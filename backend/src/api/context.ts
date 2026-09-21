@@ -1,7 +1,12 @@
-import type { Session } from "@/auth";
-import type { Database } from "@/db";
+import type { Context as HonoContext } from "hono";
+import { auth, db } from "../services";
 
-export type Context = {
-	session: Session | null;
-	db: Database;
-};
+export async function createContext(context: HonoContext) {
+	return {
+		db,
+		auth,
+		req: context.req.raw,
+	};
+}
+
+export type Context = Awaited<ReturnType<typeof createContext>>;

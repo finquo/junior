@@ -1,9 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 
-import type { DatabaseConfig } from "./config";
-import { relations } from "./relations";
+import { relations } from "./schema/relations";
 
-export function createDb(env: DatabaseConfig) {
+export function createDb(env: { DATABASE_URL: string }) {
 	return drizzle(env.DATABASE_URL, { relations });
 }
 

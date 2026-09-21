@@ -1,20 +1,109 @@
-import { ORPCError, os } from "@orpc/server";
-
+import { ORPCError, type ORPCErrorCode } from "@orpc/client";
+import { os } from "@orpc/server";
+import { triedAsync } from "utils";
+import z from "zod";
 import type { Context } from "./context";
 
-export const o = os.$context<Context>();
-
-export const publicProcedure = o;
-
-const requireAuth = o.middleware(async ({ context, next }) => {
-	if (!context.session?.user) {
-		throw new ORPCError("UNAUTHORIZED");
-	}
-	return next({
-		context: {
-			session: context.session,
-		},
+export const getError = (
+	code: ORPCErrorCode = "INTERNAL_SERVER_ERROR",
+	message?: string,
+	cause?: unknown,
+) => {
+	cause && console.error(cause);
+	return new ORPCError(code, {
+		message: message ?? "Something wrong",
+		cause,
 	});
-});
+};
 
-export const protectedProcedure = publicProcedure.use(requireAuth);
+export const handleError = (error: Error, message = "1") => {
+	return getError(
+		"INTERNAL_SERVER_ERROR",
+		`INTERNAL_SERVER_ERROR - ${message}`,
+		error,
+	);
+};
+
+export const tryAPI = async <D>(tag: string, promise: Promise<D>) => {
+	const { error, data } = await triedAsync(promise, tag);
+	if (error) throw handleError(error, tag);
+	return data;
+};
+
+export const publicProcedure = os.$context<Context>();
+
+export const protectedProcedure = publicProcedure.use(
+	async ({ context, next }) => {
+		const { data: session, error } = await triedAsync(
+			context.auth.api.getSession({
+				headers: context.req.headers,
+			}),
+		);
+
+		if (error)
+			throw getError("INTERNAL_SERVER_ERROR", "Failed to retrieve session");
+
+		if (!session?.user || !session?.user.role)
+			throw getError(
+				"UNAUTHORIZED",
+				"You are not authorized to access this action",
+			);
+
+		if (session.user.role === "banned")
+			throw getError(
+				"UNAUTHORIZED",
+				"You are banned, contact support team for more info",
+			);
+
+		return next({
+			context: {
+				session: session,
+				user: session.user,
+			},
+		});
+	},
+);
+
+export const userProcedure = protectedProcedure.use(
+	async ({ context, next }) => {
+		if (!context.session?.user.role)
+			throw getError(
+				"UNAUTHORIZED",
+				"You are not authorized to access this action",
+			);
+
+		const { success, data: gender } = z
+			.enum(["male", "female"])
+			.safeParse(context.session.user.gender);
+
+		if (!success)
+			throw getError(
+				"UNAUTHORIZED",
+				"Update your gender to access this feature",
+			);
+
+		return next({
+			context: {
+				session: context.session,
+				user: { ...context.session.user, gender },
+			},
+		});
+	},
+);
+
+export const adminProcedure = protectedProcedure.use(
+	async ({ context, next }) => {
+		if (!context.session?.user.role || context.session.user.role !== "admin")
+			throw getError(
+				"UNAUTHORIZED",
+				"You are not authorized to access this action",
+			);
+
+		return next({
+			context: {
+				session: context.session,
+				user: context.session.user,
+			},
+		});
+	},
+);

@@ -3,14 +3,12 @@ import { betterAuth } from "better-auth";
 import type { Database } from "@/db";
 import * as schema from "@/db/schema/auth";
 
-export type AuthConfig = {
-	BETTER_AUTH_URL: string;
-	BETTER_AUTH_SECRET: string;
-	CORS_ORIGIN: string;
-};
-
 export function createAuth(
-	env: AuthConfig,
+	env: {
+		BETTER_AUTH_URL: string;
+		BETTER_AUTH_SECRET: string;
+		CORS_ORIGIN: string;
+	},
 	database: Database,
 	desktopOrigins: readonly string[] = [],
 ) {
@@ -34,4 +32,6 @@ export function createAuth(
 	});
 }
 
-export type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];
+export type AUTH = ReturnType<typeof createAuth>;
+export type USER = typeof schema.user.$inferSelect;
+export type SESSION = AUTH["$Infer"]["Session"];

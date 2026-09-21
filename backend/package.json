@@ -17,6 +17,7 @@
 		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
+		"utils": "workspace:*",
 		"@orpc/openapi": "catalog:",
 		"@orpc/client": "catalog:",
 		"@orpc/server": "catalog:",
