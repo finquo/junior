@@ -1,5 +1,6 @@
 {
 	"name": "app",
+	"type": "module",
 	"private": true,
 	"workspaces": {
 		"packages": [
@@ -19,8 +20,9 @@
 			"zod": "^4.5.4"
 		}
 	},
-	"type": "module",
 	"scripts": {
+		"frontend": "vp run --filter frontend",
+		"backend": "vp run --filter backend",
 		"dev": "vp run -r dev",
 		"build": "vp run -r build",
 		"check-types": "vp run -r check-types",
@@ -29,15 +31,9 @@
 		"format": "vp fmt",
 		"staged": "vp staged",
 		"hooks:setup": "vp config",
-		"dev:web": "vp run --filter web dev",
-		"dev:server": "vp run --filter server dev",
-		"db:push": "vp run --filter @app/db db:push",
-		"db:studio": "vp run --filter @app/db db:studio",
-		"db:generate": "vp run --filter @app/db db:generate",
-		"db:migrate": "vp run --filter @app/db db:migrate",
-		"env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
-		"postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
-		"auth:generate": "cd apps/server && bun run auth:generate"
+		"env:generate": "varlock codegen --path ./frontend && varlock codegen --path ./backend",
+		"postinstall": "varlock codegen --path ./frontend && varlock codegen --path ./backend",
+		"auth:generate": "cd backend && bun run auth:generate"
 	},
 	"dependencies": {
 		"zod": "catalog:"
