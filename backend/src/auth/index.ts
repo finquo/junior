@@ -29,6 +29,16 @@ export function createAuth(
 			},
 		},
 		plugins: [],
+		user: {
+			additionalFields: {
+				role: {
+					type: ["user", "admin"],
+					required: true,
+					defaultValue: "user",
+					input: false,
+				},
+			},
+		},
 	});
 }
 

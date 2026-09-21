@@ -1,7 +1,6 @@
 import { ORPCError, type ORPCErrorCode } from "@orpc/client";
 import { os } from "@orpc/server";
 import { triedAsync } from "utils";
-import z from "zod";
 import type { Context } from "./context";
 
 export const getError = (
@@ -43,49 +42,16 @@ export const protectedProcedure = publicProcedure.use(
 		if (error)
 			throw getError("INTERNAL_SERVER_ERROR", "Failed to retrieve session");
 
-		if (!session?.user || !session?.user.role)
+		if (!session?.user)
 			throw getError(
 				"UNAUTHORIZED",
 				"You are not authorized to access this action",
-			);
-
-		if (session.user.role === "banned")
-			throw getError(
-				"UNAUTHORIZED",
-				"You are banned, contact support team for more info",
 			);
 
 		return next({
 			context: {
 				session: session,
 				user: session.user,
-			},
-		});
-	},
-);
-
-export const userProcedure = protectedProcedure.use(
-	async ({ context, next }) => {
-		if (!context.session?.user.role)
-			throw getError(
-				"UNAUTHORIZED",
-				"You are not authorized to access this action",
-			);
-
-		const { success, data: gender } = z
-			.enum(["male", "female"])
-			.safeParse(context.session.user.gender);
-
-		if (!success)
-			throw getError(
-				"UNAUTHORIZED",
-				"Update your gender to access this feature",
-			);
-
-		return next({
-			context: {
-				session: context.session,
-				user: { ...context.session.user, gender },
 			},
 		});
 	},

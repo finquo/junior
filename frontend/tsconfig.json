@@ -1,5 +1,6 @@
 {
 	"extends": "../tsconfig.json",
+	"references": [{ "path": "../backend" }],
 	"compilerOptions": {
 		"target": "ES2017",
 		"lib": ["dom", "dom.iterable", "esnext"],
@@ -21,8 +22,7 @@
 			}
 		],
 		"paths": {
-			"@/*": ["./src/*"],
-			"api": ["../backend/src/api/index.ts"]
+			"@/*": ["./src/*"]
 		}
 	},
 	"include": [

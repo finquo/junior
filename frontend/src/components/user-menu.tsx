@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/hooks/auth";
 
 export default function UserMenu() {
 	const router = useRouter();

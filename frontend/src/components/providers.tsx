@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/sonner";
 
-import { queryClient } from "@/hooks/orpc";
+import { queryClient } from "@/hooks/api";
 
 import { ThemeProvider } from "./theme-provider";
 
