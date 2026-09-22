@@ -1,6 +1,7 @@
 import { ORPCError, type ORPCErrorCode } from "@orpc/client";
 import { os } from "@orpc/server";
 import { triedAsync } from "utils";
+import type { Role, SESSION } from "@/auth";
 import type { Context } from "./context";
 
 export const getError = (
@@ -36,7 +37,7 @@ export const protectedProcedure = publicProcedure.use(
 		const { data: session, error } = await triedAsync(
 			context.auth.api.getSession({
 				headers: context.req.headers,
-			}),
+			}) as Promise<SESSION | null>,
 		);
 
 		if (error)
@@ -49,27 +50,25 @@ export const protectedProcedure = publicProcedure.use(
 			);
 
 		return next({
-			context: {
-				session: session,
-				user: session.user,
-			},
+			context: session,
 		});
 	},
 );
 
-export const adminProcedure = protectedProcedure.use(
-	async ({ context, next }) => {
-		if (!context.session?.user.role || context.session.user.role !== "admin")
+const getProcedure = (role: Role) =>
+	protectedProcedure.use(async ({ context, next }) => {
+		if (context.user.role !== role)
 			throw getError(
 				"UNAUTHORIZED",
 				"You are not authorized to access this action",
 			);
 
-		return next({
-			context: {
-				session: context.session,
-				user: context.session.user,
-			},
-		});
-	},
-);
+		return next();
+	});
+
+export const adminProcedure = getProcedure("admin");
+export const studentProcedure = getProcedure("student");
+export const teacherProcedure = getProcedure("teacher");
+export const qaAuditorProcedure = getProcedure("qa_auditor");
+export const enrollmentAdvisorProcedure = getProcedure("enrollment_advisor");
+export const schedulerProcedure = getProcedure("scheduler");

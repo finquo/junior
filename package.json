@@ -31,9 +31,7 @@
 		"format": "vp fmt",
 		"staged": "vp staged",
 		"hooks:setup": "vp config",
-		"env:generate": "varlock codegen --path ./frontend && varlock codegen --path ./backend",
-		"postinstall": "varlock codegen --path ./frontend && varlock codegen --path ./backend",
-		"auth:generate": "cd backend && bun run auth:generate"
+		"env:generate": "varlock codegen --path ./frontend && varlock codegen --path ./backend"
 	},
 	"dependencies": {
 		"zod": "catalog:"
