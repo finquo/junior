@@ -1,11 +1,25 @@
 import { defineConfig } from "tsdown";
 
-export default defineConfig({
-	entry: "./src/index.ts",
-	format: "esm",
-	outDir: "./dist",
-	clean: true,
-	deps: {
-		alwaysBundle: ["utils"],
+export default defineConfig([
+	{
+		entry: "./src/index.ts",
+		format: "esm",
+		outDir: "./out",
+		clean: true,
+		dts: false,
+		sourcemap: false,
+		deps: {
+			alwaysBundle: ["utils"],
+		},
 	},
-});
+	{
+		entry: ["./src/auth/index.ts", "./src/api/index.ts"],
+		format: "esm",
+		outDir: "./dist",
+		clean: true,
+		dts: {
+			sourcemap: false,
+		},
+		sourcemap: false,
+	},
+]);
