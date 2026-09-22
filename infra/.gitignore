@@ -1,0 +1,27 @@
+# Local .terraform directory containing cached providers and modules (Large binaries)
+.terraform/
+
+# OpenTofu state files (Contain sensitive infrastructure secrets)
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Exclude all variable files containing production secrets
+*.tfvars
+*.tfvars.json
+
+# Allow template/example variable files to track schema changes in git
+!*.example.tfvars
+
+# Ignore override files (Local tweaks that shouldn't be shared)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
