@@ -13,7 +13,11 @@ export default defineConfig([
 		},
 	},
 	{
-		entry: ["./src/auth/index.ts", "./src/api/index.ts"],
+		entry: [
+			"./src/auth/index.ts",
+			"./src/api/index.ts",
+			"./src/config/index.ts",
+		],
 		format: "esm",
 		outDir: "./dist",
 		clean: true,

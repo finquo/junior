@@ -1,7 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
 import { admin as adminPlugin } from "better-auth/plugins";
-import type { Database } from "@/db";
+import { createDb } from "@/db";
 import * as schema from "@/db/schema/auth";
 import { ac, roles } from "./permissions";
 
@@ -9,15 +9,15 @@ export * from "./permissions";
 
 export function createAuth(
 	env: {
+		DATABASE_URL: string;
 		BETTER_AUTH_URL: string;
 		BETTER_AUTH_SECRET: string;
 		CORS_ORIGIN: string;
 	},
-	database: Database,
 	desktopOrigins: readonly string[] = [],
 ) {
 	return betterAuth({
-		database: drizzleAdapter(database, {
+		database: drizzleAdapter(createDb(env), {
 			provider: "pg",
 			schema,
 		}),
