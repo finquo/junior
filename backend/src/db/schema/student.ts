@@ -1,4 +1,4 @@
-import { boolean, pgTable, text } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import type { PlayKeys } from "@/config/plans";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { user } from "./auth";
@@ -14,7 +14,7 @@ export const student = pgTable("student", {
 	mentorId: getId().references(() => teacher.id, { onDelete: "cascade" }),
 	schedulerId: getId().references(() => scheduler.id, { onDelete: "cascade" }),
 
-	address: text(),
+	address: jsonb().$type<Address>(),
 
 	program: text().$type<PlayKeys>(),
 	paid: boolean().notNull(),
@@ -29,3 +29,12 @@ export const student = pgTable("student", {
 	createdAt: createdAt(),
 	updatedAt: updatedAt(),
 });
+
+export type Address = {
+	line1: string;
+	line2?: string;
+	city: string;
+	state: string;
+	postalCode: string;
+	country: string;
+};
