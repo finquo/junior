@@ -32,6 +32,9 @@
 		"enabled": true,
 		"rules": {
 			"preset": "recommended",
+			"complexity": {
+				"noStaticOnlyClass": "off"
+			},
 			"correctness": {
 				"useHookAtTopLevel": "info",
 				"useExhaustiveDependencies": "info"

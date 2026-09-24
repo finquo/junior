@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "tsdown",
 		"check": "tsc --noEmit",
+		"format": "biome format ./ --write",
 		"dev": "tsx watch src/index.ts",
 		"start": "node out/index.mjs",
 		"env:generate": "varlock codegen",
@@ -13,6 +14,9 @@
 		"db:migrate": "drizzle-kit migrate"
 	},
 	"exports": {
+		"./config": {
+			"types": "./dist/config/index.d.mts"
+		},
 		"./auth": {
 			"types": "./dist/auth/index.d.mts"
 		},

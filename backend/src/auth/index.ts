@@ -24,7 +24,6 @@ export function createAuth(
 		emailAndPassword: {
 			enabled: true,
 			disableSignUp: false,
-			sendResetPassword: async (data) => {},
 		},
 		database: drizzleAdapter(createDb(env), {
 			provider: "pg",

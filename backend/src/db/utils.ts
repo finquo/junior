@@ -47,3 +47,13 @@ export const getSubQueryTableColumns = <
 >(
 	table: T,
 ) => table._.selectedFields;
+
+export function JsonbArrayAppend<Column extends AnyPgColumn>(
+	column: Column,
+	value: Column["_"]["data"] extends unknown[]
+		? Column["_"]["data"][number]
+		: never,
+) {
+	// return sql`${column} || ${JSON.stringify(value)}::jsonb`;
+	return sql`coalesce(${column}, '[]'::jsonb) || ${JSON.stringify(value)}::jsonb`;
+}

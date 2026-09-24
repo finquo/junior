@@ -23,10 +23,11 @@ export const slot = pgTable(
 
 		studentId: getId().references(() => student.id, { onDelete: "cascade" }),
 		teacherId: getId().references(() => teacher.id, { onDelete: "cascade" }),
-		lessonId: getId().references(() => lesson.id, { onDelete: "cascade" }),
 		schedulerId: getId().references(() => scheduler.id, {
 			onDelete: "cascade",
 		}),
+
+		lessonId: getId().references(() => lesson.id, { onDelete: "cascade" }),
 
 		startTime: timestamp({
 			withTimezone: true,

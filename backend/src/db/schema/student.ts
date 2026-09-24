@@ -7,7 +7,7 @@ import {
 	pgTable,
 	text,
 } from "drizzle-orm/pg-core";
-import type { Currency, Languages, PlayKeys } from "@/config/plans";
+import type { Currency, Language, PlayKeys } from "@/config";
 import type { Address, Note, Schooling } from "@/config/type";
 import { createdAt, generateId, getId, getTime, updatedAt } from "../utils";
 import { user } from "./auth";
@@ -29,8 +29,8 @@ export const student = pgTable(
 		address: jsonb().$type<Address>(),
 
 		schooling: text().$type<Schooling>(),
-		preferedLanguage: text()
-			.$type<Languages>()
+		languages: text()
+			.$type<Language>()
 			.array()
 			.$default(() => []),
 

@@ -21,3 +21,13 @@ export type Schooling =
 	| "online"
 	| "other"
 	| "unknown";
+
+export type Experience = {
+	title: string; // e.g. "Senior Math Teacher"
+	organization: string; // e.g. "Greenwood High School"
+	description?: string; // optional details
+	startedAt: string; // ISO date
+	endedAt?: string; // ISO date or undefined if current
+	writtenBy: string; // who recorded/updated this entry
+	createdAt: string; // ISO timestamp of this version
+};
