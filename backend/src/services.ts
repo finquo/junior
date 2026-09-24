@@ -1,7 +1,6 @@
 import { createAuth } from "@/auth";
-import { createBetterDb } from "@/db";
-
+import { createDb } from "./db";
 import { ENV } from "./env.server";
 
+export const db = createDb(ENV);
 export const auth = createAuth(ENV);
-export const db = createBetterDb(ENV);

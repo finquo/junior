@@ -26,6 +26,8 @@ export const AddToArray = <T extends AnyPgColumn>(column: T, data: any) => {
 export const createdAt = (name = "created_at") =>
 	timestamp(name, { withTimezone: false }).default(sql`now()`).notNull();
 
+export const getTime = () => timestamp({ withTimezone: false });
+
 export const updatedAt = (name = "updated_at") =>
 	timestamp(name, { withTimezone: false })
 		.default(sql`now()`)

@@ -17,19 +17,28 @@ export function createAuth(
 	desktopOrigins: readonly string[] = [],
 ) {
 	return betterAuth({
-		database: drizzleAdapter(createDb(env), {
-			provider: "pg",
-			schema,
-		}),
+		appName: "Finquo Junior",
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
 		trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
 		emailAndPassword: {
 			enabled: true,
 			disableSignUp: false,
 			sendResetPassword: async (data) => {},
 		},
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		database: drizzleAdapter(createDb(env), {
+			provider: "pg",
+			schema,
+		}),
+		authCookie: { name: "auth-session" },
+		onAPIError: {
+			errorURL: "/error",
+			onError: (error) => {
+				console.error("Auth Error:", error);
+			},
+		},
 		advanced: {
+			cookiePrefix: "finquo-auth",
 			defaultCookieAttributes: {
 				sameSite: "none",
 				secure: true,

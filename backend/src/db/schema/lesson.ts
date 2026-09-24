@@ -1,4 +1,6 @@
+import { sql } from "drizzle-orm";
 import { interval, jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
+import type { Languages } from "@/config";
 import type { Anwser, Quiz } from "@/config/quiz";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { student } from "./student";
@@ -8,9 +10,12 @@ export const lesson = pgTable("lesson", {
 
 	name: text().notNull(),
 	description: text(),
+	language: text().$type<Languages>().notNull(),
 
 	quiz: jsonb().$type<Quiz>(),
-	period: interval({ fields: "hour to minute" }),
+	period: interval({ fields: "hour to minute" }).default(
+		sql`INTERVAL '1' HOUR`,
+	),
 
 	createdAt: createdAt(),
 	updatedAt: updatedAt(),
@@ -22,7 +27,7 @@ export const answerStatusEnum = pgEnum("answer_status", [
 	"correct",
 	"partially_correct",
 	"wrong",
-	"retry",
+	"retake",
 ]);
 
 export const answer = pgTable("answer", {

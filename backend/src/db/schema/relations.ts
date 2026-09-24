@@ -48,6 +48,4 @@ const relations = defineRelations(schema, (r) => ({
 	},
 }));
 
-export const getRelations = () => ({
-	relations: { ...relations, ...schema.authRelations },
-});
+export const getRelations = { ...relations, ...schema.authRelations };

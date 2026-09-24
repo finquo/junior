@@ -1,4 +1,6 @@
 export type Country = "IN" | "US";
+export type Languages = "ml-IN" | "en-IN";
+export type Currency = "₹" | "$";
 
 export type Plan = {
 	id: string;
