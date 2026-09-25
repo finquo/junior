@@ -25,14 +25,14 @@
 		"frontend": "vp run --filter frontend",
 		"backend": "vp run --filter backend",
 		"dev": "vp run -r dev",
-		"build": "varlock codegen && vp run -r build",
+		"build": "vp run -r build",
 		"check-types": "vp run -r check-types",
 		"check": "biome check --write .",
 		"lint": "vp lint",
 		"format": "vp fmt",
 		"staged": "vp staged",
 		"hooks:setup": "vp config",
-		"env:generate": "varlock codegen"
+		"env:generate": "vp run -r env:generate"
 	},
 	"dependencies": {
 		"zod": "catalog:"

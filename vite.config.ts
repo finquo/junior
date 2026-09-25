@@ -1,8 +1,7 @@
-import { varlockCloudflareVitePlugin } from "@varlock/cloudflare-integration";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-	plugins: [varlockCloudflareVitePlugin()],
+	plugins: [],
 	lint: {
 		ignorePatterns: [
 			"node_modules/**",

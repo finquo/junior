@@ -3,13 +3,12 @@
 	"type": "module",
 	"main": "./src/index.ts",
 	"scripts": {
-		"cf:dev": "wrangler dev",
-		"build": "tsdown",
+		"cf:dev": "wrangler dev --port 3000",
+		"build": "varlock codegen & tsdown",
 		"check": "tsc --noEmit",
 		"format": "biome format ./ --write",
 		"dev": "bun run --hot src/index.ts --port 3000",
 		"start": "node out/index.mjs",
-		"env:load": "varlock load",
 		"env:generate": "varlock codegen",
 		"auth:generate": "auth generate --config src/services.ts --output src/db/auth.test.ts --yes",
 		"db:generate": "drizzle-kit generate",
@@ -17,6 +16,7 @@
 	},
 	"varlock": {
 		"loadPath": [
+			"./",
 			"../"
 		]
 	},

@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import type { AppRouterClient } from "backend/api";
 
 export const link = new RPCLink({
-	url: `${(process.env.NEXT_PUBLIC_SERVER_URL as string).replace(/\/$/, "")}/rpc`,
+	url: `${process.env.NEXT_PUBLIC_SERVER_URL ?? ""}/api`,
 	fetch(url, options) {
 		return fetch(url, {
 			...options,

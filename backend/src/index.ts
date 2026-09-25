@@ -9,7 +9,6 @@ import { logger } from "hono/logger";
 import z from "zod";
 import { appRouter } from "@/api/routers";
 import { createContext } from "./api/context";
-import { ENV } from "./env.server";
 import { auth } from "./services";
 
 const app = new Hono({ strict: false }).basePath("/api");
@@ -18,7 +17,7 @@ app.use(logger());
 app.use(
 	"/*",
 	cors({
-		origin: ENV.CORS_ORIGIN,
+		origin: process.env.CORS_ORIGIN,
 		allowMethods: ["GET", "POST", "OPTIONS"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		credentials: true,

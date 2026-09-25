@@ -7,25 +7,19 @@ import { ac, roles } from "./permissions";
 
 export * from "./permissions";
 
-export function createAuth(
-	env: {
-		DATABASE_URL: string;
-		BETTER_AUTH_URL: string;
-		BETTER_AUTH_SECRET: string;
-		CORS_ORIGIN: string;
-	},
-	desktopOrigins: readonly string[] = [],
-) {
+export function createAuth() {
 	return betterAuth({
 		appName: "Finquo Junior",
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
-		trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
+		secret: process.env.BETTER_AUTH_SECRET,
+		baseURL: process.env.BETTER_AUTH_URL,
+		trustedOrigins: process.env.CORS_ORIGIN
+			? [process.env.CORS_ORIGIN]
+			: undefined,
 		emailAndPassword: {
 			enabled: true,
 			disableSignUp: false,
 		},
-		database: drizzleAdapter(createDb(env), {
+		database: drizzleAdapter(createDb(), {
 			provider: "pg",
 			schema,
 		}),

@@ -1,3 +1,4 @@
+import "varlock/auto-load";
 import { defineConfig } from "tsdown";
 
 export default defineConfig([
