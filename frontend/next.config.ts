@@ -5,6 +5,7 @@ import { withPwa } from "./pwa.config";
 const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
+	output: "export",
 	typedRoutes: true,
 	reactCompiler: true,
 };

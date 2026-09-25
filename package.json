@@ -42,7 +42,8 @@
 		"rolldown": "1.2.7",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
-		"vite-plus": "0.3.1"
+		"vite-plus": "0.3.1",
+		"wrangler": "^4.139.0"
 	},
 	"overrides": {
 		"@next/env": "npm:@varlock/nextjs-integration@1.2.2",

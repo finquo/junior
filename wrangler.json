@@ -1,0 +1,23 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "website",
+	"compatibility_date": "2026-08-04",
+	"minify": true,
+	"main": "./backend/out/index.mjs",
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"NODE_ENV": "production",
+		"BUN_VERSION": "1.2.15",
+		"NEXT_TELEMETRY_DISABLED": 1,
+		"APP_VERSION": "1.4.6"
+	},
+	"assets": {
+		"directory": "./frontend/out",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page",
+		"run_worker_first": ["/api/*", "/.well-known/*"]
+	},
+	"send_metrics": false
+}
