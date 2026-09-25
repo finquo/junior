@@ -1,16 +1,27 @@
-"use client";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { PasswordLogin } from "./_components/password";
 
-import { useState } from "react";
-
-import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-
-export default function LoginPage() {
-	const [showSignIn, setShowSignIn] = useState(false);
-
-	return showSignIn ? (
-		<SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-	) : (
-		<SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+export default function Page() {
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Login</CardTitle>
+				<CardDescription>
+					Login with credentials you got from us
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="flex flex-col">
+				<PasswordLogin>
+					<Button variant="outline">Create Account</Button>
+				</PasswordLogin>
+			</CardContent>
+		</Card>
 	);
 }

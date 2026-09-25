@@ -50,10 +50,15 @@ export default function () {
 					className="grow"
 					variant={"secondary"}
 					render={<Link href={`mailto:${supportEmailLink}`} />}
+					nativeButton={false}
 				>
 					Contact Support
 				</Button>
-				<Button className="grow" render={<Link href={"/"} />}>
+				<Button
+					className="grow"
+					render={<Link href={"/"} />}
+					nativeButton={false}
+				>
 					Go to Homepage
 				</Button>
 			</CardFooter>

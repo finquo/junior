@@ -1,7 +1,7 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { AppRouterClient } from "backend/api";
-import { getServerBaseUrl } from "./url";
+import { getServerBaseUrl } from "@/hooks/url";
 
 export const link = new RPCLink({
 	url: getServerBaseUrl("/api"),

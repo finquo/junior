@@ -5,3 +5,8 @@ export const getServerBaseUrl = (paths?: string) =>
 		(typeof window !== "undefined"
 			? window.location.origin
 			: "http://localhost:3000")) + (paths ? paths : "");
+
+export const getClientBaseUrl = (paths?: string) =>
+	(typeof window !== "undefined"
+		? window.location.origin
+		: "http://localhost:3000") + (paths ? paths : "");
