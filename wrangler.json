@@ -1,13 +1,13 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "website",
+	"name": "app",
 	"compatibility_date": "2026-08-04",
-	"minify": true,
 	"main": "./backend/out/index.mjs",
 	"observability": {
 		"enabled": true
 	},
 	"vars": {
+		"BETTER_AUTH_URL": "https://app.finquo.workers.dev",
 		"NODE_ENV": "production",
 		"BUN_VERSION": "1.2.15",
 		"NEXT_TELEMETRY_DISABLED": 1

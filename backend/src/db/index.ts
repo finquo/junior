@@ -1,8 +1,13 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { getRelations as relations } from "./schema/relations";
 
 export function createDb() {
-	return drizzle(process.env.DATABASE_URL, { relations });
+	const client = postgres(process.env.DATABASE_URL, {
+		prepare: false,
+	});
+
+	return drizzle({ client, relations });
 }
 
 export type Database = ReturnType<typeof createDb>;
