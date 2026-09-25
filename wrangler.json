@@ -10,8 +10,7 @@
 	"vars": {
 		"NODE_ENV": "production",
 		"BUN_VERSION": "1.2.15",
-		"NEXT_TELEMETRY_DISABLED": 1,
-		"APP_VERSION": "1.4.6"
+		"NEXT_TELEMETRY_DISABLED": 1
 	},
 	"assets": {
 		"directory": "./frontend/out",

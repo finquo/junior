@@ -3,15 +3,22 @@
 	"type": "module",
 	"main": "./src/index.ts",
 	"scripts": {
+		"cf:dev": "wrangler dev",
 		"build": "tsdown",
 		"check": "tsc --noEmit",
 		"format": "biome format ./ --write",
-		"dev": "tsx watch src/index.ts",
+		"dev": "bun run --hot src/index.ts --port 3000",
 		"start": "node out/index.mjs",
+		"env:load": "varlock load",
 		"env:generate": "varlock codegen",
 		"auth:generate": "auth generate --config src/services.ts --output src/db/auth.test.ts --yes",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate"
+	},
+	"varlock": {
+		"loadPath": [
+			"../"
+		]
 	},
 	"exports": {
 		"./config": {
@@ -46,6 +53,7 @@
 		"drizzle-kit": "1.0.0-rc.4",
 		"tsdown": "^0.23.0",
 		"tsx": "^4.23.13",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"wrangler": "catalog:"
 	}
 }

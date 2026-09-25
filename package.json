@@ -17,6 +17,7 @@
 			"better-auth": "1.7.5",
 			"typescript": "^6.0.3",
 			"varlock": "1.18.0",
+			"wrangler": "^4.139.0",
 			"zod": "^4.5.4"
 		}
 	},
@@ -31,7 +32,7 @@
 		"format": "vp fmt",
 		"staged": "vp staged",
 		"hooks:setup": "vp config",
-		"env:generate": "varlock codegen --path ./frontend && varlock codegen --path ./backend"
+		"env:generate": "varlock codegen"
 	},
 	"dependencies": {
 		"zod": "catalog:"
@@ -39,11 +40,11 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.12",
 		"@types/node": "catalog:",
+		"@varlock/cloudflare-integration": "^1.6.0",
 		"rolldown": "1.2.7",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
-		"vite-plus": "0.3.1",
-		"wrangler": "^4.139.0"
+		"vite-plus": "0.3.1"
 	},
 	"overrides": {
 		"@next/env": "npm:@varlock/nextjs-integration@1.2.2",

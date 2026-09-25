@@ -9,6 +9,11 @@
 		"start": "next start",
 		"env:generate": "varlock codegen"
 	},
+	"varlock": {
+		"loadPath": [
+			"../"
+		]
+	},
 	"dependencies": {
 		"@base-ui/react": "^1.8.0",
 		"@orpc/client": "catalog:",

@@ -1,6 +1,8 @@
+import { varlockCloudflareVitePlugin } from "@varlock/cloudflare-integration";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+	plugins: [varlockCloudflareVitePlugin()],
 	lint: {
 		ignorePatterns: [
 			"node_modules/**",
@@ -31,6 +33,6 @@ export default defineConfig({
 		sortPackageJson: true,
 	},
 	staged: {
-		"*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
+		"*.{js,ts,jsx,tsx,json,jsonc,css,md}": "vp check --fix",
 	},
 });

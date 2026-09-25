@@ -34,7 +34,7 @@ export const answer = pgTable("answer", {
 	id: generateId().primaryKey(),
 	studentId: getId().references(() => student.id, { onDelete: "cascade" }),
 
-	lesson: getId().references(() => lesson.id, { onDelete: "cascade" }),
+	lessonId: getId().references(() => lesson.id, { onDelete: "cascade" }),
 	status: answerStatusEnum().notNull().default("pending"),
 
 	answer: jsonb().$type<Anwser>(),

@@ -10,7 +10,6 @@ const relations = defineRelations(schema, (r) => ({
 		teachers: r.many.teacher(),
 		students: r.many.student(),
 		slots: r.many.slot(),
-		materials: r.many.material(),
 	},
 	teacher: {
 		user: r.one.user({
@@ -32,8 +31,14 @@ const relations = defineRelations(schema, (r) => ({
 		}),
 
 		slots: r.many.slot(),
-		payments: r.many.payment(),
-		materials: r.many.material(),
+		payments: r.many.payment({
+			from: r.student.id,
+			to: r.payment.studentId,
+		}),
+		materials: r.many.material({
+			from: r.student.id,
+			to: r.material.studentId,
+		}),
 
 		mentor: r.one.teacher({
 			from: r.student.mentorId,
@@ -63,13 +68,18 @@ const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 	answer: {
-		quiz: r.one.lesson(),
-		author: r.one.student(),
+		quiz: r.one.lesson({
+			from: r.answer.lessonId,
+			to: r.lesson.id,
+		}),
+		author: r.one.student({
+			from: r.answer.studentId,
+			to: r.student.id,
+		}),
 	},
 	lesson: {
 		slots: r.many.slot(),
 		answers: r.many.answer(),
-		materials: r.many.material(),
 	},
 }));
 

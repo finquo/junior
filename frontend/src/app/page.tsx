@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/hooks/api";
 
 export default function Home() {
-	const healthCheck = useQuery(api.healthCheck.queryOptions());
+	const healthCheck = useQuery(api.health.queryOptions());
 
 	return (
 		<div className="container mx-auto max-w-3xl px-4 py-2">
