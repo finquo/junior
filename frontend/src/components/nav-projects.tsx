@@ -23,21 +23,22 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 
-export function NavProjects({
-	projects,
-}: {
-	projects: {
+export type NavProjectsType = {
+	title: string;
+	link: {
 		name: string;
 		url: string;
 		icon: React.ReactNode;
 	}[];
-}) {
+};
+
+export function NavProjects({ title, link }: NavProjectsType) {
 	const { isMobile } = useSidebar();
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
-			<SidebarGroupLabel>Projects</SidebarGroupLabel>
+			<SidebarGroupLabel>{title}</SidebarGroupLabel>
 			<SidebarMenu>
-				{projects.map((item) => (
+				{link.map((item) => (
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton render={<a href={item.url} />}>
 							{item.icon}
@@ -62,16 +63,16 @@ export function NavProjects({
 							>
 								<DropdownMenuItem>
 									<FolderIcon />
-									<span>View Project</span>
+									<span>View Link</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem>
 									<ArrowRightIcon />
-									<span>Share Project</span>
+									<span>Share Link</span>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem variant="destructive">
 									<Trash2Icon />
-									<span>Delete Project</span>
+									<span>Delete Link</span>
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>

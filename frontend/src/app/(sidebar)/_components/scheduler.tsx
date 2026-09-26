@@ -1,16 +1,14 @@
 "use client";
 
 import {
-	AudioLinesIcon,
-	BookOpenIcon,
-	BotIcon,
+	BriefcaseBusinessIcon,
 	FrameIcon,
 	GalleryVerticalEndIcon,
+	GraduationCapIcon,
 	MapIcon,
 	PieChartIcon,
 	Settings2Icon,
-	TerminalIcon,
-	TerminalSquareIcon,
+	VideoIcon,
 } from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
@@ -25,12 +23,11 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 
-// This is sample data.
 const data = {
 	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
+		name: "Rajat",
+		email: "rajat@finquo.ai",
+		avatar: "https://github.com/rajatsandeepsen.png",
 	},
 	teams: [
 		{
@@ -38,61 +35,12 @@ const data = {
 			logo: <GalleryVerticalEndIcon />,
 			plan: "Enterprise",
 		},
-		{
-			name: "Acme Corp.",
-			logo: <AudioLinesIcon />,
-			plan: "Startup",
-		},
-		{
-			name: "Evil Corp.",
-			logo: <TerminalIcon />,
-			plan: "Free",
-		},
 	],
-	navMain: [
+	platform: [
 		{
-			title: "Playground",
-			url: "#",
-			icon: <TerminalSquareIcon />,
-			isActive: true,
-			items: [
-				{
-					title: "History",
-					url: "#",
-				},
-				{
-					title: "Starred",
-					url: "#",
-				},
-				{
-					title: "Settings",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Models",
-			url: "#",
-			icon: <BotIcon />,
-			items: [
-				{
-					title: "Genesis",
-					url: "#",
-				},
-				{
-					title: "Explorer",
-					url: "#",
-				},
-				{
-					title: "Quantum",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Documentation",
-			url: "#",
-			icon: <BookOpenIcon />,
+			title: "Sessions",
+			url: "/scheduler/sessions",
+			icon: <VideoIcon />,
 			items: [
 				{
 					title: "Introduction",
@@ -136,7 +84,54 @@ const data = {
 			],
 		},
 	],
-	projects: [
+	users: [
+		{
+			title: "Teachers",
+			url: "/scheduler/teachers",
+			icon: <BriefcaseBusinessIcon />,
+			isActive: true,
+			items: [
+				{
+					title: "Rajat",
+					url: "#",
+				},
+				{
+					title: "Rajat Sandeep",
+					url: "#",
+				},
+				{
+					title: "Rajat Sandeep Sen",
+					url: "#",
+				},
+			],
+			fallbackItems: [
+				{
+					title: "FallBack Rajat",
+					url: "#",
+				},
+			],
+		},
+		{
+			title: "Students",
+			url: "/scheduler/students",
+			icon: <GraduationCapIcon />,
+			items: [
+				{
+					title: "Rajat",
+					url: "#",
+				},
+				{
+					title: "Rajat Sandeep",
+					url: "#",
+				},
+				{
+					title: "Rajat Sandeep Sen",
+					url: "#",
+				},
+			],
+		},
+	],
+	links: [
 		{
 			name: "Design Engineering",
 			url: "#",
@@ -164,8 +159,9 @@ export function SchedulerSidebar({
 				<TeamSwitcher teams={data.teams} />
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain items={data.navMain} />
-				<NavProjects projects={data.projects} />
+				<NavMain title="Users" items={data.users} />
+				<NavMain title="Platform" items={data.platform} />
+				<NavProjects title="Links" link={data.links} />
 			</SidebarContent>
 			<SidebarFooter>
 				<NavUser user={data.user} />

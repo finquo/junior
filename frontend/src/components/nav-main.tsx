@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRightIcon } from "lucide-react";
+import Link from "next/link";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -16,24 +17,30 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { Button } from "./ui/button";
 
-export function NavMain({
-	items,
-}: {
+export type NavMainType = {
+	title: string;
 	items: {
 		title: string;
 		url: string;
 		icon?: React.ReactNode;
 		isActive?: boolean;
+		fallbackItems?: {
+			title: string;
+			url: string;
+		}[];
 		items?: {
 			title: string;
 			url: string;
 		}[];
 	}[];
-}) {
+};
+
+export function NavMain({ title, items }: NavMainType) {
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>Platform</SidebarGroupLabel>
+			<SidebarGroupLabel>{title}</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => (
 					<Collapsible
@@ -42,15 +49,30 @@ export function NavMain({
 						className="group/collapsible"
 						render={<SidebarMenuItem />}
 					>
-						<CollapsibleTrigger
-							render={<SidebarMenuButton tooltip={item.title} />}
+						<SidebarMenuButton
+							tooltip={item.title}
+							render={<CollapsibleTrigger />}
 						>
-							{item.icon}
+							<Link href={item.url as "/"}>{item.icon}</Link>
 							<span>{item.title}</span>
-							<ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-						</CollapsibleTrigger>
+
+							<Button
+								className={"ml-auto"}
+								variant={"outline"}
+								size={"icon-xs"}
+							>
+								<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+							</Button>
+						</SidebarMenuButton>
 						<CollapsibleContent>
 							<SidebarMenuSub>
+								{item.fallbackItems?.map((subItem) => (
+									<SidebarMenuSubItem key={subItem.title}>
+										<SidebarMenuSubButton render={<a href={subItem.url} />}>
+											<span>{subItem.title}</span>
+										</SidebarMenuSubButton>
+									</SidebarMenuSubItem>
+								))}
 								{item.items?.map((subItem) => (
 									<SidebarMenuSubItem key={subItem.title}>
 										<SidebarMenuSubButton render={<a href={subItem.url} />}>
