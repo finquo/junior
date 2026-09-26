@@ -4,7 +4,7 @@ import * as schema from "./index";
 const relations = defineRelations(schema, (r) => ({
 	scheduler: {
 		user: r.one.user({
-			from: r.scheduler.userId,
+			from: r.scheduler.id,
 			to: r.user.id,
 		}),
 		teachers: r.many.teacher(),
@@ -13,20 +13,20 @@ const relations = defineRelations(schema, (r) => ({
 	},
 	teacher: {
 		user: r.one.user({
-			from: r.teacher.userId,
+			from: r.teacher.id,
 			to: r.user.id,
 		}),
 		students: r.many.student(),
 		slots: r.many.slot(),
 
 		scheduler: r.one.scheduler({
-			from: r.teacher.schedulerId,
+			from: r.teacher.supervisorId,
 			to: r.scheduler.id,
 		}),
 	},
 	student: {
 		user: r.one.user({
-			from: r.student.userId,
+			from: r.student.id,
 			to: r.user.id,
 		}),
 
@@ -45,7 +45,7 @@ const relations = defineRelations(schema, (r) => ({
 			to: r.teacher.id,
 		}),
 		scheduler: r.one.scheduler({
-			from: r.student.schedulerId,
+			from: r.student.supervisorId,
 			to: r.scheduler.id,
 		}),
 	},

@@ -2,6 +2,7 @@ import { ORPCError, type ORPCErrorCode } from "@orpc/client";
 import { os } from "@orpc/server";
 import { triedAsync } from "utils";
 import type { Role, SESSION } from "@/auth";
+import { auth } from "@/services";
 import type { Context } from "./context";
 
 export const getError = (
@@ -24,10 +25,20 @@ export const handleError = (error: Error, message = "1") => {
 	);
 };
 
-export const tryAPI = async <D>(tag: string, promise: Promise<D>) => {
+export const tryAPI = async <D, Def = D>(
+	tag: string,
+	promise: Promise<D>,
+	def?: Def,
+) => {
 	const { error, data } = await triedAsync(promise, tag);
 	if (error) throw handleError(error, tag);
-	return data;
+	return data ?? def;
+};
+
+export const getAPI = async <D>(tag: string, promise: Promise<D>, def: D) => {
+	const { error, data } = await triedAsync(promise, tag);
+	if (error) throw handleError(error, tag);
+	return data ?? def;
 };
 
 export const publicProcedure = os.$context<Context>();
@@ -35,7 +46,7 @@ export const publicProcedure = os.$context<Context>();
 export const protectedProcedure = publicProcedure.use(
 	async ({ context, next }) => {
 		const { data: session, error } = await triedAsync(
-			context.auth.api.getSession({
+			auth.api.getSession({
 				headers: context.req.headers,
 			}) as Promise<SESSION | null>,
 		);
@@ -55,7 +66,7 @@ export const protectedProcedure = publicProcedure.use(
 	},
 );
 
-const getProcedure = (role: Role) =>
+const getProcedure = <R extends Role>(role: R) =>
 	protectedProcedure.use(async ({ context, next }) => {
 		if (context.user.role !== role)
 			throw getError(

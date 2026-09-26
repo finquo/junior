@@ -17,13 +17,12 @@ import { teacher } from "./teacher";
 export const student = pgTable(
 	"student",
 	{
-		id: generateId().primaryKey(),
-		userId: text()
-			.notNull()
+		id: generateId()
+			.primaryKey()
 			.references(() => user.id, { onDelete: "cascade" }),
 
 		mentorId: getId().references(() => teacher.id),
-		schedulerId: getId().references(() => scheduler.id),
+		supervisorId: getId().references(() => scheduler.id),
 
 		notes: jsonb().$type<Note[]>().default([]).notNull(),
 		address: jsonb().$type<Address>(),

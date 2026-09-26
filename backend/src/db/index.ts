@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import * as schemas from "./schema";
 import { getRelations as relations } from "./schema/relations";
 
 export function createDb() {
@@ -11,3 +12,4 @@ export function createDb() {
 }
 
 export type Database = ReturnType<typeof createDb>;
+export const schema = schemas;
