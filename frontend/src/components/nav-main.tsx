@@ -54,14 +54,15 @@ export function NavMain({ title, items }: NavMainType) {
 						>
 							<Link href={item.url as "/"}>{item.icon}</Link>
 							<span>{item.title}</span>
-
-							<Button
-								className={"ml-auto"}
-								variant={"outline"}
-								size={"icon-xs"}
-							>
-								<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-							</Button>
+							<div>
+								<Button
+									className={"ml-auto"}
+									variant={"outline"}
+									size={"icon-xs"}
+								>
+									<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+								</Button>
+							</div>
 						</SidebarMenuButton>
 						<CollapsibleContent>
 							<SidebarMenuSub>

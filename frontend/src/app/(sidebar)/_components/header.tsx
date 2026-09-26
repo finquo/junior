@@ -1,8 +1,8 @@
 "use client";
 
-import { CopyIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React, { Suspense } from "react";
+import { CopyButton } from "@/components/copy";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -11,9 +11,9 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { getClientBaseUrl } from "@/hooks/url";
 
 export function SideBarHeader() {
 	return (
@@ -60,12 +60,15 @@ const Bread = () => {
 				})}
 				<Separator
 					orientation="vertical"
-					className="data-vertical:h-4 data-vertical:self-auto"
+					className="hidden data-vertical:h-4 data-vertical:self-auto md:block"
 				/>
-				<Button variant="ghost" size="icon-sm" onClick={(event) => {}}>
-					<CopyIcon />
-					<span className="sr-only">Copy Current Link</span>
-				</Button>
+				<CopyButton
+					size={"icon-xs"}
+					variant={"ghost"}
+					className="hidden md:block"
+					text={() => getClientBaseUrl(pathname)}
+					label="Link"
+				/>
 			</BreadcrumbList>
 		</Breadcrumb>
 	);

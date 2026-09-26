@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --port 4000",
-		"build": "varlock codegen & next build",
+		"build": "varlock codegen && next build",
 		"check": "tsc --noEmit",
 		"start": "next start --port 4000",
 		"env:generate": "varlock codegen"
