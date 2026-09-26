@@ -1,13 +1,19 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
 
-export const ac = createAccessControl({
-	...defaultStatements,
+const permissions = {
 	scheduler: ["create", "update", "delete"],
 	student: ["create", "update", "delete"],
 	teacher: ["create", "update", "delete"],
 	qa_auditor: ["create", "update", "delete"],
 	enrollment_advisor: ["create", "update", "delete"],
+} as const;
+
+export type Permissions = typeof permissions;
+
+export const ac = createAccessControl({
+	...defaultStatements,
+	...permissions,
 });
 
 const admin = ac.newRole({
@@ -48,5 +54,7 @@ export const roles = {
 	student,
 	qa_auditor,
 };
+
+roles.scheduler.statements.scheduler;
 
 export type Role = keyof typeof roles;

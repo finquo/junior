@@ -1,6 +1,8 @@
 import { protectedProcedure, publicProcedure } from "../procedure";
+import { enrollmentRouter as enrollment } from "./enrollment";
 import { schedulerRouter as scheduler } from "./scheduler";
 import { sidebarRouter as sidebar } from "./sidebar";
+import { studentRouter as student } from "./student";
 import { teacherRouter as teacher } from "./teacher";
 
 export const appRouter = {
@@ -11,4 +13,6 @@ export const appRouter = {
 	sidebar,
 	scheduler,
 	teacher,
+	student,
+	enrollment,
 };
