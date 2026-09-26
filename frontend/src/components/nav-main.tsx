@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import {
@@ -17,6 +18,7 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import type { api } from "@/hooks/api";
 import { Button } from "./ui/button";
 
 export type NavMainType = {
@@ -26,10 +28,7 @@ export type NavMainType = {
 		url: string;
 		icon?: React.ReactNode;
 		isActive?: boolean;
-		fallbackItems?: {
-			title: string;
-			url: string;
-		}[];
+		fetchItems?: FetchItemsType;
 		items?: {
 			title: string;
 			url: string;
@@ -66,13 +65,6 @@ export function NavMain({ title, items }: NavMainType) {
 						</SidebarMenuButton>
 						<CollapsibleContent>
 							<SidebarMenuSub>
-								{item.fallbackItems?.map((subItem) => (
-									<SidebarMenuSubItem key={subItem.title}>
-										<SidebarMenuSubButton render={<a href={subItem.url} />}>
-											<span>{subItem.title}</span>
-										</SidebarMenuSubButton>
-									</SidebarMenuSubItem>
-								))}
 								{item.items?.map((subItem) => (
 									<SidebarMenuSubItem key={subItem.title}>
 										<SidebarMenuSubButton render={<a href={subItem.url} />}>
@@ -80,6 +72,7 @@ export function NavMain({ title, items }: NavMainType) {
 										</SidebarMenuSubButton>
 									</SidebarMenuSubItem>
 								))}
+								{item.fetchItems && <FetchSideBarItems {...item.fetchItems} />}
 							</SidebarMenuSub>
 						</CollapsibleContent>
 					</Collapsible>
@@ -88,3 +81,29 @@ export function NavMain({ title, items }: NavMainType) {
 		</SidebarGroup>
 	);
 }
+
+type FetchItemsType = {
+	api: ReturnType<typeof api.sidebar.example.queryOptions>;
+	getLink: (id: string) => string;
+};
+
+const FetchSideBarItems = ({ api, getLink }: FetchItemsType) => {
+	const { data, isPending } = useQuery(api);
+
+	if (isPending)
+		return (
+			<SidebarMenuSubItem>
+				<SidebarMenuSubButton className="animate-pulse">
+					<span>Loading...</span>
+				</SidebarMenuSubButton>
+			</SidebarMenuSubItem>
+		);
+
+	return data?.map((subItem) => (
+		<SidebarMenuSubItem key={subItem.title}>
+			<SidebarMenuSubButton render={<a href={getLink(subItem.id)} />}>
+				<span>{subItem.title}</span>
+			</SidebarMenuSubButton>
+		</SidebarMenuSubItem>
+	));
+};

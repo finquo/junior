@@ -11,7 +11,7 @@ import {
 	VideoIcon,
 } from "lucide-react";
 import type * as React from "react";
-import { NavMain } from "@/components/nav-main";
+import { NavMain, type NavMainType } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -22,6 +22,7 @@ import {
 	SidebarHeader,
 	SidebarRail,
 } from "@/components/ui/sidebar";
+import { api } from "@/hooks/api";
 
 const data = {
 	user: {
@@ -90,26 +91,10 @@ const data = {
 			url: "/scheduler/teachers",
 			icon: <BriefcaseBusinessIcon />,
 			isActive: true,
-			items: [
-				{
-					title: "Rajat",
-					url: "#",
-				},
-				{
-					title: "Rajat Sandeep",
-					url: "#",
-				},
-				{
-					title: "Rajat Sandeep Sen",
-					url: "#",
-				},
-			],
-			fallbackItems: [
-				{
-					title: "FallBack Rajat",
-					url: "#",
-				},
-			],
+			fetchItems: {
+				api: api.sidebar.teachers.queryOptions(),
+				getLink: (id) => `scheduler/teacher/${id}`,
+			},
 		},
 		{
 			title: "Students",
@@ -130,7 +115,7 @@ const data = {
 				},
 			],
 		},
-	],
+	] satisfies NavMainType["items"],
 	links: [
 		{
 			name: "Design Engineering",
