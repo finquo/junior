@@ -7,6 +7,17 @@ import { useState } from "react";
 import { Badge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -85,6 +96,28 @@ function UserTableRow({ member }: UserTableRowProps) {
 						</SelectGroup>
 					</SelectContent>
 				</Select>
+			</TableCell>
+			<TableCell>
+				<Drawer>
+					<DrawerTrigger render={<Button variant="outline" />}>
+						Open
+					</DrawerTrigger>
+					<DrawerContent>
+						<DrawerHeader>
+							<DrawerTitle>Are you absolutely sure?</DrawerTitle>
+							<DrawerDescription>
+								This action cannot be undone.
+							</DrawerDescription>
+						</DrawerHeader>
+						<div className="p-4">{/* Content here */}</div>
+						<DrawerFooter>
+							<Button>Submit</Button>
+							<DrawerClose render={<Button variant="outline" />}>
+								Cancel
+							</DrawerClose>
+						</DrawerFooter>
+					</DrawerContent>
+				</Drawer>
 			</TableCell>
 		</TableRow>
 	);

@@ -2,12 +2,15 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
 import z from "zod";
 
+const CRUD = ["get", "list", "create", "update", "delete"] as const;
+
 const permissions = {
-	scheduler: ["create", "update", "delete"],
-	student: ["create", "update", "delete"],
-	teacher: ["create", "update", "delete"],
-	qa_auditor: ["create", "update", "delete"],
-	enrollment_advisor: ["create", "update", "delete"],
+	user: CRUD,
+	scheduler: CRUD,
+	student: CRUD,
+	teacher: CRUD,
+	qa_auditor: CRUD,
+	enrollment_advisor: CRUD,
 } as const;
 
 export type Permissions = typeof permissions;
@@ -34,6 +37,7 @@ const teacher = ac.newRole({
 });
 
 const enrollment_advisor = ac.newRole({
+	user: ["create"],
 	student: ["create"],
 	enrollment_advisor: ["update"],
 });

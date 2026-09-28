@@ -1,5 +1,5 @@
 "use client";
 
-import { GetAuthLayout } from "../_components/auth";
+import { GetAuthLayout } from "@/sidebar/auth";
 
 export default GetAuthLayout("admin");

@@ -22,7 +22,8 @@
 			}
 		],
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@/sidebar/*": ["./src/app/(sidebar)/_components/*"]
 		}
 	},
 	"include": [

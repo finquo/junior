@@ -6,6 +6,7 @@ const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
 	output: "export",
+	trailingSlash: true,
 	typedRoutes: true,
 	reactCompiler: true,
 	transpilePackages: ["backend"],

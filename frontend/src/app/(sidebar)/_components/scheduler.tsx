@@ -134,7 +134,7 @@ const data = {
 	],
 };
 
-export function SchedulerSidebar({
+export function SidebarConfig({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	return (

@@ -11,14 +11,44 @@ export const sidebarRouter = {
 			id: "0987654321",
 		},
 	]),
-	teachers: publicProcedure.handler(() => [
+	schedulers: publicProcedure.handler(() => [
 		{
-			title: "Rajat",
-			id: "1234567890",
+			title: "Schedulers 1",
+			id: "0987654321",
 		},
 		{
-			title: "Rajat Sandeep",
+			title: "Schedulers 2",
+			id: "1234567890",
+		},
+	]),
+	teachers: publicProcedure.handler(() => [
+		{
+			title: "Teachers 1",
 			id: "0987654321",
+		},
+		{
+			title: "Teachers 2",
+			id: "1234567890",
+		},
+	]),
+	students: publicProcedure.handler(() => [
+		{
+			title: "Students 1",
+			id: "0987654321",
+		},
+		{
+			title: "Students 2",
+			id: "1234567890",
+		},
+	]),
+	slots: publicProcedure.handler(() => [
+		{
+			title: "Slots 1",
+			id: "0987654321",
+		},
+		{
+			title: "Slots 2",
+			id: "1234567890",
 		},
 	]),
 };

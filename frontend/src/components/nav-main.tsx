@@ -29,7 +29,7 @@ export type NavMainType = {
 		icon?: React.ReactNode;
 		isActive?: boolean;
 		fetchItems?: FetchItemsType;
-		items?: {
+		subItems?: {
 			title: string;
 			url: string;
 		}[];
@@ -55,6 +55,10 @@ export function NavMain({ title, items }: NavMainType) {
 							<Link href={item.url as "/"}>{item.icon}</Link>
 							<span>{item.title}</span>
 							<Button
+								disabled={
+									(!item.subItems || item.subItems.length === 0) &&
+									!item.fetchItems
+								}
 								className={"ml-auto"}
 								variant={"outline"}
 								size={"icon-xs"}
@@ -66,7 +70,7 @@ export function NavMain({ title, items }: NavMainType) {
 						</SidebarMenuButton>
 						<CollapsibleContent>
 							<SidebarMenuSub>
-								{item.items?.map((subItem) => (
+								{item.subItems?.map((subItem) => (
 									<SidebarMenuSubItem key={subItem.title}>
 										<SidebarMenuSubButton render={<a href={subItem.url} />}>
 											<span>{subItem.title}</span>

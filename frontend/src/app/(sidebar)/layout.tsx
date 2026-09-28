@@ -1,27 +1,20 @@
-"use client";
-
-import { SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
+import { SidebarConfig as AdminSidebar } from "@/app/(sidebar)/_components/admin";
+import { SidebarConfig as SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { SwitchNode } from "@/components/utils";
-import { useAuth } from "@/hooks/auth";
+import { RoleRender } from "@/hooks/role";
 import { SideBarHeader } from "./_components/header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-	const { data } = useAuth();
-
 	return (
 		<SidebarProvider>
-			{data?.role && (
-				<SwitchNode
-					cases={data.role}
-					scheduler={<SchedulerSidebar />}
-					teacher={<SchedulerSidebar />}
-					enrollment_advisor={<SchedulerSidebar />}
-					student={<SchedulerSidebar />}
-					admin={<SchedulerSidebar />}
-					qa_auditor={<SchedulerSidebar />}
-				/>
-			)}
+			<RoleRender
+				scheduler={<SchedulerSidebar />}
+				teacher={<SchedulerSidebar />}
+				enrollment_advisor={<SchedulerSidebar />}
+				student={<SchedulerSidebar />}
+				admin={<AdminSidebar />}
+				qa_auditor={<SchedulerSidebar />}
+			/>
 			<SidebarInset>
 				<SideBarHeader />
 				<div className="p-3">{children}</div>
