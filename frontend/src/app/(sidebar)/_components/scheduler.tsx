@@ -90,7 +90,6 @@ const data = {
 			title: "Teachers",
 			url: "/scheduler/teachers",
 			icon: <BriefcaseBusinessIcon />,
-			isActive: true,
 			fetchItems: {
 				api: api.sidebar.teachers.queryOptions(),
 				getLink: (id) => `scheduler/teacher/${id}`,

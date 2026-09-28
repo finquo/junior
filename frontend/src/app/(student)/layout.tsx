@@ -1,5 +1,6 @@
 "use client";
 
+import { SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import {
@@ -8,8 +9,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { ErrorAuthCardFooter } from "../_components/login";
+import { SideBarHeader } from "../(sidebar)/_components/header";
 
 export default function Layout({
 	children,
@@ -48,5 +51,13 @@ export default function Layout({
 			</Container>
 		);
 
-	return <Container className="space-y-4">{children}</Container>;
+	return (
+		<SidebarProvider>
+			<SchedulerSidebar />
+			<SidebarInset>
+				<SideBarHeader />
+				<div className="p-3">{children}</div>
+			</SidebarInset>
+		</SidebarProvider>
+	);
 }

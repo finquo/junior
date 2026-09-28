@@ -16,7 +16,7 @@
 			"@types/node": "^26.4.1",
 			"better-auth": "1.7.5",
 			"typescript": "^6.0.3",
-			"varlock": "1.18.0",
+			"varlock": "1.21.0",
 			"wrangler": "^4.139.0",
 			"zod": "^4.5.4"
 		}

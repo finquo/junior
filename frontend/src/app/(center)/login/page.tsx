@@ -18,9 +18,7 @@ export default function Page() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="flex flex-col">
-				<PasswordLogin>
-					<Button variant="outline">Create Account</Button>
-				</PasswordLogin>
+				<PasswordLogin />
 			</CardContent>
 		</Card>
 	);

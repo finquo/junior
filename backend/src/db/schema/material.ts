@@ -1,7 +1,6 @@
 import { jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 import type { Address } from "@/config";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
-import { lesson } from "./lesson";
 import { scheduler } from "./scheduler";
 import { student } from "./student";
 
@@ -14,10 +13,7 @@ export const material = pgTable("material", {
 	studentId: getId().references(() => student.id, { onDelete: "cascade" }),
 	schedulerId: getId().references(() => scheduler.id, { onDelete: "cascade" }),
 
-	lessons: getId()
-		.references(() => lesson.id, { onDelete: "cascade" })
-		.array()
-		.default([]),
+	lessons: getId().array().default([]),
 
 	order: orderStatusEnum().notNull().default("packing"),
 	shippingAddress: jsonb().$type<Address>().notNull(),

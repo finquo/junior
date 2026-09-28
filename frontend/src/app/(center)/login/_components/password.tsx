@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { MutationButton } from "@/hooks/button";
 import { getClientBaseUrl } from "@/hooks/url";
 import { authClient } from "@/lib/auth";
 
-export const PasswordLogin = ({ children }: { children?: ReactNode }) => {
+export const PasswordLogin = () => {
 	const redirect_to = useSearchParams().get("redirect_to");
 	const callbackURL = getClientBaseUrl(redirect_to ?? "/me");
 
@@ -57,16 +57,10 @@ export const PasswordLogin = ({ children }: { children?: ReactNode }) => {
 					<Button onClick={() => mutate()} disabled={!email || !password}>
 						Sign In
 					</Button>
-					{children}
 				</>
 			)}
 			isPending={<Button disabled>Signing In...</Button>}
-			isError={
-				<>
-					<Button variant="destructive">Error! Try Again</Button>
-					{children}
-				</>
-			}
+			isError={<Button variant="destructive">Error! Try Again</Button>}
 			isSuccess={<Button variant="outline">Redirecting...</Button>}
 		/>
 	);
