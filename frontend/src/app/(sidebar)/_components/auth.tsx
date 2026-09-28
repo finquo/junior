@@ -27,7 +27,7 @@ export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 				</div>
 			);
 
-		if (!data)
+		if (!data?.role)
 			return (
 				<div className="flex flex-1 flex-col items-center justify-center">
 					<Card>
@@ -52,7 +52,7 @@ export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 								Please login as {role} to access this page.
 							</CardDescription>
 						</CardHeader>
-						<ErrorAuthCardFooter />
+						<ErrorAuthCardFooter label={"My Profile"} link={"/me"} />
 					</Card>
 				</div>
 			);

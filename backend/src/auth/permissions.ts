@@ -1,5 +1,6 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
+import z from "zod";
 
 const permissions = {
 	scheduler: ["create", "update", "delete"],
@@ -18,10 +19,7 @@ export const ac = createAccessControl({
 
 const admin = ac.newRole({
 	...adminAc.statements,
-	scheduler: ["create", "update", "delete"],
-	student: ["create", "update", "delete"],
-	teacher: ["create", "update", "delete"],
-	qa_auditor: ["create", "update", "delete"],
+	...permissions,
 });
 
 const scheduler = ac.newRole({
@@ -58,3 +56,5 @@ export const roles = {
 roles.scheduler.statements.scheduler;
 
 export type Role = keyof typeof roles;
+export const roleEnum = Object.keys(roles);
+export const roleEnumZod = z.enum(roleEnum);

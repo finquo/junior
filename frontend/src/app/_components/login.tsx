@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 
-export function ErrorAuthCardFooter() {
+export function ErrorAuthCardFooter(props?: { link?: string; label?: string }) {
 	const pathname = usePathname();
 	return (
 		<CardFooter>
@@ -21,10 +21,15 @@ export function ErrorAuthCardFooter() {
 				className="flex-1"
 				nativeButton={false}
 				render={
-					<Link href={`/login?redirect_to=${encodeURIComponent(pathname)}`} />
+					<Link
+						href={
+							(props?.link as "/") ??
+							`/login?redirect_to=${encodeURIComponent(pathname)}`
+						}
+					/>
 				}
 			>
-				Go to Login
+				Go to {props?.label ?? "Login"}
 			</Button>
 		</CardFooter>
 	);

@@ -8,7 +8,7 @@ import {
 	magicLinkClient,
 } from "better-auth/client/plugins";
 
-export type { USER } from "backend/auth";
+export type { Role, USER } from "backend/auth";
 
 export const authConfig = {
 	plugins: [inferAdditionalFields<AUTH>(), magicLinkClient()],
