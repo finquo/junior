@@ -1,7 +1,9 @@
+import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { OpenAPIReferenceHandlerPlugin } from "@orpc/openapi/plugins";
 import { ORPCError, onError, ValidationError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
+import { RPC_DEFAULT_ALLOW_METHODS } from "@orpc/server/standard";
 import { ZodToJsonSchemaConverter } from "@orpc/zod";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -33,6 +35,7 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 });
 
 const handler = new RPCHandler(appRouter, {
+	allowMethods: ["GET", ...RPC_DEFAULT_ALLOW_METHODS],
 	interceptors: [
 		onError((error) => {
 			if (
@@ -45,7 +48,6 @@ const handler = new RPCHandler(appRouter, {
 				);
 
 				throw new ORPCError("INPUT_VALIDATION_FAILED", {
-					status: 422,
 					message: zodError.issues.map((i) => i.message).join("\n"),
 					data: z.flattenError(zodError),
 					cause: error.cause,
@@ -68,22 +70,39 @@ app.use("/*", async (c, next) => {
 	await next();
 });
 
-app.use("/reference/*", async (c, next) => {
-	const openAPIHandler = new OpenAPIHandler(appRouter, {
+app.use("/openapi/*", async (c, next) => {
+	const generator = new OpenAPIGenerator({
+		converters: [new ZodToJsonSchemaConverter()],
+	});
+
+	const handler = new OpenAPIHandler(appRouter, {
 		plugins: [
-			new OpenAPIReferencePlugin({
-				schemaConverters: [new ZodToJsonSchemaConverter()],
-			}),
-		],
-		interceptors: [
-			onError((error) => {
-				console.error(error);
+			new OpenAPIReferenceHandlerPlugin({
+				spec: () =>
+					generator.generate(appRouter, {
+						base: {
+							info: {
+								title: "Finquo App OpenAPI",
+								version: "1.0.0",
+							},
+							servers: [
+								{
+									name: "Current",
+									url: c.req.url.replace("/openapi", ""),
+								},
+								{
+									name: "Cloudflare",
+									url: "https://app.finquo.workers.dev/api",
+								},
+							],
+						},
+					}),
 			}),
 		],
 	});
 
-	const { matched, response } = await openAPIHandler.handle(c.req.raw, {
-		prefix: "/api/reference",
+	const { matched, response } = await handler.handle(c.req.raw, {
+		prefix: "/api/openapi",
 		context: await createContext(c),
 	});
 

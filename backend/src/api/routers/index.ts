@@ -1,3 +1,4 @@
+import { openapi } from "@orpc/openapi";
 import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
 import { enrollmentRouter as enrollment } from "./enrollment";
@@ -7,10 +8,10 @@ import { studentRouter as student } from "./student";
 import { teacherRouter as teacher } from "./teacher";
 
 export const appRouter = {
-	health: publicProcedure.route({ method: "GET" }).handler(() => "OK"),
+	health: publicProcedure.meta(openapi({ method: "GET" })).handler(() => "OK"),
 	private: protectedProcedure
-		.route({ method: "GET" })
-		.handler(({ context }) => context.user),
+		.meta(openapi({ method: "GET" }))
+		.handler(({ context: c }) => c.user),
 	sidebar,
 	admin,
 	scheduler,

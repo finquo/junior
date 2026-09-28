@@ -22,13 +22,31 @@
 		"hono": {
 			"source": "honojs/skills",
 			"sourceType": "github",
-			"skillPath": "skills/hono/SKILL.md",
+			"skillPath": "hono/SKILL.md",
 			"computedHash": "07087a62dcd9a4c43cdb4f12b6a764739c67d49768fc822f702061ef5056e168"
+		},
+		"orpc": {
+			"source": "middleapi/orpc",
+			"sourceType": "github",
+			"skillPath": "orpc/SKILL.md",
+			"computedHash": "29fd47bb6311610089ffb7864f0e6e0dfe0b11482d9317d8783eb8886698c5d2"
+		},
+		"orpc-contract": {
+			"source": "middleapi/orpc",
+			"sourceType": "github",
+			"skillPath": "orpc-contract/SKILL.md",
+			"computedHash": "5e3f04dbec815484e5c16c95c93e01953fb0e58b2c5f63edb48e501139c63a62"
+		},
+		"orpc-openapi": {
+			"source": "middleapi/orpc",
+			"sourceType": "github",
+			"skillPath": "orpc-openapi/SKILL.md",
+			"computedHash": "1554fc8ba7a7a62c70927f99ed51ff5b6baf613deed092400460bbf9dc4a3927"
 		},
 		"shadcn": {
 			"source": "shadcn/ui",
 			"sourceType": "github",
-			"skillPath": "skills/shadcn/SKILL.md",
+			"skillPath": "shadcn/SKILL.md",
 			"computedHash": "d04e43ec01e921558b93bb8046c14a42a22556689a2827243df900825a4e1604"
 		}
 	}

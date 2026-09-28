@@ -19,7 +19,7 @@
 		"@base-ui/react": "^1.8.0",
 		"@orpc/client": "catalog:",
 		"@orpc/server": "catalog:",
-		"@orpc/tanstack-query": "^1.15.0",
+		"@orpc/tanstack-query": "catalog:",
 		"@shadcn/react": "^0.3.1",
 		"@swc/helpers": "^0.5.23",
 		"@tanstack/react-form": "^1.33.5",

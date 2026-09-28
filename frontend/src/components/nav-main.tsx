@@ -100,7 +100,11 @@ const FetchSideBarItems = ({ api, getLink }: FetchItemsType) => {
 			</SidebarMenuSubItem>
 		);
 
-	return data?.map((subItem) => (
+	const items = data as
+		| Awaited<ReturnType<FetchItemsType["api"]["queryFn"]>>
+		| undefined;
+
+	return items?.map((subItem) => (
 		<SidebarMenuSubItem key={subItem.title}>
 			<SidebarMenuSubButton render={<a href={getLink(subItem.id)} />}>
 				<span>{subItem.title}</span>

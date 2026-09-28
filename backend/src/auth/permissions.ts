@@ -53,8 +53,6 @@ export const roles = {
 	qa_auditor,
 };
 
-roles.scheduler.statements.scheduler;
-
 export type Role = keyof typeof roles;
 export const roleEnum = Object.keys(roles);
 export const roleEnumZod = z.enum(roleEnum);

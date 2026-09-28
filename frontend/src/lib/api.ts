@@ -4,7 +4,8 @@ import type { AppRouterClient } from "backend/api";
 import { getServerBaseUrl } from "@/hooks/url";
 
 export const link = new RPCLink({
-	url: getServerBaseUrl("/api"),
+	origin: getServerBaseUrl(),
+	url: "/api",
 	fetch(url, options) {
 		return fetch(url, {
 			...options,

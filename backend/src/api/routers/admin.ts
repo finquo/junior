@@ -8,9 +8,14 @@ import { adminProcedure, getAPI, tryAPI } from "../procedure";
 export const adminRouter = {
 	getUsers: adminProcedure
 		.input(
-			z.object({
-				role: roleEnumZod.optional(),
-			}),
+			z
+				.object({
+					searchQuery: z
+						.string({ error: "Search text is required" })
+						.min(3, { message: "Type at least 3 letters" }),
+					role: roleEnumZod,
+				})
+				.partial(),
 		)
 		.handler(async ({ input }) => {
 			return await getAPI(
