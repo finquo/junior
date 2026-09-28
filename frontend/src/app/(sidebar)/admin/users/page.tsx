@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { roleEnum } from "backend/config";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/reui/badge";
@@ -29,16 +30,9 @@ import {
 } from "@/components/ui/table";
 import { api } from "@/hooks/api";
 import type { Role, USER } from "@/lib/auth";
-import { createStrictArray, snakeToTitleCase } from "@/lib/utils";
+import { snakeToTitleCase } from "@/lib/utils";
 
-const items = createStrictArray<Role>()(
-	"admin",
-	"enrollment_advisor",
-	"qa_auditor",
-	"scheduler",
-	"student",
-	"teacher",
-).map((r) => ({ value: r, label: snakeToTitleCase(r) }));
+const items = roleEnum.map((r) => ({ value: r, label: snakeToTitleCase(r) }));
 
 interface UserTableRowProps {
 	member: USER;

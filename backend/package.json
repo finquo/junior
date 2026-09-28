@@ -1,7 +1,6 @@
 {
 	"name": "backend",
 	"type": "module",
-	"main": "./src/index.ts",
 	"scripts": {
 		"cf:dev": "wrangler dev --port 3000",
 		"build": "varlock codegen && tsdown",
@@ -22,7 +21,9 @@
 	},
 	"exports": {
 		"./config": {
-			"types": "./dist/config/index.d.mts"
+			"import": "./dist/config/index.mjs",
+			"default": "./dist/config/index.mjs",
+			"types": "./dist/config/index.d.ts"
 		},
 		"./auth": {
 			"types": "./dist/auth/index.d.mts"

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
 	output: "export",
 	typedRoutes: true,
 	reactCompiler: true,
+	transpilePackages: ["backend"],
 };
 
 export default withVarlock(withPwa(nextConfig));
