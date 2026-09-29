@@ -1,7 +1,13 @@
 import { ORPCError, type ORPCErrorCode } from "@orpc/client";
 import { os } from "@orpc/server";
 import { triedAsync } from "utils";
-import { type Permissions, type Role, roles, type SESSION } from "@/auth";
+import {
+	type Permissions,
+	type Role,
+	roles,
+	type SESSION,
+	type Sectors,
+} from "@/auth";
 import { auth } from "@/services";
 import type { Context } from "./context";
 
@@ -84,7 +90,7 @@ export const qaAuditorProcedure = getProcedure("qa_auditor");
 export const enrollmentAdvisorProcedure = getProcedure("enrollment_advisor");
 export const schedulerProcedure = getProcedure("scheduler");
 
-export const checkPermission = <AC extends keyof Partial<Permissions>>(
+export const checkPermission = <AC extends Sectors>(
 	checkSector: AC,
 	checkAction: Permissions[AC][number],
 ) =>
@@ -92,12 +98,24 @@ export const checkPermission = <AC extends keyof Partial<Permissions>>(
 		if (!context.user.role)
 			throw getError(
 				"UNAUTHORIZED",
-				"You are not authorized to access this action",
+				"You don't have any role to access this sector",
 			);
 
 		const role = roles[context.user.role];
-		const statements = role.statements as Record<string, undefined | string[]>;
-		const sector = statements[checkSector as string];
+
+		if (!role?.statements)
+			throw getError(
+				"UNAUTHORIZED",
+				"You don't have the any permission to access this sector or actions",
+			);
+
+		const statements = role.statements as unknown as Partial<
+			Record<string, string[]>
+		>;
+
+		const sector = statements[checkSector];
+
+		console.log({ sector });
 
 		if (!sector)
 			throw getError(
