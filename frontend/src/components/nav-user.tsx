@@ -17,7 +17,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/auth";
+import { authClient, useAuth } from "@/hooks/auth";
 import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
@@ -70,7 +70,23 @@ export function NavUser() {
 							</DropdownMenuLabel>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={async () =>
+								impersonation
+									? await authClient.admin.stopImpersonating(
+											{},
+											{
+												throw: true,
+											},
+										)
+									: await authClient.signOut(
+											{},
+											{
+												throw: true,
+											},
+										)
+							}
+						>
 							<LogOutIcon />
 							{impersonation ? "Stop Impersonating" : "Log Out"}
 						</DropdownMenuItem>

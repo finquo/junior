@@ -80,6 +80,9 @@ const getProcedure = <R extends Role>(role: R) =>
 				"You are not authorized to access this action",
 			);
 
+		if (context.session.impersonatedBy)
+			console.log(context.session.impersonatedBy);
+
 		return next();
 	});
 

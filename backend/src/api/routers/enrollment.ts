@@ -1,10 +1,10 @@
 import z from "zod";
-import { roleEnumZod } from "@/config";
+import { roleEnumZod } from "@/auth";
 import { auth } from "@/services";
-import { checkPermission, tryAPI } from "../procedure";
+import { enrollmentAdvisorProcedure, tryAPI } from "../procedure";
 
 export const enrollmentRouter = {
-	createAccount: checkPermission("student", "create")
+	createAccount: enrollmentAdvisorProcedure
 		.input(
 			z.object({
 				name: z.string(),

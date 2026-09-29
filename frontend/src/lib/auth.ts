@@ -1,4 +1,5 @@
-import { type AUTH, ac, roles } from "backend/auth";
+import type { AUTH } from "backend/auth";
+// import { ac, roles } from "backend/auth";
 import {
 	type BetterAuthClientOptions,
 	createAuthClient,
@@ -16,8 +17,8 @@ export const authConfig = {
 		inferAdditionalFields<AUTH>(),
 		magicLinkClient(),
 		adminClient({
-			ac,
-			roles,
+			// ac,
+			// roles,
 		}),
 	],
 	...(process.env.NEXT_PUBLIC_SERVER_URL

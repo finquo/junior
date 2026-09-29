@@ -40,7 +40,6 @@ export function createAuth() {
 		},
 		plugins: [
 			adminPlugin({
-				adminRoles: ["admin"],
 				ac,
 				roles,
 			}),

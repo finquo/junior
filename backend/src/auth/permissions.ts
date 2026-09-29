@@ -6,7 +6,6 @@ const CRUD = ["get", "list", "create", "update", "delete"] as const;
 export type Actions = (typeof CRUD)[number];
 
 const permissions = {
-	user: CRUD,
 	scheduler: CRUD,
 	student: CRUD,
 	teacher: CRUD,

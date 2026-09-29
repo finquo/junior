@@ -1,6 +1,6 @@
 "use client";
 
-import type { Permissions } from "backend/config";
+import type { Permissions } from "backend/auth";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
 import {
 	Card,

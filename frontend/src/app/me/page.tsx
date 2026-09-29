@@ -9,7 +9,7 @@ export default function () {
 	if (isPending) return null;
 
 	if (data?.role) {
-		redirect(data.role as "/scheduler", RedirectType.replace);
+		redirect(`/${data.role}` as "/me", RedirectType.replace);
 	}
 
 	return redirect("/login", RedirectType.replace);

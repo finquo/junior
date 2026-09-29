@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
-import { Search } from "lucide-react";
+import { ExternalLinkIcon, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { getRelateTime } from "utils";
 import { ProfileCard } from "@/components/profile";
@@ -48,6 +48,8 @@ import {
 } from "@/components/ui/tooltip";
 import { UserList } from "@/components/user";
 import { api } from "@/hooks/api";
+import { authClient } from "@/hooks/auth";
+import { MutationButton } from "@/hooks/button";
 import type { Role, USER } from "@/lib/auth";
 import { rolesObject } from "@/lib/role";
 import { snakeToTitleCase } from "@/lib/utils";
@@ -131,6 +133,28 @@ function UserTableRow({ member }: { member: USER }) {
 					</DrawerContent>
 				</Drawer>
 			</TableCell>
+			<TableCell>
+				<MutationButton
+					api={{
+						mutationKey: ["impersonating-user"],
+						mutationFn: async () => {
+							return await authClient.admin.impersonateUser(
+								{
+									userId: member.id,
+								},
+								{
+									throw: true,
+								},
+							);
+						},
+					}}
+					mutate={(mutate) => (
+						<Button onClick={() => mutate()} variant="outline" size="icon-sm">
+							<ExternalLinkIcon />
+						</Button>
+					)}
+				/>
+			</TableCell>
 		</TableRow>
 	);
 }
@@ -189,6 +213,7 @@ export default function () {
 								<TableHead>Joined</TableHead>
 								<TableHead>Change Role</TableHead>
 								<TableHead>Profile</TableHead>
+								<TableHead>Actions</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
