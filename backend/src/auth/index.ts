@@ -40,8 +40,7 @@ export function createAuth() {
 		},
 		plugins: [
 			adminPlugin({
-				adminRoles: ["admin", "scheduler"],
-				defaultRole: "student",
+				adminRoles: ["admin"],
 				ac,
 				roles,
 			}),

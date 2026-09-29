@@ -111,7 +111,7 @@ function UserTableRow({ member }: { member: USER }) {
 				</Select>
 			</TableCell>
 			<TableCell>
-				<Drawer swipeDirection={"right"}>
+				<Drawer>
 					<DrawerTrigger render={<Button variant="outline" size="sm" />}>
 						View Profile
 					</DrawerTrigger>
@@ -153,7 +153,7 @@ export default function () {
 		<TooltipProvider>
 			<Frame>
 				<FramePanel className="flex flex-row gap-4">
-					<InputGroup className="max-w-xs">
+					<InputGroup className="w-xs">
 						<InputGroupInput
 							value={search as string}
 							onChange={(v) => setSearch(v.target.value)}

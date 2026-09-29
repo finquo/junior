@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ImpersonationHeader } from "@/hooks/admin";
 import { getClientBaseUrl } from "@/hooks/url";
 
 export function SideBarHeader() {
 	return (
-		<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-			<div className="flex items-center gap-2 px-4">
+		<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+			<div className="flex items-center gap-2">
 				<SidebarTrigger />
 				<Separator
 					orientation="vertical"
@@ -28,6 +29,7 @@ export function SideBarHeader() {
 					<Bread />
 				</Suspense>
 			</div>
+			<ImpersonationHeader />
 		</header>
 	);
 }
@@ -60,7 +62,7 @@ const Bread = () => {
 				})}
 				<Separator
 					orientation="vertical"
-					className="hidden data-vertical:h-4 data-vertical:self-auto md:block"
+					className="mx-2 hidden data-vertical:h-4 data-vertical:self-auto md:block"
 				/>
 				<CopyButton
 					size={"icon-xs"}

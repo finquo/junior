@@ -1,4 +1,3 @@
-export * from "./auth";
 export type * from "./db";
 export * from "./plans";
 export * from "./quiz";

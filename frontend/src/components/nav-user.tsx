@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/auth";
 import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
-	const { data: user } = useAuth();
+	const { data: user, impersonation } = useAuth();
 	const { isMobile } = useSidebar();
 
 	if (!user) return null;
@@ -32,7 +32,11 @@ export function NavUser() {
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						render={
-							<SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
+							<SidebarMenuButton
+								variant={impersonation ? "warning" : "default"}
+								size="lg"
+								className="aria-expanded:bg-muted"
+							/>
 						}
 					>
 						<Avatar>
@@ -68,7 +72,7 @@ export function NavUser() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
 							<LogOutIcon />
-							Log out
+							{impersonation ? "Stop Impersonating" : "Log Out"}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

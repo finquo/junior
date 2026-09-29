@@ -15,7 +15,7 @@ export default defineConfig([
 	},
 	{
 		entry: [
-			"./src/auth/index.ts",
+			"./src/auth/export.ts",
 			"./src/api/index.ts",
 			"./src/config/index.ts",
 		],

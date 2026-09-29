@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { Suspense } from "react";
 import Providers from "@/components/providers";
 import PwaRegistration from "@/components/pwa-registration";
 import "@/index.css";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });

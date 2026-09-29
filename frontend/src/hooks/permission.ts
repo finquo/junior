@@ -1,6 +1,6 @@
 "use client";
 
-import { type Permissions, roles } from "backend/config";
+import { type Permissions, roles } from "backend/auth";
 import { useAuth } from "./auth";
 
 export const usePermission = <AC extends keyof Partial<Permissions>>(
@@ -12,7 +12,10 @@ export const usePermission = <AC extends keyof Partial<Permissions>>(
 	if (!data?.role) return { render: false, role: null };
 
 	const role = roles[data.role];
-	const statements = role.statements as Record<string, undefined | string[]>;
+	const statements = role.statements as unknown as Record<
+		string,
+		undefined | string[]
+	>;
 	const sector = statements[checkSector as string];
 
 	if (!sector) return { render: false, role: data.role };

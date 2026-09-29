@@ -1,6 +1,7 @@
 import { SidebarConfig as AdminSidebar } from "@/app/(sidebar)/_components/admin";
 import { SidebarConfig as SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ImpersonationBanner } from "@/hooks/admin";
 import { RoleRender } from "@/hooks/role";
 import { SideBarHeader } from "./_components/header";
 
@@ -17,7 +18,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			/>
 			<SidebarInset>
 				<SideBarHeader />
-				<div className="p-3">{children}</div>
+				<div className="relative min-h-svh p-3">
+					{children}
+					<ImpersonationBanner />
+				</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);
