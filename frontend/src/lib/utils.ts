@@ -44,17 +44,6 @@ export function getInitials(name?: string | null): string {
 		.toUpperCase();
 }
 
-export const findFallback = (name: string): string => {
-	const x = name.replace(/[^\p{L}\s]/gu, "").split(/\s+/);
-	let y = "";
-	if (x.length > 1)
-		x.forEach((i) => {
-			y += i[0];
-		});
-	else y = x[0];
-	return y.slice(0, 3);
-};
-
 function hashString(value: string): number {
 	let hash = 0;
 

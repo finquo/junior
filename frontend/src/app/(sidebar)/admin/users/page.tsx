@@ -4,9 +4,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { Search } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { getRelateTime } from "utils";
 import { ProfileCard } from "@/components/profile";
 import { Frame, FramePanel } from "@/components/reui/frame";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,13 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { UserList } from "@/components/user";
 import { api } from "@/hooks/api";
 import type { Role, USER } from "@/lib/auth";
 import { rolesObject } from "@/lib/role";
@@ -50,29 +57,39 @@ function UserTableRow({ member }: { member: USER }) {
 	return (
 		<TableRow>
 			<TableCell>
-				<div className="flex items-center gap-3">
-					<Avatar size="sm">
-						<AvatarImage
-							src={member.image ?? "https://github.com/rajatsandeepsen.png"}
-							alt={member.name}
-						/>
-						<AvatarFallback>
-							{member.name
-								.split(" ")
-								.map((n) => n[0])
-								.join("")}
-						</AvatarFallback>
-					</Avatar>
-					<div className="flex flex-col">
-						<span className="font-medium text-sm">{member.name}</span>
-						<span className="text-muted-foreground text-xs">
-							{member.email}
-						</span>
-					</div>
-				</div>
+				<UserList user={member} />
 			</TableCell>
 			<TableCell>
-				<ColorBadge>{snakeToTitleCase(member.role)}</ColorBadge>
+				<ColorBadge>
+					{snakeToTitleCase(member.role) ?? "Not Assigned"}
+				</ColorBadge>
+			</TableCell>
+			<TableCell>
+				{member.banned ? (
+					<Tooltip>
+						<TooltipTrigger>
+							<ColorBadge variant="destructive">Banned</ColorBadge>
+						</TooltipTrigger>
+						<TooltipContent>
+							<div className="flex flex-col gap-1 text-xs">
+								{member.banReason && <span>Reason: {member.banReason}</span>}
+								<span>
+									Expires:{" "}
+									{member.banExpires
+										? `${getRelateTime(member.banExpires)} ago`
+										: "Never"}
+								</span>
+							</div>
+						</TooltipContent>
+					</Tooltip>
+				) : (
+					<ColorBadge variant="success">Active</ColorBadge>
+				)}
+			</TableCell>
+			<TableCell>
+				<span className="text-muted-foreground text-xs">
+					{getRelateTime(member.createdAt)} ago
+				</span>
 			</TableCell>
 			<TableCell>
 				<Select
@@ -80,7 +97,7 @@ function UserTableRow({ member }: { member: USER }) {
 					onValueChange={(r) => mutateAsync({ id: member.id, role: r as Role })}
 				>
 					<SelectTrigger size="sm">
-						<SelectValue placeholder="Edit Roles" />
+						<SelectValue placeholder="Edit Role" />
 					</SelectTrigger>
 					<SelectContent>
 						<SelectGroup>
@@ -133,51 +150,55 @@ export default function () {
 	);
 
 	return (
-		<Frame>
-			<FramePanel className="flex flex-row gap-4">
-				<InputGroup className="max-w-xs">
-					<InputGroupInput
-						value={search as string}
-						onChange={(v) => setSearch(v.target.value)}
-						placeholder="Search users"
-					/>
-					<InputGroupAddon>
-						<Search />
-					</InputGroupAddon>
-				</InputGroup>
-				<Select items={rolesObject} onValueChange={(r) => setRole(r as Role)}>
-					<SelectTrigger>
-						<SelectValue placeholder="Filter Roles" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							{rolesObject.map((item) => (
-								<SelectItem key={item.value} value={item.value}>
-									{item.label}
-								</SelectItem>
+		<TooltipProvider>
+			<Frame>
+				<FramePanel className="flex flex-row gap-4">
+					<InputGroup className="max-w-xs">
+						<InputGroupInput
+							value={search as string}
+							onChange={(v) => setSearch(v.target.value)}
+							placeholder="Search users"
+						/>
+						<InputGroupAddon>
+							<Search />
+						</InputGroupAddon>
+					</InputGroup>
+					<Select items={rolesObject} onValueChange={(r) => setRole(r as Role)}>
+						<SelectTrigger>
+							<SelectValue placeholder="Filter Roles" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{rolesObject.map((item) => (
+									<SelectItem key={item.value} value={item.value}>
+										{item.label}
+									</SelectItem>
+								))}
+								<SelectItem value={undefined}>None</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</FramePanel>
+				<FramePanel className="p-0!">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>User</TableHead>
+								<TableHead>Role</TableHead>
+								<TableHead>Account Status</TableHead>
+								<TableHead>Joined</TableHead>
+								<TableHead>Change Role</TableHead>
+								<TableHead>Profile</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{data?.map((member) => (
+								<UserTableRow key={member.email} member={member} />
 							))}
-							<SelectItem value={undefined}>None</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-			</FramePanel>
-			<FramePanel className="p-0!">
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>Member</TableHead>
-							<TableHead>Role</TableHead>
-							<TableHead>Edit</TableHead>
-							<TableHead>Profile</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{data?.map((member) => (
-							<UserTableRow key={member.email} member={member} />
-						))}
-					</TableBody>
-				</Table>
-			</FramePanel>
-		</Frame>
+						</TableBody>
+					</Table>
+				</FramePanel>
+			</Frame>
+		</TooltipProvider>
 	);
 }

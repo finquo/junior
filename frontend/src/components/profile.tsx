@@ -1,13 +1,3 @@
-import type {
-	Address,
-	Experience,
-	Note,
-	Role,
-	SelectSchedulerType,
-	SelectStudentType,
-	SelectTeacherType,
-	SelectUserType,
-} from "backend/config";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	Avatar,
@@ -34,6 +24,15 @@ import {
 } from "@/components/ui/table";
 import { SwitchNode } from "@/components/utils";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
+import type {
+	Address,
+	Experience,
+	Note,
+	SelectSchedulerType,
+	SelectStudentType,
+	SelectTeacherType,
+	SelectUserType
+} from "backend/config";
 
 export function StudentProfile({
 	student,

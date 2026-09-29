@@ -1,6 +1,5 @@
 "use client";
 
-import { SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import {
@@ -13,6 +12,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { ErrorAuthCardFooter } from "../_components/login";
 import { SideBarHeader } from "../(sidebar)/_components/header";
+import { SidebarConfig } from "./_components/sidebar";
 
 export default function Layout({
 	children,
@@ -53,7 +53,7 @@ export default function Layout({
 
 	return (
 		<SidebarProvider>
-			<SchedulerSidebar />
+			<SidebarConfig />
 			<SidebarInset>
 				<SideBarHeader />
 				<div className="p-3">{children}</div>

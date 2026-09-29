@@ -4,7 +4,6 @@ import {
 	BriefcaseBusinessIcon,
 	CalendarClockIcon,
 	FrameIcon,
-	GalleryVerticalEndIcon,
 	GraduationCapIcon,
 	MapIcon,
 	PieChartIcon,
@@ -15,7 +14,6 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { NavMain, type NavMainType } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
