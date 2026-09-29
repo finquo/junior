@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 
-type SwitchType<T extends string | number> = {
+type SwitchType<T extends string | number | null> = {
 	cases: T;
 	children?: ReactNode;
 } & {
-	[k in T]: ReactNode;
+	[k in NonNullable<T>]: ReactNode;
 };
 
-export function SwitchNode<T extends string | number>({
+export function SwitchNode<T extends string | number | null>({
 	cases,
 	children,
 	...options
 }: SwitchType<T>) {
+	if (!cases) return children;
+
 	return options[cases as keyof typeof options] ?? children;
 }
 

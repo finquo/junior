@@ -3,8 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { MutationButton } from "@/hooks/button";
 import { getClientBaseUrl } from "@/hooks/url";
 import { authClient } from "@/lib/auth";
@@ -35,39 +35,38 @@ export const CreateAccount = () => {
 			}}
 			mutate={(mutate) => (
 				<>
-					<div className="space-y-1">
-						<Label htmlFor="name">Name</Label>
-						<Input
-							id="name"
-							className="normal-case"
-							type="name"
-							placeholder="name"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-						/>
-					</div>
-					<div className="space-y-1">
-						<Label htmlFor="email">Email</Label>
-						<Input
-							id="email"
-							className="normal-case"
-							type="email"
-							placeholder="name@example.com"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-						/>
-					</div>
-					<div className="space-y-1">
-						<Label htmlFor="password">Password</Label>
-						<Input
-							id="password"
-							className="normal-case"
-							type="password"
-							placeholder="super-secret"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-						/>
-					</div>
+					<FieldGroup>
+						<Field>
+							<FieldLabel htmlFor="name">Name</FieldLabel>
+							<Input
+								id="name"
+								type="name"
+								placeholder="Name"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+							/>
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="email">Email</FieldLabel>
+							<Input
+								id="email"
+								type="email"
+								placeholder="name@example.com"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+							/>
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="password">Password</FieldLabel>
+							<Input
+								id="password"
+								type="password"
+								placeholder="super-secret"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+							/>
+						</Field>
+					</FieldGroup>
 					<Button onClick={() => mutate()} disabled={!email || !password}>
 						Create Account
 					</Button>

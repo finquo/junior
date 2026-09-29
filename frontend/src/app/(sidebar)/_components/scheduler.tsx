@@ -140,7 +140,7 @@ export function SidebarConfig({
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<TeamSwitcher />
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain title="Users" items={data.users} />
@@ -148,7 +148,7 @@ export function SidebarConfig({
 				<NavProjects title="Links" link={data.links} />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={data.user} />
+				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

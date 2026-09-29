@@ -1,13 +1,6 @@
 "use client";
 
-import {
-	BadgeCheckIcon,
-	BellIcon,
-	ChevronsUpDownIcon,
-	CreditCardIcon,
-	LogOutIcon,
-	SparklesIcon,
-} from "lucide-react";
+import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -24,17 +17,15 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/auth";
+import { getInitials } from "@/lib/utils";
 
-export function NavUser({
-	user,
-}: {
-	user: {
-		name: string;
-		email: string;
-		avatar: string;
-	};
-}) {
+export function NavUser() {
+	const { data: user } = useAuth();
 	const { isMobile } = useSidebar();
+
+	if (!user) return null;
+
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
@@ -45,14 +36,14 @@ export function NavUser({
 						}
 					>
 						<Avatar>
-							<AvatarImage src={user.avatar} alt={user.name} />
-							<AvatarFallback>CN</AvatarFallback>
+							<AvatarImage src={user.image} alt={user.name} />
+							<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
 						</Avatar>
 						<div className="grid flex-1 text-left text-sm leading-tight">
 							<span className="truncate font-medium">{user.name}</span>
 							<span className="truncate text-xs">{user.email}</span>
 						</div>
-						<ChevronsUpDownIcon className="ml-auto size-4" />
+						<EllipsisVerticalIcon className="ml-auto size-4" />
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						className="w-fit"
@@ -64,8 +55,8 @@ export function NavUser({
 							<DropdownMenuLabel className="p-0 font-normal">
 								<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 									<Avatar>
-										<AvatarImage src={user.avatar} alt={user.name} />
-										<AvatarFallback>CN</AvatarFallback>
+										<AvatarImage src={user.image} alt={user.name} />
+										<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
 									</Avatar>
 									<div className="grid flex-1 text-left text-sm leading-tight">
 										<span className="truncate font-medium">{user.name}</span>
@@ -73,28 +64,6 @@ export function NavUser({
 									</div>
 								</div>
 							</DropdownMenuLabel>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<SparklesIcon />
-								Upgrade to Pro
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<BadgeCheckIcon />
-								Account
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<CreditCardIcon />
-								Billing
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<BellIcon />
-								Notifications
-							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>

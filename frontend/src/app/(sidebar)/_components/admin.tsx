@@ -33,13 +33,6 @@ const data = {
 		email: "rajat@finquo.ai",
 		avatar: "https://github.com/rajatsandeepsen.png",
 	},
-	teams: [
-		{
-			name: "Acme Inc",
-			logo: <GalleryVerticalEndIcon />,
-			plan: "Enterprise",
-		},
-	],
 	platform: [
 		{
 			title: "Programs",
@@ -150,15 +143,15 @@ export function SidebarConfig({
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<TeamSwitcher />
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain title="Users" items={data.users} />
 				<NavMain title="Platform" items={data.platform} />
-				<NavProjects title="Links" link={data.links} />
+				{/*<NavProjects title="Links" link={data.links} />*/}
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={data.user} />
+				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

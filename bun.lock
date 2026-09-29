@@ -56,6 +56,7 @@
         "@tanstack/react-form": "^1.33.5",
         "@tanstack/react-query": "^5.102.8",
         "@tanstack/react-table": "^9.2.4",
+        "@uidotdev/usehooks": "^2.4.1",
         "@varlock/nextjs-integration": "1.2.2",
         "babel-plugin-react-compiler": "^1.0.0",
         "backend": "workspace:*",
@@ -720,6 +721,8 @@
     "@types/react-dom": ["@types/react-dom@19.3.0", "", { "peerDependencies": { "@types/react": "^19.3.0" } }, "sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q=="],
 
     "@types/validate-npm-package-name": ["@types/validate-npm-package-name@4.0.2", "", {}, "sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw=="],
+
+    "@uidotdev/usehooks": ["@uidotdev/usehooks@2.4.1", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-1I+RwWyS+kdv3Mv0Vmc+p0dPYH0DTRAo04HLyXReYBL9AeseDWUJyi4THuksBJcu9F0Pih69Ak150VDnqbVnXg=="],
 
     "@varlock/cloudflare-integration": ["@varlock/cloudflare-integration@1.6.0", "", { "peerDependencies": { "@cloudflare/vite-plugin": ">=1", "varlock": "^1.20.0", "vite": ">=5", "wrangler": ">=3" }, "optionalPeers": ["@cloudflare/vite-plugin", "vite", "wrangler"], "bin": { "varlock-wrangler": "bin/varlock-wrangler.js" } }, "sha512-HPtAQRVQ3AZRMzmnmHBZQaxZS/1tT0bmjbW+J4iALtuKXp8tI3X8EitlXlq4Kv23c2f8qpua4DSUUPxsylIRTw=="],
 

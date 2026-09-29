@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
@@ -23,7 +23,19 @@ export const adminRouter = {
 				db
 					.select()
 					.from(schema.user)
-					.where(input.role ? eq(schema.user.role, input.role) : undefined),
+					.where(
+						and(
+							input.role ? eq(schema.user.role, input.role) : undefined,
+							input.searchQuery
+								? sql`${schema.user.name} % ${input.searchQuery}`
+								: undefined,
+						),
+					)
+					.orderBy(
+						input.searchQuery
+							? sql`similarity(${schema.user.name}, ${input.searchQuery}) DESC`
+							: sql`${schema.user.role} DESC nulls first`,
+					),
 				[],
 			);
 		}),
