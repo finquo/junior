@@ -72,7 +72,10 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-content"
-			className={cn("gap-(--card-spacing) px-(--card-spacing)", className)}
+			className={cn(
+				"gap-(--card-spacing) space-y-(--card-spacing) px-(--card-spacing)",
+				className,
+			)}
 			{...props}
 		/>
 	);

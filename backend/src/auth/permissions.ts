@@ -64,6 +64,6 @@ export const roles = {
 	qa_auditor,
 };
 
-export type Role = keyof typeof roles;
+export type Role = keyof typeof roles | "user";
 export const roleEnum = Object.keys(roles);
 export const roleEnumZod = z.enum(roleEnum);

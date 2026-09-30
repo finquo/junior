@@ -1,6 +1,7 @@
 "use client";
 
 import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
+import { sileo as toast } from "sileo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -77,12 +78,22 @@ export function NavUser() {
 											{},
 											{
 												throw: true,
+												onSuccess: () => {
+													toast.success({
+														title: "You’re back to your role",
+													});
+												},
 											},
 										)
 									: await authClient.signOut(
 											{},
 											{
 												throw: true,
+												onSuccess: () => {
+													toast.success({
+														title: "You’re signed out",
+													});
+												},
 											},
 										)
 							}

@@ -60,3 +60,14 @@ export function selectDeterministically<
 	const index = hashString(input) % choices.length;
 	return choices[index] ?? choices[0];
 }
+
+export function chunkArray<T>(arr: T[], size: number): T[][] {
+	const result: T[][] = [];
+
+	if (size <= 0) return result;
+
+	for (let i = 0; i < arr.length; i += size) {
+		result.push(arr.slice(i, i + size));
+	}
+	return result;
+}

@@ -37,6 +37,7 @@
 				"noStaticOnlyClass": "off"
 			},
 			"correctness": {
+				"noChildrenProp": "off",
 				"useHookAtTopLevel": "info",
 				"useExhaustiveDependencies": "info"
 			},

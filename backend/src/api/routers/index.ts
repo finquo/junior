@@ -1,6 +1,7 @@
 import { openapi } from "@orpc/openapi";
 import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
+import { commonRouter as common } from "./common";
 import { enrollmentRouter as enrollment } from "./enrollment";
 import { schedulerRouter as scheduler } from "./scheduler";
 import { sidebarRouter as sidebar } from "./sidebar";
@@ -18,4 +19,5 @@ export const appRouter = {
 	teacher,
 	student,
 	enrollment,
+	common,
 };

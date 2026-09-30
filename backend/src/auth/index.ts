@@ -40,6 +40,7 @@ export function createAuth() {
 		},
 		plugins: [
 			adminPlugin({
+				defaultRole: "user",
 				ac,
 				roles,
 			}),

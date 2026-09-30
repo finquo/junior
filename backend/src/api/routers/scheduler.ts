@@ -22,11 +22,15 @@ export const schedulerRouter = {
 	getTeachers: schedulerProcedure.handler(async ({ context }) => {
 		return await getAPI(
 			"db-scheduler-get-teachers-query",
-			db
-				.select()
-				.from(schema.teacher)
-				.where(eq(schema.teacher.supervisorId, context.user.id))
-				.orderBy(desc(schema.teacher.createdAt)),
+			db.query.teacher.findMany({
+				where: {
+					supervisorId: context.user.id,
+				},
+				orderBy: { createdAt: "desc" },
+				with: {
+					user: true,
+				},
+			}),
 			[],
 		);
 	}),

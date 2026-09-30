@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { ExternalLinkIcon, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { sileo as toast } from "sileo";
 import { getRelateTime } from "utils";
 import { ProfileCard } from "@/components/profile";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -135,6 +136,13 @@ function UserTableRow({ member }: { member: USER }) {
 			</TableCell>
 			<TableCell>
 				<MutationButton
+					onSuccess={(data) => {
+						toast.success({
+							title: `You’re viewing as a ${data?.user.role ?? member.role}!`,
+							description:
+								"Any actions you take will be performed as this user.",
+						});
+					}}
 					api={{
 						mutationKey: ["impersonating-user"],
 						mutationFn: async () => {

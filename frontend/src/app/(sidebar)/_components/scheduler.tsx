@@ -64,27 +64,8 @@ export function SidebarConfig({
 							icon: <VideoIcon />,
 							subItems: [
 								{
-									title: "Introduction",
-									url: "#",
-								},
-								{
-									title: "Get Started",
-									url: "#",
-								},
-								{
-									title: "Tutorials",
-									url: "#",
-								},
-							],
-						},
-						{
-							title: "Settings",
-							url: "#",
-							icon: <Settings2Icon />,
-							subItems: [
-								{
-									title: "General",
-									url: "#",
+									title: "New Session",
+									url: "/scheduler/sessions/new",
 								},
 							],
 						},

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { PasswordLogin } from "./_components/password";
 
-export default function Page() {
+export default function () {
 	return (
 		<Card>
 			<CardHeader>
