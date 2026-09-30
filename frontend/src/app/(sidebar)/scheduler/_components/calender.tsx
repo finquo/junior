@@ -14,28 +14,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-
-function getToday() {
-	const d = new Date();
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
-
-function getTomorrow() {
-	const d = new Date();
-	d.setDate(d.getDate() + 1);
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
-
-function getNextDayOfWeek(targetDay: number) {
-	const d = new Date();
-	const currentDay = d.getDay();
-	const diff = (targetDay - currentDay + 7) % 7;
-	d.setDate(d.getDate() + (diff === 0 ? 7 : diff));
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
+import { getNextDayOfWeek, getToday, getTomorrow } from "@/lib/calender";
 
 export function CalenderPicker() {
 	const [date, setDate] = useQueryState("date", parseAsIsoDate);
