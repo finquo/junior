@@ -1,26 +1,11 @@
 "use client";
 
 import {
-	ArrowRightIcon,
-	FolderIcon,
-	MoreHorizontalIcon,
-	Trash2Icon,
-} from "lucide-react";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
 	SidebarGroup,
 	SidebarGroupLabel,
 	SidebarMenu,
-	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	useSidebar,
 } from "@/components/ui/sidebar";
 
 export type NavProjectsType = {
@@ -33,7 +18,6 @@ export type NavProjectsType = {
 };
 
 export function NavProjects({ title, link }: NavProjectsType) {
-	const { isMobile } = useSidebar();
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
 			<SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -44,46 +28,14 @@ export function NavProjects({ title, link }: NavProjectsType) {
 							{item.icon}
 							<span>{item.name}</span>
 						</SidebarMenuButton>
-						<DropdownMenu>
-							<DropdownMenuTrigger
-								render={
-									<SidebarMenuAction
-										showOnHover
-										className="aria-expanded:bg-muted"
-									/>
-								}
-							>
-								<MoreHorizontalIcon />
-								<span className="sr-only">More</span>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent
-								className="w-fit"
-								side={isMobile ? "bottom" : "right"}
-								align={isMobile ? "end" : "start"}
-							>
-								<DropdownMenuItem>
-									<FolderIcon />
-									<span>View Link</span>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<ArrowRightIcon />
-									<span>Share Link</span>
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem variant="destructive">
-									<Trash2Icon />
-									<span>Delete Link</span>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
 					</SidebarMenuItem>
 				))}
-				<SidebarMenuItem>
+				{/*<SidebarMenuItem>
 					<SidebarMenuButton className="text-sidebar-foreground/70">
 						<MoreHorizontalIcon className="text-sidebar-foreground/70" />
 						<span>More</span>
 					</SidebarMenuButton>
-				</SidebarMenuItem>
+				</SidebarMenuItem>*/}
 			</SidebarMenu>
 		</SidebarGroup>
 	);
