@@ -1,8 +1,10 @@
 "use client";
 
+import { periods } from "backend/config";
 import { CircleCheckIcon } from "lucide-react";
 import { parseAsIsoDate, useQueryState } from "nuqs";
 import { useState } from "react";
+import DaySlider from "@/components/day-slider";
 import {
 	Alert,
 	AlertAction,
@@ -20,6 +22,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +39,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
-import { DURATIONS, useTimePeriodGroups } from "@/hooks/period";
+import { useTimePeriodGroups } from "@/hooks/period";
 import { CalenderPicker } from "../../_components/calender";
 import { UserSelector } from "../../_components/selecter";
 
@@ -37,14 +47,18 @@ export default function Pattern() {
 	const [studentId, setStudentId] = useQueryState("studentId");
 	const [teacherId, setTeacherId] = useQueryState("teacherId");
 	const [lessonId, setLessonId] = useQueryState("lessonId");
+	const [duration, setDuration] = useState<number>(25);
 
 	const [date] = useQueryState("date", parseAsIsoDate);
 	const [selectedTime, setSelectedTime] = useQueryState("time", {
 		defaultValue: "10:00",
 	});
 
+	const upperLimit = "17:00";
+	const lowerLimit = "09:00";
+
 	const [hour, setHour] = useState(true);
-	const TIME_PERIOD_GROUPS = useTimePeriodGroups("9-5", hour);
+	const TIME_PERIOD_GROUPS = useTimePeriodGroups(lowerLimit, upperLimit, hour);
 
 	return (
 		<div className="flex flex-col flex-wrap gap-3 md:h-svh md:flex-row md:items-start">
@@ -68,8 +82,10 @@ export default function Pattern() {
 					<CardFooter>
 						<ButtonGroup>
 							<ButtonGroupText>Durations</ButtonGroupText>
-							{DURATIONS.map((d) => (
-								<Button key={d}>{d}</Button>
+							{Object.entries(periods).map(([key, value]) => (
+								<Button onClick={() => setDuration(value)} key={key}>
+									{value}
+								</Button>
 							))}
 						</ButtonGroup>
 					</CardFooter>
@@ -123,6 +139,30 @@ export default function Pattern() {
 							))}
 						</Tabs>
 					</CardContent>
+					<CardFooter>
+						<Dialog>
+							<DialogTrigger render={<Button variant="outline" size="sm" />}>
+								Pick Presize Time
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Are you absolutely sure?</DialogTitle>
+									<DialogDescription>
+										This action cannot be undone.
+									</DialogDescription>
+								</DialogHeader>
+								<DaySlider
+									step={hour ? 60 : 15}
+									className="w-6xl"
+									lowerLimit={lowerLimit}
+									upperLimit={upperLimit}
+									fixedLength={duration}
+									value={selectedTime}
+									onChange={(v) => setSelectedTime(v)}
+								/>
+							</DialogContent>
+						</Dialog>
+					</CardFooter>
 				</Card>
 			</div>
 

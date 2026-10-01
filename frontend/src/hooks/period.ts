@@ -1,7 +1,5 @@
 import { useMemo } from "react";
 
-export const DURATIONS = ["30 mins", "1 hour", "2 hours"] as const;
-
 type TimePeriodKey = ["night", "morning", "noon", "evening"][number];
 
 type TimePeriodGroup = {
@@ -17,49 +15,53 @@ const TIME_PERIODS = [
 	{ key: "evening", label: "🌃", startHour: 17, endHour: 23 },
 ] as const;
 
+function timeStringToMinutes(time: string): number {
+	const match = time.trim().match(/^(\d{1,2}):(\d{2})$/);
+	if (!match) return 0;
+	const h = Number.parseInt(match[1] as string, 10);
+	const m = Number.parseInt(match[2] as string, 10);
+	return Math.min(1440, Math.max(0, h * 60 + m));
+}
+
 function generateSlots(
-	startHour: number,
-	endHour: number,
+	startMin: number,
+	endMin: number,
 	hourly = false,
 ): string[] {
 	const slots: string[] = [];
-	for (let h = startHour; h <= endHour; h++) {
+	const step = hourly ? 60 : 15;
+
+	// Align to the next valid step interval
+	const remainder = startMin % step;
+	const firstSlot = remainder === 0 ? startMin : startMin + (step - remainder);
+
+	for (let m = firstSlot; m <= endMin; m += step) {
+		const h = Math.floor(m / 60);
+		const min = m % 60;
 		const hourStr = h.toString().padStart(2, "0");
-		if (hourly) {
-			slots.push(`${hourStr}:00`);
-		} else {
-			slots.push(
-				`${hourStr}:00`,
-				`${hourStr}:15`,
-				`${hourStr}:30`,
-				`${hourStr}:45`,
-			);
-		}
+		const minStr = min.toString().padStart(2, "0");
+		slots.push(`${hourStr}:${minStr}`);
 	}
 	return slots;
 }
 
 export function useTimePeriodGroups(
-	period?: string,
-	isHourly?: boolean,
+	lowerLimit?: string,
+	upperLimit?: string,
+	isHourly = false,
 ): TimePeriodGroup[] {
 	return useMemo(() => {
-		let minHour = 0;
-		let maxHour = 23;
-
-		if (period) {
-			const [start, end] = period.split("-").map(Number);
-
-			if (!start || !end) throw Error("wrong period string");
-
-			minHour = start;
-			maxHour = end < start ? end + 12 : end;
-			// handles 12-hour format e.g. "9-5" -> 9 to 17
-		}
+		const minMinute = lowerLimit ? timeStringToMinutes(lowerLimit) : 0;
+		const maxMinute = upperLimit
+			? timeStringToMinutes(upperLimit)
+			: 23 * 60 + (isHourly ? 0 : 45);
 
 		return TIME_PERIODS.map((p) => {
-			const start = Math.max(p.startHour, minHour);
-			const end = Math.min(p.endHour, maxHour);
+			const pStartMin = p.startHour * 60;
+			const pEndMin = p.endHour * 60 + (isHourly ? 0 : 45);
+
+			const start = Math.max(pStartMin, minMinute);
+			const end = Math.min(pEndMin, maxMinute);
 
 			return {
 				key: p.key,
@@ -67,5 +69,5 @@ export function useTimePeriodGroups(
 				times: start <= end ? generateSlots(start, end, isHourly) : [],
 			};
 		}).filter((p) => p.times.length > 0);
-	}, [period, isHourly]);
+	}, [lowerLimit, upperLimit, isHourly]);
 }

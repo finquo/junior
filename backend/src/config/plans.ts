@@ -1,13 +1,27 @@
-export type Country = "IN" | "US";
-export type Language = "ml-IN" | "en-IN";
-export type Currency = "₹" | "$";
+export const Countries = {
+	IN: "India",
+	US: "United States of America",
+};
+export type CountryCodes = keyof typeof Countries;
+
+export const Languages = {
+	"ml-IN": "Malayalam (India)",
+	"en-IN": "English (India)",
+};
+export type LanguageCodes = keyof typeof Languages;
+
+export const Currencies = {
+	"₹": "Rupees",
+	$: "Dollar",
+};
+export type CurrencyCodes = keyof typeof Currencies;
 
 export type Plan = {
 	id: string;
 	name: string;
 	description: string;
 	count: number;
-	price: Record<Country, number>;
+	price: Record<CountryCodes, number>;
 };
 
 export const plans = [
