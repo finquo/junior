@@ -1,13 +1,18 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import z from "zod";
+import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import {
+	InsertLessonSchema,
 	InsertSlotSchema,
 	SelectSlotSchema,
+	SelectStudentSchema,
 	SelectUserSchema,
 	UpdateSlotSchema,
 } from "@/db/zod";
 import { db } from "@/services";
-import { getAPI, schedulerProcedure, tryAPI } from "../procedure";
+import { getSchedules } from "@/utils/leave";
+import { getAPI, getError, schedulerProcedure, tryAPI } from "../procedure";
 
 export const schedulerRouter = {
 	get: schedulerProcedure.handler(async ({ context }) => {
@@ -170,6 +175,45 @@ export const schedulerRouter = {
 						and(
 							eq(schema.slot.id, id),
 							eq(schema.slot.schedulerId, context.user.id),
+						),
+					)
+					.returning(),
+			);
+		}),
+	createLesson: schedulerProcedure
+		.input(
+			InsertLessonSchema.omit({
+				id: true,
+				quiz: true,
+				createdAt: true,
+				updatedAt: true,
+			}),
+		)
+		.handler(async ({ input }) => {
+			return await tryAPI(
+				"db-scheduler-create-lesson",
+				db.insert(schema.lesson).values(input).returning(),
+			);
+		}),
+	updateStudentLessons: schedulerProcedure
+		.input(
+			SelectStudentSchema.pick({
+				id: true,
+				lessons: true,
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			return await tryAPI(
+				"db-scheduler-update-student-lessons",
+				db
+					.update(schema.student)
+					.set({
+						lessons: input.lessons,
+					})
+					.where(
+						and(
+							eq(schema.student.id, input.id),
+							eq(schema.student.supervisorId, context.user.id),
 						),
 					)
 					.returning(),

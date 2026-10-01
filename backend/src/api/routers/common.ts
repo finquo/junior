@@ -1,6 +1,7 @@
 import z from "zod";
+import { Countries, Currencies, Languages } from "@/config";
 import { db } from "@/services";
-import { protectedProcedure, tryAPI } from "../procedure";
+import { protectedProcedure, publicProcedure, tryAPI } from "../procedure";
 
 export const commonRouter = {
 	getUser: protectedProcedure
@@ -19,4 +20,8 @@ export const commonRouter = {
 				}),
 			);
 		}),
+
+	getLanguages: publicProcedure.handler(() => Languages),
+	getCountries: publicProcedure.handler(() => Countries),
+	getCurrencies: publicProcedure.handler(() => Currencies),
 };

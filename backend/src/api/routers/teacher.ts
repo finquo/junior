@@ -1,4 +1,6 @@
 import { eq } from "drizzle-orm";
+import z from "zod";
+import { availabilityZod, dateLeave, timeLeave } from "@/config/time";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getAPI, teacherProcedure, tryAPI } from "../procedure";
@@ -49,4 +51,37 @@ export const teacherRouter = {
 			[],
 		);
 	}),
+	updateAvailability: teacherProcedure
+		.input(availabilityZod)
+		.handler(async ({ context, input }) => {
+			return await tryAPI(
+				"db-teacher-updates-availability",
+				db
+					.update(schema.teacher)
+					.set({
+						availability: input,
+					})
+					.where(eq(schema.teacher.id, context.user.id))
+					.returning(),
+			);
+		}),
+	updateLeaves: teacherProcedure
+		.input(
+			z
+				.object({
+					dateLeaves: z.array(dateLeave),
+					timeLeaves: z.array(timeLeave),
+				})
+				.partial(),
+		)
+		.handler(async ({ context, input }) => {
+			return await tryAPI(
+				"db-teacher-update-leaves",
+				db
+					.update(schema.teacher)
+					.set(input)
+					.where(eq(schema.teacher.id, context.user.id))
+					.returning(),
+			);
+		}),
 };

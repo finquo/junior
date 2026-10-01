@@ -1,10 +1,10 @@
 import z from "zod";
 
-export const periods = {
-	"30 min": 30,
-	"1 hr": 60,
-	"2 hrs": 120,
-} as const;
+export const periodZod = z
+	.number()
+	.min(15)
+	.max(250)
+	.transform((p) => p * 60 * 1000);
 
 export const dayKeys = [
 	"mon",
@@ -16,13 +16,7 @@ export const dayKeys = [
 	"sun",
 ] as const;
 
-export const periodKeyZod = z
-	.enum(Object.keys(periods))
-	.transform((p) => getPeriodMinutes(p) * 60 * 1000);
-
 const dayKeysZod = z.enum(dayKeys);
-
-export const getPeriodMinutes = (key: keyof typeof periods) => periods[key];
 
 export const getDaykey = (i: number) => {
 	if (i > 6 || i < 0) throw Error("Wrong day number");
