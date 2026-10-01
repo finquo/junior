@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import React, { Suspense } from "react";
 import { CopyButton } from "@/components/copy";
+import { ModeToggle } from "@/components/mode-toggle";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -30,6 +31,7 @@ export function SideBarHeader() {
 				</Suspense>
 			</div>
 			<ImpersonationHeader />
+			<ModeToggle />
 		</header>
 	);
 }

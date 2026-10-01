@@ -51,10 +51,10 @@
 	--invert-foreground: var(--color-zinc-50);
 	--hover: rgb(0 0 0 / 0.04);
 	--active: rgb(0 0 0 / 0.07);
-	--selected: #D4D4D4;
-	--destructive-light: #FEF2F2;
+	--selected: #d4d4d4;
+	--destructive-light: #fef2f2;
 	--overlay: 0 0 0;
-	--focus-ring: #6B97FF;
+	--focus-ring: #6b97ff;
 	--tint: rgb(0 0 0 / 0.08);
 	--tint-hover: rgb(0 0 0 / 0.065);
 }
@@ -103,7 +103,7 @@
 	--hover: rgb(255 255 255 / 0.06);
 	--active: rgb(255 255 255 / 0.1);
 	--selected: #525252;
-	--destructive-light: #450A0A;
+	--destructive-light: #450a0a;
 	--overlay: 255 255 255;
 	--tint: rgb(255 255 255 / 0.25);
 	--tint-hover: rgb(255 255 255 / 0.2);
@@ -179,15 +179,23 @@
 	html {
 		@apply font-sans;
 	}
-  :focus-visible {
-    outline: 1px solid var(--focus-ring, #6B97FF);
-    outline-offset: 2px;
-    border-radius: var(--shape-input-radius, 8px);
+	:focus-visible {
+		outline: 1px solid var(--focus-ring, #6b97ff);
+		outline-offset: 2px;
+		border-radius: var(--shape-input-radius, 8px);
 	}
-  a:focus-visible {
-    border-radius: 2px;
+	a:focus-visible {
+		border-radius: 2px;
 	}
 }
-  html.transitioning *, html.transitioning *::before, html.transitioning *::after {
-    transition: border-radius 180ms ease-in-out, background-color 180ms ease-in-out, color 180ms ease-in-out, border-color 180ms ease-in-out, fill 180ms ease-in-out, stroke 180ms ease-in-out !important;
+html.transitioning *,
+html.transitioning *::before,
+html.transitioning *::after {
+	transition:
+		border-radius 180ms ease-in-out,
+		background-color 180ms ease-in-out,
+		color 180ms ease-in-out,
+		border-color 180ms ease-in-out,
+		fill 180ms ease-in-out,
+		stroke 180ms ease-in-out !important;
 }
