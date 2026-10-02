@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --port 4000",
+		"construct": "open-next build",
 		"build": "varlock codegen && next build",
 		"check": "tsc --noEmit",
 		"start": "next start --port 4000",
@@ -54,6 +55,7 @@
 		"zustand": "^5.0.15"
 	},
 	"devDependencies": {
+		"@opennextjs/aws": "^4.1.6",
 		"@tailwindcss/postcss": "^4.3.3",
 		"@tanstack/react-query-devtools": "^5.102.8",
 		"@types/node": "catalog:",

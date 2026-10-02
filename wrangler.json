@@ -10,6 +10,7 @@
 		"CORS_ORIGIN": "https://app.finquo.workers.dev",
 		"BETTER_AUTH_URL": "https://app.finquo.workers.dev",
 		"NODE_ENV": "production",
+		"EXPORT": true,
 		"BUN_VERSION": "1.2.15",
 		"NEXT_TELEMETRY_DISABLED": 1
 	},

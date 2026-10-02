@@ -1,22 +1,37 @@
 name: OpenTofu Deploy
 
 on:
+    workflow_dispatch:
+
     push:
         branches: [main]
         paths:
             - "infra/**/*"
-
-    # Allows to run this workflow manually
-    workflow_dispatch:
+            - ".github/workflows/deploy.yml"
+            - "package.json"
+            - "packages/**/*"
+            - "backend/**/*"
+            - "frontend/**/*"
 
 jobs:
-    opentofu:
-        name: Provision AWS hardware
+    deploy:
+        name: Building & Deploying
         environment: development
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Code
               uses: actions/checkout@v4
+
+            - name: Set up Bun.js
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: "latest"
+
+            - name: Install dependencies
+              run: bun i
+
+            - name: Build Frontend & Backend
+              run: bun run construct
 
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -31,6 +46,7 @@ jobs:
             - name: OpenTofu Init & Apply
               env:
                   TF_VAR_github_token: ${{ secrets.GITHUB_TOKEN }}
+                  TF_VAR_github_run_id: ${{ github.run_id }}
               run: |
                   cd infra
                   tofu init

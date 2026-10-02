@@ -26,4 +26,4 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-*.tf
+test

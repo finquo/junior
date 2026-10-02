@@ -3,6 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"cf:dev": "wrangler dev --port 3000",
+		"construct": "varlock codegen && tsdown",
 		"build": "varlock codegen && tsdown",
 		"check": "tsc --noEmit",
 		"format": "biome format ./ --write",
@@ -20,10 +21,15 @@
 		]
 	},
 	"exports": {
+		".": {
+			"import": "./out/index.mjs",
+			"default": "./out/index.mjs",
+			"types": "./out/index.d.mts"
+		},
 		"./config": {
 			"import": "./dist/config/index.mjs",
 			"default": "./dist/config/index.mjs",
-			"types": "./dist/config/index.d.ts"
+			"types": "./dist/config/index.d.mts"
 		},
 		"./auth": {
 			"import": "./dist/auth/export.mjs",

@@ -1,6 +1,5 @@
 "use client";
 
-import { periods } from "backend/config";
 import { CircleCheckIcon } from "lucide-react";
 import { parseAsIsoDate, useQueryState } from "nuqs";
 import { useState } from "react";
@@ -43,6 +42,8 @@ import { useTimePeriodGroups } from "@/hooks/period";
 import { CalenderPicker } from "../../_components/calender";
 import { UserSelector } from "../../_components/selecter";
 
+const period = [30, 60, 120, 180];
+
 export default function Pattern() {
 	const [studentId, setStudentId] = useQueryState("studentId");
 	const [teacherId, setTeacherId] = useQueryState("teacherId");
@@ -82,8 +83,8 @@ export default function Pattern() {
 					<CardFooter>
 						<ButtonGroup>
 							<ButtonGroupText>Durations</ButtonGroupText>
-							{Object.entries(periods).map(([key, value]) => (
-								<Button onClick={() => setDuration(value)} key={key}>
+							{period.map((value) => (
+								<Button onClick={() => setDuration(value)} key={value}>
 									{value}
 								</Button>
 							))}

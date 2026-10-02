@@ -7,8 +7,9 @@ export default defineConfig([
 		format: "esm",
 		outDir: "./out",
 		clean: true,
-		dts: false,
-		sourcemap: false,
+		dts: {
+			sourcemap: false,
+		},
 		deps: {
 			alwaysBundle: ["utils"],
 		},
