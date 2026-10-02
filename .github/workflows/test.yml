@@ -1,4 +1,4 @@
-name: Test Varlock Secrets & Env
+name: Test Environment Secrets & Variables
 
 on:
     workflow_dispatch:
@@ -8,9 +8,16 @@ on:
             - ".github/workflows/*.yml"
 
 jobs:
-    test-varlock:
+    test-env:
         runs-on: ubuntu-latest
         environment: development
+        env:
+            BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            BETTER_AUTH_URL: ${{ vars.BETTER_AUTH_URL }}
+            CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
+            NEXT_PUBLIC_SERVER_URL: ${{ vars.NEXT_PUBLIC_SERVER_URL }}
+            EXPORT: ${{ vars.EXPORT }}
 
         steps:
             - name: Checkout
