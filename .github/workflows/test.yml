@@ -1,0 +1,31 @@
+name: Test Varlock Secrets & Env
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - ".github/workflows/*.yml"
+
+jobs:
+    test-varlock:
+        runs-on: ubuntu-latest
+        environment: development
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+
+            - name: Load environment variables
+              uses: dmno-dev/varlock-action@v1.0.1
+
+            - name: Print env and secrets info
+              run: |
+                  echo "Basic env check"
+                  echo "CI=$CI"
+                  echo "RUNNER_OS=$RUNNER_OS"
+
+                  echo "Vars loaded by Varlock"
+                  echo "EXPORT=$EXPORT"
+                  echo "DATABASE_URL (length): ${#DATABASE_URL}"
+                  echo "BETTER_AUTH_URL=$BETTER_AUTH_URL"
