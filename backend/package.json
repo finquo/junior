@@ -23,18 +23,18 @@
 	"exports": {
 		".": {
 			"import": "./out/index.mjs",
-			"default": "./out/index.mjs",
-			"types": "./out/index.d.mts"
+			"types": "./out/index.d.mts",
+			"default": "./out/index.mjs"
 		},
 		"./config": {
 			"import": "./dist/config/index.mjs",
-			"default": "./dist/config/index.mjs",
-			"types": "./dist/config/index.d.mts"
+			"types": "./dist/config/index.d.mts",
+			"default": "./dist/config/index.mjs"
 		},
 		"./auth": {
 			"import": "./dist/auth/export.mjs",
-			"default": "./dist/auth/export.mjs",
-			"types": "./dist/auth/export.d.mts"
+			"types": "./dist/auth/export.d.mts",
+			"default": "./dist/auth/export.mjs"
 		},
 		"./api": {
 			"types": "./dist/api/index.d.mts"

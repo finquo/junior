@@ -11,7 +11,6 @@ import {
 	UpdateSlotSchema,
 } from "@/db/zod";
 import { db } from "@/services";
-import { getSchedules } from "@/utils/leave";
 import { getAPI, getError, schedulerProcedure, tryAPI } from "../procedure";
 
 export const schedulerRouter = {
