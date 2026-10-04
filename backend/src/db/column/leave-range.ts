@@ -1,27 +1,34 @@
 import { customType } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
-type LeaveRangeInput =
-	| {
-			type: "full";
-			start: Date;
-	  }
-	| {
-			type: "multiple";
-			start: Date;
-			end: Date;
-	  }
-	| {
-			type: "partial";
-			start: Date;
-			end: Date;
-	  };
+export const leaveItemZod = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("full"),
+		start: z.coerce.date(),
+	}),
+	z
+		.object({
+			type: z.literal("multiple"),
+			start: z.coerce.date(),
+			end: z.coerce.date(),
+		})
+		.refine((data) => data.start <= data.end, {
+			message: "end date must be after start date",
+			path: ["end"],
+		}),
+	z
+		.object({
+			type: z.literal("partial"),
+			start: z.coerce.date(),
+			end: z.coerce.date(),
+		})
+		.refine((data) => data.start <= data.end, {
+			message: "end time must be after start time",
+			path: ["end"],
+		}),
+]);
 
-export type LeaveRange = {
-	type: "full" | "multiple" | "partial";
-	start: Date;
-	end: Date;
-};
+export type LeaveRangeInput = z.infer<typeof leaveItemZod>;
 
 const fullDayInput = z
 	.object({
@@ -114,24 +121,26 @@ const output = z
 		};
 	});
 
+export type LeaveRangeOutput = z.infer<typeof output>;
+
 export const leaveRange = customType<{
-	data: LeaveRange;
+	data: LeaveRangeOutput;
 	driverData: string;
 }>({
 	dataType() {
 		return "tstzrange";
 	},
-	toDriver(value: LeaveRangeInput): string {
+	toDriver(value: LeaveRangeInput) {
 		if (value.type === "full") return fullDayInput.parse(value);
 
 		if (value.type === "multiple") return multipleDaysInput.parse(value);
 
 		return partialInput.parse(value);
 	},
-	fromDriver(value: string): LeaveRange {
+	fromDriver(value) {
 		return output.parse(value);
 	},
-	fromJson(value): LeaveRange {
+	fromJson(value) {
 		return output.parse(value);
 	},
 	forJsonSelect(identifier, sql) {

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 import { availabilityZod } from "@/config/time";
 import { schema } from "@/db";
+import { leaveItemZod } from "@/db/column/leave-range";
 import { db } from "@/services";
 import { getAPI, teacherProcedure, tryAPI } from "../procedure";
 
@@ -67,18 +68,19 @@ export const teacherRouter = {
 		}),
 	updateLeaves: teacherProcedure
 		.input(
-			z
-				.object({
-					leaves: z.any(),
+			leaveItemZod
+				.transform((l) => {
+					if (l.type === "full") return { ...l, end: l.start };
+					return l;
 				})
-				.partial(),
+				.array(),
 		)
 		.handler(async ({ context, input }) => {
 			return await tryAPI(
 				"db-teacher-update-leaves",
 				db
 					.update(schema.teacher)
-					.set(input)
+					.set({ leaves: input })
 					.where(eq(schema.teacher.id, context.user.id))
 					.returning(),
 			);

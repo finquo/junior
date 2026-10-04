@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
+import { Languages } from "@/config";
 import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import {
@@ -279,8 +280,11 @@ export const schedulerRouter = {
 			InsertLessonSchema.omit({
 				id: true,
 				quiz: true,
+				language: true,
 				createdAt: true,
 				updatedAt: true,
+			}).extend({
+				language: z.enum(Object.keys(Languages)),
 			}),
 		)
 		.handler(async ({ input }) => {

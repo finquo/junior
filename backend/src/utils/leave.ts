@@ -1,4 +1,4 @@
-import type { LeaveRange } from "@/db/column/leave-range";
+import type { LeaveRangeOutput } from "@/db/column/leave-range";
 
 type LeaveCheckResult =
 	| {
@@ -17,7 +17,7 @@ type LeaveCheckResult =
 
 export const checkAgainstLeaves = (
 	checkingDate: Date,
-	leaves?: LeaveRange[] | null,
+	leaves?: LeaveRangeOutput[] | null,
 ): LeaveCheckResult => {
 	if (!leaves || leaves.length === 0 || Number.isNaN(checkingDate.getTime())) {
 		return {
