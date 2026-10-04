@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { schema } from "@/db";
+import { UpdateStudentSchema } from "@/db/zod";
 import { db } from "@/services";
 import { getAPI, studentProcedure, tryAPI } from "../procedure";
 
@@ -55,4 +56,30 @@ export const studentRouter = {
 			[],
 		);
 	}),
+	update: studentProcedure
+		.input(
+			UpdateStudentSchema.omit({
+				id: true,
+				mentorId: true,
+				supervisorId: true,
+				notes: true,
+				lessons: true,
+				meetingLink: true,
+				paid: true,
+				amount: true,
+				remaining: true,
+				createdAt: true,
+				updatedAt: true,
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			return await tryAPI(
+				"db-student-update",
+				db
+					.update(schema.student)
+					.set(input)
+					.where(eq(schema.student.id, context.user.id))
+					.returning(),
+			);
+		}),
 };

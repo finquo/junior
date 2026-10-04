@@ -8,7 +8,7 @@ import {
 	text,
 } from "drizzle-orm/pg-core";
 import type { CurrencyCodes, LanguageCodes, PlayKeys } from "@/config";
-import type { Address, Note, Schooling } from "@/config/type";
+import type { Address, Note, Schooling } from "@/config/profile";
 import { createdAt, generateId, getId, getTime, updatedAt } from "../utils";
 import { user } from "./auth";
 import { scheduler } from "./scheduler";

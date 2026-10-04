@@ -23,6 +23,15 @@ export const AddToArray = <T extends AnyPgColumn>(column: T, data: any) => {
 	return sql`${column} || ${[data]}`; // Append userId to the array
 };
 
+export function ArrayAppend<Column extends AnyPgColumn>(
+	column: Column,
+	value: Column["_"]["data"] extends unknown[]
+		? Column["_"]["data"][number]
+		: any,
+) {
+	return sql`array_append(${column}, ${value})`;
+}
+
 export const createdAt = (name = "created_at") =>
 	timestamp(name, { withTimezone: false }).default(sql`now()`).notNull();
 

@@ -1,32 +1,40 @@
-export type Quiz = {
-	question: string;
-} & (
-	| {
-			type: "choices";
-			choices: string[];
-			anwser: string[];
-	  }
-	| {
-			type: "options";
-			options: string[];
-			anwser: string;
-	  }
-	| {
-			type: "text";
-			anwser: string;
-	  }
-);
+import { z } from "zod";
 
-export type Anwser =
-	| {
-			type: "choices";
-			anwser: string[];
-	  }
-	| {
-			type: "options";
-			anwser: string;
-	  }
-	| {
-			type: "text";
-			anwser: string;
-	  };
+export const quizZod = z.discriminatedUnion("type", [
+	z.object({
+		question: z.string(),
+		type: z.literal("choices"),
+		choices: z.array(z.string()),
+		anwser: z.array(z.string()),
+	}),
+	z.object({
+		question: z.string(),
+		type: z.literal("options"),
+		options: z.array(z.string()),
+		anwser: z.string(),
+	}),
+	z.object({
+		question: z.string(),
+		type: z.literal("text"),
+		anwser: z.string(),
+	}),
+]);
+
+export type Quiz = z.infer<typeof quizZod>;
+
+export const anwserZod = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("choices"),
+		anwser: z.array(z.string()),
+	}),
+	z.object({
+		type: z.literal("options"),
+		anwser: z.string(),
+	}),
+	z.object({
+		type: z.literal("text"),
+		anwser: z.string(),
+	}),
+]);
+
+export type Anwser = z.infer<typeof anwserZod>;

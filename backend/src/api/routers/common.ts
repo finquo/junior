@@ -17,6 +17,11 @@ export const commonRouter = {
 					where: {
 						id: input.id,
 					},
+					with: {
+						schedulerData: true,
+						teacherData: true,
+						studentData: true,
+					},
 				}),
 			);
 		}),

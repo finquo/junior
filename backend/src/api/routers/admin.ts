@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
+import { SelectStudentSchema, SelectTeacherSchema } from "@/db/zod";
 import { db } from "@/services";
 import { adminProcedure, getAPI, tryAPI } from "../procedure";
 
@@ -65,4 +66,42 @@ export const adminRouter = {
 			[],
 		);
 	}),
+	updateTeacher: adminProcedure
+		.input(
+			SelectTeacherSchema.pick({
+				id: true,
+				supervisorId: true,
+			}),
+		)
+		.handler(async ({ input }) => {
+			const { id, ...data } = input;
+			return await tryAPI(
+				"db-admin-update-teacher",
+				db
+					.update(schema.teacher)
+					.set(data)
+					.where(eq(schema.teacher.id, id))
+					.returning(),
+			);
+		}),
+	updateStudent: adminProcedure
+		.input(
+			SelectStudentSchema.pick({
+				id: true,
+				mentorId: true,
+				meetingLink: true,
+				supervisorId: true,
+			}),
+		)
+		.handler(async ({ input }) => {
+			const { id, ...data } = input;
+			return await tryAPI(
+				"db-admin-update-student",
+				db
+					.update(schema.student)
+					.set(data)
+					.where(eq(schema.student.id, id))
+					.returning(),
+			);
+		}),
 };

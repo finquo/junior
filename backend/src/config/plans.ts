@@ -1,3 +1,5 @@
+import z from "zod";
+
 export const Countries = {
 	IN: "India",
 	US: "United States of America",
@@ -9,6 +11,8 @@ export const Languages = {
 	"en-IN": "English (India)",
 };
 export type LanguageCodes = keyof typeof Languages;
+
+export const LanguageCodeZod = z.enum(Object.keys(Languages));
 
 export const Currencies = {
 	"₹": "Rupees",

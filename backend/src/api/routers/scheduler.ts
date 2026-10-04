@@ -9,8 +9,12 @@ import {
 	InsertSlotSchema,
 	SelectSlotSchema,
 	SelectStudentSchema,
+	SelectTeacherSchema,
 	SelectUserSchema,
 	UpdateSlotSchema,
+	UpdateStudentSchema,
+	UpdateTeacherSchema,
+	updateZod,
 } from "@/db/zod";
 import { db } from "@/services";
 import { checkAgainstLeaves } from "@/utils/leave";
@@ -311,6 +315,64 @@ export const schedulerRouter = {
 					.where(
 						and(
 							eq(schema.student.id, input.id),
+							eq(schema.student.supervisorId, context.user.id),
+						),
+					)
+					.returning(),
+			);
+		}),
+	updateTeacher: schedulerProcedure
+		.input(
+			UpdateTeacherSchema.omit({
+				experiences: true,
+				supervisorId: true,
+				createdAt: true,
+				updatedAt: true,
+				leaves: true,
+			}).merge(
+				SelectTeacherSchema.pick({
+					id: true,
+				}),
+			),
+		)
+		.handler(async ({ input, context }) => {
+			const { id, ...data } = input;
+			return await tryAPI(
+				"db-scheduler-update-teacher",
+				db
+					.update(schema.teacher)
+					.set(data)
+					.where(
+						and(
+							eq(schema.teacher.id, id),
+							eq(schema.teacher.supervisorId, context.user.id),
+						),
+					)
+					.returning(),
+			);
+		}),
+	updateStudent: schedulerProcedure
+		.input(
+			UpdateStudentSchema.omit({
+				supervisorId: true,
+				createdAt: true,
+				updatedAt: true,
+			}).merge(
+				SelectStudentSchema.pick({
+					id: true,
+				}),
+			),
+		)
+		.handler(async ({ input, context }) => {
+			const { id, ...data } = input;
+			return await tryAPI(
+				"db-scheduler-update-student",
+				db
+					.update(schema.student)
+					.set(data)
+					.where(
+						and(
+							eq(schema.student.id, id),
 							eq(schema.student.supervisorId, context.user.id),
 						),
 					)

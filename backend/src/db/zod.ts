@@ -1,5 +1,21 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
-import type { output as Infer } from "zod";
+import {
+	type ZodObject,
+	type ZodRawShape,
+	type ZodString,
+	type ZodTypeAny,
+	z,
+} from "zod";
+import {
+	addressZod,
+	availabilityZod,
+	experienceZod,
+	LanguageCodeZod,
+	noteZod,
+	type PlayKeys,
+	planKeys,
+	schoolingZod,
+} from "@/config";
 import * as schema from "./schema";
 
 export const { createInsertSchema, createSelectSchema, createUpdateSchema } =
@@ -9,53 +25,88 @@ export const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 		},
 	});
 
-// Select Schemas
+export const ProgramZod = z.enum(planKeys as [PlayKeys, ...PlayKeys[]]);
+
+// User
 export const SelectUserSchema = createSelectSchema(schema.user);
-export type SelectUserType = Infer<typeof SelectUserSchema>;
-
-export const SelectSchedulerSchema = createSelectSchema(schema.scheduler);
-export type SelectSchedulerType = Infer<typeof SelectSchedulerSchema>;
-
-export const SelectTeacherSchema = createSelectSchema(schema.teacher);
-export type SelectTeacherType = Infer<typeof SelectTeacherSchema>;
-
-export const SelectStudentSchema = createSelectSchema(schema.student);
-export type SelectStudentType = Infer<typeof SelectStudentSchema>;
-
-export const SelectSlotSchema = createSelectSchema(schema.slot);
-export type SelectSlotType = Infer<typeof SelectSlotSchema>;
-
-export const SelectLessonSchema = createSelectSchema(schema.lesson);
-export type SelectLessonType = Infer<typeof SelectLessonSchema>;
-
-// Insert Schemas
 export const InsertUserSchema = createInsertSchema(schema.user);
-export type InsertUserType = Infer<typeof InsertUserSchema>;
-
-export const InsertSchedulerSchema = createInsertSchema(schema.scheduler);
-export type InsertSchedulerType = Infer<typeof InsertSchedulerSchema>;
-
-export const InsertTeacherSchema = createInsertSchema(schema.teacher);
-export type InsertTeacherType = Infer<typeof InsertTeacherSchema>;
-
-export const InsertStudentSchema = createInsertSchema(schema.student);
-export type InsertStudentType = Infer<typeof InsertStudentSchema>;
-
-export const InsertSlotSchema = createInsertSchema(schema.slot);
-export type InsertSlotType = Infer<typeof InsertSlotSchema>;
-
-export const InsertLessonSchema = createInsertSchema(schema.lesson);
-export type InsertLessonType = Infer<typeof InsertLessonSchema>;
-
-// Update Schemas
-export const UpdateSlotSchema = createUpdateSchema(schema.slot);
-export type UpdateSlotType = Infer<typeof UpdateSlotSchema>;
-
 export const UpdateUserSchema = createUpdateSchema(schema.user);
-export type UpdateUserType = Infer<typeof UpdateUserSchema>;
 
-export const UpdateTeacherSchema = createUpdateSchema(schema.teacher);
-export type UpdateTeacherType = Infer<typeof UpdateTeacherSchema>;
+// Teacher
+export const InsertTeacherSchema = createInsertSchema(
+	schema.teacher,
+).safeExtend({
+	languages: LanguageCodeZod.array().optional(),
+	availability: availabilityZod.nullable().optional(),
+	experiences: experienceZod.array().optional(),
+});
+export const SelectTeacherSchema = createSelectSchema(
+	schema.teacher,
+).safeExtend({
+	languages: LanguageCodeZod.array(),
+	availability: availabilityZod.nullable(),
+	experiences: experienceZod.array(),
+});
+export const UpdateTeacherSchema = createUpdateSchema(
+	schema.teacher,
+).safeExtend({
+	languages: LanguageCodeZod.array().optional(),
+	availability: availabilityZod.optional(),
+	experiences: experienceZod.array().optional(),
+});
 
-export const UpdateStudentSchema = createUpdateSchema(schema.student);
-export type UpdateStudentType = Infer<typeof UpdateStudentSchema>;
+// Student
+export const InsertStudentSchema = createInsertSchema(
+	schema.student,
+).safeExtend({
+	schooling: schoolingZod.optional(),
+	languages: LanguageCodeZod.array().optional(),
+	program: ProgramZod.nullable().optional(),
+	notes: noteZod.array().optional(),
+	address: addressZod.nullable().optional(),
+});
+export const SelectStudentSchema = createSelectSchema(
+	schema.student,
+).safeExtend({
+	schooling: schoolingZod.nullable(),
+	languages: LanguageCodeZod.array(),
+	program: ProgramZod.nullable(),
+	notes: noteZod.array(),
+	address: addressZod.nullable(),
+});
+export const UpdateStudentSchema = createUpdateSchema(
+	schema.student,
+).safeExtend({
+	schooling: schoolingZod.nullable().optional(),
+	languages: LanguageCodeZod.array().optional(),
+	program: ProgramZod.nullable(),
+	notes: noteZod.array().optional(),
+	address: addressZod.optional(),
+});
+
+// Slot
+export const SelectSlotSchema = createSelectSchema(schema.slot);
+export const InsertSlotSchema = createInsertSchema(schema.slot);
+export const UpdateSlotSchema = createUpdateSchema(schema.slot);
+
+export const SelectLessonSchema = createSelectSchema(schema.lesson).safeExtend({
+	language: LanguageCodeZod,
+});
+export const InsertLessonSchema = createInsertSchema(schema.lesson).safeExtend({
+	language: LanguageCodeZod,
+});
+
+export const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
+	schema: T,
+) =>
+	schema
+		.pick({
+			id: true,
+		})
+		.extend({
+			data: schema
+				.omit({
+					id: true,
+				})
+				.partial(),
+		});

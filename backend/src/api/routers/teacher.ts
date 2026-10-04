@@ -3,6 +3,8 @@ import z from "zod";
 import { availabilityZod } from "@/config/time";
 import { schema } from "@/db";
 import { leaveItemZod } from "@/db/column/leave-range";
+import { ArrayAppend } from "@/db/utils";
+import { UpdateTeacherSchema } from "@/db/zod";
 import { db } from "@/services";
 import { getAPI, teacherProcedure, tryAPI } from "../procedure";
 
@@ -52,6 +54,26 @@ export const teacherRouter = {
 			[],
 		);
 	}),
+	update: teacherProcedure
+		.input(
+			UpdateTeacherSchema.omit({
+				id: true,
+				supervisorId: true,
+				createdAt: true,
+				updatedAt: true,
+				leaves: true,
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			return await tryAPI(
+				"db-teacher-update",
+				db
+					.update(schema.teacher)
+					.set(input)
+					.where(eq(schema.teacher.id, context.user.id))
+					.returning(),
+			);
+		}),
 	updateAvailability: teacherProcedure
 		.input(availabilityZod)
 		.handler(async ({ context, input }) => {
@@ -81,6 +103,25 @@ export const teacherRouter = {
 				db
 					.update(schema.teacher)
 					.set({ leaves: input })
+					.where(eq(schema.teacher.id, context.user.id))
+					.returning(),
+			);
+		}),
+	addLeave: teacherProcedure
+		.input(
+			leaveItemZod.transform((l) => {
+				if (l.type === "full") return { ...l, end: l.start };
+				return l;
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			return await tryAPI(
+				"db-teacher-add-leave",
+				db
+					.update(schema.teacher)
+					.set({
+						leaves: ArrayAppend(schema.teacher.leaves, input),
+					})
 					.where(eq(schema.teacher.id, context.user.id))
 					.returning(),
 			);

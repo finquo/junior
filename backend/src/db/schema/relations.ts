@@ -2,6 +2,20 @@ import { defineRelations } from "drizzle-orm";
 import * as schema from "./index";
 
 const relations = defineRelations(schema, (r) => ({
+	user: {
+		teacherData: r.one.teacher({
+			from: r.user.id,
+			to: r.teacher.id,
+		}),
+		studentData: r.one.student({
+			from: r.user.id,
+			to: r.student.id,
+		}),
+		schedulerData: r.one.scheduler({
+			from: r.user.id,
+			to: r.scheduler.id,
+		}),
+	},
 	scheduler: {
 		user: r.one.user({
 			from: r.scheduler.id,
@@ -86,4 +100,12 @@ const relations = defineRelations(schema, (r) => ({
 export const getRelations = {
 	...relations,
 	...schema.authRelations,
+	user: {
+		name: "user",
+		table: schema.user,
+		relations: {
+			...schema.authRelations.user.relations,
+			...relations.user.relations,
+		},
+	},
 };
