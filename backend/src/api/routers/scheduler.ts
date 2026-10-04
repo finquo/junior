@@ -1,4 +1,5 @@
-import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { SwitchFunc } from "utils";
 import z from "zod";
 import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
@@ -11,6 +12,7 @@ import {
 	UpdateSlotSchema,
 } from "@/db/zod";
 import { db } from "@/services";
+import { checkAgainstLeaves } from "@/utils/leave";
 import { getAPI, getError, schedulerProcedure, tryAPI } from "../procedure";
 
 export const schedulerRouter = {
@@ -38,6 +40,99 @@ export const schedulerRouter = {
 			[],
 		);
 	}),
+	checkTeacherAvailability: schedulerProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				date: z.coerce.date().transform((d) => {
+					const targetDate = new Date(d);
+					const dayKey = getDaykey(targetDate.getDay());
+					const dayStart = new Date(targetDate).setHours(0, 0, 0, 0);
+					const dayEnd = new Date(targetDate).setHours(23, 59, 59, 999);
+
+					return {
+						dayKey,
+						targetDate,
+						dayStart,
+						dayEnd,
+					};
+				}),
+				period: periodZod,
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const { targetDate, dayStart, dayEnd, dayKey } = input.date;
+
+			const teacherRecord = await tryAPI(
+				"db-scheduler-check-teacher",
+				db.query.teacher.findFirst({
+					where: {
+						id: input.id,
+						supervisorId: context.user.id,
+					},
+				}),
+			);
+
+			if (!teacherRecord) throw getError("NOT_FOUND", "Teacher not found");
+
+			if (!teacherRecord.availability)
+				throw getError(
+					"NOT_IMPLEMENTED",
+					"Teacher did not updated their availability",
+				);
+
+			const dayConfig = teacherRecord.availability[dayKey];
+
+			if (!dayConfig?.enabled || !dayConfig.ranges?.length) {
+				return {
+					isAvailable: false,
+					reason: "Teacher is not available on this day",
+				};
+			}
+
+			const { isLeave, type, time } = checkAgainstLeaves(
+				targetDate,
+				teacherRecord.leaves,
+			);
+
+			if (isLeave)
+				return {
+					isAvailable: false,
+					time,
+					reason: SwitchFunc(type, {
+						partial: "Teacher took a partial leave on this date & time",
+						full: "Teacher took a full leave on this date",
+						multiple: "Teacher took multiple leaves, including this date",
+					}),
+				};
+
+			// const existingSlots = await tryAPI(
+			// 	"db-scheduler-check-active-booked-slots",
+			// 	db
+			// 		.select({
+			// 			startTime: schema.slot.startTime,
+			// 			expectedEndTime: schema.slot.expectedEndTime,
+			// 		})
+			// 		.from(schema.slot)
+			// 		.where(
+			// 			and(
+			// 				eq(schema.slot.teacherId, input.id),
+			// 				inArray(schema.slot.status, [
+			// 					"scheduled",
+			// 					"rescheduled",
+			// 					"started",
+			// 				]),
+			// 				lt(schema.slot.startTime, dayEnd),
+			// 				gt(schema.slot.expectedEndTime, dayStart),
+			// 			),
+			// 		),
+			// );
+
+			return {
+				isAvailable: true,
+				availableSlots: [],
+			};
+		}),
 	getStudents: schedulerProcedure.handler(async ({ context }) => {
 		return await getAPI(
 			"db-scheduler-get-students-query",

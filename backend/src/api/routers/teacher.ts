@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { availabilityZod, dateLeave, timeLeave } from "@/config/time";
+import { availabilityZod } from "@/config/time";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getAPI, teacherProcedure, tryAPI } from "../procedure";
@@ -69,8 +69,7 @@ export const teacherRouter = {
 		.input(
 			z
 				.object({
-					dateLeaves: z.array(dateLeave),
-					timeLeaves: z.array(timeLeave),
+					leaves: z.any(),
 				})
 				.partial(),
 		)

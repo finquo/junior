@@ -1,7 +1,7 @@
-import { interval, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import type { Experience, LanguageCodes } from "@/config";
 import type { Availability } from "@/config/time";
-import { tstzrange } from "../tstzrange";
+import { leaveRange } from "../column/leave-range";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { user } from "./auth";
 import { scheduler } from "./scheduler";
@@ -20,8 +20,7 @@ export const teacher = pgTable("teacher", {
 		.$default(() => []),
 
 	availability: jsonb().$type<Availability>(),
-	dateLeaves: tstzrange().array(),
-	timeLeaves: interval().array(),
+	leaves: leaveRange().array(),
 
 	createdAt: createdAt(),
 	updatedAt: updatedAt(),

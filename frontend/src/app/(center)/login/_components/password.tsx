@@ -1,7 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useQueryState } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -10,11 +9,13 @@ import { getClientBaseUrl } from "@/hooks/url";
 import { authClient } from "@/lib/auth";
 
 export const PasswordLogin = () => {
-	const redirect_to = useSearchParams().get("redirect_to");
-	const callbackURL = getClientBaseUrl(redirect_to ?? "/me");
+	const [email, setEmail] = useQueryState("email", { defaultValue: "" });
+	const [password, setPassword] = useQueryState("password", {
+		defaultValue: "",
+	});
+	const [redirect_to] = useQueryState("redirect_to", { defaultValue: "/me" });
+	const callbackURL = getClientBaseUrl(redirect_to);
 
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
 	return (
 		<MutationButton
 			api={{

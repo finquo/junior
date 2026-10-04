@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { interval, jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
-import type { Language } from "@/config";
+import type { LanguageCodes } from "@/config";
 import type { Anwser, Quiz } from "@/config/quiz";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { student } from "./student";
@@ -10,7 +10,7 @@ export const lesson = pgTable("lesson", {
 
 	name: text().notNull(),
 	description: text(),
-	language: text().$type<Language>().notNull(),
+	language: text().$type<LanguageCodes>().notNull(),
 
 	quiz: jsonb().$type<Quiz>(),
 	period: interval({ fields: "hour to minute" }).default(

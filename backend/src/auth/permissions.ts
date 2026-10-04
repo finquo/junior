@@ -55,7 +55,10 @@ const qa_auditor = ac.newRole({
 	slot: ["get", "list"],
 });
 
+const user = ac.newRole({});
+
 export const roles = {
+	user,
 	admin,
 	scheduler,
 	teacher,
@@ -64,6 +67,6 @@ export const roles = {
 	qa_auditor,
 };
 
-export type Role = keyof typeof roles | "user";
+export type Role = keyof typeof roles;
 export const roleEnum = Object.keys(roles);
 export const roleEnumZod = z.enum(roleEnum);
