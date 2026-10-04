@@ -1,4 +1,4 @@
-name: OpenTofu Deploy
+name: Building & Deploying
 
 on:
     workflow_dispatch:
@@ -18,7 +18,13 @@ jobs:
         name: Building & Deploying
         environment: development
         runs-on: ubuntu-latest
+
         steps:
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+                  vars: ${{ toJSON(vars) }}
+
             - name: Checkout Code
               uses: actions/checkout@v4
 

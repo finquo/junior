@@ -6,20 +6,19 @@ on:
         branches: [main]
         paths:
             - ".github/workflows/*.yml"
+            - ".env.schema"
 
 jobs:
     test-env:
         runs-on: ubuntu-latest
         environment: development
-        env:
-            BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
-            BETTER_AUTH_URL: ${{ vars.BETTER_AUTH_URL }}
-            CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
-            NEXT_PUBLIC_SERVER_URL: ${{ vars.NEXT_PUBLIC_SERVER_URL }}
-            EXPORT: ${{ vars.EXPORT }}
 
         steps:
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+                  vars: ${{ toJSON(vars) }}
+
             - name: Checkout
               uses: actions/checkout@v7
 

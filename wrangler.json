@@ -6,6 +6,11 @@
 	"observability": {
 		"enabled": true
 	},
+	"build": {
+		"command": "bun run build",
+		"watch_dir": ["backend", "frontend", "packages"]
+	},
+	"keep_vars": true,
 	"vars": {
 		"CORS_ORIGIN": "https://app.finquo.workers.dev",
 		"BETTER_AUTH_URL": "https://app.finquo.workers.dev",
