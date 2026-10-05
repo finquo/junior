@@ -34,7 +34,7 @@ export const fetchExtraData = async (role: Role, id: string) => {
 	return;
 }
 
-type GetKey<D, R> = R extends keyof D ? D[R] : undefined;
+export type GetData<R> = R extends keyof Data ? Data[R] : undefined;
 
 export const getProcedure = <R extends Role>(role: R) =>
 	protectedProcedure.use(async ({ context, next }) => {
@@ -52,7 +52,7 @@ export const getProcedure = <R extends Role>(role: R) =>
 		return next({
 			context: {
 				...context,
-				data: data as GetKey<Data, R> | undefined
+				data: data as GetData<R> | undefined
 			}
 		});
 	});

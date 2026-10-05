@@ -38,33 +38,28 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/auth";
-import { orpc } from "@/lib/api";
 import { experienceZod, LanguageCodeZod, Languages, LanguageCodeKey, type LanguageCodes } from "backend/config";
-
+import { api } from "@/hooks/api";
+import { getUserData } from "@/hooks/user";
 
 const teacherFormSchema = z.object({
-	languages: z.array(
-		LanguageCodeZod as unknown as z.ZodType<LanguageCodes, LanguageCodes>,
-	),
-	experiences: z.array(experienceZod),
+	languages: LanguageCodeZod.array(),
+	experiences: experienceZod.array(),
 });
 
 type TeacherFormValues = z.infer<typeof teacherFormSchema>;
 
-interface ExperienceItemProps {
-	index: number;
-	// biome-ignore lint/suspicious/noExplicitAny: TanStack Form instance type
-	form: any;
-	isSaving: boolean;
-	onRemove: () => void;
-}
-
-export function ExperienceItem({
+function ExperienceItem({
 	index,
 	form,
-	isSaving,
+	isPending,
 	onRemove,
-}: ExperienceItemProps) {
+}: {
+	index: number;
+	form: any;
+	isPending: boolean;
+	onRemove: () => void;
+}) {
 	return (
 		<Card size="sm">
 			<CardHeader>
@@ -75,7 +70,7 @@ export function ExperienceItem({
 						variant="destructive"
 						size="icon-xs"
 						onClick={onRemove}
-						disabled={isSaving}
+						disabled={isPending}
 					>
 						<Trash2Icon />
 					</Button>
@@ -99,7 +94,7 @@ export function ExperienceItem({
 										onBlur={subField.handleBlur}
 										onChange={(e) => subField.handleChange(e.target.value)}
 										aria-invalid={isInvalid}
-										disabled={isSaving}
+										disabled={isPending}
 									/>
 									{isInvalid && (
 										<FieldError
@@ -131,7 +126,7 @@ export function ExperienceItem({
 										onBlur={subField.handleBlur}
 										onChange={(e) => subField.handleChange(e.target.value)}
 										aria-invalid={isInvalid}
-										disabled={isSaving}
+										disabled={isPending}
 									/>
 									{isInvalid && (
 										<FieldError
@@ -161,7 +156,7 @@ export function ExperienceItem({
 										onBlur={subField.handleBlur}
 										onChange={(e) => subField.handleChange(e.target.value)}
 										aria-invalid={isInvalid}
-										disabled={isSaving}
+										disabled={isPending}
 									/>
 									{isInvalid && (
 										<FieldError
@@ -189,7 +184,7 @@ export function ExperienceItem({
 									value={subField.state.value ?? ""}
 									onBlur={subField.handleBlur}
 									onChange={(e) => subField.handleChange(e.target.value)}
-									disabled={isSaving}
+									disabled={isPending}
 								/>
 							</Field>
 						)}
@@ -207,7 +202,7 @@ export function ExperienceItem({
 									value={subField.state.value ?? ""}
 									onBlur={subField.handleBlur}
 									onChange={(e) => subField.handleChange(e.target.value)}
-									disabled={isSaving}
+									disabled={isPending}
 								/>
 							</Field>
 						)}
@@ -218,58 +213,31 @@ export function ExperienceItem({
 	);
 }
 
-export default function TeacherProfilePage() {
+export default function () {
 	const { data: user } = useAuth();
+	const { data } = getUserData()
 
-	// Default data placeholder (will be replaced with an API call later)
-	const defaultData: {
-		languages?: LanguageCodes[];
-		experiences?: TeacherFormValues["experiences"];
-	} = {};
-
-	const { mutate: updateTeacher, isPending: isSaving } = useMutation({
-		mutationKey: ["teacher-update"],
-		mutationFn: async (values: TeacherFormValues) => {
-			return await orpc.teacher.update({
-				languages: values.languages,
-				experiences: values.experiences.map((exp) => ({
-					...exp,
-					description: exp.description?.trim() ? exp.description.trim() : undefined,
-					endedAt: exp.endedAt?.trim() ? exp.endedAt.trim() : undefined,
-				})),
-			});
-		},
-		onSuccess: () => {
-			toast.success({
-				title: "Teacher profile updated successfully",
-			});
-		},
-		onError: (error) => {
-			toast.error({
-				title: error.message || "Failed to update teacher profile",
-			});
-		},
-	});
+	const { mutateAsync, isPending } = useMutation(api.teacher.update.mutationOptions());
 
 	const form = useForm({
 		defaultValues: {
-			languages: (defaultData.languages ?? []) as LanguageCodes[],
-			experiences: (defaultData.experiences ?? []) as TeacherFormValues["experiences"],
+			languages: (data?.teacherData?.languages ?? []),
+			experiences: (data?.teacherData?.experiences ?? []),
 		},
 		validators: {
 			onSubmit: teacherFormSchema,
 			onChange: teacherFormSchema,
 		},
 		onSubmit: async ({ value }) => {
-			updateTeacher(value);
+			mutateAsync(value);
 		},
 	});
 
 	useEffect(() => {
-		if (defaultData) {
+		if (data?.teacherData) {
 			form.reset({
-				languages: defaultData.languages ?? [],
-				experiences: defaultData.experiences ?? [],
+				languages: data?.teacherData?.languages ?? [],
+				experiences: data?.teacherData?.experiences ?? [],
 			});
 		}
 	}, [form]);
@@ -332,7 +300,7 @@ export default function TeacherProfilePage() {
 																onCheckedChange={(checked) =>
 																	toggleLanguage(code, !!checked)
 																}
-																disabled={isSaving}
+																disabled={isPending}
 															/>
 															<FieldLabel htmlFor={`lang-${code}`}>
 																{label}
@@ -392,7 +360,7 @@ export default function TeacherProfilePage() {
 														variant="outline"
 														size="sm"
 														onClick={addExperience}
-														disabled={isSaving}
+														disabled={isPending}
 													>
 														<PlusIcon />
 														Add Experience
@@ -416,7 +384,7 @@ export default function TeacherProfilePage() {
 																key={index}
 																index={index}
 																form={form}
-																isSaving={isSaving}
+																isPending={isPending}
 																onRemove={() => removeExperience(index)}
 															/>
 														))}
@@ -438,15 +406,15 @@ export default function TeacherProfilePage() {
 									type="button"
 									variant="outline"
 									onClick={() => form.reset()}
-									disabled={!isDirty || isSaving}
+									disabled={!isDirty || isPending}
 								>
 									Reset
 								</Button>
 								<Button
 									type="submit"
-									disabled={!isDirty || isSaving || !canSubmit}
+									disabled={!isDirty || isPending || !canSubmit}
 								>
-									{isSaving && <Spinner />}
+									{isPending && <Spinner />}
 									Save Teacher Profile
 								</Button>
 							</CardFooter>

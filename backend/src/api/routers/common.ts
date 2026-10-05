@@ -6,7 +6,7 @@ import { protectedProcedure, publicProcedure, tryAPI } from "../procedure";
 export const commonRouter = {
 	getMe: protectedProcedure
 		.handler(async ({ context }) => {
-			return await tryAPI(
+			const user = await tryAPI(
 				"db-common-get-user",
 				db.query.user.findFirst({
 					where: {
@@ -19,6 +19,17 @@ export const commonRouter = {
 					},
 				}),
 			);
+
+			if (user) {
+				switch (user.role) {
+					case "student":
+						return { ...user, data: user[`studentData`], role: "student" } as const
+					case "teacher":
+						return { ...user, data: user[`teacherData`], role: "teacher" } as const
+					case "scheduler":
+						return { ...user, data: user[`schedulerData`], role: "scheduler" } as const
+				}
+			}
 		}),
 	getUser: protectedProcedure
 		.input(

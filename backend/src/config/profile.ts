@@ -37,7 +37,6 @@ export const experienceZod = z.object({
 	description: z.string().optional(), // optional details
 	startedAt: z.string(), // ISO date
 	endedAt: z.string().optional(), // ISO date or undefined if current
-	writtenBy: z.string(), // who recorded/updated this entry
 	createdAt: z.string(), // ISO timestamp of this version
 });
 
