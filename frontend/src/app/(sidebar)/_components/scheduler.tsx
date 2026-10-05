@@ -7,6 +7,7 @@ import {
 	MapIcon,
 	PieChartIcon,
 	Settings2Icon,
+	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
 import type * as React from "react";
@@ -75,19 +76,9 @@ export function SidebarConfig({
 					title="Links"
 					link={[
 						{
-							name: "Design Engineering",
-							url: "#",
-							icon: <FrameIcon />,
-						},
-						{
-							name: "Sales & Marketing",
-							url: "#",
-							icon: <PieChartIcon />,
-						},
-						{
-							name: "Travel",
-							url: "#",
-							icon: <MapIcon />,
+							name: "Edit Profile",
+							url: "/scheduler/edit",
+							icon: <UserPenIcon />,
 						},
 					]}
 				/>

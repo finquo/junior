@@ -1,15 +1,10 @@
+import type { SESSION } from "@/auth";
+import { auth } from "@/services";
 import { ORPCError, type ORPCErrorCode } from "@orpc/client";
 import { os } from "@orpc/server";
 import { triedAsync } from "utils";
-import {
-	type Permissions,
-	type Role,
-	roles,
-	type SESSION,
-	type Sectors,
-} from "@/auth";
-import { auth } from "@/services";
 import type { Context } from "./context";
+import { getProcedure } from "./data";
 
 export const getError = (
 	code: ORPCErrorCode = "INTERNAL_SERVER_ERROR",
@@ -72,20 +67,6 @@ export const protectedProcedure = publicProcedure.use(
 	},
 );
 
-const getProcedure = <R extends Role>(role: R) =>
-	protectedProcedure.use(async ({ context, next }) => {
-		if (context.user.role !== role)
-			throw getError(
-				"UNAUTHORIZED",
-				"You are not authorized to access this action",
-			);
-
-		if (context.session.impersonatedBy)
-			console.log(context.session.impersonatedBy);
-
-		return next();
-	});
-
 export const adminProcedure = getProcedure("admin");
 export const studentProcedure = getProcedure("student");
 export const teacherProcedure = getProcedure("teacher");
@@ -93,45 +74,4 @@ export const qaAuditorProcedure = getProcedure("qa_auditor");
 export const enrollmentAdvisorProcedure = getProcedure("enrollment_advisor");
 export const schedulerProcedure = getProcedure("scheduler");
 
-export const checkPermission = <AC extends Sectors>(
-	checkSector: AC,
-	checkAction: Permissions[AC][number],
-) =>
-	protectedProcedure.use(({ context, next }) => {
-		if (!context.user.role)
-			throw getError(
-				"UNAUTHORIZED",
-				"You don't have any role to access this sector",
-			);
-
-		const role = roles[context.user.role];
-
-		if (!role?.statements)
-			throw getError(
-				"UNAUTHORIZED",
-				"You don't have the any permission to access this sector or actions",
-			);
-
-		const statements = role.statements as unknown as Partial<
-			Record<string, string[]>
-		>;
-
-		const sector = statements[checkSector];
-
-		console.log({ sector });
-
-		if (!sector)
-			throw getError(
-				"UNAUTHORIZED",
-				"You don't have the permission to access this sector",
-			);
-
-		for (const action of sector) {
-			if (action === checkAction) return next();
-		}
-
-		throw getError(
-			"UNAUTHORIZED",
-			"You don't have the permission to access this action",
-		);
-	});
+export * from "./permission";

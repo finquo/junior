@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarFoldIcon, GraduationCapIcon, VideoIcon } from "lucide-react";
+import { CalendarFoldIcon, GraduationCapIcon, UserPenIcon, VideoIcon } from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
@@ -61,6 +61,11 @@ export function SidebarConfig({
 							name: "Availability",
 							url: "/teacher/availability",
 							icon: <CalendarFoldIcon />,
+						},
+						{
+							name: "Edit Profile",
+							url: "/teacher/edit",
+							icon: <UserPenIcon />,
 						},
 					]}
 				/>

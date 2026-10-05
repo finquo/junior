@@ -59,6 +59,7 @@ export const teacherRouter = {
 			UpdateTeacherSchema.omit({
 				id: true,
 				supervisorId: true,
+				availability: true,
 				createdAt: true,
 				updatedAt: true,
 				leaves: true,

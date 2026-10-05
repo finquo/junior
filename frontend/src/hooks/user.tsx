@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import type { USER } from "@/lib/auth";
+import type { Role, USER } from "@/lib/auth";
 import { api } from "./api";
 import { useAuth } from "./auth";
 
@@ -46,4 +46,19 @@ export const CheckSameUser = ({
 	if (sameUser) return <>{fallback}</>;
 
 	return <>{children}</>;
+};
+
+export const GetUserData = ({ id, role }: {
+	id: string;
+	role: Role
+}) => {
+	const res = useQuery(
+		api.common.getUser.queryOptions({
+			input: { id },
+		}),
+	);
+
+	if (res.data) return { ...res, data: res.data[`${role}Data` as ] }
+
+	return res;
 };
