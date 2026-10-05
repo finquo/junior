@@ -22,7 +22,7 @@ import { FetchUser } from "@/hooks/user";
 import { getInitials } from "@/lib/utils";
 
 export function UserSelector<
-	TData = { id: string }[],
+	TData extends { id: string }[] = { id: string }[],
 	TError = DefaultError,
 	TQueryKey extends QueryKey = QueryKey,
 >({
@@ -73,7 +73,7 @@ export function UserSelector<
 				<SelectContent alignItemWithTrigger={false}>
 					<SelectGroup>
 						<SelectLabel>Select a {label}</SelectLabel>
-						{list?.map((l) => (
+						{(list as { id: string }[] | undefined)?.map((l) => (
 							<SelectItem key={l.id} value={l.id}>
 								<FetchUser
 									id={l.id}

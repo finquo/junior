@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
 	transpilePackages: ["backend"],
-	typescript: {
-		ignoreBuildErrors: true,
-	},
 };
 
 // export default nextConfig;

@@ -156,8 +156,14 @@ export function timeStringToMinutes(
 		return fallback;
 	}
 
-	const hours = Number.parseInt(match[1], 10);
-	const minutes = Number.parseInt(match[2], 10);
+	const rawHours = match[1];
+	const rawMinutes = match[2];
+	if (rawHours === undefined || rawMinutes === undefined) {
+		return fallback;
+	}
+
+	const hours = Number.parseInt(rawHours, 10);
+	const minutes = Number.parseInt(rawMinutes, 10);
 
 	if (hours < 0 || hours > 24 || minutes < 0 || minutes >= 60) {
 		console.warn(
@@ -403,7 +409,12 @@ export function DaySlider({
 			}
 
 			// Otherwise, find the closest valid start bound in empty spaces
-			let closest = validStartRanges[0].min;
+			const firstRange = validStartRanges[0];
+			if (!firstRange) {
+				return lowerMin;
+			}
+
+			let closest = firstRange.min;
 			let minDiff = Number.POSITIVE_INFINITY;
 
 			for (const range of validStartRanges) {
@@ -548,13 +559,15 @@ export function DaySlider({
 			emitChange(snapToEmptySpace(target));
 		} else if (e.key === "Home") {
 			e.preventDefault();
-			if (validStartRanges.length > 0) {
-				emitChange(validStartRanges[0].min);
+			const firstRange = validStartRanges[0];
+			if (firstRange) {
+				emitChange(firstRange.min);
 			}
 		} else if (e.key === "End") {
 			e.preventDefault();
-			if (validStartRanges.length > 0) {
-				emitChange(validStartRanges[validStartRanges.length - 1].max);
+			const lastRange = validStartRanges[validStartRanges.length - 1];
+			if (lastRange) {
+				emitChange(lastRange.max);
 			}
 		}
 	};

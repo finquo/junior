@@ -1,3 +1,12 @@
+import type {
+	Address,
+	Experience,
+	Note,
+	SchedulerType,
+	StudentType,
+	TeacherType,
+	UserType,
+} from "backend/config";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	Avatar,
@@ -24,20 +33,11 @@ import {
 } from "@/components/ui/table";
 import { SwitchNode } from "@/components/utils";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
-import type {
-	Address,
-	Experience,
-	Note,
-	SelectSchedulerType,
-	SelectStudentType,
-	SelectTeacherType,
-	SelectUserType
-} from "backend/config";
 
 export function StudentProfile({
 	student,
 }: {
-	student?: SelectStudentType | null;
+	student?: StudentType | null;
 }) {
 	if (!student) return null;
 
@@ -68,9 +68,9 @@ export function StudentProfile({
 						<TableRow>
 							<TableCell>Languages</TableCell>
 							<TableCell>
-								{student.languages?.length
+								{Array.isArray(student.languages) && student.languages.length
 									? student.languages.map((lang) => (
-											<ColorBadge key={lang}>{lang}</ColorBadge>
+											<ColorBadge key={String(lang)}>{String(lang)}</ColorBadge>
 										))
 									: "None"}
 							</TableCell>
@@ -180,7 +180,7 @@ export function StudentProfile({
 export function TeacherProfile({
 	teacher,
 }: {
-	teacher?: SelectTeacherType | null;
+	teacher?: TeacherType | null;
 }) {
 	if (!teacher) return null;
 
@@ -256,7 +256,7 @@ export function TeacherProfile({
 export function SchedulerProfile({
 	scheduler,
 }: {
-	scheduler?: SelectSchedulerType | null;
+	scheduler?: SchedulerType | null;
 }) {
 	if (!scheduler) return null;
 	return (
@@ -293,10 +293,10 @@ export function ProfileCard({
 	teacher,
 	scheduler,
 }: {
-	user: SelectUserType;
-	student?: SelectStudentType | null;
-	teacher?: SelectTeacherType | null;
-	scheduler?: SelectSchedulerType | null;
+	user: UserType;
+	student?: StudentType | null;
+	teacher?: TeacherType | null;
+	scheduler?: SchedulerType | null;
 }) {
 	return (
 		<Card>
@@ -351,6 +351,10 @@ export function ProfileCard({
 					student={<StudentProfile student={student} />}
 					teacher={<TeacherProfile teacher={teacher} />}
 					scheduler={<SchedulerProfile scheduler={scheduler} />}
+					admin={null}
+					enrollment_advisor={null}
+					qa_auditor={null}
+					user={null}
 				/>
 			</CardContent>
 		</Card>
