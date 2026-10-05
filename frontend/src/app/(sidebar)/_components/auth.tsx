@@ -17,13 +17,18 @@ export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 
 		if (isPending)
 			return (
-				<div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+				<div className="flex h-svh flex-1 flex-col gap-4 p-4">
 					<div className="grid auto-rows-min gap-4 md:grid-cols-3">
 						<Skeleton className="aspect-video" />
 						<Skeleton className="aspect-video" />
 						<Skeleton className="aspect-video" />
 					</div>
-					<Skeleton className="flex-1 md:min-h-min" />
+					<Skeleton className="flex-1" />
+					<div className="grid auto-rows-min gap-4 md:grid-cols-3">
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+					</div>
 				</div>
 			);
 
