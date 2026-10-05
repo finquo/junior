@@ -4,7 +4,7 @@ import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
 import { SelectStudentSchema, SelectTeacherSchema } from "@/db/zod";
 import { db } from "@/services";
-import { adminProcedure, getAPI, tryAPI } from "../procedure";
+import { adminProcedure, getAPI, getError, tryAPI } from "../procedure";
 
 export const adminRouter = {
 	getUsers: adminProcedure
@@ -48,6 +48,61 @@ export const adminRouter = {
 			}),
 		)
 		.handler(async ({ input }) => {
+			const existingUser = await tryAPI(
+				"db-admin-get-user-role",
+				db.query.user.findFirst({
+					where: {
+						id: input.id,
+					},
+					columns: {
+						role: true,
+					},
+				}),
+			);
+
+			if (!existingUser) throw getError("NOT_FOUND", "User not found");
+
+			const oldRole = existingUser.role;
+			const newRole = input.role;
+
+			if (oldRole !== newRole) {
+				if (oldRole === "teacher") {
+					await tryAPI(
+						"db-admin-delete-teacher",
+						db.delete(schema.teacher).where(eq(schema.teacher.id, input.id)),
+					);
+				} else if (oldRole === "student") {
+					await tryAPI(
+						"db-admin-delete-student",
+						db.delete(schema.student).where(eq(schema.student.id, input.id)),
+					);
+				} else if (oldRole === "scheduler") {
+					await tryAPI(
+						"db-admin-delete-scheduler",
+						db
+							.delete(schema.scheduler)
+							.where(eq(schema.scheduler.id, input.id)),
+					);
+				}
+
+				if (newRole === "teacher") {
+					await tryAPI(
+						"db-admin-create-teacher",
+						db.insert(schema.teacher).values({ id: input.id }),
+					);
+				} else if (newRole === "student") {
+					await tryAPI(
+						"db-admin-create-student",
+						db.insert(schema.student).values({ id: input.id }),
+					);
+				} else if (newRole === "scheduler") {
+					await tryAPI(
+						"db-admin-create-scheduler",
+						db.insert(schema.scheduler).values({ id: input.id }),
+					);
+				}
+			}
+
 			return await tryAPI(
 				"db-admin-promote-user-update",
 				db

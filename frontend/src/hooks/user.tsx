@@ -48,17 +48,17 @@ export const CheckSameUser = ({
 	return <>{children}</>;
 };
 
-export const GetUserData = ({ id, role }: {
-	id: string;
-	role: Role
-}) => {
-	const res = useQuery(
-		api.common.getUser.queryOptions({
-			input: { id },
-		}),
-	);
+// export const GetUserData = ({ id, role }: {
+// 	id: string;
+// 	role: Role
+// }) => {
+// 	const res = useQuery(
+// 		api.common.getUser.queryOptions({
+// 			input: { id },
+// 		}),
+// 	);
 
-	if (res.data) return { ...res, data: res.data[`${role}Data` as ] }
+// 	if (res.data) return { ...res, data: res.data[`${role}Data` as ] }
 
-	return res;
-};
+// 	return res;
+// };

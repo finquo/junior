@@ -39,11 +39,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/auth";
 import { orpc } from "@/lib/api";
-import { experienceZod, LanguageCodeZod, Languages, type LanguageCodes } from "backend/config";
+import { experienceZod, LanguageCodeZod, Languages, LanguageCodeKey, type LanguageCodes } from "backend/config";
 
 
 const teacherFormSchema = z.object({
-	languages: z.array(LanguageCodeZod),
+	languages: z.array(
+		LanguageCodeZod as unknown as z.ZodType<LanguageCodes, LanguageCodes>,
+	),
 	experiences: z.array(experienceZod),
 });
 
@@ -277,8 +279,13 @@ export default function TeacherProfilePage() {
 			<div>
 				<EditProfile />
 			</div>
-
-			<div>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+			>
 				<Card>
 					<CardHeader>
 						<CardTitle>Teacher Profile</CardTitle>
@@ -286,178 +293,167 @@ export default function TeacherProfilePage() {
 							Update your teaching languages and professional experience.
 						</CardDescription>
 					</CardHeader>
+					<CardContent>
+						<FieldGroup>
+							<form.Field
+								name="languages"
+								children={(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									const selectedLanguages = field.state.value ?? [];
 
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							form.handleSubmit();
-						}}
-					>
-						<CardContent>
-							<FieldGroup>
-								{/* Languages Field */}
-								<form.Field
-									name="languages"
-									children={(field) => {
-										const isInvalid =
-											field.state.meta.isTouched && !field.state.meta.isValid;
-										const selectedLanguages = field.state.value ?? [];
-
-										const toggleLanguage = (code: string, checked: boolean) => {
-											if (checked) {
-												if (!selectedLanguages.includes(code)) {
-													field.handleChange([...selectedLanguages, code]);
-												}
-											} else {
-												field.handleChange(
-													selectedLanguages.filter((lang) => lang !== code),
-												);
+									const toggleLanguage = (code: LanguageCodes, checked: boolean) => {
+										if (checked) {
+											if (!selectedLanguages.includes(code)) {
+												field.handleChange([...selectedLanguages, code]);
 											}
-										};
+										} else {
+											field.handleChange(
+												selectedLanguages.filter((lang) => lang !== code),
+											);
+										}
+									};
 
-										return (
-											<FieldSet data-invalid={isInvalid}>
-												<FieldLegend>Languages Spoken</FieldLegend>
-												<FieldDescription>
-													Select the languages you are comfortable teaching in.
-												</FieldDescription>
+									return (
+										<FieldSet data-invalid={isInvalid}>
+											<FieldLegend>Languages Spoken</FieldLegend>
+											<FieldDescription>
+												Select the languages you are comfortable teaching in.
+											</FieldDescription>
 
-												<FieldGroup data-slot="checkbox-group">
-													{Object.entries(Languages).map(([code, label]) => {
-														const isChecked = selectedLanguages.includes(code);
-														return (
-															<Field key={code} orientation="horizontal">
-																<Checkbox
-																	id={`lang-${code}`}
-																	checked={isChecked}
-																	onCheckedChange={(checked) =>
-																		toggleLanguage(code, !!checked)
-																	}
-																	disabled={isSaving}
-																/>
-																<FieldLabel htmlFor={`lang-${code}`}>
-																	{label}
-																</FieldLabel>
-															</Field>
-														);
-													})}
-												</FieldGroup>
+											<FieldGroup data-slot="checkbox-group">
+												{(Object.entries(Languages) as [LanguageCodes, string][]).map(([code, label]) => {
+													const isChecked = selectedLanguages.includes(code);
+													return (
+														<Field key={code} orientation="horizontal">
+															<Checkbox
+																id={`lang-${code}`}
+																checked={isChecked}
+																onCheckedChange={(checked) =>
+																	toggleLanguage(code, !!checked)
+																}
+																disabled={isSaving}
+															/>
+															<FieldLabel htmlFor={`lang-${code}`}>
+																{label}
+															</FieldLabel>
+														</Field>
+													);
+												})}
+											</FieldGroup>
 
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors.map((err) =>
-															typeof err === "string" ? { message: err } : err,
-														)}
-													/>
-												)}
-											</FieldSet>
-										);
-									}}
-								/>
-
-								<FieldSeparator />
-
-								{/* Experiences Field wrapped in Card with CardAction */}
-								<form.Field
-									name="experiences"
-									mode="array"
-									children={(field: any) => {
-										const experiences =
-											(field.state.value ?? []) as TeacherFormValues["experiences"];
-
-										const addExperience = () => {
-											field.pushValue({
-												title: "",
-												organization: "",
-												description: "",
-												startedAt: "",
-												endedAt: "",
-												writtenBy: user?.name ?? "Teacher",
-												createdAt: new Date().toISOString(),
-											});
-										};
-
-										const removeExperience = (index: number) => {
-											field.removeValue(index);
-										};
-
-										return (
-											<Card size="sm">
-												<CardHeader>
-													<CardTitle>Professional Experiences</CardTitle>
-													<CardDescription>
-														List your teaching history and relevant work experience.
-													</CardDescription>
-													<CardAction>
-														<Button
-															type="button"
-															variant="outline"
-															size="sm"
-															onClick={addExperience}
-															disabled={isSaving}
-														>
-															<PlusIcon />
-															Add Experience
-														</Button>
-													</CardAction>
-												</CardHeader>
-												<CardContent>
-													{experiences.length === 0 ? (
-														<Empty>
-															<EmptyHeader>
-																<EmptyTitle>No experiences added</EmptyTitle>
-																<EmptyDescription>
-																	Add your teaching history and relevant work experience.
-																</EmptyDescription>
-															</EmptyHeader>
-														</Empty>
-													) : (
-														<FieldGroup>
-															{experiences.map((_, index) => (
-																<ExperienceItem
-																	key={index}
-																	index={index}
-																	form={form}
-																	isSaving={isSaving}
-																	onRemove={() => removeExperience(index)}
-																/>
-															))}
-														</FieldGroup>
+											{isInvalid && (
+												<FieldError
+													errors={field.state.meta.errors.map((err) =>
+														typeof err === "string" ? { message: err } : err,
 													)}
-												</CardContent>
-											</Card>
-										);
-									}}
-								/>
-							</FieldGroup>
-						</CardContent>
+												/>
+											)}
+										</FieldSet>
+									);
+								}}
+							/>
 
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isDirty]}
-							children={([canSubmit, isDirty]) => (
-								<CardFooter>
-									<Button
-										type="button"
-										variant="outline"
-										onClick={() => form.reset()}
-										disabled={!isDirty || isSaving}
-									>
-										Reset
-									</Button>
-									<Button
-										type="submit"
-										disabled={!isDirty || isSaving || !canSubmit}
-									>
-										{isSaving && <Spinner />}
-										Save Teacher Profile
-									</Button>
-								</CardFooter>
-							)}
-						/>
-					</form>
+							<FieldSeparator />
+
+							<form.Field
+								name="experiences"
+								mode="array"
+								children={(field: any) => {
+									const experiences =
+										(field.state.value ?? []) as TeacherFormValues["experiences"];
+
+									const addExperience = () => {
+										field.pushValue({
+											title: "",
+											organization: "",
+											description: "",
+											startedAt: "",
+											endedAt: "",
+											writtenBy: user?.name ?? "Teacher",
+											createdAt: new Date().toISOString(),
+										});
+									};
+
+									const removeExperience = (index: number) => {
+										field.removeValue(index);
+									};
+
+									return (
+										<Card size="sm">
+											<CardHeader>
+												<CardTitle>Professional Experiences</CardTitle>
+												<CardDescription>
+													List your teaching history and relevant work experience.
+												</CardDescription>
+												<CardAction>
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={addExperience}
+														disabled={isSaving}
+													>
+														<PlusIcon />
+														Add Experience
+													</Button>
+												</CardAction>
+											</CardHeader>
+											<CardContent>
+												{experiences.length === 0 ? (
+													<Empty>
+														<EmptyHeader>
+															<EmptyTitle>No experiences added</EmptyTitle>
+															<EmptyDescription>
+																Add your teaching history and relevant work experience.
+															</EmptyDescription>
+														</EmptyHeader>
+													</Empty>
+												) : (
+													<FieldGroup>
+														{experiences.map((_, index) => (
+															<ExperienceItem
+																key={index}
+																index={index}
+																form={form}
+																isSaving={isSaving}
+																onRemove={() => removeExperience(index)}
+															/>
+														))}
+													</FieldGroup>
+												)}
+											</CardContent>
+										</Card>
+									);
+								}}
+							/>
+						</FieldGroup>
+					</CardContent>
+
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isDirty]}
+						children={([canSubmit, isDirty]) => (
+							<CardFooter className="justify-end">
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => form.reset()}
+									disabled={!isDirty || isSaving}
+								>
+									Reset
+								</Button>
+								<Button
+									type="submit"
+									disabled={!isDirty || isSaving || !canSubmit}
+								>
+									{isSaving && <Spinner />}
+									Save Teacher Profile
+								</Button>
+							</CardFooter>
+						)}
+					/>
 				</Card>
-			</div>
+			</form>
 		</div>
 	);
 }

@@ -10,9 +10,10 @@ export const Languages = {
 	"ml-IN": "Malayalam (India)",
 	"en-IN": "English (India)",
 };
+export const LanguageCodeKey = Object.keys(Languages)
 export type LanguageCodes = keyof typeof Languages;
 
-export const LanguageCodeZod = z.enum(Object.keys(Languages));
+export const LanguageCodeZod = z.enum(LanguageCodeKey);
 
 export const Currencies = {
 	"₹": "Rupees",

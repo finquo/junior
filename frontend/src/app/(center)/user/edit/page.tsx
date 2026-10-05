@@ -100,21 +100,20 @@ export default function ProfileEditPage() {
 	};
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Edit Profile</CardTitle>
-				<CardDescription>
-					Update your personal details and avatar.
-				</CardDescription>
-			</CardHeader>
-
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
-			>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				form.handleSubmit();
+			}}
+		>
+			<Card>
+				<CardHeader>
+					<CardTitle>Edit Profile</CardTitle>
+					<CardDescription>
+						Update your personal details and avatar.
+					</CardDescription>
+				</CardHeader>
 				<CardContent>
 					<FieldGroup>
 						<form.Field
@@ -192,7 +191,7 @@ export default function ProfileEditPage() {
 						</CardFooter>
 					)}
 				/>
-			</form>
-		</Card>
+			</Card>
+		</form>
 	);
 }
