@@ -26,7 +26,7 @@
 		"both": "vp run -r",
 		"frontend": "vp run --filter frontend",
 		"backend": "vp run --filter backend",
-		"dev": "vp run -r dev",
+		"dev": "vp run -r --parallel dev",
 		"construct": "vp run -r construct",
 		"build": "vp run -r build",
 		"biome": "biome check",

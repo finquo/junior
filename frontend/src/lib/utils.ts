@@ -1,3 +1,6 @@
+import type { StandardSchemaV1 } from "@tanstack/react-form";
+import type { infer as Infer, ZodObject, z } from "zod";
+
 export { cn } from "cn";
 
 export function snakeToTitleCase(snake?: string | null) {
@@ -71,3 +74,8 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
 	}
 	return result;
 }
+
+export type GetFormZod<T extends ZodObject> = StandardSchemaV1<
+	z.infer<T>,
+	unknown
+>;

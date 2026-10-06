@@ -12,7 +12,7 @@ export const lesson = pgTable("lesson", {
 	description: text(),
 	language: text().$type<LanguageCodes>().notNull(),
 
-	quiz: jsonb().$type<Quiz>(),
+	quiz: jsonb().$type<Quiz[]>(),
 	period: interval({ fields: "hour to minute" }).default(
 		sql`INTERVAL '1' HOUR`,
 	),

@@ -1,7 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
-import { Languages } from "@/config";
 import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import {
@@ -9,12 +8,11 @@ import {
 	InsertSlotSchema,
 	SelectSlotSchema,
 	SelectStudentSchema,
-	SelectTeacherSchema,
 	SelectUserSchema,
+	UpdateLessonSchema,
 	UpdateSlotSchema,
 	UpdateStudentSchema,
 	UpdateTeacherSchema,
-	updateZod,
 } from "@/db/zod";
 import { db } from "@/services";
 import { checkAgainstLeaves } from "@/utils/leave";
@@ -284,17 +282,30 @@ export const schedulerRouter = {
 			InsertLessonSchema.omit({
 				id: true,
 				quiz: true,
-				language: true,
 				createdAt: true,
 				updatedAt: true,
-			}).extend({
-				language: z.enum(Object.keys(Languages)),
 			}),
 		)
 		.handler(async ({ input }) => {
 			return await tryAPI(
 				"db-scheduler-create-lesson",
 				db.insert(schema.lesson).values(input).returning(),
+			);
+		}),
+	updateLesson: schedulerProcedure
+		.input(
+			UpdateLessonSchema.required({
+				id: true,
+			}),
+		)
+		.handler(async ({ input }) => {
+			return await tryAPI(
+				"db-scheduler-create-lesson",
+				db
+					.update(schema.lesson)
+					.set(input)
+					.where(eq(schema.lesson.id, input.id))
+					.returning(),
 			);
 		}),
 	updateStudentLessons: schedulerProcedure
@@ -329,11 +340,9 @@ export const schedulerRouter = {
 				createdAt: true,
 				updatedAt: true,
 				leaves: true,
-			}).merge(
-				SelectTeacherSchema.pick({
-					id: true,
-				}),
-			),
+			}).required({
+				id: true,
+			}),
 		)
 		.handler(async ({ input, context }) => {
 			const { id, ...data } = input;
@@ -357,11 +366,9 @@ export const schedulerRouter = {
 				supervisorId: true,
 				createdAt: true,
 				updatedAt: true,
-			}).merge(
-				SelectStudentSchema.pick({
-					id: true,
-				}),
-			),
+			}).required({
+				id: true,
+			}),
 		)
 		.handler(async ({ input, context }) => {
 			const { id, ...data } = input;

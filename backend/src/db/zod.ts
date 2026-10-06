@@ -4,10 +4,12 @@ import {
 	addressZod,
 	availabilityZod,
 	experienceZod,
+	intervalHourZod,
 	LanguageCodeZod,
 	noteZod,
 	type PlayKeys,
 	planKeys,
+	quizZod,
 	schoolingZod,
 } from "@/config";
 import * as schema from "./schema";
@@ -73,7 +75,7 @@ export const UpdateStudentSchema = createUpdateSchema(
 ).safeExtend({
 	schooling: schoolingZod.nullable().optional(),
 	languages: LanguageCodeZod.array().optional(),
-	program: ProgramZod.nullable(),
+	program: ProgramZod.optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.optional(),
 });
@@ -83,12 +85,28 @@ export const SelectSlotSchema = createSelectSchema(schema.slot);
 export const InsertSlotSchema = createInsertSchema(schema.slot);
 export const UpdateSlotSchema = createUpdateSchema(schema.slot);
 
-export const SelectLessonSchema = createSelectSchema(schema.lesson).safeExtend({
-	language: LanguageCodeZod,
-});
-export const InsertLessonSchema = createInsertSchema(schema.lesson).safeExtend({
-	language: LanguageCodeZod,
-});
+// Lesson
+export const SelectLessonSchema = createSelectSchema(schema.lesson)
+	.omit({ period: true })
+	.safeExtend({
+		language: LanguageCodeZod,
+		quiz: quizZod.array(),
+		period: intervalHourZod,
+	});
+export const InsertLessonSchema = createInsertSchema(schema.lesson)
+	.omit({ period: true })
+	.safeExtend({
+		language: LanguageCodeZod,
+		quiz: quizZod.array().optional(),
+		period: intervalHourZod.optional(),
+	});
+export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
+	.omit({ period: true })
+	.safeExtend({
+		language: LanguageCodeZod.optional(),
+		quiz: quizZod.array().optional(),
+		period: intervalHourZod.optional(),
+	});
 
 export const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
 	schema: T,

@@ -39,6 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, queryClient } from "@/hooks/api";
 import type { Role } from "@/lib/auth";
 import { rolesObject } from "@/lib/role";
+import type { GetFormZod } from "@/lib/utils";
 
 const createUserSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
@@ -86,10 +87,7 @@ export default function CreateUserPage() {
 			role: "user",
 		} as z.infer<typeof createUserSchema>,
 		validators: {
-			onSubmit: createUserSchema as StandardSchemaV1<
-				z.infer<typeof createUserSchema>,
-				unknown
-			>,
+			onSubmit: createUserSchema as GetFormZod<typeof createUserSchema>,
 		},
 		onSubmit: async ({ value }) => {
 			await mutateAsync({
