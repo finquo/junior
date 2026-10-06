@@ -23,17 +23,14 @@
 		}
 	},
 	"scripts": {
-		"both": "vp run",
+		"both": "vp run -r",
 		"frontend": "vp run --filter frontend",
 		"backend": "vp run --filter backend",
 		"dev": "vp run -r dev",
 		"construct": "vp run -r construct",
 		"build": "vp run -r build",
-		"check-types": "vp run -r check-types",
-		"check": "biome check",
-		"lint": "vp lint",
-		"format": "vp fmt",
-		"staged": "vp staged",
+		"biome": "biome check",
+		"check": "vp run -r check",
 		"hooks:setup": "vp config",
 		"env:generate": "vp run -r env:generate"
 	},

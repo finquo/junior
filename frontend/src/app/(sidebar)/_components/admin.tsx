@@ -75,7 +75,7 @@ const data = {
 			subItems: [
 				{
 					title: "Create User",
-					url: "/create",
+					url: "/admin/users/new",
 				},
 			],
 		},
@@ -130,7 +130,6 @@ const data = {
 		{
 			name: "Travel",
 			url: "#",
-			icon: <MapIcon />,
 		},
 	],
 };

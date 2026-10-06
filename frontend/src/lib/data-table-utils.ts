@@ -331,7 +331,9 @@ export function stringifyFilterValue(value: unknown): string {
 }
 
 export function getIsMultiValueVariant(variant: FilterVariant) {
-	return MULTI_VALUE_FILTER_VARIANTS.includes(variant);
+	return MULTI_VALUE_FILTER_VARIANTS.includes(
+		variant as (typeof MULTI_VALUE_FILTER_VARIANTS)[number],
+	);
 }
 
 export function getPlainFilterOperator(variant: FilterVariant): FilterOperator {

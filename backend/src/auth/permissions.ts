@@ -68,5 +68,5 @@ export const roles = {
 };
 
 export type Role = keyof typeof roles;
-export const roleEnum = Object.keys(roles);
+export const roleEnum = Object.keys(roles) as Role[];
 export const roleEnumZod = z.enum(roleEnum);

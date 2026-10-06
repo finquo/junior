@@ -122,10 +122,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 									<StudentProfile student={row.original} />
 								</div>
 								<DrawerFooter>
-									<DrawerClose
-										nativeButton={false}
-										render={<Button variant="outline" />}
-									>
+									<DrawerClose render={<Button variant="outline" />}>
 										Close
 									</DrawerClose>
 								</DrawerFooter>
@@ -306,7 +303,6 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			cell: ({ row }) => (
 				<Drawer>
 					<DrawerTrigger
-						nativeButton={false}
 						render={
 							<Button variant="outline" size="icon-sm">
 								<PenIcon />
@@ -320,10 +316,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
-							<DrawerClose
-								nativeButton={false}
-								render={<Button variant="outline" />}
-							>
+							<DrawerClose render={<Button variant="outline" />}>
 								Close
 							</DrawerClose>
 						</DrawerFooter>

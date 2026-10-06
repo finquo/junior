@@ -3,7 +3,7 @@ import z from "zod";
 import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
 import { SelectStudentSchema, SelectTeacherSchema } from "@/db/zod";
-import { db } from "@/services";
+import { auth, db } from "@/services";
 import { adminProcedure, getAPI, getError, tryAPI } from "../procedure";
 
 export const adminRouter = {
@@ -38,6 +38,23 @@ export const adminRouter = {
 							: desc(schema.user.createdAt),
 					),
 				[],
+			);
+		}),
+	createAccount: adminProcedure
+		.input(
+			z.object({
+				name: z.string(),
+				email: z.email(),
+				password: z.string().default("1234567890"),
+				role: roleEnumZod.default("user"),
+			}),
+		)
+		.handler(async ({ input }) => {
+			return await tryAPI(
+				"db-admin-create-students",
+				auth.api.createUser({
+					body: input,
+				}),
 			);
 		}),
 	promote: adminProcedure
@@ -104,24 +121,46 @@ export const adminRouter = {
 				if (input.role === "teacher") {
 					await tryAPI(
 						"db-admin-create-teacher",
-						db.insert(schema.teacher).values({
-							id: input.id,
-							supervisorId: input.supervisorId,
-						}),
+						db
+							.insert(schema.teacher)
+							.values({
+								id: input.id,
+								supervisorId: input.supervisorId,
+							})
+							.onConflictDoUpdate({
+								target: schema.teacher.id,
+								set: {
+									supervisorId: schema.teacher.supervisorId,
+								},
+							}),
 					);
 				} else if (input.role === "student") {
 					await tryAPI(
 						"db-admin-create-student",
-						db.insert(schema.student).values({
-							id: input.id,
-							mentorId: input.mentorId,
-							supervisorId: input.supervisorId,
-						} as any),
+						db
+							.insert(schema.student)
+							.values({
+								id: input.id,
+								mentorId: input.mentorId,
+								supervisorId: input.supervisorId,
+								paid: false,
+								amount: 0,
+							})
+							.onConflictDoUpdate({
+								target: schema.student.id,
+								set: {
+									mentorId: schema.student.mentorId,
+									supervisorId: schema.student.supervisorId,
+								},
+							}),
 					);
 				} else if (input.role === "scheduler") {
 					await tryAPI(
 						"db-admin-create-scheduler",
-						db.insert(schema.scheduler).values({ id: input.id }),
+						db
+							.insert(schema.scheduler)
+							.values({ id: input.id })
+							.onConflictDoNothing(),
 					);
 				}
 			}

@@ -20,14 +20,15 @@ import {
 	useTable,
 } from "@tanstack/react-table";
 import { useDebounce } from "@uidotdev/usehooks";
-import { ExternalLinkIcon, PenIcon, Search } from "lucide-react";
+import { ExternalLinkIcon, PenIcon, Search, UserPlusIcon } from "lucide-react";
+import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
 import { getRelateTime } from "utils";
 import Loader from "@/components/loader";
 import { ProfileCard } from "@/components/profile";
-import { Frame, FramePanel } from "@/components/reui/frame";
+import { Frame, FrameHeader, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -137,10 +138,7 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger
-				nativeButton={false}
-				render={<Button variant="outline" size="sm" />}
-			>
+			<DrawerTrigger render={<Button variant="outline" size="sm" />}>
 				Change Role
 			</DrawerTrigger>
 			<DrawerContent className="overflow-y-auto">
@@ -159,35 +157,6 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 					</DrawerHeader>
 					<div className="flex flex-col gap-4 p-4">
 						<FieldGroup>
-							<form.Field
-								name="role"
-								children={(field) => (
-									<Field>
-										<FieldLabel>Role</FieldLabel>
-										<Select
-											items={rolesObject}
-											value={field.state.value}
-											disabled={isPending}
-											onValueChange={(r) => {
-												if (r) field.handleChange(r as Role);
-											}}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Select role" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectGroup>
-													{rolesObject.map((item) => (
-														<SelectItem key={item.value} value={item.value}>
-															{item.label}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-									</Field>
-								)}
-							/>
 							<form.Field
 								name="role"
 								children={(field) => (
@@ -280,10 +249,7 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 							{isPending && <Spinner />}
 							Submit
 						</Button>
-						<DrawerClose
-							nativeButton={false}
-							render={<Button variant="outline" />}
-						>
+						<DrawerClose render={<Button variant="outline" />}>
 							Cancel
 						</DrawerClose>
 					</DrawerFooter>
@@ -353,7 +319,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 						<DrawerTrigger
 							nativeButton={false}
 							render={
-								<Item className="cursor-pointer p-0 text-left transition-opacity transition-opacity hover:opacity-80" />
+								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
 							}
 						>
 							<ItemMedia>
@@ -379,10 +345,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								<ProfileCard user={member} />
 							</div>
 							<DrawerFooter>
-								<DrawerClose
-									nativeButton={false}
-									render={<Button variant="outline" />}
-								>
+								<DrawerClose render={<Button variant="outline" />}>
 									Close
 								</DrawerClose>
 							</DrawerFooter>
@@ -497,10 +460,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
-							<DrawerClose
-								nativeButton={false}
-								render={<Button variant="outline" />}
-							>
+							<DrawerClose render={<Button variant="outline" />}>
 								Close
 							</DrawerClose>
 						</DrawerFooter>
@@ -537,7 +497,7 @@ export default function Page() {
 	return (
 		<TooltipProvider>
 			<Frame>
-				<FramePanel className="flex flex-row gap-4">
+				<FrameHeader className="flex-row items-center justify-between">
 					<InputGroup className="w-xs">
 						<InputGroupInput
 							value={search ?? ""}
@@ -563,11 +523,17 @@ export default function Page() {
 										{item.label}
 									</SelectItem>
 								))}
-								<SelectItem value={undefined}>None</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>
-				</FramePanel>
+					<Button
+						render={<Link href="/admin/users/new" />}
+						nativeButton={false}
+					>
+						<UserPlusIcon />
+						Create User
+					</Button>
+				</FrameHeader>
 				<FramePanel className="p-0!">
 					<Table>
 						<TableHeader>

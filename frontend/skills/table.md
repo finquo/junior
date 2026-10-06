@@ -67,6 +67,7 @@ columnHelper.display({
       {(user) => (
         <Drawer>
           <DrawerTrigger
+          	nativeButton={false}
             render={
               <Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
             }

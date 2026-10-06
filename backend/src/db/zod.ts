@@ -1,11 +1,5 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
-import {
-	type ZodObject,
-	type ZodRawShape,
-	type ZodString,
-	type ZodTypeAny,
-	z,
-} from "zod";
+import { type ZodObject, type ZodRawShape, type ZodString, z } from "zod";
 import {
 	addressZod,
 	availabilityZod,

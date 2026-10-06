@@ -1,6 +1,7 @@
-import { sql } from "drizzle-orm";
+import { getColumns, type SQL, sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
+	type PgTable,
 	type SubqueryWithSelection,
 	text,
 	timestamp,
@@ -66,3 +67,23 @@ export function JsonbArrayAppend<Column extends AnyPgColumn>(
 	// return sql`${column} || ${JSON.stringify(value)}::jsonb`;
 	return sql`coalesce(${column}, '[]'::jsonb) || ${JSON.stringify(value)}::jsonb`;
 }
+
+export const buildConflictUpdateColumns = <
+	T extends PgTable,
+	Q extends keyof T["_"]["columns"],
+>(
+	table: T,
+	columns: Q[],
+) => {
+	const cls = getColumns(table);
+
+	return columns.reduce(
+		(acc, column) => {
+			const colName = cls[column]?.name;
+			acc[column] = sql.raw(`excluded.${colName}`);
+
+			return acc;
+		},
+		{} as Record<Q, SQL>,
+	);
+};

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+	type ColumnDef,
 	columnFilteringFeature,
 	columnVisibilityFeature,
 	createColumnHelper,
@@ -16,11 +17,10 @@ import {
 	sortFn_text,
 	tableFeatures,
 	useTable,
-	type ColumnDef,
 } from "@tanstack/react-table";
+import { Languages } from "backend/config";
 import { CalendarIcon, PenIcon } from "lucide-react";
 import { getRelateTime } from "utils";
-import { Languages } from "backend/config";
 import Loader from "@/components/loader";
 import { ProfileCard, TeacherProfile } from "@/components/profile";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -105,7 +105,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 					<Drawer>
 						<DrawerTrigger
 							render={
-								<Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
+								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
 							}
 						>
 							<ItemMedia>
@@ -114,9 +114,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 										src={user?.image ?? undefined}
 										alt={user?.name ?? "Teacher"}
 									/>
-									<AvatarFallback>
-										{user?.name?.[0] ?? "T"}
-									</AvatarFallback>
+									<AvatarFallback>{user?.name?.[0] ?? "T"}</AvatarFallback>
 								</Avatar>
 							</ItemMedia>
 							<ItemContent>
@@ -178,9 +176,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
 						Supervisor
 					</TooltipTrigger>
-					<TooltipContent>
-						Assigned scheduler supervisor
-					</TooltipContent>
+					<TooltipContent>Assigned scheduler supervisor</TooltipContent>
 				</Tooltip>
 			),
 			cell: ({ row }) => {
@@ -219,9 +215,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 										</ItemMedia>
 										<ItemContent>
 											<ItemTitle>{supervisor.name}</ItemTitle>
-											<ItemDescription>
-												{supervisor.email}
-											</ItemDescription>
+											<ItemDescription>{supervisor.email}</ItemDescription>
 										</ItemContent>
 									</Item>
 								)}
@@ -288,9 +282,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 					<DrawerContent className="overflow-y-auto">
 						<DrawerHeader>
 							<DrawerTitle>Edit Teacher</DrawerTitle>
-							<DrawerDescription>
-								Edit teacher details
-							</DrawerDescription>
+							<DrawerDescription>Edit teacher details</DrawerDescription>
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
@@ -350,10 +342,7 @@ export default function Page() {
 								))
 							) : (
 								<TableRow>
-									<TableCell
-										colSpan={columns.length}
-										className="text-center"
-									>
+									<TableCell colSpan={columns.length} className="text-center">
 										No teachers found
 									</TableCell>
 								</TableRow>

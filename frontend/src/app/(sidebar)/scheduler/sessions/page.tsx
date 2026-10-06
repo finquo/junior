@@ -131,10 +131,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ProfileCard user={user} />
 									</div>
 									<DrawerFooter>
-										<DrawerClose
-											nativeButton={false}
-											render={<Button variant="outline" />}
-										>
+										<DrawerClose render={<Button variant="outline" />}>
 											Close
 										</DrawerClose>
 									</DrawerFooter>
@@ -185,10 +182,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ProfileCard user={user} />
 									</div>
 									<DrawerFooter>
-										<DrawerClose
-											nativeButton={false}
-											render={<Button variant="outline" />}
-										>
+										<DrawerClose render={<Button variant="outline" />}>
 											Close
 										</DrawerClose>
 									</DrawerFooter>
@@ -278,7 +272,6 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			cell: ({ row }) => (
 				<Drawer>
 					<DrawerTrigger
-						nativeButton={false}
 						render={
 							<Button variant="outline" size="icon-sm">
 								<PenIcon />
@@ -294,10 +287,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
-							<DrawerClose
-								nativeButton={false}
-								render={<Button variant="outline" />}
-							>
+							<DrawerClose render={<Button variant="outline" />}>
 								Close
 							</DrawerClose>
 						</DrawerFooter>
