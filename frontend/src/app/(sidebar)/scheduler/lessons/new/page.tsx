@@ -8,6 +8,7 @@ import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardContent,
@@ -38,12 +39,13 @@ import { api, queryClient } from "@/hooks/api";
 import type { GetFormZod } from "@/lib/utils";
 
 const languageOptions = Object.entries(Languages);
+const period = [30, 60, 120, 180];
 
 const createLessonSchema = z.object({
 	name: z.string().trim().min(1, "Lesson name is required"),
 	description: z.string().optional(),
 	language: LanguageCodeZod,
-	period: z.string().optional(),
+	period: z.number(),
 });
 
 export default function CreateLessonPage() {
@@ -64,7 +66,7 @@ export default function CreateLessonPage() {
 			name: "",
 			description: "",
 			language: "en-IN" as LanguageCodes,
-			period: "1 hour",
+			period: 60,
 		} as z.infer<typeof createLessonSchema>,
 		validators: {
 			onSubmit: createLessonSchema as GetFormZod<typeof createLessonSchema>,
@@ -74,7 +76,7 @@ export default function CreateLessonPage() {
 				name: value.name.trim(),
 				description: value.description?.trim() || null,
 				language: value.language,
-				period: value.period?.trim() || undefined,
+				period: value.period,
 			});
 		},
 	});
@@ -212,20 +214,24 @@ export default function CreateLessonPage() {
 										field.state.meta.isTouched && !field.state.meta.isValid;
 									return (
 										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>Duration</FieldLabel>
-											<Input
-												id={field.name}
-												name={field.name}
-												placeholder="1 hour"
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												aria-invalid={isInvalid}
-												disabled={isPending}
-											/>
+											<FieldLabel>Duration (Minutes)</FieldLabel>
+											<ButtonGroup>
+												{period.map((val) => (
+													<Button
+														key={val}
+														type="button"
+														variant={
+															field.state.value === val ? "default" : "outline"
+														}
+														onClick={() => field.handleChange(val)}
+														disabled={isPending}
+													>
+														{val} mins
+													</Button>
+												))}
+											</ButtonGroup>
 											<FieldDescription>
-												Estimated duration (e.g. 1 hour, 45 minutes, 30
-												minutes).
+												Select the lesson duration in minutes.
 											</FieldDescription>
 											{isInvalid && (
 												<FieldError
@@ -241,16 +247,8 @@ export default function CreateLessonPage() {
 						</FieldGroup>
 					</CardContent>
 					<CardFooter className="flex justify-end gap-3 pt-6">
-						<Button
-							variant="outline"
-							render={<Link href="/scheduler/sessions" />}
-							nativeButton={false}
-							disabled={isPending}
-						>
-							Cancel
-						</Button>
 						<Button type="submit" disabled={isPending}>
-							{isPending ? <Spinner className="size-4" /> : <BookOpenIcon />}
+							{isPending ? <Spinner /> : <BookOpenIcon />}
 							Create Lesson
 						</Button>
 					</CardFooter>

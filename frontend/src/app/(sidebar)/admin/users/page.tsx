@@ -82,17 +82,12 @@ import {
 import { api, queryClient } from "@/hooks/api";
 import { authClient } from "@/hooks/auth";
 import { MutationButton } from "@/hooks/button";
+import type { API_Returns } from "@/lib/api";
 import type { Role } from "@/lib/auth";
 import { rolesObject } from "@/lib/role";
 import { snakeToTitleCase } from "@/lib/utils";
 
-type UserRecord = NonNullable<
-	Awaited<
-		ReturnType<
-			NonNullable<ReturnType<typeof api.admin.getUsers.queryOptions>["queryFn"]>
-		>
-	>
->[number];
+type UserRecord = API_Returns["admin"]["getUsers"][number];
 
 function ChangeRoleCell({ user }: { user: UserRecord }) {
 	const [open, setOpen] = useState(false);

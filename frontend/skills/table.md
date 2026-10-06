@@ -9,16 +9,16 @@ This guide establishes the architecture, conventions, and rules for building dat
 - **Framework**: Next.js (App Router, React 19)
 - **Table State Management**: TanStack Table v9 (`@tanstack/react-table`)
 - **Server State & Queries**: TanStack Query (`@tanstack/react-query`) with oRPC utilities (`@/hooks/api`)
+- **Type Utilities**: `API_Returns` and `API_Params` from `@/lib/api` for exact router type extraction
 - **Design System**: shadcn/ui components backed by Base UI (`@base-ui/react`) and Tailwind CSS
   - Table: `Table`, `TableHeader`, `TableBody`, `TableHead`, `TableRow`, `TableCell` from `@/components/ui/table`
-  - Container: `Frame`, `FramePanel` from `@/components/reui/frame`
+  - Container: `Frame`, `FrameHeader`, `FramePanel` from `@/components/reui/frame`
   - Drawers: `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`, `DrawerClose` from `@/components/ui/drawer`
   - Item UI: `Item`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription` from `@/components/ui/item`
   - Hover Card: `HoverCard`, `HoverCardTrigger`, `HoverCardContent` from `@/components/ui/hover-card`
   - Tooltips: `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider` from `@/components/ui/tooltip`
   - Avatars & Badges: `@/components/ui/avatar`, `@/components/ui/badge`
-- **User & Entity Resolution**: `<FetchUser />` (`@/hooks/user`), Better Auth (`@/hooks/auth`), and `<ProfileCard />` (`@/components/profile`)
-- **Loading & Notifications**: `<Loader />` (`@/components/loader`), `<Spinner />` (`@/components/ui/spinner`), `sileo` as `toast`
+- **User & Entity Resolution**: `<FetchUser />` (`@/hooks/user`), Better Auth (`@/hooks/auth`), and `<ProfileCard />` (`@/components/profile`)\n- **Loading & Notifications**: `<Loader />` (`@/components/loader`), `<Spinner />` (`@/components/ui/spinner`), `sileo` as `toast`
 - **URL & Search State**: `useQueryState` (`nuqs`) and `useDebounce` (`@uidotdev/usehooks`)
 - **Time Utilities**: `getRelateTime` from `utils` (`import { getRelateTime } from "utils"`)
 
@@ -34,29 +34,26 @@ This guide establishes the architecture, conventions, and rules for building dat
 - **Full Page Loading**: Always use `<Loader />` from `@/components/loader` for initial page loading states (`if (isPending) return <Loader />;`).
 - **Inline / Micro Loading**: Use `<Spinner />` from `@/components/ui/spinner` only for nested, asynchronous cell resolution (e.g. `<FetchUser isPending={<Spinner />}>`).
 
-### C. Exact Type Inference from Query Options
-Never manually redeclare database or response types for table rows if they can be inferred directly from the oRPC query. Use exact return type inference:
+### C. Exact Type Inference with `API_Returns`
+Never manually redeclare database or response types for table rows, and avoid cumbersome nested `ReturnType<...>` extractions. Use the centralized `API_Returns` type exported from `@/lib/api`:
 
 ```ts
-type RecordItem = NonNullable<
-  Awaited<
-    ReturnType<
-      NonNullable<
-        ReturnType<typeof api.router.procedure.queryOptions>["queryFn"]
-      >
-    >
-  >
->[number];
+import type { API_Returns } from "@/lib/api";
+
+type RecordItem = API_Returns["routerName"]["procedureName"][number];
+
+// Example:
+type LessonRecord = API_Returns["scheduler"]["getLessons"][number];
 ```
 
-This guarantees 100% type alignment between backend drizzle queries, oRPC routers, and table cell accessor definitions.
+This guarantees clean, concise, and 100% typesafe alignment between backend routers and table cell definitions. For input parameters, use `API_Params` from the same module.
 
 ---
 
 ## 3. Entity & Cell Interaction Patterns
 
 ### A. The Item + Drawer Pattern for Primary Entity Cells
-Whenever a table row references a primary entity (such as a Student, Teacher, or User), wrap the **entire** `<Item>` in `<DrawerTrigger render={<Item ... />}>`:
+Whenever a table row references a primary entity (such as a Student, Teacher, User, or Lesson), wrap the **entire** `<Item>` in `<DrawerTrigger nativeButton={false} render={<Item ... />}>`:
 
 ```tsx
 columnHelper.display({
@@ -67,7 +64,7 @@ columnHelper.display({
       {(user) => (
         <Drawer>
           <DrawerTrigger
-          	nativeButton={false}
+            nativeButton={false}
             render={
               <Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
             }
@@ -99,7 +96,10 @@ columnHelper.display({
               <StudentProfile student={row.original} />
             </div>
             <DrawerFooter>
-              <DrawerClose render={<Button variant="outline" />}>
+              <DrawerClose
+                nativeButton={false}
+                render={<Button variant="outline" />}
+              >
                 Close
               </DrawerClose>
             </DrawerFooter>
@@ -169,7 +169,7 @@ columnHelper.display({
 ```
 
 ### C. Row Action "Edit" Drawer Button
-Every table row should provide an edit action button (`<PenIcon />`) triggering an edit drawer:
+Every table row should provide an edit action button (`<PenIcon />`) triggering an edit drawer with Base UI `nativeButton={false}`:
 
 ```tsx
 columnHelper.display({
@@ -178,6 +178,7 @@ columnHelper.display({
   cell: ({ row }) => (
     <Drawer>
       <DrawerTrigger
+        nativeButton={false}
         render={
           <Button variant="outline" size="icon-sm">
             <PenIcon />
@@ -191,7 +192,10 @@ columnHelper.display({
         </DrawerHeader>
         <div className="p-4" />
         <DrawerFooter>
-          <DrawerClose render={<Button variant="outline" />}>
+          <DrawerClose
+            nativeButton={false}
+            render={<Button variant="outline" />}
+          >
             Close
           </DrawerClose>
         </DrawerFooter>
@@ -218,6 +222,7 @@ columnHelper.display({
   cell: ({ row }) => (
     <Drawer>
       <DrawerTrigger
+        nativeButton={false}
         render={
           <Button variant="outline" size="icon-sm">
             <CalendarIcon />
@@ -231,7 +236,10 @@ columnHelper.display({
         </DrawerHeader>
         <div className="p-4" />
         <DrawerFooter>
-          <DrawerClose render={<Button variant="outline" />}>
+          <DrawerClose
+            nativeButton={false}
+            render={<Button variant="outline" />}
+          >
             Close
           </DrawerClose>
         </DrawerFooter>
@@ -246,7 +254,7 @@ columnHelper.display({
 ## 4. Design System & Cell Formatting Rules
 
 ### A. Column Header Tooltips
-Add hover tooltips on columns that may be ambiguous or jargon-heavy (e.g. `Program`, `Schooling`, `Status`, `Meeting`, `Payment`):
+Add hover tooltips on columns that may be ambiguous or jargon-heavy (e.g. `Program`, `Schooling`, `Status`, `Meeting`, `Language`, `Duration`):
 
 ```tsx
 header: () => (
@@ -263,11 +271,17 @@ header: () => (
 *Note: Always wrap the table or page component with `<TooltipProvider>` so tooltips trigger correctly.*
 
 ### B. Frame Container Pattern
-Wrap all tables in `<Frame>` and `<FramePanel className="p-0!">` to maintain consistent panel styling and border radius:
+Wrap all tables in `<Frame>` with optional `<FrameHeader>` for navigation/create buttons, and `<FramePanel className="p-0!">` to maintain consistent panel styling and border radius:
 
 ```tsx
 <TooltipProvider>
   <Frame>
+    <FrameHeader className="flex flex-row items-center justify-end">
+      <Button render={<Link href="/scheduler/lessons/new" />} nativeButton={false}>
+        <PlusIcon />
+        Create Lesson
+      </Button>
+    </FrameHeader>
     <FramePanel className="p-0!">
       <Table>
         {/* Table content */}
@@ -277,8 +291,8 @@ Wrap all tables in `<Frame>` and `<FramePanel className="p-0!">` to maintain con
 </TooltipProvider>
 ```
 
-### C. Link Buttons with `nativeButton={false}`
-When using Base UI's `<Button>` to render an anchor tag (`render={<a href={...} />}`), **always pass `nativeButton={false}`**:
+### C. Link Buttons & Triggers with `nativeButton={false}`
+When using Base UI's `<Button>` or `<DrawerTrigger>` / `<DrawerClose>` to render an anchor tag (`render={<a href={...} />}`), a link (`render={<Link ... />}`), or a custom button (`render={<Button ... />}`), **always pass `nativeButton={false}`**:
 
 ```tsx
 // Correct:
@@ -291,14 +305,12 @@ When using Base UI's `<Button>` to render an anchor tag (`render={<a href={...} 
   Join
 </Button>
 
-// Incorrect (Will trigger Base UI invalid button attribute warnings):
-<Button
-  variant="outline"
-  size="sm"
-  render={<a href={link} target="_blank" rel="noreferrer" />}
+<DrawerClose
+  nativeButton={false}
+  render={<Button variant="outline" />}
 >
-  Join
-</Button>
+  Close
+</DrawerClose>
 ```
 
 ### D. Relative Time Columns (`createdAt`, `updatedAt`)
@@ -307,7 +319,7 @@ Use `getRelateTime` from `utils` (`import { getRelateTime } from "utils"`) for t
 ```tsx
 columnHelper.accessor("createdAt", {
   header: "Joined",
-  cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+  cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago` | "—",
 }),
 ```
 
@@ -325,14 +337,15 @@ columnHelper.accessor("createdAt", {
 
 ## 5. Summary Checklist Before Finalizing a Table
 
+- [ ] Used `API_Returns["router"]["procedure"][number]` from `@/lib/api` for row types.
 - [ ] Built directly in `page.tsx` with zero duplicate components in `_components/`.
 - [ ] Exported only `default function Page()`.
 - [ ] Wrapped table in `<TooltipProvider>` and `<Frame><FramePanel className="p-0!"><Table>...</Table></FramePanel></Frame>`.
 - [ ] Rendered `<Badge variant="outline">Not Assigned</Badge>` for null `supervisorId`, `mentorId`, `teacherId`, etc.
-- [ ] Added `<Tooltip>` to ambiguous column headers (`Program`, `Schooling`, `Status`, etc.).
+- [ ] Added `<Tooltip>` to ambiguous column headers (`Program`, `Schooling`, `Status`, `Language`, `Duration`, etc.).
 - [ ] Replaced foreign key lookups (`supervisorId`, `mentorId`) with interactive `<HoverCard>` previews.
-- [ ] Passed `nativeButton={false}` to every `<Button>` rendering an anchor tag (`<a>`).
+- [ ] Passed `nativeButton={false}` to every `<Button>` rendering `<Link>` or `<a>`, and every `<DrawerTrigger>` / `<DrawerClose>` rendering `<Button>`.
 - [ ] Added an edit button (`<PenIcon />`) with `<Drawer>` to every table row.
 - [ ] Formatted timestamps using `${getRelateTime(new Date(getValue()))} ago`.
-- [ ] Wrapped entity cells in `<Item>` with the entire item acting as `<DrawerTrigger>`.
+- [ ] Wrapped entity cells in `<Item>` with the entire item acting as `<DrawerTrigger>` and `nativeButton={false}`.
 - [ ] Passed TypeScript compilation check (`bun run check`) with 0 errors.

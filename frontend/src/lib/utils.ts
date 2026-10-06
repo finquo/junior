@@ -76,6 +76,6 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
 export type GetFormZod<T extends ZodObject> = StandardSchemaV1<
-	z.infer<T>,
+	Infer<T>,
 	unknown
 >;

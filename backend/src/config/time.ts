@@ -37,11 +37,12 @@ export const availabilityZod = z.record(
 export type Availability = z.infer<typeof availabilityZod>;
 
 export const intervalHourZod = z
-	.object({
-		hours: z.number().int().nonnegative().default(0),
-		minutes: z.number().int().min(0).max(59).default(0),
-	})
-	.refine((val) => val.hours > 0 || val.minutes > 0, {
-		message: "Interval must be greater than 0",
-	})
+	.number()
+	.int()
+	.nonnegative()
+	.default(0)
+	.transform((min) => ({
+		hours: Math.floor(min / 60),
+		minutes: min % 60,
+	}))
 	.transform(({ hours, minutes }) => `${hours} hours ${minutes} minutes`);

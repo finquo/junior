@@ -158,6 +158,13 @@ export const schedulerRouter = {
 			[],
 		);
 	}),
+	getLessons: schedulerProcedure.handler(async () => {
+		return await getAPI(
+			"db-scheduler-get-lessons-query",
+			db.select().from(schema.lesson).orderBy(desc(schema.lesson.createdAt)),
+			[],
+		);
+	}),
 	searchTeachers: schedulerProcedure
 		.input(
 			SelectUserSchema.pick({ name: true }).extend({

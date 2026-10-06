@@ -37,7 +37,9 @@
 			"default": "./dist/auth/export.mjs"
 		},
 		"./api": {
-			"types": "./dist/api/index.d.mts"
+			"types": "./dist/api/index.d.mts",
+			"import": "./dist/api/index.mjs",
+			"default": "./dist/api/index.mjs"
 		}
 	},
 	"dependencies": {

@@ -1,12 +1,9 @@
 "use client";
 
 import {
+	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
-	FrameIcon,
 	GraduationCapIcon,
-	MapIcon,
-	PieChartIcon,
-	Settings2Icon,
 	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -67,6 +64,17 @@ export function SidebarConfig({
 								{
 									title: "New Session",
 									url: "/scheduler/sessions/new",
+								},
+							],
+						},
+						{
+							title: "Lessons",
+							url: "/scheduler/lessons",
+							icon: <BookOpenCheckIcon />,
+							subItems: [
+								{
+									title: "New Lessons",
+									url: "/scheduler/lessons/new",
 								},
 							],
 						},
