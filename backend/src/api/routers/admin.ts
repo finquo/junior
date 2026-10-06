@@ -42,10 +42,27 @@ export const adminRouter = {
 		}),
 	promote: adminProcedure
 		.input(
-			z.object({
-				id: z.string(),
-				role: roleEnumZod,
-			}),
+			z
+				.object({
+					id: z.string(),
+					role: roleEnumZod,
+				})
+				.and(
+					z.union([
+						z.object({
+							role: z.literal("teacher"),
+							supervisorId: z.string(),
+						}),
+						z.object({
+							role: z.literal("student"),
+							mentorId: z.string(),
+							supervisorId: z.string(),
+						}),
+						z.object({
+							role: roleEnumZod.exclude(["teacher", "student"]),
+						}),
+					]),
+				),
 		)
 		.handler(async ({ input }) => {
 			const existingUser = await tryAPI(
@@ -63,9 +80,8 @@ export const adminRouter = {
 			if (!existingUser) throw getError("NOT_FOUND", "User not found");
 
 			const oldRole = existingUser.role;
-			const newRole = input.role;
 
-			if (oldRole !== newRole) {
+			if (oldRole !== input.role) {
 				if (oldRole === "teacher") {
 					await tryAPI(
 						"db-admin-delete-teacher",
@@ -85,17 +101,24 @@ export const adminRouter = {
 					);
 				}
 
-				if (newRole === "teacher") {
+				if (input.role === "teacher") {
 					await tryAPI(
 						"db-admin-create-teacher",
-						db.insert(schema.teacher).values({ id: input.id }),
+						db.insert(schema.teacher).values({
+							id: input.id,
+							supervisorId: input.supervisorId,
+						}),
 					);
-				} else if (newRole === "student") {
+				} else if (input.role === "student") {
 					await tryAPI(
 						"db-admin-create-student",
-						db.insert(schema.student).values({ id: input.id }),
+						db.insert(schema.student).values({
+							id: input.id,
+							mentorId: input.mentorId,
+							supervisorId: input.supervisorId,
+						} as any),
 					);
-				} else if (newRole === "scheduler") {
+				} else if (input.role === "scheduler") {
 					await tryAPI(
 						"db-admin-create-scheduler",
 						db.insert(schema.scheduler).values({ id: input.id }),

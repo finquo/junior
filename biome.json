@@ -52,7 +52,7 @@
 			},
 			"a11y": {
 				"useKeyWithClickEvents": "info",
-				"noStaticElementInteractions": "info",
+				"noStaticElementInteractions": "info"
 			},
 			"style": {
 				"noParameterAssign": "error",

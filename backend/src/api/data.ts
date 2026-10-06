@@ -4,35 +4,38 @@ import { db } from "@/services";
 import { getError, protectedProcedure, tryAPI } from "./procedure";
 
 type Data = {
-	student: StudentType
-	teacher: TeacherType
-	scheduler: SchedulerType
-}
+	student: StudentType;
+	teacher: TeacherType;
+	scheduler: SchedulerType;
+};
 
 export const fetchExtraData = async (role: Role, id: string) => {
 	if (role === "student")
 		return await tryAPI<StudentType | undefined>(
 			"procedure-fetch-student-data",
 			db.query.student.findFirst({
-				where: { id }
-			}))
+				where: { id },
+			}),
+		);
 
 	if (role === "teacher")
 		return await tryAPI<TeacherType | undefined>(
 			"procedure-fetch-teacher-data",
 			db.query.teacher.findFirst({
-				where: { id }
-			}))
+				where: { id },
+			}),
+		);
 
 	if (role === "scheduler")
 		return await tryAPI<SchedulerType | undefined>(
 			"procedure-fetch-scheduler-data",
 			db.query.scheduler.findFirst({
-				where: { id }
-			}))
+				where: { id },
+			}),
+		);
 
 	return;
-}
+};
 
 export type GetData<R> = R extends keyof Data ? Data[R] : undefined;
 
@@ -52,7 +55,7 @@ export const getProcedure = <R extends Role>(role: R) =>
 		return next({
 			context: {
 				...context,
-				data: data as GetData<R> | undefined
-			}
+				data: data as GetData<R> | undefined,
+			},
 		});
 	});

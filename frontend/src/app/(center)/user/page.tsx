@@ -8,7 +8,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 
-export default function () {
+export default function() {
 	return (
 		<Card>
 			<CardHeader>
@@ -19,7 +19,7 @@ export default function () {
 			</CardHeader>
 			<CardFooter className="justify-between">
 				<Button variant={"destructive"}>Logout</Button>
-				<Button render={<Link href={"/me"} />}>Refresh</Button>
+				<Button nativeButton={false} render={<Link href={"/me"} />}>Refresh</Button>
 			</CardFooter>
 		</Card>
 	);

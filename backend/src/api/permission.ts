@@ -1,10 +1,5 @@
-import {
-	roles,
-	type Permissions,
-	type Sectors
-} from "@/auth";
+import { type Permissions, roles, type Sectors } from "@/auth";
 import { getError, protectedProcedure } from "./procedure";
-
 
 export const checkPermission = <AC extends Sectors>(
 	checkSector: AC,

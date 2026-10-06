@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+	type ColumnDef,
 	columnFilteringFeature,
 	columnVisibilityFeature,
 	createColumnHelper,
@@ -16,12 +17,15 @@ import {
 	sortFn_text,
 	tableFeatures,
 	useTable,
-	type ColumnDef,
 } from "@tanstack/react-table";
 import { Languages, type StudentType } from "backend/config";
+import { PenIcon } from "lucide-react";
+import { getRelateTime } from "utils";
 import Loader from "@/components/loader";
 import { ProfileCard, StudentProfile } from "@/components/profile";
+import { Frame, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -33,6 +37,11 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import {
 	Item,
 	ItemContent,
@@ -49,6 +58,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
 
@@ -80,7 +95,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 						<Drawer>
 							<DrawerTrigger
 								render={
-									<Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
+									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
 								}
 							>
 								<ItemMedia>
@@ -89,9 +104,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 											src={user.image ?? undefined}
 											alt={user.name}
 										/>
-										<AvatarFallback>
-											{user.name?.[0] ?? "U"}
-										</AvatarFallback>
+										<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
 									</Avatar>
 								</ItemMedia>
 								<ItemContent>
@@ -120,11 +133,25 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			),
 		}),
 		columnHelper.accessor("program", {
-			header: "Program",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+						Program
+					</TooltipTrigger>
+					<TooltipContent>Enrolled study track or course plan</TooltipContent>
+				</Tooltip>
+			),
 			cell: ({ getValue }) => getValue() ?? "—",
 		}),
 		columnHelper.accessor("schooling", {
-			header: "Schooling",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+						Schooling
+					</TooltipTrigger>
+					<TooltipContent>Student's affiliated curriculum board</TooltipContent>
+				</Tooltip>
+			),
 			cell: ({ getValue }) => getValue() ?? "—",
 		}),
 		columnHelper.display({
@@ -137,11 +164,83 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		}),
 		columnHelper.display({
 			id: "lessons",
-			header: "Lessons",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+						Lessons
+					</TooltipTrigger>
+					<TooltipContent>Total enrolled lesson sessions</TooltipContent>
+				</Tooltip>
+			),
 			cell: ({ row }) => row.original.lessons?.length ?? 0,
 		}),
+		columnHelper.display({
+			id: "supervisor",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+						Supervisor
+					</TooltipTrigger>
+					<TooltipContent>Assigned scheduler supervisor</TooltipContent>
+				</Tooltip>
+			),
+			cell: ({ row }) => {
+				const supervisorId = row.original.supervisorId;
+				if (!supervisorId) {
+					return <Badge variant="outline">Not Assigned</Badge>;
+				}
+				return (
+					<HoverCard>
+						<HoverCardTrigger
+							render={
+								<span
+									role="button"
+									className="cursor-pointer font-medium text-xs underline decoration-dotted"
+								/>
+							}
+						>
+							<FetchUser id={supervisorId} isPending={<Spinner />}>
+								{(supervisor) => supervisor.name}
+							</FetchUser>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-64">
+							<FetchUser id={supervisorId} isPending={<Spinner />}>
+								{(supervisor) => (
+									<Item className="p-0 text-left">
+										<ItemMedia>
+											<Avatar size="sm">
+												<AvatarImage
+													src={supervisor.image ?? undefined}
+													alt={supervisor.name}
+												/>
+												<AvatarFallback>
+													{supervisor.name?.[0] ?? "S"}
+												</AvatarFallback>
+											</Avatar>
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>{supervisor.name}</ItemTitle>
+											<ItemDescription>{supervisor.email}</ItemDescription>
+										</ItemContent>
+									</Item>
+								)}
+							</FetchUser>
+						</HoverCardContent>
+					</HoverCard>
+				);
+			},
+		}),
 		columnHelper.accessor("meetingLink", {
-			header: "Meeting",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+						Meeting
+					</TooltipTrigger>
+					<TooltipContent>
+						Direct video conference classroom link
+					</TooltipContent>
+				</Tooltip>
+			),
 			cell: ({ getValue }) => {
 				const link = getValue();
 				if (!link) return "—";
@@ -149,6 +248,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 					<Button
 						variant="outline"
 						size="sm"
+						nativeButton={false}
 						render={<a href={link} target="_blank" rel="noreferrer" />}
 					>
 						Join
@@ -158,7 +258,34 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		}),
 		columnHelper.accessor("createdAt", {
 			header: "Joined",
-			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+		}),
+		columnHelper.display({
+			id: "edit",
+			header: "Edit",
+			cell: ({ row }) => (
+				<Drawer>
+					<DrawerTrigger
+						render={
+							<Button variant="outline" size="icon-sm">
+								<PenIcon />
+							</Button>
+						}
+					/>
+					<DrawerContent className="overflow-y-auto">
+						<DrawerHeader>
+							<DrawerTitle>Edit Student</DrawerTitle>
+							<DrawerDescription>Edit student record</DrawerDescription>
+						</DrawerHeader>
+						<div className="p-4" />
+						<DrawerFooter>
+							<DrawerClose render={<Button variant="outline" />}>
+								Close
+							</DrawerClose>
+						</DrawerFooter>
+					</DrawerContent>
+				</Drawer>
+			),
 		}),
 	]);
 
@@ -178,39 +305,45 @@ export default function Page() {
 	}
 
 	return (
-		<Table>
-			<TableHeader>
-				{table.getHeaderGroups().map((headerGroup) => (
-					<TableRow key={headerGroup.id}>
-						{headerGroup.headers.map((header) => (
-							<TableHead key={header.id}>
-								{header.isPlaceholder ? null : (
-									<table.FlexRender header={header} />
-								)}
-							</TableHead>
-						))}
-					</TableRow>
-				))}
-			</TableHeader>
-			<TableBody>
-				{table.getRowModel().rows.length ? (
-					table.getRowModel().rows.map((row) => (
-						<TableRow key={row.id}>
-							{row.getVisibleCells().map((cell) => (
-								<TableCell key={cell.id}>
-									<table.FlexRender cell={cell} />
-								</TableCell>
+		<TooltipProvider>
+			<Frame>
+				<FramePanel className="p-0!">
+					<Table>
+						<TableHeader>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<TableRow key={headerGroup.id}>
+									{headerGroup.headers.map((header) => (
+										<TableHead key={header.id}>
+											{header.isPlaceholder ? null : (
+												<table.FlexRender header={header} />
+											)}
+										</TableHead>
+									))}
+								</TableRow>
 							))}
-						</TableRow>
-					))
-				) : (
-					<TableRow>
-						<TableCell colSpan={columns.length} className="text-center">
-							No students found
-						</TableCell>
-					</TableRow>
-				)}
-			</TableBody>
-		</Table>
+						</TableHeader>
+						<TableBody>
+							{table.getRowModel().rows.length ? (
+								table.getRowModel().rows.map((row) => (
+									<TableRow key={row.id}>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												<table.FlexRender cell={cell} />
+											</TableCell>
+										))}
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell colSpan={columns.length} className="text-center">
+										No students found
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
+				</FramePanel>
+			</Frame>
+		</TooltipProvider>
 	);
 }

@@ -34,11 +34,7 @@ import {
 import { SwitchNode } from "@/components/utils";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 
-export function StudentProfile({
-	student,
-}: {
-	student?: StudentType | null;
-}) {
+export function StudentProfile({ student }: { student?: StudentType | null }) {
 	if (!student) return null;
 
 	const address = student.address as Address | null;
@@ -177,11 +173,7 @@ export function StudentProfile({
 	);
 }
 
-export function TeacherProfile({
-	teacher,
-}: {
-	teacher?: TeacherType | null;
-}) {
+export function TeacherProfile({ teacher }: { teacher?: TeacherType | null }) {
 	if (!teacher) return null;
 
 	const experiences = (teacher.experiences ?? []) as Experience[];
