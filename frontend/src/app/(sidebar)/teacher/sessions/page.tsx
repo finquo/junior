@@ -1,0 +1,239 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import {
+	columnFilteringFeature,
+	columnVisibilityFeature,
+	createColumnHelper,
+	createFilteredRowModel,
+	createPaginatedRowModel,
+	createSortedRowModel,
+	filterFn_includesString,
+	rowPaginationFeature,
+	rowSelectionFeature,
+	rowSortingFeature,
+	sortFn_alphanumeric,
+	sortFn_text,
+	tableFeatures,
+	useTable,
+	type ColumnDef,
+} from "@tanstack/react-table";
+import Loader from "@/components/loader";
+import { ProfileCard } from "@/components/profile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+	Item,
+	ItemContent,
+	ItemDescription,
+	ItemMedia,
+	ItemTitle,
+} from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { api } from "@/hooks/api";
+import { FetchUser } from "@/hooks/user";
+import { snakeToTitleCase } from "@/lib/utils";
+
+type SlotRecord = NonNullable<
+	Awaited<
+		ReturnType<
+			NonNullable<
+				ReturnType<typeof api.teacher.getSlots.queryOptions>["queryFn"]
+			>
+		>
+	>
+>[number];
+
+const features = tableFeatures({
+	columnFilteringFeature,
+	columnVisibilityFeature,
+	rowPaginationFeature,
+	rowSelectionFeature,
+	rowSortingFeature,
+	filteredRowModel: createFilteredRowModel(),
+	paginatedRowModel: createPaginatedRowModel(),
+	sortedRowModel: createSortedRowModel(),
+	filterFns: { includesString: filterFn_includesString },
+	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
+});
+
+type DataTableFeatures = typeof features;
+
+const columnHelper = createColumnHelper<DataTableFeatures, SlotRecord>();
+
+const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
+	columnHelper.columns([
+		columnHelper.display({
+			id: "student",
+			header: "Student",
+			cell: ({ row }) => (
+				<FetchUser id={row.original.studentId} isPending={<Spinner />}>
+					{(user) => (
+						<Drawer>
+							<DrawerTrigger
+								render={
+									<Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
+								}
+							>
+								<ItemMedia>
+									<Avatar size="sm">
+										<AvatarImage
+											src={user.image ?? undefined}
+											alt={user.name}
+										/>
+										<AvatarFallback>
+											{user.name?.[0] ?? "U"}
+										</AvatarFallback>
+									</Avatar>
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>{user.name}</ItemTitle>
+									<ItemDescription>{user.email}</ItemDescription>
+								</ItemContent>
+							</DrawerTrigger>
+							<DrawerContent className="overflow-y-auto">
+								<DrawerHeader>
+									<DrawerTitle>{user.name}</DrawerTitle>
+									<DrawerDescription>{user.email}</DrawerDescription>
+								</DrawerHeader>
+								<div className="flex flex-col gap-4 p-4">
+									<ProfileCard user={user} />
+								</div>
+								<DrawerFooter>
+									<DrawerClose render={<Button variant="outline" />}>
+										Close
+									</DrawerClose>
+								</DrawerFooter>
+							</DrawerContent>
+						</Drawer>
+					)}
+				</FetchUser>
+			),
+		}),
+		columnHelper.accessor("status", {
+			header: "Status",
+			cell: ({ getValue }) => {
+				const status = getValue();
+				const variantMap: Record<
+					string,
+					"info" | "success" | "warning" | "destructive" | "secondary"
+				> = {
+					scheduled: "info",
+					started: "success",
+					rescheduled: "warning",
+					request_reschedule: "destructive",
+					attended: "secondary",
+				};
+				return (
+					<Badge variant={variantMap[status] ?? "secondary"}>
+						{snakeToTitleCase(status)}
+					</Badge>
+				);
+			},
+		}),
+		columnHelper.accessor("startTime", {
+			header: "Date",
+			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+		}),
+		columnHelper.display({
+			id: "time",
+			header: "Time",
+			cell: ({ row }) => {
+				const start = new Date(row.original.startTime);
+				const end = new Date(row.original.expectedEndTime);
+				return `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+			},
+		}),
+		columnHelper.accessor("meetingLink", {
+			header: "Meeting",
+			cell: ({ getValue }) => {
+				const link = getValue();
+				if (!link) return "—";
+				return (
+					<Button
+						variant="outline"
+						size="sm"
+						render={<a href={link} target="_blank" rel="noreferrer" />}
+					>
+						Join
+					</Button>
+				);
+			},
+		}),
+		columnHelper.accessor("createdAt", {
+			header: "Created",
+			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+		}),
+	]);
+
+export default function Page() {
+	const { data: slots = [], isPending } = useQuery(
+		api.teacher.getSlots.queryOptions(),
+	);
+
+	const table = useTable({
+		features,
+		data: slots,
+		columns,
+	});
+
+	if (isPending) {
+		return <Loader />;
+	}
+
+	return (
+		<Table>
+			<TableHeader>
+				{table.getHeaderGroups().map((headerGroup) => (
+					<TableRow key={headerGroup.id}>
+						{headerGroup.headers.map((header) => (
+							<TableHead key={header.id}>
+								{header.isPlaceholder ? null : (
+									<table.FlexRender header={header} />
+								)}
+							</TableHead>
+						))}
+					</TableRow>
+				))}
+			</TableHeader>
+			<TableBody>
+				{table.getRowModel().rows.length ? (
+					table.getRowModel().rows.map((row) => (
+						<TableRow key={row.id}>
+							{row.getVisibleCells().map((cell) => (
+								<TableCell key={cell.id}>
+									<table.FlexRender cell={cell} />
+								</TableCell>
+							))}
+						</TableRow>
+					))
+				) : (
+					<TableRow>
+						<TableCell colSpan={columns.length} className="text-center">
+							No sessions found
+						</TableCell>
+					</TableRow>
+				)}
+			</TableBody>
+		</Table>
+	);
+}

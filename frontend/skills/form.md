@@ -1,209 +1,300 @@
 # Frontend Form Development Guide
 
-This guide establishes the architecture, conventions, and rules for building forms in this frontend codebase. Every agent building or modifying forms must adhere strictly to these principles.
+This guide establishes the architecture, conventions, and rules for building forms in this frontend codebase. Every agent and developer must adhere strictly to these principles.
 
 ---
 
 ## 1. Tech Stack
 
-- Framework: Next.js (App Router, React 19)
-- Form State Management: TanStack Form (`@tanstack/react-form`)
-- Server State & Mutations: TanStack Query (`@tanstack/react-query`)
-- Schema Validation: Zod (`zod`) via Standard Schema
-- Design System: shadcn/ui components backed by Base UI (`@base-ui/react`) and Tailwind CSS
-- Notifications: `sileo` as `toast` (`import { sileo as toast } from "sileo"`)
-- Authentication: Better Auth client (`import { authClient, useAuth } from "@/hooks/auth"`)
+- **Framework**: Next.js (App Router, React 19)
+- **Form State Management**: TanStack Form (`@tanstack/react-form`)
+- **Server State & Mutations**: TanStack Query (`@tanstack/react-query`) with oRPC utilities (`@/hooks/api`)
+- **Schema Validation**: Zod (`zod`) via Standard Schema, reusing backend schemas directly from `backend/config`
+- **Design System**: shadcn/ui components backed by Base UI (`@base-ui/react`) and Tailwind CSS
+- **Notifications**: `sileo` as `toast` (`import { sileo as toast } from "sileo"`)
+- **Data & Auth Queries**: `getUserData()` (`@/hooks/user`) and Better Auth (`@/hooks/auth`)
 
 ---
 
-## 2. Core Form Components
+## 2. Design System Rules (Zero Custom Tailwind Hacks)
 
-Never write custom Tailwind utility classes for layout spacing (`space-y-*`), font sizes, or text colors in form fields. The design system provides components that automatically handle spacing, responsive container queries, accessibility, and theming.
+Never write custom Tailwind classes for layout spacing (`space-y-*`), arbitrary widths (`w-auto`, `min-w-*`, `max-w-*`), typography, or text colors. The design system components handle spacing, container queries, accessibility, and theming out of the box.
 
-Import from `@/components/ui/field`:
-- `<FieldGroup>`: Container that manages gap spacing and responsive layout across fields.
-- `<Field data-invalid={isInvalid}>`: Wrapper for an individual form control.
-- `<FieldLabel htmlFor={field.name}>`: Semantic label linked to input.
-- `<FieldDescription>`: Helper text beneath the control.
-- `<FieldError errors={field.state.meta.errors}>`: Displays Zod validation errors.
-- `<FieldSeparator>`: Clean divider between logical form sections.
+### A. Layout & Card Sizing
+- **No Arbitrary Widths**: Never hardcode width classes on forms or cards. Let the design system layout and container queries govern element sizing naturally.
+- **Use `CardAction`**: Never write manual alignment wrappers (e.g. `flex justify-between items-center`) in card headers. Place action buttons directly inside `<CardAction>` within `<CardHeader>`:
+  ```tsx
+  <CardHeader>
+    <CardTitle>Section Title</CardTitle>
+    <CardDescription>Description text.</CardDescription>
+    <CardAction>
+      <Button variant="outline" size="sm" onClick={handleAdd} disabled={isPending}>
+        <PlusIcon />
+        Add Item
+      </Button>
+    </CardAction>
+  </CardHeader>
+  ```
+- **Align Footers**: Use `<CardFooter className="justify-end">` to cleanly right-align form submit and reset buttons.
 
-Import from `@/components/ui/card`:
-- `<Card>`, `<CardHeader>`, `<CardTitle>`, `<CardDescription>`, `<CardContent>`, `<CardFooter>`.
+### B. Buttons & Icons
+- **No Icon Sizing Inside Buttons**: The `Button` component automatically manages SVG sizes. Never write `<Icon className="size-4" />` inside a button — always use bare `<Icon />`.
+- **Semantic Button Variants**: Use built-in variants instead of custom colors. For destructive or removal actions, use `variant="destructive"` instead of custom Tailwind classes like `text-destructive hover:bg-destructive/10`.
+- **Submit Loading States**: Use `<Spinner />` inside the submit button and disable interactive elements when `isPending` is true.
 
-Import from `@/components/ui/button` & `@/components/ui/spinner`:
-- `<Button variant="default | outline | destructive" />`
-- `<Spinner />` (displays during pending/saving states)
+### C. Grouped Controls & Empty States
+- **Checkbox / Radio Groups**: Wrap collections in `<FieldSet>`, `<FieldLegend>`, and `<FieldGroup data-slot="checkbox-group">` with horizontal fields.
+- **Empty States**: When an array or list has 0 items, always render shadcn's `<Empty>`, `<EmptyHeader>`, `<EmptyTitle>`, and `<EmptyDescription>` from `@/components/ui/empty` instead of custom dashed-border text blocks.
 
 ---
 
-## 3. Architecture & Pattern
+## 3. Architecture & Core Patterns
 
-### A. Schema Definition
-Keep schemas clean and concise. Types in the schema must match `defaultValues` strictly:
+### A. Single Source of Truth for Schemas
+Always reuse backend Zod schemas, types, and lookup tables from `backend/config`:
 
 ```tsx
-import { z } from "zod";
+import { itemSchema, statusZod, Statuses, type StatusCode } from "backend/config";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Name cannot be empty"),
-  avatar: z.string().nullable(), // Notice: .nullable() without .optional() when default is null
+  status: statusZod,
+  items: itemSchema.array(),
 });
 ```
 
-> Crucial Type Rule: If `defaultValues` has a field typed as `string | null`, the Zod schema MUST be `z.string().nullable()`. Do NOT append `.optional()` because that introduces `undefined` into the input type, causing a TypeScript `TS2322` StandardSchema type mismatch with TanStack Form.
+- **Dynamic Options**: Map over backend dictionaries (e.g. `(Object.entries(Statuses) as [StatusCode, string][]).map(...)`) instead of hardcoding option arrays on the frontend.
+- **Strict Type Alignment**: Types in the schema must match `defaultValues` strictly. If `defaultValues` contains `null`, use `z.string().nullable()`. Do **not** append `.optional()` because that introduces `undefined` into the input type, causing StandardSchema TypeScript mismatch errors with TanStack Form.
 
 ---
 
-### B. TanStack Query Mutation
-Delegate all API calls, network state, and pending flags to `useMutation`. Never declare custom `useState` for loading or saving flags (e.g. `const [isSaving, setIsSaving] = useState(false)`).
+### B. oRPC TanStack Query Mutations
+Pass lifecycle callbacks (`onSuccess`, `onError`) directly into the oRPC `.mutationOptions({...})` method. Never write manual `mutationFn` wrappers or custom `useState` loading flags:
 
 ```tsx
-const { mutate: updateProfile, isPending: isSaving } = useMutation({
-  mutationKey: ["update-profile"],
-  mutationFn: async (values: { name: string; avatar: string | null }) => {
-    const { data, error } = await authClient.updateUser({
-      name: values.name.trim(),
-      image: values.avatar,
-    });
-    if (error) throw error;
-    return data;
-  },
-  onSuccess: () => {
-    toast.success({ title: "Updated successfully" });
-  },
-  onError: (error) => {
-    toast.error({ title: error.message || "Something went wrong" });
-  },
-});
+const { mutate: updateRecord, isPending } = useMutation(
+  api.resource.update.mutationOptions({
+    onSuccess: () => {
+      toast.success({ title: "Updated successfully" });
+    },
+    onError: (error) => {
+      toast.error({ title: error.message || "Failed to update record" });
+    },
+  })
+);
 ```
 
 ---
 
-### C. TanStack Form Setup
-Initialize `useForm` with Standard Schema validation:
+### C. Server State Synchronization
+Pre-populate form `defaultValues` from query hooks (e.g. `getUserData()`) and synchronize state when server data loads:
 
 ```tsx
+const { data: serverData } = getUserData();
+
 const form = useForm({
   defaultValues: {
-    name: data?.name ?? "",
-    avatar: (data?.image ?? null) as string | null,
+    title: serverData?.title ?? "",
+    items: serverData?.items ?? [],
   },
   validators: {
     onSubmit: formSchema,
     onChange: formSchema,
   },
   onSubmit: async ({ value }) => {
-    updateProfile(value);
+    updateRecord(value);
   },
 });
 
-// Keep form state in sync when server data arrives
 useEffect(() => {
-  if (data) {
+  if (serverData) {
     form.reset({
-      name: data.name ?? "",
-      avatar: data.image ?? null,
+      title: serverData.title ?? "",
+      items: serverData.items ?? [],
     });
   }
-}, [data, form]);
+}, [serverData, form]);
 ```
 
 ---
 
-### D. Field Binding with Accessible Markup
-Follow the shadcn TanStack Form render-prop pattern:
+### D. Component Decomposition for Dynamic / Array Fields
+When a form renders an array of items (e.g. `form.Field mode="array"`), extract the individual item rendering into its own subcomponent inside the same file. Pass `{ index, form, isPending, onRemove }` to keep the parent component clean:
 
 ```tsx
-<form
-  onSubmit={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    form.handleSubmit();
-  }}
->
-  <CardContent>
-    <FieldGroup>
-      <form.Field
-        name="name"
-        children={(field) => {
-          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-          return (
-            <Field data-invalid={isInvalid}>
-              <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-              <Input
-                id={field.name}
-                name={field.name}
-                placeholder="Your name"
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                aria-invalid={isInvalid}
-                disabled={isSaving}
-              />
-              {isInvalid && (
-                <FieldError
-                  errors={field.state.meta.errors.map((err) =>
-                    typeof err === "string" ? { message: err } : err,
+function FormListItem({
+  index,
+  form,
+  isPending,
+  onRemove,
+}: {
+  index: number;
+  form: any;
+  isPending: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>Item #{index + 1}</CardTitle>
+        <CardAction>
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon-xs"
+            onClick={onRemove}
+            disabled={isPending}
+          >
+            <Trash2Icon />
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup>
+          <form.Field
+            name={`items[${index}].name`}
+            children={(subField: any) => {
+              const isInvalid = subField.state.meta.isTouched && !subField.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={subField.name}>Name</FieldLabel>
+                  <Input
+                    id={subField.name}
+                    name={subField.name}
+                    value={subField.state.value}
+                    onBlur={subField.handleBlur}
+                    onChange={(e) => subField.handleChange(e.target.value)}
+                    aria-invalid={isInvalid}
+                    disabled={isPending}
+                  />
+                  {isInvalid && (
+                    <FieldError errors={subField.state.meta.errors} />
                   )}
-                />
-              )}
-            </Field>
-          );
-        }}
-      />
-    </FieldGroup>
-  </CardContent>
-
-  <form.Subscribe
-    selector={(state) => [state.canSubmit, state.isDirty]}
-    children={([canSubmit, isDirty]) => (
-      <CardFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => form.reset()}
-          disabled={!isDirty || isSaving}
-        >
-          Reset
-        </Button>
-        <Button
-          type="submit"
-          disabled={!isDirty || isSaving || !canSubmit}
-        >
-          {isSaving && <Spinner />}
-          Save
-        </Button>
-      </CardFooter>
-    )}
-  />
-</form>
+                </Field>
+              );
+            }}
+          />
+        </FieldGroup>
+      </CardContent>
+    </Card>
+  );
+}
 ```
 
 ---
 
-## 4. Specialized Widgets & Component Encapsulation
+### E. Array Field Container with Empty Fallback
+Combine `<Card size="sm">`, `<CardAction>`, and `<Empty>` for array lists:
 
-When a field involves complex interactive behavior (e.g., file dropzones, image cropping, avatar previews):
-1. Encapsulate UI & File State: The widget (`AvatarUpload`) handles drag-and-drop, temporary object URLs (`URL.createObjectURL`), and preview rendering internally.
-2. Expose Pure Primitives: The widget must communicate with the parent form using simple primitives (`string | null`), not raw `File` objects or internal metadata:
-   ```tsx
-   <AvatarUpload
-     defaultAvatar={data?.image ?? undefined}
-     onFileChange={(url) => field.handleChange(url)}
-   />
+```tsx
+<form.Field
+  name="items"
+  mode="array"
+  children={(field: any) => {
+    const items = field.state.value ?? [];
+
+    return (
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>Items</CardTitle>
+          <CardDescription>Manage your collection.</CardDescription>
+          <CardAction>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => field.pushValue({ name: "" })}
+              disabled={isPending}
+            >
+              <PlusIcon />
+              Add Item
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {items.length === 0 ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>No items added</EmptyTitle>
+                <EmptyDescription>Click "Add Item" to create one.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <FieldGroup>
+              {items.map((_, index) => (
+                <FormListItem
+                  key={index}
+                  index={index}
+                  form={form}
+                  isPending={isPending}
+                  onRemove={() => field.removeValue(index)}
+                />
+              ))}
+            </FieldGroup>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }}
+/>
+```
+
+---
+
+### F. Reactive Form Buttons
+Always use `form.Subscribe` watching `[canSubmit, isDirty]` to control submission and reset buttons:
+
+```tsx
+<form.Subscribe
+  selector={(state) => [state.canSubmit, state.isDirty]}
+  children={([canSubmit, isDirty]) => (
+    <CardFooter className="justify-end">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => form.reset()}
+        disabled={!isDirty || isPending}
+      >
+        Reset
+      </Button>
+      <Button
+        type="submit"
+        disabled={!isDirty || isPending || !canSubmit}
+      >
+        {isPending && <Spinner />}
+        Save
+      </Button>
+    </CardFooter>
+  )}
+/>
+```
+
+---
+
+## 4. Specialized Widgets & Pure Data Adapters
+
+When an interactive component (e.g. file dropzones, calendar schedulers) uses an internal data model (like temporary IDs or client-only representations) that differs from the backend contract:
+
+1. **Encapsulate UI State**: The widget manages temporary object URLs or local UI IDs internally.
+2. **Expose Pure Values**: Form fields communicate using primitives (`string | null`) or pure data structures.
+3. **Pure Adapter Functions**: Write pure converter functions (`toUIModel` and `toServerModel`) at the top of the file to transform between server payloads and widget state cleanly:
+   ```ts
+   function toUIModel(data?: ServerData | null): UIModel { ... }
+   function toServerModel(ui: UIModel): ServerData { ... }
    ```
-3. Support Deletion with `null`: When the user removes an existing asset, the widget must emit `null`. This allows the form to detect dirty state and explicitly clear the database value.
-4. Prevent Cross-Component Render Warnings: Never call a parent's `onFileChange` / `field.handleChange` synchronously from inside a child hook's `setState((prev) => ...)` updater. Defer notifications to a `useEffect` running in the commit phase.
+4. **Prevent Render Phase Warnings**: Never call `field.handleChange` synchronously from inside a child hook's `setState((prev) => ...)` updater. Defer notifications to a `useEffect` running during the commit phase.
 
 ---
 
 ## 5. Summary Checklist Before Finalizing Code
 
-- [ ] Used `FieldGroup`, `Field`, `FieldLabel`, `FieldDescription`, `FieldError` instead of custom Tailwind spacing and typography classes.
-- [ ] No manual `useState` for loading/saving flags; using `useMutation`'s `isPending`.
-- [ ] Zod schema input types match `defaultValues` strictly (e.g. `z.string().nullable()` for `string | null`).
+- [ ] Reused schemas, types, and dictionaries directly from `backend/config`.
+- [ ] No manual `useState` for loading flags; used `useMutation`'s `isPending`.
+- [ ] Passed `onSuccess` and `onError` directly into `.mutationOptions({...})`.
+- [ ] Zod schema types strictly match `defaultValues` (e.g. `z.string().nullable()` for `string | null`).
+- [ ] Used `<CardAction>` inside `<CardHeader>` for header actions instead of custom flex/div wrappers.
+- [ ] Used `variant="destructive"` on `<Button>` for deletion/clear actions instead of custom color classes.
+- [ ] No explicit `size` classes on icons inside `<Button>` (e.g., bare `<PlusIcon />`, `<Trash2Icon />`).
+- [ ] Used `<Empty>` component when list/array collections have 0 items.
+- [ ] Removed all arbitrary Tailwind widths (`w-auto`, `min-w-*`, `max-w-*`) and unnecessary wrapper `div`s.
 - [ ] Buttons react to form state using `form.Subscribe` with `[canSubmit, isDirty]`.
-- [ ] Disabled states applied when `isSaving` is true.
-- [ ] No unneeded metadata (e.g., internal IDs, join timestamps) cluttering the form interface.
-- [ ] Checked existing file contents before making edits to preserve user changes.
+- [ ] Extracted array item rendering into a clean standalone subcomponent.

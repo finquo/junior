@@ -227,7 +227,6 @@ export function TeacherProfile({
 										<TableHead>Organization</TableHead>
 										<TableHead>Period</TableHead>
 										<TableHead>Description</TableHead>
-										<TableHead>Written By</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -240,7 +239,6 @@ export function TeacherProfile({
 												{exp.endedAt ? formatDate(exp.endedAt) : "Present"}
 											</TableCell>
 											<TableCell>{exp.description ?? "—"}</TableCell>
-											<TableCell>{exp.writtenBy}</TableCell>
 										</TableRow>
 									))}
 								</TableBody>

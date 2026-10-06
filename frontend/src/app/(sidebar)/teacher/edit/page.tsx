@@ -213,11 +213,22 @@ function ExperienceItem({
 	);
 }
 
-export default function () {
+export default function() {
 	const { data: user } = useAuth();
 	const { data } = getUserData()
 
-	const { mutateAsync, isPending } = useMutation(api.teacher.update.mutationOptions());
+	const { mutateAsync, isPending } = useMutation(api.teacher.update.mutationOptions({
+		onSuccess: () => {
+			toast.success({
+				title: "Teacher profile updated successfully",
+			});
+		},
+		onError: (error) => {
+			toast.error({
+				title: error.message || "Failed to update teacher profile",
+			});
+		},
+	}));
 
 	const form = useForm({
 		defaultValues: {
