@@ -24,12 +24,12 @@ export function LessonSelector({
 }: {
 	label?: string;
 	enrolledLessonIds?: string[];
-	value?: string;
+	value?: string | null;
 	onValueChange?: (val: string) => void;
 }) {
-	const { data: list = [] } = useQuery(api.core.getLessons.queryOptions());
+	const { data = [] } = useQuery(api.core.lesson.list.queryOptions());
 
-	const availableLessons = list.filter(
+	const availableLessons = data.filter(
 		(l) => !enrolledLessonIds.includes(l.id),
 	);
 

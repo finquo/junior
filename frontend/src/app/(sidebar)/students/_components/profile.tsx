@@ -1,10 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import type { Address, Note } from "backend/config";
-import { BookOpenIcon, ExternalLinkIcon, PenIcon } from "lucide-react";
+import {
+	BookOpenIcon,
+	ExternalLinkIcon,
+	PenIcon,
+	PlusIcon,
+} from "lucide-react";
 import Link from "next/link";
-import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -21,7 +23,6 @@ import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
-	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
 	DrawerTitle,
@@ -36,47 +37,46 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
+import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials } from "@/lib/utils";
 
-export type StudentUserData = NonNullable<API_Returns["core"]["getStudent"]>;
+type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
 
-export function StudentProfileView({
-	studentUser,
-}: {
-	studentUser: StudentUserData;
-}) {
-	const student = studentUser.studentData;
-	const address = student?.address as Address | null;
-	const notes = (student?.notes ?? []) as Note[];
+export function StudentProfile({ data }: { data: StudentData }) {
+	const address = data.address;
+	const notes = data.notes ?? [];
 
 	return (
 		<Card>
 			<CardHeader>
-				<Avatar size="lg">
-					{studentUser.image && (
-						<AvatarImage src={studentUser.image} alt={studentUser.name} />
+				<FetchUser id={data.id}>
+					{(user) => (
+						<>
+							<Avatar size="lg">
+								{user.image && <AvatarImage src={user.image} alt={user.name} />}
+								<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+							</Avatar>
+							<CardTitle>{user.name}</CardTitle>
+							<CardDescription>{user.email}</CardDescription>
+							<ColorBadge variant="info">Student</ColorBadge>
+							<ColorBadge variant={user.emailVerified ? "success" : "warning"}>
+								{user.emailVerified ? "Verified" : "Unverified"}
+							</ColorBadge>
+							{user.banned && (
+								<ColorBadge variant="destructive">Banned</ColorBadge>
+							)}
+						</>
 					)}
-					<AvatarFallback>{getInitials(studentUser.name)}</AvatarFallback>
-				</Avatar>
-				<CardTitle>{studentUser.name}</CardTitle>
-				<CardDescription>{studentUser.email}</CardDescription>
-				<ColorBadge variant="info">Student</ColorBadge>
-				<ColorBadge variant={studentUser.emailVerified ? "success" : "warning"}>
-					{studentUser.emailVerified ? "Verified" : "Unverified"}
-				</ColorBadge>
-				{studentUser.banned && (
-					<ColorBadge variant="destructive">Banned</ColorBadge>
-				)}
+				</FetchUser>
 
 				<CardAction>
 					<Button
 						variant="outline"
 						size="sm"
 						nativeButton={false}
-						render={<Link href={`/students/${studentUser.id}/lessons`} />}
+						render={<Link href={`/students/${data.id}/lessons`} />}
 					>
 						<BookOpenIcon />
 						Manage Lessons
@@ -95,9 +95,6 @@ export function StudentProfileView({
 							<DrawerContent>
 								<DrawerHeader>
 									<DrawerTitle>Edit Student</DrawerTitle>
-									<DrawerDescription>
-										Update student record for {studentUser.name}
-									</DrawerDescription>
 								</DrawerHeader>
 								<DrawerFooter>
 									<DrawerClose render={<Button variant="outline" />}>
@@ -115,15 +112,15 @@ export function StudentProfileView({
 					<TableBody>
 						<TableRow>
 							<TableCell>User ID</TableCell>
-							<TableCell>{studentUser.id}</TableCell>
+							<TableCell>{data.id}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Program</TableCell>
-							<TableCell>{student?.program ?? "None"}</TableCell>
+							<TableCell>{data.program ?? "None"}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Schooling</TableCell>
-							<TableCell>{student?.schooling ?? "None"}</TableCell>
+							<TableCell>{data.schooling ?? "None"}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Lessons Enrolled</TableCell>
@@ -132,9 +129,9 @@ export function StudentProfileView({
 									variant="link"
 									size="sm"
 									nativeButton={false}
-									render={<Link href={`/students/${studentUser.id}/lessons`} />}
+									render={<Link href={`/students/${data.id}/lessons`} />}
 								>
-									{student?.lessons?.length ?? 0} lessons
+									{data.lessons?.length ?? 0} lessons
 									<ExternalLinkIcon />
 								</Button>
 							</TableCell>
@@ -142,8 +139,8 @@ export function StudentProfileView({
 						<TableRow>
 							<TableCell>Languages</TableCell>
 							<TableCell>
-								{Array.isArray(student?.languages) && student.languages.length
-									? student.languages.map((lang) => (
+								{Array.isArray(data.languages) && data.languages.length
+									? data.languages.map((lang) => (
 											<Badge key={String(lang)} variant="secondary">
 												{String(lang)}
 											</Badge>
@@ -154,48 +151,48 @@ export function StudentProfileView({
 						<TableRow>
 							<TableCell>Fee Status</TableCell>
 							<TableCell>
-								<ColorBadge variant={student?.paid ? "success" : "warning"}>
-									{student?.paid ? "Paid" : "Pending"}
+								<ColorBadge variant={data.paid ? "success" : "warning"}>
+									{data.paid ? "Paid" : "Pending"}
 								</ColorBadge>
 							</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Total Amount</TableCell>
-							<TableCell>₹{student?.amount ?? 0}</TableCell>
+							<TableCell>₹{data.amount ?? 0}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Remaining Balance</TableCell>
-							<TableCell>₹{student?.remaining ?? 0}</TableCell>
+							<TableCell>₹{data.remaining ?? 0}</TableCell>
 						</TableRow>
-						{student?.meetingLink && (
+						{data.meetingLink && (
 							<TableRow>
 								<TableCell>Meeting Link</TableCell>
 								<TableCell>
 									<a
-										href={student.meetingLink}
+										href={data.meetingLink}
 										target="_blank"
 										rel="noopener noreferrer"
 									>
-										{student.meetingLink}
+										{data.meetingLink}
 									</a>
 								</TableCell>
 							</TableRow>
 						)}
-						{student?.mentorId && (
+						{data.mentorId && (
 							<TableRow>
 								<TableCell>Mentor ID</TableCell>
-								<TableCell>{student.mentorId}</TableCell>
+								<TableCell>{data.mentorId}</TableCell>
 							</TableRow>
 						)}
-						{student?.supervisorId && (
+						{data.supervisorId && (
 							<TableRow>
 								<TableCell>Supervisor ID</TableCell>
-								<TableCell>{student.supervisorId}</TableCell>
+								<TableCell>{data.supervisorId}</TableCell>
 							</TableRow>
 						)}
 						<TableRow>
 							<TableCell>Joined</TableCell>
-							<TableCell>{formatDate(studentUser.createdAt)}</TableCell>
+							<TableCell>{formatDate(data.createdAt)}</TableCell>
 						</TableRow>
 					</TableBody>
 				</Table>
@@ -236,64 +233,48 @@ export function StudentProfileView({
 					</>
 				)}
 
-				{notes.length > 0 && (
-					<>
-						<Separator />
-						<Card>
-							<CardHeader>
-								<CardTitle>Notes</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Note</TableHead>
-											<TableHead>Author</TableHead>
-											<TableHead>Date</TableHead>
+				<Separator />
+				<Card>
+					<CardHeader>
+						<CardTitle>Notes</CardTitle>
+						<CardAction>
+							<Button variant="outline" size="sm">
+								<PlusIcon />
+								Add Note
+							</Button>
+						</CardAction>
+					</CardHeader>
+					<CardContent>
+						{notes.length === 0 ? (
+							<Alert>
+								<AlertTitle>No notes</AlertTitle>
+								<AlertDescription>
+									No notes recorded for this student.
+								</AlertDescription>
+							</Alert>
+						) : (
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Note</TableHead>
+										<TableHead>Author</TableHead>
+										<TableHead>Date</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{notes.map((note, idx) => (
+										<TableRow key={idx as number}>
+											<TableCell>{note.text}</TableCell>
+											<TableCell>{note.writterBy}</TableCell>
+											<TableCell>{formatDate(note.createdAt)}</TableCell>
 										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{notes.map((note, idx) => (
-											<TableRow key={idx}>
-												<TableCell>{note.text}</TableCell>
-												<TableCell>{note.writterBy}</TableCell>
-												<TableCell>{formatDate(note.createdAt)}</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</CardContent>
-						</Card>
-					</>
-				)}
+									))}
+								</TableBody>
+							</Table>
+						)}
+					</CardContent>
+				</Card>
 			</CardContent>
 		</Card>
 	);
 }
-
-export function StudentProfile({ id }: { id: string }) {
-	const { data, isPending, isError } = useQuery(
-		api.core.getStudent.queryOptions({
-			input: { id },
-		}),
-	);
-
-	if (isPending) {
-		return <Loader />;
-	}
-
-	if (isError || !data) {
-		return (
-			<Alert variant="destructive">
-				<AlertTitle>Student Not Found</AlertTitle>
-				<AlertDescription>
-					The requested student profile could not be loaded or does not exist.
-				</AlertDescription>
-			</Alert>
-		);
-	}
-
-	return <StudentProfileView studentUser={data} />;
-}
-
-export default StudentProfile;

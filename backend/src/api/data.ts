@@ -55,6 +55,7 @@ export const getProcedure = <R extends Role>(role: R) =>
 		return next({
 			context: {
 				...context,
+				role,
 				data: data as GetData<R> | undefined,
 			},
 		});
@@ -73,5 +74,10 @@ export const getRolesProcedure = <R extends Role>(roles: R[]) =>
 		if (context.session.impersonatedBy)
 			console.log("impersonatedBy:", context.session.impersonatedBy);
 
-		return next();
+		return next({
+			context: {
+				...context,
+				role: context.user.role as R,
+			},
+		});
 	});

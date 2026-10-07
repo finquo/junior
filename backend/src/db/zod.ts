@@ -12,7 +12,7 @@ import {
 	quizZod,
 	schoolingZod,
 } from "@/config";
-import * as schema from "./schema";
+import * as schema from "./schema/index";
 
 export const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({

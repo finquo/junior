@@ -3,7 +3,7 @@ import z from "zod";
 import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
 import { SelectStudentSchema, SelectTeacherSchema } from "@/db/zod";
-import { auth, db } from "@/services";
+import { db } from "@/services";
 import { adminProcedure, getAPI, getError, tryAPI } from "../procedure";
 
 export const adminRouter = {
@@ -38,23 +38,6 @@ export const adminRouter = {
 							: desc(schema.user.createdAt),
 					),
 				[],
-			);
-		}),
-	createAccount: adminProcedure
-		.input(
-			z.object({
-				name: z.string(),
-				email: z.email(),
-				password: z.string().default("1234567890"),
-				role: roleEnumZod.default("user"),
-			}),
-		)
-		.handler(async ({ input }) => {
-			return await tryAPI(
-				"db-admin-create-students",
-				auth.api.createUser({
-					body: input,
-				}),
 			);
 		}),
 	promote: adminProcedure

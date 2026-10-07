@@ -50,7 +50,7 @@ const createLessonSchema = z.object({
 
 export default function CreateLessonPage() {
 	const { mutateAsync, isPending } = useMutation(
-		api.scheduler.createLesson.mutationOptions({
+		api.core.lesson.create.mutationOptions({
 			onSuccess: () => {
 				queryClient.invalidateQueries();
 				toast.success({ title: "Lesson created successfully" });

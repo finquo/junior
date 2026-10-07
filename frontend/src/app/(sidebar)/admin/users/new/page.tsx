@@ -1,6 +1,6 @@
 "use client";
 
-import { type StandardSchemaV1, useForm } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { roleEnumZod } from "backend/auth";
 import { UserPlusIcon } from "lucide-react";
@@ -66,7 +66,7 @@ export default function CreateUserPage() {
 	const [isUsernameCustom, setIsUsernameCustom] = useState(false);
 
 	const { mutateAsync, isPending } = useMutation(
-		api.admin.createAccount.mutationOptions({
+		api.core.user.createAccount.mutationOptions({
 			onSuccess: () => {
 				queryClient.invalidateQueries();
 				toast.success({ title: "User created successfully" });

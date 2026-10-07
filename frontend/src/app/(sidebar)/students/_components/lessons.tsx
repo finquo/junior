@@ -41,19 +41,19 @@ import { LessonSelector } from "./selector";
 
 export function StudentLessons({ studentId }: { studentId: string }) {
 	const { data: studentLessonIds = [], isPending } = useQuery(
-		api.core.getStudentLessons.queryOptions({
+		api.core.student.getLessons.queryOptions({
 			input: { id: studentId },
 		}),
 	);
 
 	const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
-	const [selectedLessonId, setSelectedLessonId] = useState<string>(null);
+	const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
 	const items = orderedIds ?? studentLessonIds;
 
 	const { mutateAsync: updateStudentLessons } = useMutation(
-		api.scheduler.updateStudentLessons.mutationOptions({
+		api.core.student.updateLessons.mutationOptions({
 			onSuccess: () => {
 				queryClient.invalidateQueries();
 				toast.success({ title: "Lesson order updated" });

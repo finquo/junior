@@ -18,7 +18,7 @@ import {
 	tableFeatures,
 	useTable,
 } from "@tanstack/react-table";
-import { Languages, type LessonType } from "backend/config";
+import { Languages } from "backend/config";
 import { PenIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";

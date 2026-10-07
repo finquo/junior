@@ -4,15 +4,10 @@ import z from "zod";
 import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import {
-	InsertLessonSchema,
 	InsertSlotSchema,
 	SelectSlotSchema,
-	SelectStudentSchema,
 	SelectUserSchema,
-	UpdateLessonSchema,
 	UpdateSlotSchema,
-	UpdateStudentSchema,
-	UpdateTeacherSchema,
 } from "@/db/zod";
 import { db } from "@/services";
 import { checkAgainstLeaves } from "@/utils/leave";
@@ -279,115 +274,6 @@ export const schedulerRouter = {
 						and(
 							eq(schema.slot.id, id),
 							eq(schema.slot.schedulerId, context.user.id),
-						),
-					)
-					.returning(),
-			);
-		}),
-	createLesson: schedulerProcedure
-		.input(
-			InsertLessonSchema.omit({
-				id: true,
-				quiz: true,
-				createdAt: true,
-				updatedAt: true,
-			}),
-		)
-		.handler(async ({ input }) => {
-			return await tryAPI(
-				"db-scheduler-create-lesson",
-				db.insert(schema.lesson).values(input).returning(),
-			);
-		}),
-	updateLesson: schedulerProcedure
-		.input(
-			UpdateLessonSchema.required({
-				id: true,
-			}),
-		)
-		.handler(async ({ input }) => {
-			return await tryAPI(
-				"db-scheduler-create-lesson",
-				db
-					.update(schema.lesson)
-					.set(input)
-					.where(eq(schema.lesson.id, input.id))
-					.returning(),
-			);
-		}),
-	updateStudentLessons: schedulerProcedure
-		.input(
-			SelectStudentSchema.pick({
-				id: true,
-				lessons: true,
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			return await tryAPI(
-				"db-scheduler-update-student-lessons",
-				db
-					.update(schema.student)
-					.set({
-						lessons: input.lessons,
-					})
-					.where(
-						and(
-							eq(schema.student.id, input.id),
-							eq(schema.student.supervisorId, context.user.id),
-						),
-					)
-					.returning(),
-			);
-		}),
-	updateTeacher: schedulerProcedure
-		.input(
-			UpdateTeacherSchema.omit({
-				experiences: true,
-				supervisorId: true,
-				createdAt: true,
-				updatedAt: true,
-				leaves: true,
-			}).required({
-				id: true,
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const { id, ...data } = input;
-			return await tryAPI(
-				"db-scheduler-update-teacher",
-				db
-					.update(schema.teacher)
-					.set(data)
-					.where(
-						and(
-							eq(schema.teacher.id, id),
-							eq(schema.teacher.supervisorId, context.user.id),
-						),
-					)
-					.returning(),
-			);
-		}),
-	updateStudent: schedulerProcedure
-		.input(
-			UpdateStudentSchema.omit({
-				supervisorId: true,
-				createdAt: true,
-				updatedAt: true,
-			}).required({
-				id: true,
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const { id, ...data } = input;
-			return await tryAPI(
-				"db-scheduler-update-student",
-				db
-					.update(schema.student)
-					.set(data)
-					.where(
-						and(
-							eq(schema.student.id, id),
-							eq(schema.student.supervisorId, context.user.id),
 						),
 					)
 					.returning(),

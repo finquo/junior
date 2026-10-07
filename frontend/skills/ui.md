@@ -134,46 +134,118 @@ Keep a strict boundary between globally shared components and route-specific chi
 ### `src/app/.../_components/` (Route-Private Child Components)
 - Place components that are private to a specific route branch inside that folder's `_components/` directory (e.g. `src/app/(sidebar)/students/_components/`).
 - Colocate feature logic:
-  - `profile.tsx`: Student profile view component.
-  - `lessons.tsx`: Student sortable lessons manager.
+  - `profile.tsx`: Pure view component.
+  - `lessons.tsx`: Route-specific management component.
   - `index.ts`: Barrel export for the private components.
 
-### Page Component Pattern (Route Param Guard)
-The default `page.tsx` must be a clean, minimal shell that guards route parameters before mounting the child component:
+### Pure View Rules for `_components/`:
+1. **Pure View Responsibility**: The child component in `_components/` (e.g. `StudentProfile({ data })`) must be a pure presentation component. It should receive `data` and render without internal `useQuery`, loader branches, or error screens.
+2. **No Default Exports**: Never use `export default` in `_components/` files. Use explicit named exports (e.g. `export function StudentProfile`). Default exports are strictly reserved for `page.tsx` and `layout.tsx`.
+3. **Single Export**: Export only the view component itself. Do not export extra types or secondary helpers from the view file.
+
+---
+
+## 5. Page Architecture & React Hook Rules
+
+### React Rule of Hooks: No Conditional Hook Execution
+Never place a `useQuery` call after an early `if (!id) return ...` check in the same component. That violates React's Rules of Hooks.
+
+### The Correct Pattern: Two-Tier Component Split
+In `page.tsx`:
+1. The **`export default function Page()`** guards the URL parameter existence (`studentId`). If missing, it immediately returns an `<Alert>`.
+2. An **unexported internal function component** (e.g. `function Student({ studentId })`) is mounted only when `studentId` exists. It executes `useQuery`, handles `<Loader />` and error `<Alert>`, and renders the pure view component `<StudentProfile data={data} />`.
 
 ```tsx
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { api } from "@/hooks/api";
 import { StudentProfile } from "../_components/profile";
 
-export default function Page() {
-  const params = useParams<{ id: string }>();
-  const studentId = params?.id;
+// 1. Internal unexported component: runs queries & handles loader/error states
+function Student({ studentId }: { studentId: string }) {
+  const { data, isPending, isError } = useQuery(
+    api.core.student.get.queryOptions({
+      input: { id: studentId },
+    }),
+  );
 
-  // 1. Guard param existence first
-  if (!studentId) {
+  if (isPending) {
+    return <Loader />;
+  }
+
+  if (isError || !data) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Invalid Student ID</AlertTitle>
-        <AlertDescription>No identifier provided in URL.</AlertDescription>
+        <AlertTitle>Student Not Found</AlertTitle>
+        <AlertDescription>
+          The requested student profile could not be loaded or does not exist.
+        </AlertDescription>
       </Alert>
     );
   }
 
-  // 2. Only render the child component once verified
-  return <StudentProfile id={studentId} />;
+  // 2. Passes typed data directly to the pure view
+  return <StudentProfile data={data} />;
+}
+
+// 3. Default Page export: guards param existence first
+export default function Page() {
+  const params = useParams<{ id: string }>();
+  const studentId = params?.id;
+
+  if (!studentId) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Invalid Student ID</AlertTitle>
+        <AlertDescription>
+          No student identifier was found in the URL.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return <Student studentId={studentId} />;
 }
 ```
 
-This guarantees that:
-- The child component runs queries with a guaranteed valid `id` (no defensive `enabled: Boolean(id)` boilerplate needed).
-- The page component remains lean and easy to maintain.
+---
+
+## 6. End-to-End Type Safety & Zero Manual Casting
+
+- **Never Cast Backend Types Manually**:
+  Do **not** use manual type assertions like `data.address as Address` or `(data.notes ?? []) as Note[]`.
+- **oRPC Inferrence**:
+  oRPC automatically propagates backend Drizzle/Zod schemas directly into the client query's `data`. The returned payload is already 100% type-safe. Let TypeScript infer `data.address` and `data.notes` naturally.
 
 ---
 
-## 5. Custom Hooks & Role Guards
+## 7. List Rendering & Key Casting (`i as number`)
+
+When rendering lists of mapped elements using the loop index as a key (e.g., in tables or list sections), always explicitly cast the index as a number:
+
+```tsx
+// ✅ CORRECT: Explicit index casting
+<TableBody>
+  {notes.map((note, i) => (
+    <TableRow key={i as number}>
+      <TableCell>{note.text}</TableCell>
+      <TableCell>{note.writterBy}</TableCell>
+      <TableCell>{formatDate(note.createdAt)}</TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+
+// ❌ AVOID: Uncast key index causing lint or type friction
+<TableRow key={i}>
+```
+
+---
+
+## 8. Custom Hooks & Role Guards
 
 Keep authorization and logic modular with dedicated hooks:
 
@@ -206,6 +278,6 @@ const isScheduler = useHasRole("scheduler");
 ### B. Standard Hook Stack
 - **Authentication**: `useAuth()` (`@/hooks/auth`)
 - **Current User Profile**: `getUserData()` (`@/hooks/user`)
-- **User Resolution**: `<FetchUser id={userId} />` (`@/hooks/user`)
+- **Entity Resolution**: `<FetchUser id={userId} />` (`@/hooks/user`), `<FetchLesson id={lessonId} />` (`@/hooks/lesson`)
 - **API Queries & Mutations**: `api.<router>.<procedure>.queryOptions()` / `.mutationOptions()` with TanStack Query (`@/hooks/api`)
 - **Notifications**: `import { sileo as toast } from "sileo";`
