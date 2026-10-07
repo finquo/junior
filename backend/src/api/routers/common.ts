@@ -63,7 +63,22 @@ export const commonRouter = {
 				}),
 			);
 		}),
-
+	getLesson: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			return await tryAPI(
+				"db-common-get-lesson",
+				db.query.lesson.findFirst({
+					where: {
+						id: input.id,
+					},
+				}),
+			);
+		}),
 	getLanguages: publicProcedure.handler(() => Languages),
 	getCountries: publicProcedure.handler(() => Countries),
 	getCurrencies: publicProcedure.handler(() => Currencies),

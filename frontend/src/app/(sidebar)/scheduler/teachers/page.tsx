@@ -153,9 +153,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			id: "experience",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Experience
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Experience</TooltipTrigger>
 					<TooltipContent>
 						Prior teaching background and employment history
 					</TooltipContent>
@@ -173,9 +171,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			id: "supervisor",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Supervisor
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Supervisor</TooltipTrigger>
 					<TooltipContent>Assigned scheduler supervisor</TooltipContent>
 				</Tooltip>
 			),
@@ -229,9 +225,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			id: "availability",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Availability
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Availability</TooltipTrigger>
 					<TooltipContent>
 						Teacher's weekly schedule availability and working hours
 					</TooltipContent>

@@ -280,9 +280,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			id: "role",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Role
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Role</TooltipTrigger>
 					<TooltipContent>System authorization and access level</TooltipContent>
 				</Tooltip>
 			),
@@ -296,7 +294,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			id: "status",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+					<TooltipTrigger className="cursor-help">
 						Account Status
 					</TooltipTrigger>
 					<TooltipContent>Active or suspended/banned status</TooltipContent>
@@ -339,9 +337,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			id: "changeRole",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Change Role
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Change Role</TooltipTrigger>
 					<TooltipContent>
 						Promote or reassign user permission level
 					</TooltipContent>
@@ -353,9 +349,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			id: "actions",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Actions
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Actions</TooltipTrigger>
 					<TooltipContent>
 						Impersonation and administrative tools
 					</TooltipContent>

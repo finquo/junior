@@ -119,7 +119,7 @@ columnHelper.display({
   id: "supervisor",
   header: () => (
     <Tooltip>
-      <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+      <TooltipTrigger className="cursor-help">
         Supervisor
       </TooltipTrigger>
       <TooltipContent>Assigned scheduler supervisor</TooltipContent>
@@ -213,7 +213,7 @@ columnHelper.display({
   id: "availability",
   header: () => (
     <Tooltip>
-      <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+      <TooltipTrigger className="cursor-help">
         Availability
       </TooltipTrigger>
       <TooltipContent>Teacher's weekly schedule availability</TooltipContent>
@@ -259,7 +259,7 @@ Add hover tooltips on columns that may be ambiguous or jargon-heavy (e.g. `Progr
 ```tsx
 header: () => (
   <Tooltip>
-    <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
+    <TooltipTrigger className="cursor-help">
       Program
     </TooltipTrigger>
     <TooltipContent>

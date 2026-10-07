@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ImpersonationHeader } from "@/hooks/admin";
 import { getClientBaseUrl } from "@/hooks/url";
+import { truncateText } from "@/lib/utils";
 
 export function SideBarHeader() {
 	return (
@@ -45,7 +46,10 @@ const Bread = () => {
 				{segments.map((segment, index) => {
 					const isLast = index === segments.length - 1;
 					const href = `/${segments.slice(0, index + 1).join("/")}`;
-					const formatted = segment.charAt(0).toUpperCase() + segment.slice(1);
+					const formatted = truncateText(
+						segment.charAt(0).toUpperCase() + segment.slice(1),
+						15,
+					);
 
 					return (
 						<React.Fragment key={href}>

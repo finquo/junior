@@ -39,7 +39,7 @@ export function SidebarConfig({
 							icon: <BriefcaseBusinessIcon />,
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
-								getLink: (id) => `scheduler/teacher/${id}`,
+								getLink: (id) => `/teachers/${id}`,
 							},
 						},
 						{
@@ -48,7 +48,7 @@ export function SidebarConfig({
 							icon: <GraduationCapIcon />,
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
-								getLink: (id) => `scheduler/student/${id}`,
+								getLink: (id) => `/students/${id}`,
 							},
 						},
 					]}

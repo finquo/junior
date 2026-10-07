@@ -79,3 +79,12 @@ export type GetFormZod<T extends ZodObject> = StandardSchemaV1<
 	Infer<T>,
 	unknown
 >;
+
+export const truncateText = (text: string, maxLength: number) => {
+	if (text.length <= maxLength) return text;
+
+	const firstHalf = text.slice(0, Math.ceil(maxLength / 2));
+	const secondHalf = text.slice(-Math.floor(maxLength / 2));
+
+	return `${firstHalf}...${secondHalf}`;
+};

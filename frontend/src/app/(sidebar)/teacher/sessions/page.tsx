@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+	type ColumnDef,
 	columnFilteringFeature,
 	columnVisibilityFeature,
 	createColumnHelper,
@@ -16,7 +17,6 @@ import {
 	sortFn_text,
 	tableFeatures,
 	useTable,
-	type ColumnDef,
 } from "@tanstack/react-table";
 import { PenIcon } from "lucide-react";
 import { getRelateTime } from "utils";
@@ -105,7 +105,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 							<Drawer>
 								<DrawerTrigger
 									render={
-										<Item className="cursor-pointer p-0 text-left hover:opacity-80 transition-opacity" />
+										<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
 									}
 								>
 									<ItemMedia>
@@ -114,9 +114,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 												src={user.image ?? undefined}
 												alt={user.name}
 											/>
-											<AvatarFallback>
-												{user.name?.[0] ?? "U"}
-											</AvatarFallback>
+											<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
 										</Avatar>
 									</ItemMedia>
 									<ItemContent>
@@ -147,9 +145,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		columnHelper.accessor("status", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Status
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Status</TooltipTrigger>
 					<TooltipContent>
 						Lifecycle state of the scheduled session
 					</TooltipContent>
@@ -190,9 +186,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		columnHelper.accessor("meetingLink", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Meeting
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Meeting</TooltipTrigger>
 					<TooltipContent>
 						Direct video conference classroom link
 					</TooltipContent>
@@ -294,10 +288,7 @@ export default function Page() {
 								))
 							) : (
 								<TableRow>
-									<TableCell
-										colSpan={columns.length}
-										className="text-center"
-									>
+									<TableCell colSpan={columns.length} className="text-center">
 										No sessions found
 									</TableCell>
 								</TableRow>

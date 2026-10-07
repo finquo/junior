@@ -196,9 +196,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		columnHelper.accessor("status", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Status
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Status</TooltipTrigger>
 					<TooltipContent>
 						Lifecycle state of the scheduled session
 					</TooltipContent>
@@ -239,9 +237,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		columnHelper.accessor("meetingLink", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Meeting
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Meeting</TooltipTrigger>
 					<TooltipContent>
 						Online classroom video conference link
 					</TooltipContent>

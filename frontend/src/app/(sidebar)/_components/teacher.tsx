@@ -1,6 +1,11 @@
 "use client";
 
-import { CalendarFoldIcon, GraduationCapIcon, UserPenIcon, VideoIcon } from "lucide-react";
+import {
+	CalendarFoldIcon,
+	GraduationCapIcon,
+	UserPenIcon,
+	VideoIcon,
+} from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
@@ -33,7 +38,7 @@ export function SidebarConfig({
 							icon: <GraduationCapIcon />,
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
-								getLink: (id) => `teacher/student/${id}`,
+								getLink: (id) => `/students/${id}`,
 							},
 						},
 					]}

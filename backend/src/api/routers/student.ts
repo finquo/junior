@@ -24,10 +24,7 @@ export const studentRouter = {
 
 		return await tryAPI(
 			"db-student-get-mentor-query",
-			db
-				.select()
-				.from(schema.scheduler)
-				.where(eq(schema.scheduler.id, mentorId)),
+			db.select().from(schema.teacher).where(eq(schema.teacher.id, mentorId)),
 		);
 	}),
 	getSupervisor: studentProcedure.handler(async ({ context }) => {

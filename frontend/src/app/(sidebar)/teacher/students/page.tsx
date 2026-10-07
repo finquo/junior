@@ -135,9 +135,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("program", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Program
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Program</TooltipTrigger>
 					<TooltipContent>Enrolled study track or course plan</TooltipContent>
 				</Tooltip>
 			),
@@ -146,9 +144,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("schooling", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Schooling
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Schooling</TooltipTrigger>
 					<TooltipContent>Student's affiliated curriculum board</TooltipContent>
 				</Tooltip>
 			),
@@ -166,9 +162,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			id: "lessons",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Lessons
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Lessons</TooltipTrigger>
 					<TooltipContent>Total enrolled lesson sessions</TooltipContent>
 				</Tooltip>
 			),
@@ -178,9 +172,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			id: "supervisor",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Supervisor
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Supervisor</TooltipTrigger>
 					<TooltipContent>Assigned scheduler supervisor</TooltipContent>
 				</Tooltip>
 			),
@@ -233,9 +225,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("meetingLink", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Meeting
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Meeting</TooltipTrigger>
 					<TooltipContent>
 						Direct video conference classroom link
 					</TooltipContent>

@@ -74,4 +74,5 @@ export const qaAuditorProcedure = getProcedure("qa_auditor");
 export const enrollmentAdvisorProcedure = getProcedure("enrollment_advisor");
 export const schedulerProcedure = getProcedure("scheduler");
 
+export { getRolesProcedure } from "./data";
 export * from "./permission";

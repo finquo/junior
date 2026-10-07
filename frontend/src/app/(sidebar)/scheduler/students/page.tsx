@@ -135,9 +135,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("program", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Program
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Program</TooltipTrigger>
 					<TooltipContent>Enrolled study track or course plan</TooltipContent>
 				</Tooltip>
 			),
@@ -146,9 +144,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("schooling", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Schooling
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Schooling</TooltipTrigger>
 					<TooltipContent>Student's affiliated curriculum board</TooltipContent>
 				</Tooltip>
 			),
@@ -166,9 +162,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			id: "mentor",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Mentor
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Mentor</TooltipTrigger>
 					<TooltipContent>Assigned teacher mentor</TooltipContent>
 				</Tooltip>
 			),
@@ -222,9 +216,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			id: "supervisor",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Supervisor
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Supervisor</TooltipTrigger>
 					<TooltipContent>Assigned scheduler supervisor</TooltipContent>
 				</Tooltip>
 			),
@@ -277,9 +269,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 		columnHelper.accessor("paid", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Payment
-					</TooltipTrigger>
+					<TooltipTrigger className="cursor-help">Payment</TooltipTrigger>
 					<TooltipContent>Fee payment status</TooltipContent>
 				</Tooltip>
 			),

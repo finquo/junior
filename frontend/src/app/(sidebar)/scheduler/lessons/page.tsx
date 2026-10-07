@@ -18,7 +18,7 @@ import {
 	tableFeatures,
 	useTable,
 } from "@tanstack/react-table";
-import { Languages } from "backend/config";
+import { Languages, type LessonType } from "backend/config";
 import { PenIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
@@ -81,7 +81,7 @@ const columnHelper = createColumnHelper<DataTableFeatures, LessonRecord>();
 const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 	columnHelper.columns([
 		columnHelper.display({
-			id: "name",
+			id: "lesson",
 			header: "Lesson",
 			cell: ({ row }) => {
 				const lesson = row.original;
@@ -106,40 +106,48 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 							<DrawerHeader>
 								<DrawerTitle>{lesson.name}</DrawerTitle>
 								<DrawerDescription>
-									{Languages[lesson.language as keyof typeof Languages] ??
-										lesson.language}
+									{lesson.description ?? "No description provided"}
 								</DrawerDescription>
 							</DrawerHeader>
-							<div className="flex flex-col gap-4 p-4 text-sm">
-								<div>
-									<span className="font-medium text-muted-foreground">
-										Description:
-									</span>
-									<p className="mt-1">
-										{lesson.description || "No description provided."}
-									</p>
-								</div>
-								<div className="flex gap-6">
-									<div>
-										<span className="font-medium text-muted-foreground">
-											Language:
-										</span>
-										<p>
-											{Languages[lesson.language as keyof typeof Languages] ??
-												lesson.language}
-										</p>
-									</div>
-									<div>
-										<span className="font-medium text-muted-foreground">
-											Duration:
-										</span>
-										<p>
-											{lesson.period
-												? `${lesson.period} mins`
-												: "Not specified"}
-										</p>
-									</div>
-								</div>
+							<div className="flex flex-col gap-4 p-4">
+								<Table>
+									<TableBody>
+										<TableRow>
+											<TableCell className="font-medium">Lesson ID</TableCell>
+											<TableCell>{lesson.id}</TableCell>
+										</TableRow>
+										<TableRow>
+											<TableCell className="font-medium">Language</TableCell>
+											<TableCell>
+												<Badge variant="secondary">
+													{Languages[
+														lesson.language as keyof typeof Languages
+													] ?? lesson.language}
+												</Badge>
+											</TableCell>
+										</TableRow>
+										{lesson.period && (
+											<TableRow>
+												<TableCell className="font-medium">Duration</TableCell>
+												<TableCell>{String(lesson.period)}</TableCell>
+											</TableRow>
+										)}
+										<TableRow>
+											<TableCell className="font-medium">Created</TableCell>
+											<TableCell>
+												{new Date(lesson.createdAt).toLocaleDateString()}
+											</TableCell>
+										</TableRow>
+										<TableRow>
+											<TableCell className="font-medium">
+												Last Updated
+											</TableCell>
+											<TableCell>
+												{new Date(lesson.updatedAt).toLocaleDateString()}
+											</TableCell>
+										</TableRow>
+									</TableBody>
+								</Table>
 							</div>
 							<DrawerFooter>
 								<DrawerClose render={<Button variant="outline" />}>
@@ -151,45 +159,37 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				);
 			},
 		}),
-		columnHelper.display({
-			id: "language",
+		columnHelper.accessor("language", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Language
-					</TooltipTrigger>
-					<TooltipContent>Teaching and instruction language</TooltipContent>
+					<TooltipTrigger className="cursor-help">Language</TooltipTrigger>
+					<TooltipContent>Instruction medium of the lesson</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ row }) => {
-				const lang = row.original.language;
-				const label = Languages[lang as keyof typeof Languages] ?? lang;
-				return <Badge variant="outline">{label}</Badge>;
+			cell: ({ getValue }) => {
+				const val = getValue();
+				return (
+					<Badge variant="secondary">
+						{Languages[val as keyof typeof Languages] ?? val}
+					</Badge>
+				);
 			},
 		}),
-		columnHelper.display({
-			id: "period",
+		columnHelper.accessor("period", {
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-2">
-						Duration
-					</TooltipTrigger>
-					<TooltipContent>Class duration in minutes</TooltipContent>
+					<TooltipTrigger className="cursor-help">Period</TooltipTrigger>
+					<TooltipContent>Duration or interval of the lesson</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ row }) => {
-				const period = row.original.period;
-				if (!period) return "—";
-				return `${period} mins`;
+			cell: ({ getValue }) => {
+				const val = getValue();
+				return val ? String(val) : "—";
 			},
 		}),
 		columnHelper.accessor("createdAt", {
 			header: "Created",
-			cell: ({ getValue }) => (
-				<span className="text-muted-foreground text-xs">
-					{getRelateTime(new Date(getValue()))} ago
-				</span>
-			),
+			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
 			id: "edit",
@@ -197,7 +197,6 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			cell: ({ row }) => (
 				<Drawer>
 					<DrawerTrigger
-						nativeButton={false}
 						render={
 							<Button variant="outline" size="icon-sm">
 								<PenIcon />
@@ -255,9 +254,11 @@ export default function Page() {
 								<TableRow key={headerGroup.id}>
 									{headerGroup.headers.map((header) => (
 										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : (
-												<table.FlexRender header={header} />
-											)}
+											{header.isPlaceholder
+												? null
+												: typeof header.column.columnDef.header === "function"
+													? header.column.columnDef.header(header.getContext())
+													: header.column.columnDef.header}
 										</TableHead>
 									))}
 								</TableRow>
@@ -266,18 +267,26 @@ export default function Page() {
 						<TableBody>
 							{table.getRowModel().rows.length ? (
 								table.getRowModel().rows.map((row) => (
-									<TableRow key={row.id}>
+									<TableRow
+										key={row.id}
+										data-state={row.getIsSelected() && "selected"}
+									>
 										{row.getVisibleCells().map((cell) => (
 											<TableCell key={cell.id}>
-												<table.FlexRender cell={cell} />
+												{typeof cell.column.columnDef.cell === "function"
+													? cell.column.columnDef.cell(cell.getContext())
+													: cell.getValue()}
 											</TableCell>
 										))}
 									</TableRow>
 								))
 							) : (
 								<TableRow>
-									<TableCell colSpan={columns.length} className="text-center">
-										No lessons found
+									<TableCell
+										colSpan={columns.length}
+										className="h-24 text-center"
+									>
+										No lessons found.
 									</TableCell>
 								</TableRow>
 							)}

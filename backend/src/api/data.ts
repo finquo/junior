@@ -59,3 +59,19 @@ export const getProcedure = <R extends Role>(role: R) =>
 			},
 		});
 	});
+
+export const getRolesProcedure = <R extends Role>(roles: R[]) =>
+	protectedProcedure.use(async ({ context, next }) => {
+		const isAllowed = roles.some((r) => r === context.user.role);
+
+		if (!isAllowed)
+			throw getError(
+				"UNAUTHORIZED",
+				"You are not authorized to access this action",
+			);
+
+		if (context.session.impersonatedBy)
+			console.log("impersonatedBy:", context.session.impersonatedBy);
+
+		return next();
+	});
