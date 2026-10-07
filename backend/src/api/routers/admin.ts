@@ -59,27 +59,10 @@ export const adminRouter = {
 		}),
 	promote: adminProcedure
 		.input(
-			z
-				.object({
-					id: z.string(),
-					role: roleEnumZod,
-				})
-				.and(
-					z.union([
-						z.object({
-							role: z.literal("teacher"),
-							supervisorId: z.string(),
-						}),
-						z.object({
-							role: z.literal("student"),
-							mentorId: z.string(),
-							supervisorId: z.string(),
-						}),
-						z.object({
-							role: roleEnumZod.exclude(["teacher", "student"]),
-						}),
-					]),
-				),
+			z.object({
+				id: z.string(),
+				role: roleEnumZod,
+			}),
 		)
 		.handler(async ({ input }) => {
 			const existingUser = await tryAPI(
@@ -98,71 +81,53 @@ export const adminRouter = {
 
 			const oldRole = existingUser.role;
 
-			if (oldRole !== input.role) {
-				if (oldRole === "teacher") {
-					await tryAPI(
-						"db-admin-delete-teacher",
-						db.delete(schema.teacher).where(eq(schema.teacher.id, input.id)),
-					);
-				} else if (oldRole === "student") {
-					await tryAPI(
-						"db-admin-delete-student",
-						db.delete(schema.student).where(eq(schema.student.id, input.id)),
-					);
-				} else if (oldRole === "scheduler") {
-					await tryAPI(
-						"db-admin-delete-scheduler",
-						db
-							.delete(schema.scheduler)
-							.where(eq(schema.scheduler.id, input.id)),
-					);
-				}
+			if (oldRole === input.role) return;
 
-				if (input.role === "teacher") {
-					await tryAPI(
-						"db-admin-create-teacher",
-						db
-							.insert(schema.teacher)
-							.values({
-								id: input.id,
-								supervisorId: input.supervisorId,
-							})
-							.onConflictDoUpdate({
-								target: schema.teacher.id,
-								set: {
-									supervisorId: schema.teacher.supervisorId,
-								},
-							}),
-					);
-				} else if (input.role === "student") {
-					await tryAPI(
-						"db-admin-create-student",
-						db
-							.insert(schema.student)
-							.values({
-								id: input.id,
-								mentorId: input.mentorId,
-								supervisorId: input.supervisorId,
-								paid: false,
-								amount: 0,
-							})
-							.onConflictDoUpdate({
-								target: schema.student.id,
-								set: {
-									mentorId: schema.student.mentorId,
-									supervisorId: schema.student.supervisorId,
-								},
-							}),
-					);
-				} else if (input.role === "scheduler") {
-					await tryAPI(
-						"db-admin-create-scheduler",
-						db
-							.insert(schema.scheduler)
-							.values({ id: input.id })
-							.onConflictDoNothing(),
-					);
-				}
+			if (oldRole === "teacher") {
+				await tryAPI(
+					"db-admin-delete-teacher",
+					db.delete(schema.teacher).where(eq(schema.teacher.id, input.id)),
+				);
+			} else if (oldRole === "student") {
+				await tryAPI(
+					"db-admin-delete-student",
+					db.delete(schema.student).where(eq(schema.student.id, input.id)),
+				);
+			} else if (oldRole === "scheduler") {
+				await tryAPI(
+					"db-admin-delete-scheduler",
+					db.delete(schema.scheduler).where(eq(schema.scheduler.id, input.id)),
+				);
+			}
+
+			if (input.role === "teacher") {
+				await tryAPI(
+					"db-admin-create-teacher",
+					db
+						.insert(schema.teacher)
+						.values({ id: input.id })
+						.onConflictDoNothing(),
+				);
+			} else if (input.role === "student") {
+				await tryAPI(
+					"db-admin-create-student",
+					db
+						.insert(schema.student)
+						.values({
+							id: input.id,
+							paid: false,
+							amount: 0,
+						})
+						.onConflictDoNothing(),
+				);
+			} else if (input.role === "scheduler") {
+				await tryAPI(
+					"db-admin-create-scheduler",
+					db
+						.insert(schema.scheduler)
+						.values({ id: input.id })
+						.onConflictDoNothing(),
+				);
 			}
 
 			return await tryAPI(

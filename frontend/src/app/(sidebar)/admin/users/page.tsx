@@ -105,29 +105,12 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 	const form = useForm({
 		defaultValues: {
 			role: (user.role as Role) ?? "user",
-			supervisorId: "",
-			mentorId: "",
 		},
 		onSubmit: async ({ value }) => {
-			if (value.role === "teacher") {
-				await mutateAsync({
-					id: user.id,
-					role: "teacher",
-					supervisorId: value.supervisorId,
-				});
-			} else if (value.role === "student") {
-				await mutateAsync({
-					id: user.id,
-					role: "student",
-					supervisorId: value.supervisorId,
-					mentorId: value.mentorId,
-				});
-			} else {
-				await mutateAsync({
-					id: user.id,
-					role: value.role,
-				});
-			}
+			await mutateAsync({
+				id: user.id,
+				role: value.role,
+			});
 		},
 	});
 
@@ -179,62 +162,6 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 											</SelectContent>
 										</Select>
 									</Field>
-								)}
-							/>
-							<form.Subscribe
-								selector={(state) => state.values.role}
-								children={(role) => (
-									<>
-										{(role === "teacher" || role === "student") && (
-											<form.Field
-												name="supervisorId"
-												children={(field) => (
-													<Field>
-														<FieldLabel htmlFor={field.name}>
-															Supervisor ID
-														</FieldLabel>
-														<Input
-															id={field.name}
-															name={field.name}
-															value={field.state.value}
-															onBlur={field.handleBlur}
-															onChange={(e) =>
-																field.handleChange(e.target.value)
-															}
-															placeholder="Enter supervisor ID..."
-															disabled={isPending}
-															required
-														/>
-													</Field>
-												)}
-											/>
-										)}
-
-										{role === "student" && (
-											<form.Field
-												name="mentorId"
-												children={(field) => (
-													<Field>
-														<FieldLabel htmlFor={field.name}>
-															Mentor ID
-														</FieldLabel>
-														<Input
-															id={field.name}
-															name={field.name}
-															value={field.state.value}
-															onBlur={field.handleBlur}
-															onChange={(e) =>
-																field.handleChange(e.target.value)
-															}
-															placeholder="Enter mentor ID..."
-															disabled={isPending}
-															required
-														/>
-													</Field>
-												)}
-											/>
-										)}
-									</>
 								)}
 							/>
 						</FieldGroup>

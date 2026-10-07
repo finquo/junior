@@ -26,6 +26,7 @@ export const schoolingZod = z.enum([
 	"homeschool",
 	"online",
 	"other",
+	"other1",
 	"unknown",
 ]);
 

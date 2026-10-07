@@ -9,7 +9,14 @@ import {
 } from "drizzle-orm/pg-core";
 import type { CurrencyCodes, LanguageCodes, PlayKeys } from "@/config";
 import type { Address, Note, Schooling } from "@/config/profile";
-import { createdAt, generateId, getId, getTime, updatedAt } from "../utils";
+import {
+	createdAt,
+	generateId,
+	getId,
+	getTempId,
+	getTime,
+	updatedAt,
+} from "../utils";
 import { user } from "./auth";
 import { scheduler } from "./scheduler";
 import { teacher } from "./teacher";
@@ -21,8 +28,8 @@ export const student = pgTable(
 			.primaryKey()
 			.references(() => user.id, { onDelete: "cascade" }),
 
-		mentorId: getId().references(() => teacher.id),
-		supervisorId: getId().references(() => scheduler.id),
+		mentorId: getTempId().references(() => teacher.id),
+		supervisorId: getTempId().references(() => scheduler.id),
 
 		notes: jsonb().$type<Note[]>().default([]).notNull(),
 		address: jsonb().$type<Address>(),

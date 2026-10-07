@@ -44,9 +44,9 @@ export const updatedAt = (name = "updated_at") =>
 		.$onUpdate(() => new Date())
 		.notNull();
 
-export const getId = () => text().notNull();
-export const generateId = () =>
-	text().default(sql`gen_random_uuid()`).notNull();
+export const getTempId = () => text();
+export const getId = () => getTempId().notNull();
+export const generateId = () => getId().default(sql`gen_random_uuid()`);
 
 export async function enableTrigramExtension(db: Database) {
 	await db.execute(sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
