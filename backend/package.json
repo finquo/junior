@@ -3,6 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"cf:dev": "wrangler dev --port 3000",
+		"compile": "varlock codegen && tsdown",
 		"construct": "varlock codegen && tsdown",
 		"build": "varlock codegen && tsdown",
 		"check": "tsc --noEmit",

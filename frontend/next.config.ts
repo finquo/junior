@@ -5,12 +5,13 @@ import { withPwa } from "./pwa.config";
 const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
-	output: process.env.EXPORT ? "export" : "standalone",
+	output: "standalone",
 	trailingSlash: true,
 	skipTrailingSlashRedirect: true,
 	typedRoutes: true,
 	reactCompiler: true,
 	transpilePackages: ["backend"],
+	images: { unoptimized: true },
 };
 
 // export default nextConfig;

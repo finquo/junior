@@ -2,12 +2,13 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "app",
 	"compatibility_date": "2026-08-04",
-	"main": "./backend/out/index.mjs",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"main": "./frontend/.open-next/worker.js",
 	"observability": {
 		"enabled": true
 	},
 	"build": {
-		"command": "bun run build",
+		"command": "bun run compile",
 		"watch_dir": ["backend", "frontend", "packages"]
 	},
 	"keep_vars": true,
@@ -20,7 +21,7 @@
 		"NEXT_TELEMETRY_DISABLED": 1
 	},
 	"assets": {
-		"directory": "./frontend/out",
+		"directory": "./frontend/.open-next/assets",
 		"html_handling": "auto-trailing-slash",
 		"not_found_handling": "404-page",
 		"run_worker_first": ["/api/*", "/.well-known/*"]
