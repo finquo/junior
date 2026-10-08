@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import {
 	Select,
 	SelectContent,
@@ -35,7 +35,6 @@ export function LessonSelector({
 
 	return (
 		<Field>
-			<FieldLabel>Select {label}</FieldLabel>
 			<Select
 				value={value}
 				onValueChange={(val) => {

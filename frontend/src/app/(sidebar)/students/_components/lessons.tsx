@@ -1,9 +1,11 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { BookOpenIcon, GripVerticalIcon, PlusIcon } from "lucide-react";
+import { langFlag, langName } from "language-emoji";
+import { BookOpenIcon, GripIcon, ImportIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
+import { formatTimeString } from "utils";
 import Loader from "@/components/loader";
 import {
 	Frame,
@@ -23,6 +25,7 @@ import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
 	DrawerTitle,
@@ -32,9 +35,10 @@ import {
 	Item,
 	ItemActions,
 	ItemContent,
-	ItemMedia,
+	ItemDescription,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Marker, MarkerContent } from "@/components/ui/marker";
 import { api, queryClient } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
 import { LessonSelector } from "./selector";
@@ -48,7 +52,6 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 
 	const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
 	const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
 	const items = orderedIds ?? studentLessonIds;
 
@@ -79,7 +82,6 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 		const newIds = [...items, selectedLessonId];
 		setOrderedIds(newIds);
 		setSelectedLessonId("");
-		setIsDrawerOpen(false);
 		await updateStudentLessons({
 			id: studentId,
 			lessons: newIds,
@@ -92,12 +94,12 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 
 	return (
 		<Frame>
-			<FrameHeader className="flex flex-row items-center justify-between">
+			<FrameHeader className="flex-row justify-between">
 				<FrameTitle>Enrolled Lessons</FrameTitle>
-				<Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+				<Drawer>
 					<DrawerTrigger
 						render={
-							<Button variant="outline" size="sm">
+							<Button variant="outline" size="xs">
 								<PlusIcon />
 								Add Lesson
 							</Button>
@@ -106,17 +108,34 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 					<DrawerContent>
 						<DrawerHeader>
 							<DrawerTitle>Add Lesson</DrawerTitle>
+							<DrawerDescription>Pick from available lessons</DrawerDescription>
 						</DrawerHeader>
+
 						<LessonSelector
 							enrolledLessonIds={items}
 							value={selectedLessonId}
 							onValueChange={setSelectedLessonId}
 						/>
+
+						<Marker variant="separator">
+							<MarkerContent>or</MarkerContent>
+						</Marker>
+
+						<Button>
+							<ImportIcon />
+							Import from another students
+						</Button>
+
 						<DrawerFooter>
-							<Button disabled={!selectedLessonId} onClick={handleAddLesson}>
+							<DrawerClose
+								disabled={!selectedLessonId}
+								onClick={handleAddLesson}
+								render={<Button />}
+							>
 								<PlusIcon />
 								Add
-							</Button>
+							</DrawerClose>
+
 							<DrawerClose render={<Button variant="outline" />}>
 								Close
 							</DrawerClose>
@@ -137,43 +156,45 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 						onValueChange={handleValueChange}
 						getItemValue={(id) => id}
 						strategy="vertical"
+						className="space-y-3"
 					>
 						{items.map((lessonId, index) => (
 							<SortableItem key={lessonId} value={lessonId}>
 								<Item variant="outline">
-									<SortableItemHandle>
-										<GripVerticalIcon />
+									<SortableItemHandle className="opacity-40">
+										<GripIcon />
 									</SortableItemHandle>
-									<ItemMedia>
-										<BookOpenIcon />
-									</ItemMedia>
 									<FetchLesson
 										id={lessonId}
 										isPending={
 											<ItemContent>
-												<ItemTitle>#{index + 1} Loading...</ItemTitle>
+												<ItemTitle>Loading...</ItemTitle>
 											</ItemContent>
 										}
 										notFound={
 											<ItemContent>
-												<ItemTitle>#{index + 1} Lesson not found</ItemTitle>
+												<ItemTitle>Lesson not found</ItemTitle>
 											</ItemContent>
 										}
 									>
 										{(lesson) => (
 											<>
 												<ItemContent>
-													<ItemTitle>
-														#{index + 1} {lesson.name}
-													</ItemTitle>
+													<ItemTitle>{lesson.name}</ItemTitle>
+													<ItemDescription>
+														{lesson.description}
+													</ItemDescription>
+												</ItemContent>
+												<ItemContent>
+													<Badge variant="secondary">
+														{langFlag(lesson.language)}{" "}
+														{langName(lesson.language)}
+													</Badge>
 												</ItemContent>
 												<ItemActions>
-													{lesson.language && (
-														<Badge variant="secondary">{lesson.language}</Badge>
-													)}
 													{lesson.period && (
 														<Badge variant="outline">
-															{String(lesson.period)}
+															{formatTimeString(lesson.period)}
 														</Badge>
 													)}
 												</ItemActions>

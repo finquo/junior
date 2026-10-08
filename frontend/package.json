@@ -43,6 +43,7 @@
 		"cn": "^0.3.2",
 		"date-fns": "^4.4.0",
 		"framer-motion": "^13.4.6",
+		"language-emoji": "^2.1.1",
 		"lucide-react": "^1.41.0",
 		"motion": "^13.4.6",
 		"next": "^16.3.4",
