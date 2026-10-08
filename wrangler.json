@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "app",
+	"name": "junior",
 	"compatibility_date": "2026-08-04",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"main": "./frontend/.open-next/worker.js",
@@ -13,8 +13,8 @@
 	},
 	"keep_vars": true,
 	"vars": {
-		"CORS_ORIGIN": "https://app.finquo.workers.dev",
-		"BETTER_AUTH_URL": "https://app.finquo.workers.dev",
+		"CORS_ORIGIN": "https://junior.finquo.workers.dev",
+		"BETTER_AUTH_URL": "https://junior.finquo.workers.dev",
 		"NODE_ENV": "production",
 		"EXPORT": true,
 		"BUN_VERSION": "1.2.15",

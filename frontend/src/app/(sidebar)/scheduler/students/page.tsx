@@ -61,7 +61,6 @@ import {
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
@@ -332,45 +331,43 @@ export default function Page() {
 	}
 
 	return (
-		<TooltipProvider>
-			<Frame>
-				<FramePanel className="p-0!">
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : (
-												<table.FlexRender header={header} />
-											)}
-										</TableHead>
+		<Frame>
+			<FramePanel>
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : (
+											<table.FlexRender header={header} />
+										)}
+									</TableHead>
+								))}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow key={row.id}>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell key={cell.id}>
+											<table.FlexRender cell={cell} />
+										</TableCell>
 									))}
 								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												<table.FlexRender cell={cell} />
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={columns.length} className="text-center">
-										No students found
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</FramePanel>
-			</Frame>
-		</TooltipProvider>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={columns.length} className="text-center">
+									No students found
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</FramePanel>
+		</Frame>
 	);
 }

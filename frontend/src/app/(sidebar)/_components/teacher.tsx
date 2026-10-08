@@ -50,12 +50,6 @@ export function SidebarConfig({
 							title: "Sessions",
 							url: "/teacher/sessions",
 							icon: <VideoIcon />,
-							subItems: [
-								{
-									title: "New Session",
-									url: "/teacher/sessions/new",
-								},
-							],
 						},
 					]}
 				/>

@@ -53,7 +53,6 @@ import {
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
@@ -74,7 +73,7 @@ const features = tableFeatures({
 
 type DataTableFeatures = typeof features;
 
-type LessonRecord = API_Returns["scheduler"]["getLessons"][number];
+type LessonRecord = API_Returns["core"]["lesson"]["list"][number];
 
 const columnHelper = createColumnHelper<DataTableFeatures, LessonRecord>();
 
@@ -208,7 +207,6 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 							<DrawerTitle>Edit Lesson</DrawerTitle>
 							<DrawerDescription>Edit {row.original.name}</DrawerDescription>
 						</DrawerHeader>
-						<div className="p-4" />
 						<DrawerFooter>
 							<DrawerClose render={<Button variant="outline" />}>
 								Close
@@ -221,13 +219,13 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 	]);
 
 export default function Page() {
-	const { data: lessons = [], isPending } = useQuery(
-		api.scheduler.getLessons.queryOptions(),
+	const { data = [], isPending } = useQuery(
+		api.core.lesson.list.queryOptions(),
 	);
 
 	const table = useTable({
 		features,
-		data: lessons,
+		data,
 		columns,
 	});
 
@@ -236,64 +234,59 @@ export default function Page() {
 	}
 
 	return (
-		<TooltipProvider>
-			<Frame>
-				<FrameHeader className="flex flex-row items-center justify-end">
-					<Button
-						render={<Link href="/scheduler/lessons/new" />}
-						nativeButton={false}
-					>
-						<PlusIcon />
-						Create Lesson
-					</Button>
-				</FrameHeader>
-				<FramePanel className="p-0!">
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: typeof header.column.columnDef.header === "function"
-													? header.column.columnDef.header(header.getContext())
-													: header.column.columnDef.header}
-										</TableHead>
+		<Frame>
+			<FrameHeader className="flex flex-row items-center justify-end">
+				<Button render={<Link href="/lessons/new" />} nativeButton={false}>
+					<PlusIcon />
+					Create Lesson
+				</Button>
+			</FrameHeader>
+			<FramePanel>
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder
+											? null
+											: typeof header.column.columnDef.header === "function"
+												? header.column.columnDef.header(header.getContext())
+												: header.column.columnDef.header}
+									</TableHead>
+								))}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow
+									key={row.id}
+									data-state={row.getIsSelected() && "selected"}
+								>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell key={cell.id}>
+											{typeof cell.column.columnDef.cell === "function"
+												? cell.column.columnDef.cell(cell.getContext())
+												: cell.getValue()}
+										</TableCell>
 									))}
 								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow
-										key={row.id}
-										data-state={row.getIsSelected() && "selected"}
-									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												{typeof cell.column.columnDef.cell === "function"
-													? cell.column.columnDef.cell(cell.getContext())
-													: cell.getValue()}
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell
-										colSpan={columns.length}
-										className="h-24 text-center"
-									>
-										No lessons found.
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</FramePanel>
-			</Frame>
-		</TooltipProvider>
+							))
+						) : (
+							<TableRow>
+								<TableCell
+									colSpan={columns.length}
+									className="h-24 text-center"
+								>
+									No lessons found.
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</FramePanel>
+		</Frame>
 	);
 }

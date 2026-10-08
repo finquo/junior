@@ -19,10 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			/>
 			<SidebarInset>
 				<SideBarHeader />
-				<div className="relative min-h-svh p-3">
-					{children}
-					{/*<ImpersonationBanner />*/}
-				</div>
+				<div className="relative min-h-svh p-3">{children}</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);

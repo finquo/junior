@@ -55,22 +55,14 @@ import {
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
+import type { API_Returns } from "@/lib/api";
 import { snakeToTitleCase } from "@/lib/utils";
 
-type SlotRecord = NonNullable<
-	Awaited<
-		ReturnType<
-			NonNullable<
-				ReturnType<typeof api.scheduler.getSlots.queryOptions>["queryFn"]
-			>
-		>
-	>
->[number];
+type SlotRecord = API_Returns["core"]["slot"]["list"][number];
 
 const features = tableFeatures({
 	columnFilteringFeature,
@@ -281,7 +273,6 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 								Edit slot and reschedule details
 							</DrawerDescription>
 						</DrawerHeader>
-						<div className="p-4" />
 						<DrawerFooter>
 							<DrawerClose render={<Button variant="outline" />}>
 								Close
@@ -294,13 +285,11 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 	]);
 
 export default function Page() {
-	const { data: slots = [], isPending } = useQuery(
-		api.scheduler.getSlots.queryOptions(),
-	);
+	const { data = [], isPending } = useQuery(api.core.slot.list.queryOptions());
 
 	const table = useTable({
 		features,
-		data: slots,
+		data,
 		columns,
 	});
 
@@ -309,45 +298,43 @@ export default function Page() {
 	}
 
 	return (
-		<TooltipProvider>
-			<Frame>
-				<FramePanel className="p-0!">
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : (
-												<table.FlexRender header={header} />
-											)}
-										</TableHead>
+		<Frame>
+			<FramePanel>
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : (
+											<table.FlexRender header={header} />
+										)}
+									</TableHead>
+								))}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow key={row.id}>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell key={cell.id}>
+											<table.FlexRender cell={cell} />
+										</TableCell>
 									))}
 								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												<table.FlexRender cell={cell} />
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={columns.length} className="text-center">
-										No sessions found
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</FramePanel>
-			</Frame>
-		</TooltipProvider>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={columns.length} className="text-center">
+									No sessions found
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</FramePanel>
+		</Frame>
 	);
 }

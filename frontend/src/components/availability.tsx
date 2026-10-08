@@ -22,7 +22,6 @@ import { Switch } from "@/components/ui/switch";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -527,20 +526,18 @@ export function AvailabilityScheduler({
 	);
 
 	return (
-		<TooltipProvider>
-			<div className={cn("divide-y divide-border", className)}>
-				{WEEKDAYS.map(({ key, label }) => (
-					<DayRow
-						key={key}
-						day={key}
-						label={label}
-						state={week[key]}
-						options={options}
-						onChange={(next) => setDay(key, next)}
-						onCopy={(targets) => copyDay(key, targets)}
-					/>
-				))}
-			</div>
-		</TooltipProvider>
+		<div className={cn("divide-y divide-border", className)}>
+			{WEEKDAYS.map(({ key, label }) => (
+				<DayRow
+					key={key}
+					day={key}
+					label={label}
+					state={week[key]}
+					options={options}
+					onChange={(next) => setDay(key, next)}
+					onCopy={(targets) => copyDay(key, targets)}
+				/>
+			))}
+		</div>
 	);
 }

@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -670,316 +669,312 @@ export function DaySlider({
 	const hasAvailableSpace = validStartRanges.length > 0;
 
 	return (
-		<TooltipProvider delay={100}>
-			<div
-				className={cn(
-					"w-full select-none rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
-					disabled && "pointer-events-none opacity-60",
-					className,
-				)}
-			>
-				{/* Header & Status Information */}
-				<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<div className="flex items-center gap-2">
-							<Clock className="size-4 text-primary" />
-							<h3 className="font-semibold text-foreground text-sm">{label}</h3>
-						</div>
-						<p className="text-muted-foreground text-xs">
-							Window: {formatTime12(lowerMin)} – {formatTime12(upperMin)}
-							{isBounded && (
-								<>
-									{" "}
-									• Track: {formatTime12(trackStartMin)} –{" "}
-									{formatTime12(trackEndMin)}
-								</>
-							)}{" "}
-							• Duration: {formatDuration(durationMin)}
-						</p>
-					</div>
-
+		<div
+			className={cn(
+				"w-full select-none rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
+				disabled && "pointer-events-none opacity-60",
+				className,
+			)}
+		>
+			{/* Header & Status Information */}
+			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+				<div>
 					<div className="flex items-center gap-2">
-						{hasAvailableSpace ? (
-							<div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs">
-								<span className="font-semibold text-foreground tabular-nums">
-									{minutesToTimeString(currentStart)} –{" "}
-									{minutesToTimeString(currentEnd)}
-								</span>
-								<span className="text-muted-foreground">
-									({formatDuration(durationMin)})
-								</span>
-							</div>
-						) : (
-							<div className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-destructive text-xs">
-								<AlertCircle className="size-3.5" />
-								<span>No available space for this duration</span>
-							</div>
-						)}
-
-						{/* Quick jump step buttons */}
-						<div className="flex items-center gap-0.5">
-							<Tooltip>
-								<TooltipTrigger
-									render={
-										<Button
-											type="button"
-											variant="outline"
-											size="icon-xs"
-											disabled={disabled || !hasAvailableSpace}
-											onClick={jumpToPrevSlot}
-											aria-label="Previous slot"
-										>
-											<ChevronLeft className="size-3" />
-										</Button>
-									}
-								/>
-								<TooltipContent>Previous slot</TooltipContent>
-							</Tooltip>
-
-							<Tooltip>
-								<TooltipTrigger
-									render={
-										<Button
-											type="button"
-											variant="outline"
-											size="icon-xs"
-											disabled={disabled || !hasAvailableSpace}
-											onClick={jumpToNextSlot}
-											aria-label="Next slot"
-										>
-											<ChevronRight className="size-3" />
-										</Button>
-									}
-								/>
-								<TooltipContent>Next slot</TooltipContent>
-							</Tooltip>
-						</div>
+						<Clock className="size-4 text-primary" />
+						<h3 className="font-semibold text-foreground text-sm">{label}</h3>
 					</div>
-				</div>
-
-				{/* Slider Track Area */}
-				<div className="relative pt-6 pb-9">
-					{/* Visible Track: renders [trackStartMin, trackEndMin] */}
-					<div
-						ref={trackRef}
-						onPointerDown={handleTrackPointerDown}
-						className="relative h-12 w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/40 shadow-inner"
-					>
-						{/* Shaded buffer area: Before lowerLimit */}
-						{lowerMin > trackStartMin && (
-							<div
-								style={{ left: 0, width: toPercent(lowerMin) }}
-								className="absolute inset-y-0 border-primary/40 border-r-2 border-dashed bg-muted/80 backdrop-blur-[1px]"
-								title={`Outside active window (before ${minutesToTimeString(lowerMin)})`}
-							>
-								<div className="h-full w-full bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.04)_6px,rgba(0,0,0,0.04)_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(255,255,255,0.03)_6px,rgba(255,255,255,0.03)_12px)]" />
-							</div>
-						)}
-
-						{/* Shaded buffer area: After upperLimit */}
-						{upperMin < trackEndMin && (
-							<div
-								style={{
-									left: toPercent(upperMin),
-									width: toWidthPercent(trackEndMin - upperMin),
-								}}
-								className="absolute inset-y-0 border-primary/40 border-l-2 border-dashed bg-muted/80 backdrop-blur-[1px]"
-								title={`Outside active window (after ${minutesToTimeString(upperMin)})`}
-							>
-								<div className="h-full w-full bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.04)_6px,rgba(0,0,0,0.04)_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(255,255,255,0.03)_6px,rgba(255,255,255,0.03)_12px)]" />
-							</div>
-						)}
-
-						{/* Blocked Times intervals within visible track */}
-						{normalizedBlocked.map((b) => {
-							const visibleStart = Math.max(trackStartMin, b.start);
-							const visibleEnd = Math.min(trackEndMin, b.end);
-							if (visibleEnd <= visibleStart) return null;
-
-							return (
-								<Tooltip key={b.id}>
-									<TooltipTrigger
-										render={
-											<div
-												style={{
-													left: toPercent(visibleStart),
-													width: toWidthPercent(visibleEnd - visibleStart),
-												}}
-												className="absolute inset-y-0 z-10 flex cursor-not-allowed items-center justify-center border-border/80 border-r border-l bg-destructive/15 transition-colors hover:bg-destructive/25"
-											>
-												<div className="flex items-center gap-1 overflow-hidden px-1 text-destructive">
-													<Lock className="size-3 shrink-0" />
-													<span className="truncate font-medium text-[10px]">
-														{b.label}
-													</span>
-												</div>
-											</div>
-										}
-									/>
-									<TooltipContent>
-										<p className="font-semibold">{b.label}</p>
-										<p className="text-[11px] opacity-80">
-											{minutesToTimeString(b.start)} –{" "}
-											{minutesToTimeString(b.end)} (Blocked)
-										</p>
-									</TooltipContent>
-								</Tooltip>
-							);
-						})}
-
-						{/* Hour subtle tick lines within track */}
-						{hourTicks.map((mins) => (
-							<div
-								key={mins}
-								style={{ left: toPercent(mins) }}
-								className="pointer-events-none absolute inset-y-0 border-border/50 border-r"
-							/>
-						))}
-
-						{/* Draggable Slider Block */}
-						{hasAvailableSpace && (
-							<div
-								role="slider"
-								tabIndex={disabled ? -1 : 0}
-								aria-label={`${label} block, duration ${formatDuration(durationMin)}`}
-								aria-valuemin={lowerMin}
-								aria-valuemax={upperMin - durationMin}
-								aria-valuenow={currentStart}
-								aria-valuetext={`${minutesToTimeString(currentStart)} to ${minutesToTimeString(currentEnd)}`}
-								onKeyDown={handleKeyDown}
-								onPointerDown={handleThumbPointerDown}
-								onPointerMove={handleThumbPointerMove}
-								onPointerUp={handleThumbPointerUp}
-								style={{
-									left: toPercent(currentStart),
-									width: toWidthPercent(durationMin),
-								}}
-								className={cn(
-									"absolute inset-y-0 z-20 flex cursor-grab items-center justify-between rounded-lg border-2 border-primary bg-primary text-primary-foreground shadow-md transition-[box-shadow,border-color]",
-									"focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
-									isDragging &&
-										"cursor-grabbing shadow-lg ring-2 ring-primary/40",
-								)}
-							>
-								{/* Left handle grip */}
-								<div className="flex h-full items-center px-0.5 opacity-70">
-									<GripVertical className="size-3.5" />
-								</div>
-
-								{/* Center Label (Start - End) */}
-								<div className="flex min-w-0 flex-1 flex-col items-center justify-center px-1 text-center">
-									<span className="truncate font-semibold text-[11px] tabular-nums leading-tight sm:text-xs">
-										{minutesToTimeString(currentStart)}
-									</span>
-									<span className="truncate text-[9px] opacity-80 sm:text-[10px]">
-										to {minutesToTimeString(currentEnd)}
-									</span>
-								</div>
-
-								{/* Right handle grip */}
-								<div className="flex h-full items-center px-0.5 opacity-70">
-									<GripVertical className="size-3.5" />
-								</div>
-							</div>
-						)}
-					</div>
-
-					{/* Scale & Axis Marks below Track */}
-					<div className="pointer-events-none absolute right-0 bottom-0 left-0 h-7">
-						{/* Regular Axis Marks */}
-						{filteredAxisMarks.map((mark) => (
-							<div
-								key={mark.minutes}
-								style={{
-									position: "absolute",
-									left:
-										mark.isEdge === "start"
-											? "0%"
-											: mark.isEdge === "end"
-												? "100%"
-												: toPercent(mark.minutes),
-									transform:
-										mark.isEdge === "start"
-											? "none"
-											: mark.isEdge === "end"
-												? "translateX(-100%)"
-												: "translateX(-50%)",
-								}}
-								className="whitespace-nowrap pt-2 text-[10px] text-muted-foreground"
-							>
-								{mark.label}
-							</div>
-						))}
-
-						{/* Explicit Lower Limit Marker on the Scale */}
-						{lowerLimit !== undefined && (
-							<div
-								style={{
-									position: "absolute",
-									left: lowerMin === trackStartMin ? "0%" : toPercent(lowerMin),
-									transform:
-										lowerMin === trackStartMin ? "none" : "translateX(-50%)",
-								}}
-								className="flex flex-col items-center pt-0.5"
-								title={`Lower limit: ${minutesToTimeString(lowerMin)}`}
-							>
-								<div className="h-1.5 w-1 rounded-full bg-primary" />
-								<span className="whitespace-nowrap font-bold text-[10px] text-primary tabular-nums">
-									{formatTime12(lowerMin)}
-								</span>
-							</div>
-						)}
-
-						{/* Explicit Upper Limit Marker on the Scale */}
-						{upperLimit !== undefined && (
-							<div
-								style={{
-									position: "absolute",
-									left: upperMin === trackEndMin ? "100%" : toPercent(upperMin),
-									transform:
-										upperMin === trackEndMin
-											? "translateX(-100%)"
-											: "translateX(-50%)",
-								}}
-								className="flex flex-col items-center pt-0.5"
-								title={`Upper limit: ${minutesToTimeString(upperMin)}`}
-							>
-								<div className="h-1.5 w-1 rounded-full bg-primary" />
-								<span className="whitespace-nowrap font-bold text-[10px] text-primary tabular-nums">
-									{formatTime12(upperMin)}
-								</span>
-							</div>
-						)}
-					</div>
-				</div>
-
-				{/* Footer legend / helper info */}
-				<div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3 text-[11px] text-muted-foreground">
-					<div className="flex flex-wrap items-center gap-3">
-						<div className="flex items-center gap-1.5">
-							<span className="size-2.5 rounded-sm bg-primary" />
-							<span>Active Time ({formatDuration(durationMin)})</span>
-						</div>
-						{normalizedBlocked.length > 0 && (
-							<div className="flex items-center gap-1.5">
-								<span className="size-2.5 rounded-sm bg-destructive/30" />
-								<span>Blocked Breaks</span>
-							</div>
-						)}
+					<p className="text-muted-foreground text-xs">
+						Window: {formatTime12(lowerMin)} – {formatTime12(upperMin)}
 						{isBounded && (
-							<div className="flex items-center gap-1.5">
-								<span className="size-2.5 rounded-sm bg-muted-foreground/30" />
-								<span>Buffer / Outside Hours</span>
-							</div>
-						)}
-					</div>
+							<>
+								{" "}
+								• Track: {formatTime12(trackStartMin)} –{" "}
+								{formatTime12(trackEndMin)}
+							</>
+						)}{" "}
+						• Duration: {formatDuration(durationMin)}
+					</p>
+				</div>
 
-					<span className="italic">
-						Drag to move • Snaps past blocked times
-					</span>
+				<div className="flex items-center gap-2">
+					{hasAvailableSpace ? (
+						<div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs">
+							<span className="font-semibold text-foreground tabular-nums">
+								{minutesToTimeString(currentStart)} –{" "}
+								{minutesToTimeString(currentEnd)}
+							</span>
+							<span className="text-muted-foreground">
+								({formatDuration(durationMin)})
+							</span>
+						</div>
+					) : (
+						<div className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-destructive text-xs">
+							<AlertCircle className="size-3.5" />
+							<span>No available space for this duration</span>
+						</div>
+					)}
+
+					{/* Quick jump step buttons */}
+					<div className="flex items-center gap-0.5">
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										type="button"
+										variant="outline"
+										size="icon-xs"
+										disabled={disabled || !hasAvailableSpace}
+										onClick={jumpToPrevSlot}
+										aria-label="Previous slot"
+									>
+										<ChevronLeft className="size-3" />
+									</Button>
+								}
+							/>
+							<TooltipContent>Previous slot</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										type="button"
+										variant="outline"
+										size="icon-xs"
+										disabled={disabled || !hasAvailableSpace}
+										onClick={jumpToNextSlot}
+										aria-label="Next slot"
+									>
+										<ChevronRight className="size-3" />
+									</Button>
+								}
+							/>
+							<TooltipContent>Next slot</TooltipContent>
+						</Tooltip>
+					</div>
 				</div>
 			</div>
-		</TooltipProvider>
+
+			{/* Slider Track Area */}
+			<div className="relative pt-6 pb-9">
+				{/* Visible Track: renders [trackStartMin, trackEndMin] */}
+				<div
+					ref={trackRef}
+					onPointerDown={handleTrackPointerDown}
+					className="relative h-12 w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/40 shadow-inner"
+				>
+					{/* Shaded buffer area: Before lowerLimit */}
+					{lowerMin > trackStartMin && (
+						<div
+							style={{ left: 0, width: toPercent(lowerMin) }}
+							className="absolute inset-y-0 border-primary/40 border-r-2 border-dashed bg-muted/80 backdrop-blur-[1px]"
+							title={`Outside active window (before ${minutesToTimeString(lowerMin)})`}
+						>
+							<div className="h-full w-full bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.04)_6px,rgba(0,0,0,0.04)_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(255,255,255,0.03)_6px,rgba(255,255,255,0.03)_12px)]" />
+						</div>
+					)}
+
+					{/* Shaded buffer area: After upperLimit */}
+					{upperMin < trackEndMin && (
+						<div
+							style={{
+								left: toPercent(upperMin),
+								width: toWidthPercent(trackEndMin - upperMin),
+							}}
+							className="absolute inset-y-0 border-primary/40 border-l-2 border-dashed bg-muted/80 backdrop-blur-[1px]"
+							title={`Outside active window (after ${minutesToTimeString(upperMin)})`}
+						>
+							<div className="h-full w-full bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.04)_6px,rgba(0,0,0,0.04)_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(255,255,255,0.03)_6px,rgba(255,255,255,0.03)_12px)]" />
+						</div>
+					)}
+
+					{/* Blocked Times intervals within visible track */}
+					{normalizedBlocked.map((b) => {
+						const visibleStart = Math.max(trackStartMin, b.start);
+						const visibleEnd = Math.min(trackEndMin, b.end);
+						if (visibleEnd <= visibleStart) return null;
+
+						return (
+							<Tooltip key={b.id}>
+								<TooltipTrigger
+									render={
+										<div
+											style={{
+												left: toPercent(visibleStart),
+												width: toWidthPercent(visibleEnd - visibleStart),
+											}}
+											className="absolute inset-y-0 z-10 flex cursor-not-allowed items-center justify-center border-border/80 border-r border-l bg-destructive/15 transition-colors hover:bg-destructive/25"
+										>
+											<div className="flex items-center gap-1 overflow-hidden px-1 text-destructive">
+												<Lock className="size-3 shrink-0" />
+												<span className="truncate font-medium text-[10px]">
+													{b.label}
+												</span>
+											</div>
+										</div>
+									}
+								/>
+								<TooltipContent>
+									<p className="font-semibold">{b.label}</p>
+									<p className="text-[11px] opacity-80">
+										{minutesToTimeString(b.start)} –{" "}
+										{minutesToTimeString(b.end)} (Blocked)
+									</p>
+								</TooltipContent>
+							</Tooltip>
+						);
+					})}
+
+					{/* Hour subtle tick lines within track */}
+					{hourTicks.map((mins) => (
+						<div
+							key={mins}
+							style={{ left: toPercent(mins) }}
+							className="pointer-events-none absolute inset-y-0 border-border/50 border-r"
+						/>
+					))}
+
+					{/* Draggable Slider Block */}
+					{hasAvailableSpace && (
+						<div
+							role="slider"
+							tabIndex={disabled ? -1 : 0}
+							aria-label={`${label} block, duration ${formatDuration(durationMin)}`}
+							aria-valuemin={lowerMin}
+							aria-valuemax={upperMin - durationMin}
+							aria-valuenow={currentStart}
+							aria-valuetext={`${minutesToTimeString(currentStart)} to ${minutesToTimeString(currentEnd)}`}
+							onKeyDown={handleKeyDown}
+							onPointerDown={handleThumbPointerDown}
+							onPointerMove={handleThumbPointerMove}
+							onPointerUp={handleThumbPointerUp}
+							style={{
+								left: toPercent(currentStart),
+								width: toWidthPercent(durationMin),
+							}}
+							className={cn(
+								"absolute inset-y-0 z-20 flex cursor-grab items-center justify-between rounded-lg border-2 border-primary bg-primary text-primary-foreground shadow-md transition-[box-shadow,border-color]",
+								"focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
+								isDragging &&
+									"cursor-grabbing shadow-lg ring-2 ring-primary/40",
+							)}
+						>
+							{/* Left handle grip */}
+							<div className="flex h-full items-center px-0.5 opacity-70">
+								<GripVertical className="size-3.5" />
+							</div>
+
+							{/* Center Label (Start - End) */}
+							<div className="flex min-w-0 flex-1 flex-col items-center justify-center px-1 text-center">
+								<span className="truncate font-semibold text-[11px] tabular-nums leading-tight sm:text-xs">
+									{minutesToTimeString(currentStart)}
+								</span>
+								<span className="truncate text-[9px] opacity-80 sm:text-[10px]">
+									to {minutesToTimeString(currentEnd)}
+								</span>
+							</div>
+
+							{/* Right handle grip */}
+							<div className="flex h-full items-center px-0.5 opacity-70">
+								<GripVertical className="size-3.5" />
+							</div>
+						</div>
+					)}
+				</div>
+
+				{/* Scale & Axis Marks below Track */}
+				<div className="pointer-events-none absolute right-0 bottom-0 left-0 h-7">
+					{/* Regular Axis Marks */}
+					{filteredAxisMarks.map((mark) => (
+						<div
+							key={mark.minutes}
+							style={{
+								position: "absolute",
+								left:
+									mark.isEdge === "start"
+										? "0%"
+										: mark.isEdge === "end"
+											? "100%"
+											: toPercent(mark.minutes),
+								transform:
+									mark.isEdge === "start"
+										? "none"
+										: mark.isEdge === "end"
+											? "translateX(-100%)"
+											: "translateX(-50%)",
+							}}
+							className="whitespace-nowrap pt-2 text-[10px] text-muted-foreground"
+						>
+							{mark.label}
+						</div>
+					))}
+
+					{/* Explicit Lower Limit Marker on the Scale */}
+					{lowerLimit !== undefined && (
+						<div
+							style={{
+								position: "absolute",
+								left: lowerMin === trackStartMin ? "0%" : toPercent(lowerMin),
+								transform:
+									lowerMin === trackStartMin ? "none" : "translateX(-50%)",
+							}}
+							className="flex flex-col items-center pt-0.5"
+							title={`Lower limit: ${minutesToTimeString(lowerMin)}`}
+						>
+							<div className="h-1.5 w-1 rounded-full bg-primary" />
+							<span className="whitespace-nowrap font-bold text-[10px] text-primary tabular-nums">
+								{formatTime12(lowerMin)}
+							</span>
+						</div>
+					)}
+
+					{/* Explicit Upper Limit Marker on the Scale */}
+					{upperLimit !== undefined && (
+						<div
+							style={{
+								position: "absolute",
+								left: upperMin === trackEndMin ? "100%" : toPercent(upperMin),
+								transform:
+									upperMin === trackEndMin
+										? "translateX(-100%)"
+										: "translateX(-50%)",
+							}}
+							className="flex flex-col items-center pt-0.5"
+							title={`Upper limit: ${minutesToTimeString(upperMin)}`}
+						>
+							<div className="h-1.5 w-1 rounded-full bg-primary" />
+							<span className="whitespace-nowrap font-bold text-[10px] text-primary tabular-nums">
+								{formatTime12(upperMin)}
+							</span>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Footer legend / helper info */}
+			<div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3 text-[11px] text-muted-foreground">
+				<div className="flex flex-wrap items-center gap-3">
+					<div className="flex items-center gap-1.5">
+						<span className="size-2.5 rounded-sm bg-primary" />
+						<span>Active Time ({formatDuration(durationMin)})</span>
+					</div>
+					{normalizedBlocked.length > 0 && (
+						<div className="flex items-center gap-1.5">
+							<span className="size-2.5 rounded-sm bg-destructive/30" />
+							<span>Blocked Breaks</span>
+						</div>
+					)}
+					{isBounded && (
+						<div className="flex items-center gap-1.5">
+							<span className="size-2.5 rounded-sm bg-muted-foreground/30" />
+							<span>Buffer / Outside Hours</span>
+						</div>
+					)}
+				</div>
+
+				<span className="italic">Drag to move • Snaps past blocked times</span>
+			</div>
+		</div>
 	);
 }
 

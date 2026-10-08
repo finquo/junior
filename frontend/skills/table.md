@@ -16,7 +16,7 @@ This guide establishes the architecture, conventions, and rules for building dat
   - Drawers: `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`, `DrawerClose` from `@/components/ui/drawer`
   - Item UI: `Item`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription` from `@/components/ui/item`
   - Hover Card: `HoverCard`, `HoverCardTrigger`, `HoverCardContent` from `@/components/ui/hover-card`
-  - Tooltips: `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider` from `@/components/ui/tooltip`
+  - Tooltips: `Tooltip`, `TooltipTrigger`, `TooltipContent` from `@/components/ui/tooltip`
   - Avatars & Badges: `@/components/ui/avatar`, `@/components/ui/badge`
 - **User & Entity Resolution**: `<FetchUser />` (`@/hooks/user`), Better Auth (`@/hooks/auth`), and `<ProfileCard />` (`@/components/profile`)\n- **Loading & Notifications**: `<Loader />` (`@/components/loader`), `<Spinner />` (`@/components/ui/spinner`), `sileo` as `toast`
 - **URL & Search State**: `useQueryState` (`nuqs`) and `useDebounce` (`@uidotdev/usehooks`)
@@ -268,13 +268,11 @@ header: () => (
   </Tooltip>
 ),
 ```
-*Note: Always wrap the table or page component with `<TooltipProvider>` so tooltips trigger correctly.*
 
 ### B. Frame Container Pattern
-Wrap all tables in `<Frame>` with optional `<FrameHeader>` for navigation/create buttons, and `<FramePanel className="p-0!">` to maintain consistent panel styling and border radius:
+Wrap all tables in `<Frame>` with optional `<FrameHeader>` for navigation/create buttons, and `<FramePanel>` to maintain consistent panel styling and border radius:
 
 ```tsx
-<TooltipProvider>
   <Frame>
     <FrameHeader className="flex flex-row items-center justify-end">
       <Button render={<Link href="/scheduler/lessons/new" />} nativeButton={false}>
@@ -282,13 +280,12 @@ Wrap all tables in `<Frame>` with optional `<FrameHeader>` for navigation/create
         Create Lesson
       </Button>
     </FrameHeader>
-    <FramePanel className="p-0!">
+    <FramePanel>
       <Table>
         {/* Table content */}
       </Table>
     </FramePanel>
   </Frame>
-</TooltipProvider>
 ```
 
 ### C. Link Buttons & Triggers with `nativeButton={false}`
@@ -340,7 +337,7 @@ columnHelper.accessor("createdAt", {
 - [ ] Used `API_Returns["router"]["procedure"][number]` from `@/lib/api` for row types.
 - [ ] Built directly in `page.tsx` with zero duplicate components in `_components/`.
 - [ ] Exported only `default function Page()`.
-- [ ] Wrapped table in `<TooltipProvider>` and `<Frame><FramePanel className="p-0!"><Table>...</Table></FramePanel></Frame>`.
+- [ ] Wrapped table in `<Frame><FramePanel><Table>...</Table></FramePanel></Frame>`.
 - [ ] Rendered `<Badge variant="outline">Not Assigned</Badge>` for null `supervisorId`, `mentorId`, `teacherId`, etc.
 - [ ] Added `<Tooltip>` to ambiguous column headers (`Program`, `Schooling`, `Status`, `Language`, `Duration`, etc.).
 - [ ] Replaced foreign key lookups (`supervisorId`, `mentorId`) with interactive `<HoverCard>` previews.

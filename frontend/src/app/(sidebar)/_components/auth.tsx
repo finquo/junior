@@ -67,3 +67,59 @@ export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 
 	return Layout;
 }
+
+export function GetAuthsLayout(roles: NonNullable<USER["role"]>[]) {
+	function Layout({ children }: { children: React.ReactNode }) {
+		const { data, isPending } = useAuth();
+
+		if (isPending)
+			return (
+				<div className="flex h-svh flex-1 flex-col gap-4 p-4">
+					<div className="grid auto-rows-min gap-4 md:grid-cols-3">
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+					</div>
+					<Skeleton className="flex-1" />
+					<div className="grid auto-rows-min gap-4 md:grid-cols-3">
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+						<Skeleton className="aspect-video" />
+					</div>
+				</div>
+			);
+
+		if (!data?.role)
+			return (
+				<div className="flex flex-1 flex-col items-center justify-center">
+					<Card>
+						<CardHeader>
+							<CardTitle>Not Authenticated</CardTitle>
+							<CardDescription>
+								Please login to access this page.
+							</CardDescription>
+						</CardHeader>
+						<ErrorAuthCardFooter />
+					</Card>
+				</div>
+			);
+
+		if (roles.some((r) => r === data.role)) return children;
+
+		return (
+			<div className="flex flex-1 flex-col items-center justify-center">
+				<Card>
+					<CardHeader>
+						<CardTitle>Not Authorized</CardTitle>
+						<CardDescription>
+							Please login as {roles.join(", ")} to access this page.
+						</CardDescription>
+					</CardHeader>
+					<ErrorAuthCardFooter label={"My Profile"} link={"/me"} />
+				</Card>
+			</div>
+		);
+	}
+
+	return Layout;
+}

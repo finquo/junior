@@ -61,21 +61,13 @@ import {
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
+import type { API_Returns } from "@/lib/api";
 
-type TeacherRecord = NonNullable<
-	Awaited<
-		ReturnType<
-			NonNullable<
-				ReturnType<typeof api.scheduler.getTeachers.queryOptions>["queryFn"]
-			>
-		>
-	>
->[number];
+type TeacherRecord = API_Returns["core"]["teacher"]["list"][number];
 
 const features = tableFeatures({
 	columnFilteringFeature,
@@ -259,7 +251,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 		}),
 		columnHelper.accessor("createdAt", {
 			header: "Joined",
-			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => `${getRelateTime(getValue())} ago`,
 		}),
 		columnHelper.display({
 			id: "edit",
@@ -291,13 +283,13 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 	]);
 
 export default function Page() {
-	const { data: teachers = [], isPending } = useQuery(
-		api.scheduler.getTeachers.queryOptions(),
+	const { data = [], isPending } = useQuery(
+		api.core.teacher.list.queryOptions(),
 	);
 
 	const table = useTable({
 		features,
-		data: teachers,
+		data,
 		columns,
 	});
 
@@ -306,45 +298,43 @@ export default function Page() {
 	}
 
 	return (
-		<TooltipProvider>
-			<Frame>
-				<FramePanel className="p-0!">
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : (
-												<table.FlexRender header={header} />
-											)}
-										</TableHead>
+		<Frame>
+			<FramePanel>
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : (
+											<table.FlexRender header={header} />
+										)}
+									</TableHead>
+								))}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow key={row.id}>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell key={cell.id}>
+											<table.FlexRender cell={cell} />
+										</TableCell>
 									))}
 								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												<table.FlexRender cell={cell} />
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={columns.length} className="text-center">
-										No teachers found
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</FramePanel>
-			</Frame>
-		</TooltipProvider>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={columns.length} className="text-center">
+									No teachers found
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</FramePanel>
+		</Frame>
 	);
 }

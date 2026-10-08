@@ -63,7 +63,7 @@ export function TeachersTable() {
 	return (
 		<div className="mx-auto flex w-full max-w-2xl flex-col">
 			<Frame spacing="xs">
-				<FramePanel className="p-0!">
+				<FramePanel>
 					<Table>
 						<TableHeader>
 							<TableRow>

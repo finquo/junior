@@ -3,6 +3,8 @@ import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
 import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
+import { schedulerRouter as schedulerCore } from "./core/scheduler";
+import { slotRouter as slotCore } from "./core/slot";
 import { studentRouter as studentCore } from "./core/student";
 import { teacherRouter as teacherCore } from "./core/teacher";
 import { userRouter as userCore } from "./core/user";
@@ -23,9 +25,11 @@ export const appRouter = {
 	student,
 	common,
 	core: {
+		lesson: lessonCore,
+		scheduler: schedulerCore,
+		slot: slotCore,
 		student: studentCore,
 		teacher: teacherCore,
-		lesson: lessonCore,
 		user: userCore,
 	},
 };

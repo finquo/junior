@@ -1,12 +1,39 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import z from "zod";
-import { getRolesProcedure, tryAPI } from "@/api/procedure";
+import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
-import { SelectStudentSchema, UpdateStudentSchema } from "@/db/zod";
+import {
+	SelectStudentSchema,
+	SelectUserSchema,
+	UpdateStudentSchema,
+} from "@/db/zod";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 
 export const studentRouter = {
+	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
+		async ({ context }) => {
+			return await getAPI(
+				"db-core-list-students-query",
+				db.query.student.findMany({
+					where: MapRole(context.role, {
+						admin: {},
+						scheduler: {
+							supervisorId: context.user.id,
+						},
+						teacher: {
+							mentorId: context.user.id,
+						},
+					}),
+					orderBy: { createdAt: "desc" },
+					with: {
+						user: true,
+					},
+				}),
+				[],
+			);
+		},
+	),
 	get: getRolesProcedure(["admin", "teacher", "scheduler"])
 		.input(
 			z.object({
@@ -34,6 +61,40 @@ export const studentRouter = {
 						user: true,
 					},
 				}),
+			);
+		}),
+	search: getRolesProcedure(["admin", "teacher", "scheduler"])
+		.input(
+			SelectUserSchema.pick({ name: true }).extend({
+				searchQuery: SelectUserSchema.shape.name
+					.min(3, { message: "Type at least 3 letters" })
+					.optional(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const query = input.searchQuery || input.name;
+			return await getAPI(
+				"db-core-search-students-query",
+				db
+					.select()
+					.from(schema.student)
+					.innerJoin(schema.user, eq(schema.student.id, schema.user.id))
+					.where(
+						and(
+							MapRole(context.role, {
+								admin: undefined,
+								scheduler: eq(schema.student.supervisorId, context.user.id),
+								teacher: eq(schema.student.mentorId, context.user.id),
+							}),
+							query ? sql`${schema.user.name} % ${query}` : undefined,
+						),
+					)
+					.orderBy(
+						query
+							? sql`similarity(${schema.user.name}, ${query}) DESC`
+							: desc(schema.student.createdAt),
+					),
+				[],
 			);
 		}),
 	getLessons: getRolesProcedure(["admin", "teacher", "scheduler"])

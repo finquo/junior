@@ -110,7 +110,7 @@ const FetchSideBarItems = ({ api, getLink }: FetchItemsType) => {
 
 	return items?.map((subItem) => (
 		<SidebarMenuSubItem key={subItem.title}>
-			<SidebarMenuSubButton render={<a href={getLink(subItem.id)} />}>
+			<SidebarMenuSubButton render={<Link href={getLink(subItem.id) as "/"} />}>
 				<span>{subItem.title}</span>
 			</SidebarMenuSubButton>
 		</SidebarMenuSubItem>

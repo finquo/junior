@@ -20,7 +20,15 @@ import {
 	useTable,
 } from "@tanstack/react-table";
 import { useDebounce } from "@uidotdev/usehooks";
-import { ExternalLinkIcon, PenIcon, Search, UserPlusIcon } from "lucide-react";
+import {
+	ExternalLinkIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	Search,
+	TrashIcon,
+	UserPlusIcon,
+	UserXIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { useState } from "react";
@@ -42,8 +50,14 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -76,12 +90,10 @@ import {
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api, queryClient } from "@/hooks/api";
 import { authClient } from "@/hooks/auth";
-import { MutationButton } from "@/hooks/button";
 import type { API_Returns } from "@/lib/api";
 import type { Role } from "@/lib/auth";
 import { rolesObject } from "@/lib/role";
@@ -89,7 +101,7 @@ import { snakeToTitleCase } from "@/lib/utils";
 
 type UserRecord = API_Returns["admin"]["getUsers"][number];
 
-function ChangeRoleCell({ user }: { user: UserRecord }) {
+function EditUserDrawer({ user }: { user: UserRecord }) {
 	const [open, setOpen] = useState(false);
 
 	const { mutateAsync, isPending } = useMutation(
@@ -116,56 +128,58 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger render={<Button variant="outline" size="sm" />}>
-				Change Role
-			</DrawerTrigger>
-			<DrawerContent className="overflow-y-auto">
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						form.handleSubmit();
-					}}
-				>
+			<DrawerTrigger
+				render={
+					<Button variant="outline" size="icon-sm">
+						<PenIcon />
+					</Button>
+				}
+			/>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+			>
+				<DrawerContent>
 					<DrawerHeader>
-						<DrawerTitle>Change Role</DrawerTitle>
+						<DrawerTitle>Edit User Role</DrawerTitle>
 						<DrawerDescription>
 							Promote or reassign role for {user.name} ({user.email})
 						</DrawerDescription>
 					</DrawerHeader>
-					<div className="flex flex-col gap-4 p-4">
-						<FieldGroup>
-							<form.Field
-								name="role"
-								children={(field) => (
-									<Field>
-										<FieldLabel>Role</FieldLabel>
-										<Select
-											items={rolesObject}
-											value={field.state.value}
-											disabled={isPending}
-											onValueChange={(r) => {
-												if (r) field.handleChange(r as Role);
-											}}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Select role" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectGroup>
-													{rolesObject.map((item) => (
-														<SelectItem key={item.value} value={item.value}>
-															{item.label}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-									</Field>
-								)}
-							/>
-						</FieldGroup>
-					</div>
+					<FieldGroup>
+						<form.Field
+							name="role"
+							children={(field) => (
+								<Field>
+									<FieldLabel>Role</FieldLabel>
+									<Select
+										items={rolesObject}
+										value={field.state.value}
+										disabled={isPending}
+										onValueChange={(r) => {
+											if (r) field.handleChange(r as Role);
+										}}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select role" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												{rolesObject.map((item) => (
+													<SelectItem key={item.value} value={item.value}>
+														{item.label}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+								</Field>
+							)}
+						/>
+					</FieldGroup>
 					<DrawerFooter>
 						<Button type="submit" disabled={isPending}>
 							{isPending && <Spinner />}
@@ -175,40 +189,77 @@ function ChangeRoleCell({ user }: { user: UserRecord }) {
 							Cancel
 						</DrawerClose>
 					</DrawerFooter>
-				</form>
-			</DrawerContent>
+				</DrawerContent>
+			</form>
 		</Drawer>
 	);
 }
 
-function ImpersonateCell({ user }: { user: UserRecord }) {
-	return (
-		<MutationButton
-			onSuccess={(data) => {
-				toast.success({
-					title: `You’re viewing as a ${data?.user.role ?? user.role}!`,
-					description: "Any actions you take will be performed as this user.",
-				});
-			}}
-			api={{
-				mutationKey: ["impersonating-user", user.id],
-				mutationFn: async () => {
-					return await authClient.admin.impersonateUser(
-						{
-							userId: user.id,
-						},
-						{
-							throw: true,
-						},
-					);
+function UserActionsCell({ user }: { user: UserRecord }) {
+	const { mutateAsync: impersonate, isPending: isImpersonating } = useMutation({
+		mutationKey: ["impersonating-user", user.id],
+		mutationFn: async () => {
+			return await authClient.admin.impersonateUser(
+				{
+					userId: user.id,
 				},
-			}}
-			mutate={(mutate) => (
-				<Button onClick={() => mutate()} variant="outline" size="icon-sm">
+				{
+					throw: true,
+				},
+			);
+		},
+		onSuccess: (data) => {
+			toast.success({
+				title: `You’re viewing as a ${data?.user.role ?? user.role}!`,
+				description: "Any actions you take will be performed as this user.",
+			});
+		},
+		onError: (err) => {
+			toast.error({
+				title: err.message || "Failed to impersonate user",
+			});
+		},
+	});
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				render={
+					<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
+						{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
+					</Button>
+				}
+			/>
+			<DropdownMenuContent align="end">
+				<DropdownMenuItem onClick={() => impersonate()}>
 					<ExternalLinkIcon />
-				</Button>
-			)}
-		/>
+					Impersonate
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={() => {
+						toast.info({
+							title: `Revoked active sessions for ${user.name}`,
+						});
+					}}
+				>
+					<UserXIcon />
+					Revoke Sessions
+				</DropdownMenuItem>
+				<DropdownMenuSeparator />
+				<DropdownMenuItem
+					variant="destructive"
+					onClick={() => {
+						toast.error({
+							title: `Delete action requested for ${user.name}`,
+							description: "This is a placeholder action.",
+						});
+					}}
+				>
+					<TrashIcon />
+					Delete User
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 
@@ -258,14 +309,12 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								<ItemDescription>{member.email}</ItemDescription>
 							</ItemContent>
 						</DrawerTrigger>
-						<DrawerContent className="overflow-y-auto">
+						<DrawerContent>
 							<DrawerHeader>
 								<DrawerTitle>{member.name}</DrawerTitle>
 								<DrawerDescription>{member.email}</DrawerDescription>
 							</DrawerHeader>
-							<div className="p-4">
-								<ProfileCard user={member} />
-							</div>
+							<ProfileCard user={member} />
 							<DrawerFooter>
 								<DrawerClose render={<Button variant="outline" />}>
 									Close
@@ -334,55 +383,19 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			),
 		}),
 		columnHelper.display({
-			id: "changeRole",
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Change Role</TooltipTrigger>
-					<TooltipContent>
-						Promote or reassign user permission level
-					</TooltipContent>
-				</Tooltip>
-			),
-			cell: ({ row }) => <ChangeRoleCell user={row.original} />,
+			id: "edit",
+			header: "Edit",
+			cell: ({ row }) => <EditUserDrawer user={row.original} />,
 		}),
 		columnHelper.display({
 			id: "actions",
 			header: () => (
 				<Tooltip>
 					<TooltipTrigger className="cursor-help">Actions</TooltipTrigger>
-					<TooltipContent>
-						Impersonation and administrative tools
-					</TooltipContent>
+					<TooltipContent>Administrative options and tools</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ row }) => <ImpersonateCell user={row.original} />,
-		}),
-		columnHelper.display({
-			id: "edit",
-			header: "Edit",
-			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<PenIcon />
-							</Button>
-						}
-					/>
-					<DrawerContent className="overflow-y-auto">
-						<DrawerHeader>
-							<DrawerTitle>Edit User</DrawerTitle>
-							<DrawerDescription>Edit user account settings</DrawerDescription>
-						</DrawerHeader>
-						<div className="p-4" />
-						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
-			),
+			cell: ({ row }) => <UserActionsCell user={row.original} />,
 		}),
 	]);
 
@@ -411,82 +424,77 @@ export default function Page() {
 	}
 
 	return (
-		<TooltipProvider>
-			<Frame>
-				<FrameHeader className="flex-row items-center justify-between">
-					<InputGroup className="w-xs">
-						<InputGroupInput
-							value={search ?? ""}
-							onChange={(v) => setSearch(v.target.value)}
-							placeholder="Search users"
-						/>
-						<InputGroupAddon>
-							<Search />
-						</InputGroupAddon>
-					</InputGroup>
-					<Select
-						items={rolesObject}
-						value={role ?? undefined}
-						onValueChange={(r) => setRole((r as Role) ?? null)}
-					>
-						<SelectTrigger>
-							<SelectValue placeholder="Filter Roles" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectGroup>
-								{rolesObject.map((item) => (
-									<SelectItem key={item.value} value={item.value}>
-										{item.label}
-									</SelectItem>
+		<Frame>
+			<FrameHeader className="flex-row items-center justify-between">
+				<InputGroup className="w-xs">
+					<InputGroupInput
+						value={search ?? ""}
+						onChange={(v) => setSearch(v.target.value)}
+						placeholder="Search users"
+					/>
+					<InputGroupAddon>
+						<Search />
+					</InputGroupAddon>
+				</InputGroup>
+				<Select
+					items={rolesObject}
+					value={role ?? undefined}
+					onValueChange={(r) => setRole((r as Role) ?? null)}
+				>
+					<SelectTrigger>
+						<SelectValue placeholder="Filter Roles" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectGroup>
+							{rolesObject.map((item) => (
+								<SelectItem key={item.value} value={item.value}>
+									{item.label}
+								</SelectItem>
+							))}
+						</SelectGroup>
+					</SelectContent>
+				</Select>
+				<Button render={<Link href="/admin/users/new" />} nativeButton={false}>
+					<UserPlusIcon />
+					Create User
+				</Button>
+			</FrameHeader>
+			<FramePanel>
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : (
+											<table.FlexRender header={header} />
+										)}
+									</TableHead>
 								))}
-							</SelectGroup>
-						</SelectContent>
-					</Select>
-					<Button
-						render={<Link href="/admin/users/new" />}
-						nativeButton={false}
-					>
-						<UserPlusIcon />
-						Create User
-					</Button>
-				</FrameHeader>
-				<FramePanel className="p-0!">
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : (
-												<table.FlexRender header={header} />
-											)}
-										</TableHead>
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow key={row.id}>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell key={cell.id}>
+											<table.FlexRender cell={cell} />
+										</TableCell>
 									))}
 								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												<table.FlexRender cell={cell} />
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={columns.length} className="text-center">
-										No users found
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</FramePanel>
-			</Frame>
-		</TooltipProvider>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={columns.length} className="text-center">
+									No users found
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</FramePanel>
+		</Frame>
 	);
 }

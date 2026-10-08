@@ -39,12 +39,14 @@ import {
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { useTimePeriodGroups } from "@/hooks/period";
-import { CalenderPicker } from "../../_components/calender";
-import { UserSelector } from "../../_components/selecter";
+import { RenderWhenRole } from "@/hooks/role";
+import { CalenderPicker } from "../_components/calender";
+import { UserSelector } from "../_components/selecter";
 
 const period = [30, 60, 120, 180];
 
 export default function Pattern() {
+	const [schedulerId, setSchedulerId] = useQueryState("schedulerId");
 	const [studentId, setStudentId] = useQueryState("studentId");
 	const [teacherId, setTeacherId] = useQueryState("teacherId");
 	const [lessonId, setLessonId] = useQueryState("lessonId");
@@ -70,15 +72,22 @@ export default function Pattern() {
 					</CardHeader>
 					<CardContent>
 						<UserSelector
-							name="student"
+							name="studentId"
 							label="Student"
-							api={api.scheduler.getStudents.queryOptions()}
+							api={api.core.student.list.queryOptions()}
 						/>
 						<UserSelector
-							name="teacher"
+							name="teacherId"
 							label="Teacher"
-							api={api.scheduler.getTeachers.queryOptions()}
+							api={api.core.teacher.list.queryOptions()}
 						/>
+						<RenderWhenRole role={["admin"]}>
+							<UserSelector
+								name="schedulerId"
+								label="Scheduler"
+								api={api.core.scheduler.list.queryOptions()}
+							/>
+						</RenderWhenRole>
 					</CardContent>
 					<CardFooter>
 						<ButtonGroup>

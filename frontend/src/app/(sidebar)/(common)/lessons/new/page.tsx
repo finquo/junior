@@ -4,7 +4,6 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
 import { BookOpenIcon } from "lucide-react";
-import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,7 @@ export default function CreateLessonPage() {
 	});
 
 	return (
-		<div className="mx-auto max-w-xl py-6">
+		<div>
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();

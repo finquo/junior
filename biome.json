@@ -52,6 +52,7 @@
 			},
 			"a11y": {
 				"useKeyWithClickEvents": "info",
+				"useValidAriaRole": "info",
 				"noStaticElementInteractions": "info"
 			},
 			"style": {
