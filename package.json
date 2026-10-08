@@ -43,6 +43,7 @@
 		"@types/node": "catalog:",
 		"@varlock/cloudflare-integration": "^1.6.0",
 		"rolldown": "1.2.7",
+		"typeflare": "^0.0.5",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
 		"vite-plus": "0.3.1"
