@@ -62,5 +62,3 @@ export const intervalHourZod = z
 	.transform(({ hours, minutes }) => `${hours} hours ${minutes} minutes`);
 
 export * from "../db/column/leave-range";
-
-console.log(timeSchema.parse("11:31"));

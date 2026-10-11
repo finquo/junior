@@ -39,7 +39,7 @@ export function AddLeaveDrawer() {
 	const [endTime, setEndTime] = useState<string>();
 
 	const { mutateAsync, isPending } = useMutation(
-		api.teacher.updateLeaves.mutationOptions({
+		api.teacher.addLeave.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([api.core.self.teacher.queryKey()]);
 				setOpen(false);
@@ -57,23 +57,19 @@ export function AddLeaveDrawer() {
 
 	const handleFullConfirm = () => {
 		if (!startDate) return;
-		mutateAsync([
-			{
-				type: "full",
-				start: startDate,
-			},
-		]);
+		mutateAsync({
+			type: "full",
+			start: startDate,
+		});
 	};
 
 	const handleMultipleConfirm = () => {
 		if (!startDate || !endDate) return;
-		mutateAsync([
-			{
-				type: "multiple",
-				start: startDate,
-				end: endDate,
-			},
-		]);
+		mutateAsync({
+			type: "multiple",
+			start: startDate,
+			end: endDate,
+		});
 	};
 
 	const handlePartialConfirm = () => {
@@ -95,13 +91,11 @@ export function AddLeaveDrawer() {
 			return;
 		}
 
-		mutateAsync([
-			{
-				type: "partial",
-				start,
-				end,
-			},
-		]);
+		mutateAsync({
+			type: "partial",
+			start,
+			end,
+		});
 	};
 
 	return (

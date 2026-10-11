@@ -1,4 +1,5 @@
-import { customType } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { type AnyPgColumn, customType } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 type Leavetype = "full" | "multiple" | "partial";
@@ -112,3 +113,13 @@ export const leaveRange = customType<{
 		return sql`cast(${identifier} as text)`;
 	},
 });
+
+export const AppendLeave = <Column extends AnyPgColumn>(
+	column: Column,
+	value: Column["_"]["data"] extends unknown[]
+		? Column["_"]["data"][number]
+		: any,
+) => {
+	const converted = leaveConvertorZod.parse(value);
+	return sql`${column} || ${converted}::tstzrange`;
+};

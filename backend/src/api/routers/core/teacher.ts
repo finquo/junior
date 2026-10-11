@@ -4,8 +4,7 @@ import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
-import { leaveItemZod } from "@/db/column/leave-range";
-import { ArrayAppend } from "@/db/utils";
+import { AppendLeave, leaveItemZod } from "@/db/column/leave-range";
 import {
 	SelectTeacherSchema,
 	SelectUserSchema,
@@ -285,7 +284,7 @@ export const teacherRouter = {
 				db
 					.update(schema.teacher)
 					.set({
-						leaves: ArrayAppend(schema.teacher.leaves, input.leave),
+						leaves: AppendLeave(schema.teacher.leaves, input.leave),
 					})
 					.where(
 						MapRole(context.role, {

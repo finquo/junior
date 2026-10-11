@@ -1,9 +1,7 @@
 import { eq } from "drizzle-orm";
-import z from "zod";
 import { availabilityZod } from "@/config/time";
 import { schema } from "@/db";
-import { leaveItemZod } from "@/db/column/leave-range";
-import { ArrayAppend } from "@/db/utils";
+import { AppendLeave, leaveItemZod } from "@/db/column/leave-range";
 import { UpdateTeacherSchema } from "@/db/zod";
 import { db } from "@/services";
 import { getAPI, teacherProcedure, tryAPI } from "../procedure";
@@ -109,7 +107,7 @@ export const teacherRouter = {
 				db
 					.update(schema.teacher)
 					.set({
-						leaves: ArrayAppend(schema.teacher.leaves, input),
+						leaves: AppendLeave(schema.teacher.leaves, input),
 					})
 					.where(eq(schema.teacher.id, context.user.id))
 					.returning(),
