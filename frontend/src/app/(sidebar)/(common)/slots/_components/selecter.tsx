@@ -18,6 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
 import { getInitials } from "@/lib/utils";
 
@@ -35,7 +36,7 @@ export function UserSelector<
 	name?: string;
 	label?: string;
 	defaultUser?: string;
-	onSelect?: (data: TData) => void;
+	onSelect?: (item: TData[number]) => void;
 	api: UseQueryOptions<TData, TError, TData, TQueryKey>;
 }) {
 	const [user, setUser] = useQueryState(name);
@@ -46,9 +47,15 @@ export function UserSelector<
 			<Select
 				defaultValue={defaultUser}
 				value={user}
-				onValueChange={(c) => {
-					setUser(c);
-					// if (onSelect) onSelect(c);
+				onValueChange={(selectedId) => {
+					if (!selectedId) return;
+					setUser(selectedId);
+					if (onSelect && list) {
+						const selectedItem = list.find((item) => item.id === selectedId);
+						if (selectedItem) {
+							onSelect(selectedItem);
+						}
+					}
 				}}
 			>
 				<SelectTrigger title="Hi">
@@ -89,6 +96,51 @@ export function UserSelector<
 										</span>
 									)}
 								/>
+							</SelectItem>
+						))}
+					</SelectGroup>
+				</SelectContent>
+			</Select>
+		</Field>
+	);
+}
+
+export function LessonSelector({
+	name = "lessonId",
+	label = "Lesson",
+	defaultLesson,
+}: {
+	name?: string;
+	label?: string;
+	defaultLesson?: string;
+}) {
+	const [lesson, setLesson] = useQueryState(name);
+	const { data: list } = useQuery(api.core.lesson.list.queryOptions());
+
+	return (
+		<Field className="w-auto">
+			<Select
+				defaultValue={defaultLesson}
+				value={lesson}
+				onValueChange={(c) => {
+					setLesson(c);
+				}}
+			>
+				<SelectTrigger>
+					<SelectValue
+						placeholder={`Select a ${label}`}
+						children={(item: string) => {
+							const selected = list?.find((l) => l.id === item);
+							return <span>{selected?.name ?? "Select Lesson"}</span>;
+						}}
+					/>
+				</SelectTrigger>
+				<SelectContent alignItemWithTrigger={false}>
+					<SelectGroup>
+						<SelectLabel>Select a {label}</SelectLabel>
+						{list?.map((l) => (
+							<SelectItem key={l.id} value={l.id}>
+								{l.name}
 							</SelectItem>
 						))}
 					</SelectGroup>

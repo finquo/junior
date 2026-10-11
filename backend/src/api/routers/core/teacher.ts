@@ -100,14 +100,10 @@ export const teacherRouter = {
 				date: z.coerce.date().transform((d) => {
 					const targetDate = new Date(d);
 					const dayKey = getDaykey(targetDate.getDay());
-					const dayStart = new Date(targetDate).setHours(0, 0, 0, 0);
-					const dayEnd = new Date(targetDate).setHours(23, 59, 59, 999);
 
 					return {
 						dayKey,
 						targetDate,
-						dayStart,
-						dayEnd,
 					};
 				}),
 				period: periodZod,

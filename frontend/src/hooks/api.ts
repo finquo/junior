@@ -3,6 +3,7 @@
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import {
 	type AnyDataTag,
+	MutationCache,
 	QueryCache,
 	QueryClient,
 } from "@tanstack/react-query";
@@ -10,10 +11,25 @@ import { sileo as toast } from "sileo";
 import { orpc } from "@/lib/api";
 
 export const queryClient = new QueryClient({
+	mutationCache: new MutationCache({
+		onError: (error, param, result, mutation) => {
+			toast.error({
+				title: error.name,
+				description: error.message,
+				button: {
+					title: "retry",
+					onClick: () => {
+						mutation.execute(param);
+					},
+				},
+			});
+		},
+	}),
 	queryCache: new QueryCache({
 		onError: (error, query) => {
 			toast.error({
-				title: `Error: ${error.message}`,
+				title: error.name,
+				description: error.message,
 				button: {
 					title: "retry",
 					onClick: () => {

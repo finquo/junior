@@ -38,9 +38,17 @@ export const checkAgainstLeaves = (
 		const startTime = leave.start.getTime();
 		const endTime = leave.end.getTime();
 
+		// picked time is inbetween a leave time
 		if (checkStartTime >= startTime && checkStartTime < endTime) return true;
 
+		// picked end time is inbetween a leave time
 		if (checkEndTime >= startTime && checkEndTime < endTime) return true;
+
+		// leave start time is in between the slot time
+		if (checkEndTime >= startTime && checkStartTime < startTime) return true;
+
+		// leave end time is in between the slot time
+		if (checkEndTime >= endTime && checkStartTime < endTime) return true;
 
 		return false;
 	});

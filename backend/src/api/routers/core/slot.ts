@@ -1,6 +1,7 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, inArray, lt } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
 import { db } from "@/services";
@@ -64,31 +65,23 @@ export const slotRouter = {
 		.input(
 			InsertSlotSchema.omit({
 				id: true,
-				schedulerId: true,
 				createdAt: true,
 				updatedAt: true,
 				endTime: true,
+				expectedEndTime: true,
 			})
 				.extend({
-					schedulerId: z.string().optional(),
+					period: periodZod,
 				})
-				.refine((data) => data.startTime < data.expectedEndTime, {
-					message: "startTime must be before expectedEndTime",
-				}),
+				.transform((d) => ({
+					...d,
+					expectedEndTime: new Date(d.startTime.getTime() + d.period),
+				})),
 		)
-		.handler(async ({ input, context }) => {
+		.handler(async ({ input }) => {
 			return await tryAPI(
 				"db-core-create-slot",
-				db
-					.insert(schema.slot)
-					.values({
-						...input,
-						schedulerId:
-							context.role === "admin"
-								? (input.schedulerId ?? context.user.id)
-								: context.user.id,
-					})
-					.returning(),
+				db.insert(schema.slot).values(input).returning(),
 			);
 		}),
 	update: getRolesProcedure(["admin", "scheduler"])
@@ -195,5 +188,47 @@ export const slotRouter = {
 					)
 					.returning(),
 			);
+		}),
+	checkAvailability: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z
+				.object({
+					teacherId: z.string(),
+					date: z.date(),
+					period: periodZod,
+				})
+				.transform((d) => ({
+					...d,
+					endTime: new Date(d.date.getTime() + d.period),
+				})),
+		)
+		.handler(async ({ input, context }) => {
+			const existingSlots = await tryAPI(
+				"db-core-check-active-booked-slots",
+				db
+					.select({
+						startTime: schema.slot.startTime,
+						expectedEndTime: schema.slot.expectedEndTime,
+					})
+					.from(schema.slot)
+					.where(
+						and(
+							eq(schema.slot.teacherId, input.teacherId),
+							inArray(schema.slot.status, [
+								"scheduled",
+								"rescheduled",
+								"started",
+							]),
+							lt(schema.slot.startTime, input.date),
+							gt(schema.slot.expectedEndTime, input.endTime),
+						),
+					),
+			);
+
+			return {
+				isAvailable: true,
+				existingSlots,
+				availableSlots: [],
+			} as const;
 		}),
 };
