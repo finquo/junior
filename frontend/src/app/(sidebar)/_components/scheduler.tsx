@@ -1,5 +1,6 @@
 "use client";
 
+import { plans } from "backend/config";
 import {
 	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
@@ -35,7 +36,7 @@ export function SidebarConfig({
 					items={[
 						{
 							title: "Teachers",
-							url: "/scheduler/teachers",
+							url: "/teachers",
 							icon: <BriefcaseBusinessIcon />,
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
@@ -44,7 +45,7 @@ export function SidebarConfig({
 						},
 						{
 							title: "Students",
-							url: "/scheduler/students",
+							url: "/students",
 							icon: <GraduationCapIcon />,
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
@@ -57,34 +58,43 @@ export function SidebarConfig({
 					title="Platform"
 					items={[
 						{
-							title: "Sessions",
-							url: "/scheduler/sessions",
+							title: "Programs",
+							url: "/admin/programs",
 							icon: <VideoIcon />,
+							subItems: plans.map((p) => ({
+								title: p.name,
+								url: "#",
+							})),
+						},
+						{
+							title: "Lessons",
+							url: "/lessons",
+							icon: <BookOpenCheckIcon />,
 							subItems: [
 								{
-									title: "New Session",
-									url: "/scheduler/sessions/new",
+									title: "Create New Lesson",
+									url: "/lessons/new",
 								},
 							],
 						},
 						{
-							title: "Lessons",
-							url: "/scheduler/lessons",
-							icon: <BookOpenCheckIcon />,
+							title: "Slots",
+							url: "/slots",
+							icon: <VideoIcon />,
 							subItems: [
 								{
-									title: "New Lessons",
-									url: "/scheduler/lessons/new",
+									title: "Create New Slot",
+									url: "/slots/new",
 								},
 							],
 						},
 					]}
 				/>
 				<NavProjects
-					title="Links"
+					title="Profile"
 					link={[
 						{
-							name: "Edit Profile",
+							name: "Edit",
 							url: "/scheduler/edit",
 							icon: <UserPenIcon />,
 						},

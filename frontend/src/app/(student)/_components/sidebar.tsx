@@ -4,6 +4,7 @@ import {
 	BriefcaseBusinessIcon,
 	FrameIcon,
 	Settings2Icon,
+	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
 import type * as React from "react";
@@ -79,12 +80,12 @@ export function SidebarConfig({
 					]}
 				/>
 				<NavProjects
-					title="Links"
+					title="Profile"
 					link={[
 						{
-							name: "Design Engineering",
-							url: "#",
-							icon: <FrameIcon />,
+							name: "Edit",
+							url: "/user/edit",
+							icon: <UserPenIcon />,
 						},
 					]}
 				/>

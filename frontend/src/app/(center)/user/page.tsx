@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardDescription,
@@ -8,7 +9,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 
-export default function() {
+export default function () {
 	return (
 		<Card>
 			<CardHeader>
@@ -19,7 +20,22 @@ export default function() {
 			</CardHeader>
 			<CardFooter className="justify-between">
 				<Button variant={"destructive"}>Logout</Button>
-				<Button nativeButton={false} render={<Link href={"/me"} />}>Refresh</Button>
+				<ButtonGroup>
+					<Button
+						nativeButton={false}
+						variant={"outline"}
+						render={<Link href={"/user/edit"} />}
+					>
+						Edit Profile
+					</Button>
+					<Button
+						nativeButton={false}
+						variant={"outline"}
+						render={<Link href={"/me"} />}
+					>
+						Refresh
+					</Button>
+				</ButtonGroup>
 			</CardFooter>
 		</Card>
 	);

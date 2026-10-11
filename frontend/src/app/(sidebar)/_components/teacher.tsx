@@ -34,7 +34,7 @@ export function SidebarConfig({
 					items={[
 						{
 							title: "Students",
-							url: "/teacher/students",
+							url: "/students",
 							icon: <GraduationCapIcon />,
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
@@ -47,14 +47,14 @@ export function SidebarConfig({
 					title="Platform"
 					items={[
 						{
-							title: "Sessions",
-							url: "/teacher/sessions",
+							title: "Slots",
+							url: "/slots",
 							icon: <VideoIcon />,
 						},
 					]}
 				/>
 				<NavProjects
-					title="Links"
+					title="Profile"
 					link={[
 						{
 							name: "Availability",
@@ -62,7 +62,7 @@ export function SidebarConfig({
 							icon: <CalendarFoldIcon />,
 						},
 						{
-							name: "Edit Profile",
+							name: "Edit",
 							url: "/teacher/edit",
 							icon: <UserPenIcon />,
 						},
