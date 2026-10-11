@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { periodZod } from "@/config/time";
@@ -219,8 +219,8 @@ export const slotRouter = {
 								"rescheduled",
 								"started",
 							]),
-							lt(schema.slot.startTime, input.date),
-							gt(schema.slot.expectedEndTime, input.endTime),
+							lt(schema.slot.startTime, input.endTime),
+							gt(schema.slot.expectedEndTime, input.date),
 						),
 					),
 			);

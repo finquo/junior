@@ -75,10 +75,10 @@ export async function enableConstraint(db: Database) {
 	await db.execute(sql`CREATE EXTENSION IF NOT EXISTS btree_gist;`);
 
 	await db.execute(sql`
-	ALTER TABLE slot ADD CONSTRAINT slot_no_overlap_teacher_active
+	ALTER TABLE "slot" ADD CONSTRAINT slot_no_overlap_teacher_active
 		EXCLUDE USING GIST (
-			teacher_id WITH =,
-			tstzrange(start_time, expected_end_time, '[)') WITH &&
+			"teacherId" WITH =,
+			tstzrange("startTime", "expectedEndTime", '[)') WITH &&
 		)
 		WHERE (status IN ('scheduled', 'rescheduled', 'started'));
 	`);
