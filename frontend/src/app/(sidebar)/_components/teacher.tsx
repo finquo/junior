@@ -2,6 +2,7 @@
 
 import {
 	CalendarFoldIcon,
+	CalendarX2Icon,
 	GraduationCapIcon,
 	UserPenIcon,
 	VideoIcon,
@@ -60,6 +61,11 @@ export function SidebarConfig({
 							name: "Availability",
 							url: "/teacher/availability",
 							icon: <CalendarFoldIcon />,
+						},
+						{
+							name: "Leave",
+							url: "/teacher/leave",
+							icon: <CalendarX2Icon />,
 						},
 						{
 							name: "Edit",

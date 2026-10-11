@@ -124,7 +124,7 @@ function FrameHeader({ className, ...props }: React.ComponentProps<"header">) {
 	return (
 		<header
 			className={cn(
-				"flex flex-col gap-(--frame-panel-header-gap) px-(--frame-panel-header-px) py-(--frame-panel-header-py)",
+				"grid auto-rows-min items-start gap-(--frame-panel-header-gap) px-(--frame-panel-header-px) py-(--frame-panel-header-py) has-data-[slot=frame-action]:grid-cols-[1fr_auto] has-data-[slot=frame-actions]:grid-cols-[1fr_auto] has-data-[slot=frame-panel-description]:grid-rows-[auto_auto]",
 				className,
 			)}
 			data-slot="frame-panel-header"
@@ -156,6 +156,16 @@ function FrameDescription({
 	);
 }
 
+function FrameActions({ className, ...props }: React.ComponentProps<"div">) {
+	return (
+		<div
+			className={cn("col-start-2 row-span-2 row-start-1", className)}
+			data-slot="frame-actions"
+			{...props}
+		/>
+	);
+}
+
 function FrameFooter({ className, ...props }: React.ComponentProps<"footer">) {
 	return (
 		<footer
@@ -171,6 +181,7 @@ function FrameFooter({ className, ...props }: React.ComponentProps<"footer">) {
 
 export {
 	Frame,
+	FrameActions,
 	FrameDescription,
 	FrameFooter,
 	FrameHeader,

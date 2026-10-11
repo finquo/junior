@@ -1,196 +1,235 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import type { LeaveRangeOutput } from "backend/config";
-import { CircleCheckIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
-import { Frame } from "@/components/reui/frame";
-import {
-	Alert,
-	AlertAction,
-	AlertDescription,
-	AlertTitle,
-} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	ButtonGroup,
-	ButtonGroupSeparator,
-} from "@/components/ui/button-group";
 import { Calendar } from "@/components/ui/calendar";
 import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerInner,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+	TabsContent,
+	TabsList,
+	TabsPanel,
+	TabsRoot,
+	TabsTrigger,
+} from "@/components/ui/tabs";
 import { api, refetchAPIs } from "@/hooks/api";
-import { getNextDayOfWeek, getToday, getTomorrow } from "@/lib/calender";
 
-function toLeaveDates(leaves?: Array<{ start: string | Date }> | null): Date[] {
-	if (!leaves || !Array.isArray(leaves)) return [];
-	return leaves.map((l) => new Date(l.start));
-}
+export function AddLeaveDrawer() {
+	const [open, setOpen] = useState(false);
 
-export function LeavesCard({ initial }: { initial?: LeaveRangeOutput | null }) {
-	const reset = () => toLeaveDates(initial);
-	const [date, setDate] = useState<Date[]>(reset);
+	const [startDate, setStartDate] = useState<Date>();
+	const [endDate, setEndDate] = useState<Date>();
 
-	const { mutate: updateLeaves, isPending } = useMutation(
+	const [startTime, setStartTime] = useState<string>();
+	const [endTime, setEndTime] = useState<string>();
+
+	const { mutateAsync, isPending } = useMutation(
 		api.teacher.updateLeaves.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([api.core.self.teacher.queryKey()]);
+				setOpen(false);
 				toast.success({
-					title: "Leave dates updated successfully",
+					title: "Leave added successfully",
 				});
 			},
 			onError: (error) => {
 				toast.error({
-					title: error.message || "Failed to update leaves",
+					title: error.message || "Failed to add leave",
 				});
 			},
 		}),
 	);
 
-	const toggleDate = (targetDate: Date) => {
-		setDate((prev = []) => {
-			const exists = prev.some(
-				(d) => d.toDateString() === targetDate.toDateString(),
-			);
-			if (exists) {
-				return prev.filter(
-					(d) => d.toDateString() !== targetDate.toDateString(),
-				);
-			}
-			return [...prev, targetDate];
-		});
+	const handleFullConfirm = () => {
+		if (!startDate) return;
+		mutateAsync([
+			{
+				type: "full",
+				start: startDate,
+			},
+		]);
 	};
 
-	const selectedCount = date?.length ?? 0;
+	const handleMultipleConfirm = () => {
+		if (!startDate || !endDate) return;
+		mutateAsync([
+			{
+				type: "multiple",
+				start: startDate,
+				end: endDate,
+			},
+		]);
+	};
+
+	const handlePartialConfirm = () => {
+		if (!startDate || !startTime || !endTime) return;
+		const [startH, startM] = startTime.split(":").map(Number);
+		const [endH, endM] = endTime.split(":").map(Number);
+
+		if (!startH || !startM || !endH || !endM) return;
+
+		const start = new Date(startDate);
+		start.setHours(startH, startM, 0, 0);
+		const end = new Date(startDate);
+		end.setHours(endH, endM, 0, 0);
+
+		if (end.getTime() <= start.getTime()) {
+			toast.error({
+				title: "End time must be after start time",
+			});
+			return;
+		}
+
+		mutateAsync([
+			{
+				type: "partial",
+				start,
+				end,
+			},
+		]);
+	};
 
 	return (
-		<Card className="flex-1">
-			<CardHeader>
-				<CardTitle>Select Leave Dates</CardTitle>
-			</CardHeader>
-			<CardContent className="flex flex-row items-start">
-				<Frame className="max-w-fit">
-					<Calendar
-						buttonVariant="default"
-						className="w-auto max-w-72"
-						required
-						mode="multiple"
-						disablePreviousDates
-						selected={date}
-						onSelect={(d) => setDate(d)}
-						defaultMonth={new Date()}
-						showOutsideDays={false}
-					/>
-				</Frame>
-				<Card className="grow">
-					<CardHeader>
-						<CardTitle>Selected Leaves</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<Alert>
-							<CircleCheckIcon />
-							<AlertTitle>
-								{selectedCount === 0
-									? "No leaves selected"
-									: `${selectedCount} leave date${selectedCount > 1 ? "s" : ""} selected`}
-							</AlertTitle>
-							<AlertDescription>
-								{selectedCount === 0
-									? "Pick dates from the calendar or choose quick select options below."
-									: date?.map((d) => d.toLocaleDateString()).join(", ")}
-							</AlertDescription>
-							{selectedCount > 0 && (
-								<AlertAction>
-									<Button
-										size="xs"
-										variant="destructive"
-										disabled={isPending}
-										onClick={() => setDate([])}
-									>
-										Clear
-									</Button>
-								</AlertAction>
-							)}
-						</Alert>
-					</CardContent>
-					<CardFooter className="flex-wrap">
-						<ButtonGroup>
-							<Button
-								variant="secondary"
-								disabled={isPending}
-								onClick={() => toggleDate(getToday())}
-							>
-								Today
-							</Button>
-							<ButtonGroupSeparator />
-							<Button
-								variant="secondary"
-								disabled={isPending}
-								onClick={() => toggleDate(getTomorrow())}
-							>
-								Tomorrow
-							</Button>
-						</ButtonGroup>
-						<ButtonGroup>
-							<Button
-								variant="secondary"
-								disabled={isPending}
-								onClick={() => toggleDate(getTomorrow(2))}
-							>
-								Day after tomorrow
-							</Button>
-						</ButtonGroup>
-						<ButtonGroup>
-							<Button
-								variant="secondary"
-								disabled={isPending}
-								onClick={() => toggleDate(getNextDayOfWeek(6))}
-							>
-								Next Saturday
-							</Button>
-							<ButtonGroupSeparator />
-							<Button
-								variant="secondary"
-								disabled={isPending}
-								onClick={() => toggleDate(getNextDayOfWeek(0))}
-							>
-								Next Sunday
-							</Button>
-						</ButtonGroup>
-					</CardFooter>
-				</Card>
-			</CardContent>
-			<CardFooter className="justify-end">
-				<ButtonGroup>
-					<Button
-						variant="secondary"
-						disabled={isPending}
-						onClick={() => setDate(reset())}
-					>
-						Reset
+		<Drawer open={open} onOpenChange={setOpen}>
+			<DrawerTrigger
+				render={
+					<Button size="sm">
+						<PlusIcon />
+						Add Leave
 					</Button>
-					<Button
-						disabled={isPending}
-						onClick={() => {
-							const payload = (date ?? []).map((d) => ({
-								type: "full" as const,
-								start: d,
-							}));
-							updateLeaves(payload);
-						}}
+				}
+			/>
+			<DrawerContent render={<TabsRoot defaultValue="full" />}>
+				<DrawerHeader>
+					<DrawerTitle>Add Leave</DrawerTitle>
+					<DrawerDescription>
+						Choose leave duration and select dates.
+					</DrawerDescription>
+				</DrawerHeader>
+				<DrawerInner>
+					<TabsList className="w-full">
+						<TabsTrigger value="full">Full Day</TabsTrigger>
+						<TabsTrigger value="multiple">Multiple Days</TabsTrigger>
+						<TabsTrigger value="partial">Partial Day</TabsTrigger>
+					</TabsList>
+
+					<TabsContent value="full">
+						<Calendar
+							className="w-full rounded-xl"
+							buttonVariant="default"
+							mode="single"
+							disablePreviousDates
+							selected={startDate}
+							onSelect={setStartDate}
+							defaultMonth={new Date()}
+							showOutsideDays={false}
+						/>
+					</TabsContent>
+
+					<TabsContent value="multiple">
+						<Calendar
+							className="w-full rounded-xl"
+							buttonVariant="default"
+							mode="range"
+							numberOfMonths={1}
+							disablePreviousDates
+							selected={
+								startDate ? { from: startDate, to: endDate } : undefined
+							}
+							onSelect={(range) => {
+								setStartDate(range?.from);
+								setEndDate(range?.to);
+							}}
+							defaultMonth={new Date()}
+							showOutsideDays={false}
+						/>
+					</TabsContent>
+
+					<TabsContent value="partial">
+						<Calendar
+							className="w-full rounded-xl"
+							buttonVariant="default"
+							mode="single"
+							disablePreviousDates
+							selected={startDate}
+							onSelect={setStartDate}
+							defaultMonth={new Date()}
+							showOutsideDays={false}
+						/>
+						<Field>
+							<FieldLabel>Start Time</FieldLabel>
+							<Input
+								type="time"
+								value={startTime}
+								onChange={(e) => setStartTime(e.target.value)}
+							/>
+						</Field>
+						<Field>
+							<FieldLabel>End Time</FieldLabel>
+							<Input
+								type="time"
+								value={endTime}
+								onChange={(e) => setEndTime(e.target.value)}
+							/>
+						</Field>
+					</TabsContent>
+				</DrawerInner>
+
+				<DrawerFooter>
+					<TabsPanel
+						value="full"
+						render={
+							<Button
+								disabled={!startDate || isPending}
+								onClick={handleFullConfirm}
+							/>
+						}
 					>
 						{isPending && <Spinner />}
-						Save Leaves
-					</Button>
-				</ButtonGroup>
-			</CardFooter>
-		</Card>
+						Confirm Full Day Leave
+					</TabsPanel>
+					<TabsPanel
+						value="multiple"
+						render={
+							<Button
+								disabled={!startDate || !endDate || isPending}
+								onClick={handleMultipleConfirm}
+							/>
+						}
+					>
+						{isPending && <Spinner />}
+						Confirm Multiple Days Leave
+					</TabsPanel>
+					<TabsPanel
+						value="partial"
+						render={
+							<Button
+								disabled={!startDate || !startTime || !endTime || isPending}
+								onClick={handlePartialConfirm}
+							/>
+						}
+					>
+						{isPending && <Spinner />}
+						Confirm Partial Leave
+					</TabsPanel>
+					<DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
+				</DrawerFooter>
+			</DrawerContent>
+		</Drawer>
 	);
 }

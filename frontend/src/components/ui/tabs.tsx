@@ -4,6 +4,8 @@ import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
+const TabsRoot = TabsPrimitive.Root;
+
 function Tabs({
 	className,
 	orientation = "horizontal",
@@ -78,4 +80,14 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
 	);
 }
 
-export { Tabs, TabsContent, TabsList, TabsTrigger, tabsListVariants };
+const TabsPanel = TabsPrimitive.Panel;
+
+export {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsPanel,
+	TabsRoot,
+	TabsTrigger,
+	tabsListVariants,
+};
