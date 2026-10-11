@@ -145,7 +145,7 @@ export default function Pattern() {
 							<ButtonGroupText>Durations</ButtonGroupText>
 							{period.map((value) => (
 								<Button onClick={() => setDuration(value)} key={value}>
-									{value}
+									{value} mins
 								</Button>
 							))}
 						</ButtonGroup>

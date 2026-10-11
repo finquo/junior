@@ -36,10 +36,16 @@ import { sileo as toast } from "sileo";
 import { getRelateTime } from "utils";
 import Loader from "@/components/loader";
 import { ProfileCard } from "@/components/profile";
-import { Frame, FrameHeader, FramePanel } from "@/components/reui/frame";
+import {
+	Frame,
+	FrameActions,
+	FrameHeader,
+	FramePanel,
+} from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -429,7 +435,7 @@ export default function Page() {
 
 	return (
 		<Frame>
-			<FrameHeader className="flex-row items-center justify-between">
+			<FrameHeader>
 				<InputGroup className="w-xs">
 					<InputGroupInput
 						value={search ?? ""}
@@ -440,28 +446,35 @@ export default function Page() {
 						<Search />
 					</InputGroupAddon>
 				</InputGroup>
-				<Select
-					items={rolesObject}
-					value={role ?? undefined}
-					onValueChange={(r) => setRole((r as Role) ?? null)}
-				>
-					<SelectTrigger>
-						<SelectValue placeholder="Filter Roles" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							{rolesObject.map((item) => (
-								<SelectItem key={item.value} value={item.value}>
-									{item.label}
-								</SelectItem>
-							))}
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-				<Button render={<Link href="/admin/users/new" />} nativeButton={false}>
-					<UserPlusIcon />
-					Create User
-				</Button>
+				<FrameActions>
+					<ButtonGroup>
+						<Select
+							items={rolesObject}
+							value={role ?? undefined}
+							onValueChange={(r) => setRole((r as Role) ?? null)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="Filter Roles" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectGroup>
+									{rolesObject.map((item) => (
+										<SelectItem key={item.value} value={item.value}>
+											{item.label}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+						<Button
+							render={<Link href="/admin/users/new" />}
+							nativeButton={false}
+						>
+							<UserPlusIcon />
+							Create User
+						</Button>
+					</ButtonGroup>
+				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
 				<Table>

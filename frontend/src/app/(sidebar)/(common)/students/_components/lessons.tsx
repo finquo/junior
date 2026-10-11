@@ -9,6 +9,7 @@ import { formatTimeString } from "utils";
 import Loader from "@/components/loader";
 import {
 	Frame,
+	FrameActions,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
@@ -28,6 +29,7 @@ import {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
@@ -94,54 +96,60 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 
 	return (
 		<Frame>
-			<FrameHeader className="flex-row justify-between">
+			<FrameHeader>
 				<FrameTitle>Enrolled Lessons</FrameTitle>
-				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="xs">
-								<PlusIcon />
-								Add Lesson
-							</Button>
-						}
-					/>
-					<DrawerContent>
-						<DrawerHeader>
-							<DrawerTitle>Add Lesson</DrawerTitle>
-							<DrawerDescription>Pick from available lessons</DrawerDescription>
-						</DrawerHeader>
-
-						<LessonSelector
-							enrolledLessonIds={items}
-							value={selectedLessonId}
-							onValueChange={setSelectedLessonId}
+				<FrameActions>
+					<Drawer>
+						<DrawerTrigger
+							render={
+								<Button variant="outline">
+									<PlusIcon />
+									Add Lesson
+								</Button>
+							}
 						/>
+						<DrawerContent>
+							<DrawerHeader>
+								<DrawerTitle>Add Lesson</DrawerTitle>
+								<DrawerDescription>
+									Pick from available lessons
+								</DrawerDescription>
+							</DrawerHeader>
 
-						<Marker variant="separator">
-							<MarkerContent>or</MarkerContent>
-						</Marker>
+							<DrawerInner>
+								<LessonSelector
+									enrolledLessonIds={items}
+									value={selectedLessonId}
+									onValueChange={setSelectedLessonId}
+								/>
 
-						<Button>
-							<ImportIcon />
-							Import from another students
-						</Button>
+								<Marker variant="separator">
+									<MarkerContent>or</MarkerContent>
+								</Marker>
 
-						<DrawerFooter>
-							<DrawerClose
-								disabled={!selectedLessonId}
-								onClick={handleAddLesson}
-								render={<Button />}
-							>
-								<PlusIcon />
-								Add
-							</DrawerClose>
+								<Button>
+									<ImportIcon />
+									Import from another students
+								</Button>
+							</DrawerInner>
 
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
+							<DrawerFooter>
+								<DrawerClose
+									disabled={!selectedLessonId}
+									onClick={handleAddLesson}
+									render={<Button />}
+								>
+									<PlusIcon />
+									Add
+								</DrawerClose>
+
+								<DrawerClose render={<Button variant="outline" />}>
+									Close
+								</DrawerClose>
+							</DrawerFooter>
+						</DrawerContent>
+					</Drawer>
+				</FrameActions>
 			</FrameHeader>
 
 			<FramePanel>
