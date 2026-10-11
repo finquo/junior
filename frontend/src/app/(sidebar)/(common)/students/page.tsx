@@ -93,6 +93,7 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 					{(user) => (
 						<Drawer>
 							<DrawerTrigger
+								nativeButton={false}
 								render={
 									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
 								}
@@ -279,13 +280,13 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 	]);
 
 export default function Page() {
-	const { data: students = [], isPending } = useQuery(
-		api.teacher.getStudents.queryOptions(),
+	const { data = [], isPending } = useQuery(
+		api.core.student.list.queryOptions(),
 	);
 
 	const table = useTable({
 		features,
-		data: students,
+		data,
 		columns,
 	});
 

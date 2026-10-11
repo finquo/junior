@@ -18,11 +18,11 @@ import {
 	tableFeatures,
 	useTable,
 } from "@tanstack/react-table";
-import { Languages, type StudentType } from "backend/config";
-import { PenIcon } from "lucide-react";
+import { Languages } from "backend/config";
+import { CalendarIcon, PenIcon } from "lucide-react";
 import { getRelateTime } from "utils";
 import Loader from "@/components/loader";
-import { ProfileCard, StudentProfile } from "@/components/profile";
+import { ProfileCard, TeacherProfile } from "@/components/profile";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +65,9 @@ import {
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
+import type { API_Returns } from "@/lib/api";
+
+type TeacherRecord = API_Returns["core"]["teacher"]["list"][number];
 
 const features = tableFeatures({
 	columnFilteringFeature,
@@ -81,73 +84,55 @@ const features = tableFeatures({
 
 type DataTableFeatures = typeof features;
 
-const columnHelper = createColumnHelper<DataTableFeatures, StudentType>();
+const columnHelper = createColumnHelper<DataTableFeatures, TeacherRecord>();
 
-const columns: ColumnDef<DataTableFeatures, StudentType>[] =
+const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 	columnHelper.columns([
 		columnHelper.display({
-			id: "student",
-			header: "Student",
-			cell: ({ row }) => (
-				<FetchUser id={row.original.id} isPending={<Spinner />}>
-					{(user) => (
-						<Drawer>
-							<DrawerTrigger
-								render={
-									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-								}
-							>
-								<ItemMedia>
-									<Avatar size="sm">
-										<AvatarImage
-											src={user.image ?? undefined}
-											alt={user.name}
-										/>
-										<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
-									</Avatar>
-								</ItemMedia>
-								<ItemContent>
-									<ItemTitle>{user.name}</ItemTitle>
-									<ItemDescription>{user.email}</ItemDescription>
-								</ItemContent>
-							</DrawerTrigger>
-							<DrawerContent className="overflow-y-auto">
-								<DrawerHeader>
-									<DrawerTitle>{user.name}</DrawerTitle>
-									<DrawerDescription>{user.email}</DrawerDescription>
-								</DrawerHeader>
-								<div className="flex flex-col gap-4 p-4">
-									<ProfileCard user={user} />
-									<StudentProfile student={row.original} />
-								</div>
-								<DrawerFooter>
-									<DrawerClose render={<Button variant="outline" />}>
-										Close
-									</DrawerClose>
-								</DrawerFooter>
-							</DrawerContent>
-						</Drawer>
-					)}
-				</FetchUser>
-			),
-		}),
-		columnHelper.accessor("program", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Program</TooltipTrigger>
-					<TooltipContent>Enrolled study track or course plan</TooltipContent>
-				</Tooltip>
-			),
-			cell: ({ getValue }) => getValue() ?? "—",
-		}),
-		columnHelper.accessor("schooling", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Schooling</TooltipTrigger>
-					<TooltipContent>Student's affiliated curriculum board</TooltipContent>
-				</Tooltip>
-			),
-			cell: ({ getValue }) => getValue() ?? "—",
+			id: "teacher",
+			header: "Teacher",
+			cell: ({ row }) => {
+				const user = row.original.user;
+				return (
+					<Drawer>
+						<DrawerTrigger
+							nativeButton={false}
+							render={
+								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
+							}
+						>
+							<ItemMedia>
+								<Avatar size="sm">
+									<AvatarImage
+										src={user?.image ?? undefined}
+										alt={user?.name ?? "Teacher"}
+									/>
+									<AvatarFallback>{user?.name?.[0] ?? "T"}</AvatarFallback>
+								</Avatar>
+							</ItemMedia>
+							<ItemContent>
+								<ItemTitle>{user?.name ?? "Teacher"}</ItemTitle>
+								<ItemDescription>{user?.email ?? "—"}</ItemDescription>
+							</ItemContent>
+						</DrawerTrigger>
+						<DrawerContent className="overflow-y-auto">
+							<DrawerHeader>
+								<DrawerTitle>{user?.name ?? "Teacher"}</DrawerTitle>
+								<DrawerDescription>{user?.email ?? "—"}</DrawerDescription>
+							</DrawerHeader>
+							<div className="flex flex-col gap-4 p-4">
+								{user && <ProfileCard user={user} />}
+								<TeacherProfile teacher={row.original} />
+							</div>
+							<DrawerFooter>
+								<DrawerClose render={<Button variant="outline" />}>
+									Close
+								</DrawerClose>
+							</DrawerFooter>
+						</DrawerContent>
+					</Drawer>
+				);
+			},
 		}),
 		columnHelper.display({
 			id: "languages",
@@ -158,57 +143,21 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 					.join(", ") || "—",
 		}),
 		columnHelper.display({
-			id: "mentor",
+			id: "experience",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help">Mentor</TooltipTrigger>
-					<TooltipContent>Assigned teacher mentor</TooltipContent>
+					<TooltipTrigger className="cursor-help">Experience</TooltipTrigger>
+					<TooltipContent>
+						Prior teaching background and employment history
+					</TooltipContent>
 				</Tooltip>
 			),
 			cell: ({ row }) => {
-				const mentorId = row.original.mentorId;
-				if (!mentorId) {
-					return <Badge variant="outline">Not Assigned</Badge>;
-				}
-				return (
-					<HoverCard>
-						<HoverCardTrigger
-							render={
-								<span
-									role="button"
-									className="cursor-pointer font-medium text-xs underline decoration-dotted"
-								/>
-							}
-						>
-							<FetchUser id={mentorId} isPending={<Spinner />}>
-								{(mentor) => mentor.name}
-							</FetchUser>
-						</HoverCardTrigger>
-						<HoverCardContent className="w-64">
-							<FetchUser id={mentorId} isPending={<Spinner />}>
-								{(mentor) => (
-									<Item className="p-0 text-left">
-										<ItemMedia>
-											<Avatar size="sm">
-												<AvatarImage
-													src={mentor.image ?? undefined}
-													alt={mentor.name}
-												/>
-												<AvatarFallback>
-													{mentor.name?.[0] ?? "M"}
-												</AvatarFallback>
-											</Avatar>
-										</ItemMedia>
-										<ItemContent>
-											<ItemTitle>{mentor.name}</ItemTitle>
-											<ItemDescription>{mentor.email}</ItemDescription>
-										</ItemContent>
-									</Item>
-								)}
-							</FetchUser>
-						</HoverCardContent>
-					</HoverCard>
-				);
+				const latest = row.original.experiences?.[0];
+				if (!latest) return "—";
+				return latest.organization
+					? `${latest.title} at ${latest.organization}`
+					: latest.title;
 			},
 		}),
 		columnHelper.display({
@@ -265,26 +214,45 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 				);
 			},
 		}),
-		columnHelper.accessor("paid", {
+		columnHelper.display({
+			id: "availability",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help">Payment</TooltipTrigger>
-					<TooltipContent>Fee payment status</TooltipContent>
+					<TooltipTrigger className="cursor-help">Availability</TooltipTrigger>
+					<TooltipContent>
+						Teacher's weekly schedule availability and working hours
+					</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ getValue }) => (
-				<Badge variant={getValue() ? "success" : "warning"}>
-					{getValue() ? "Paid" : "Pending"}
-				</Badge>
+			cell: ({ row }) => (
+				<Drawer>
+					<DrawerTrigger
+						render={
+							<Button variant="outline" size="icon-sm">
+								<CalendarIcon />
+							</Button>
+						}
+					/>
+					<DrawerContent className="overflow-y-auto">
+						<DrawerHeader>
+							<DrawerTitle>Teacher Availability</DrawerTitle>
+							<DrawerDescription>
+								Availability schedule for {row.original.user?.name ?? "Teacher"}
+							</DrawerDescription>
+						</DrawerHeader>
+						<div className="p-4" />
+						<DrawerFooter>
+							<DrawerClose render={<Button variant="outline" />}>
+								Close
+							</DrawerClose>
+						</DrawerFooter>
+					</DrawerContent>
+				</Drawer>
 			),
-		}),
-		columnHelper.accessor("amount", {
-			header: "Amount",
-			cell: ({ getValue }) => `₹${getValue()}`,
 		}),
 		columnHelper.accessor("createdAt", {
 			header: "Joined",
-			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => `${getRelateTime(getValue())} ago`,
 		}),
 		columnHelper.display({
 			id: "edit",
@@ -300,8 +268,8 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 					/>
 					<DrawerContent className="overflow-y-auto">
 						<DrawerHeader>
-							<DrawerTitle>Edit Student</DrawerTitle>
-							<DrawerDescription>Edit student record</DrawerDescription>
+							<DrawerTitle>Edit Teacher</DrawerTitle>
+							<DrawerDescription>Edit teacher details</DrawerDescription>
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
@@ -316,13 +284,13 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 	]);
 
 export default function Page() {
-	const { data: students = [], isPending } = useQuery(
-		api.scheduler.getStudents.queryOptions(),
+	const { data = [], isPending } = useQuery(
+		api.core.teacher.list.queryOptions(),
 	);
 
 	const table = useTable({
 		features,
-		data: students,
+		data,
 		columns,
 	});
 
@@ -361,7 +329,7 @@ export default function Page() {
 						) : (
 							<TableRow>
 								<TableCell colSpan={columns.length} className="text-center">
-									No students found
+									No teachers found
 								</TableCell>
 							</TableRow>
 						)}
