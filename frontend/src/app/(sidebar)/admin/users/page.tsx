@@ -47,6 +47,7 @@ import {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
@@ -92,7 +93,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { api, queryClient } from "@/hooks/api";
+import { api } from "@/hooks/api";
 import { authClient } from "@/hooks/auth";
 import type { API_Returns } from "@/lib/api";
 import type { Role } from "@/lib/auth";
@@ -107,7 +108,6 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 	const { mutateAsync, isPending } = useMutation(
 		api.admin.promote.mutationOptions({
 			onSuccess: () => {
-				queryClient.invalidateQueries();
 				toast.success({ title: "Role updated successfully" });
 				setOpen(false);
 			},
@@ -116,7 +116,7 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 
 	const form = useForm({
 		defaultValues: {
-			role: (user.role as Role) ?? "user",
+			role: user.role ?? "user",
 		},
 		onSubmit: async ({ value }) => {
 			await mutateAsync({
@@ -135,20 +135,24 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 					</Button>
 				}
 			/>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
+			<DrawerContent
+				render={
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							form.handleSubmit();
+						}}
+					/>
+				}
 			>
-				<DrawerContent>
-					<DrawerHeader>
-						<DrawerTitle>Edit User Role</DrawerTitle>
-						<DrawerDescription>
-							Promote or reassign role for {user.name} ({user.email})
-						</DrawerDescription>
-					</DrawerHeader>
+				<DrawerHeader>
+					<DrawerTitle>Edit User Role</DrawerTitle>
+					<DrawerDescription>
+						Promote or reassign role for {user.name} ({user.email})
+					</DrawerDescription>
+				</DrawerHeader>
+				<DrawerInner>
 					<FieldGroup>
 						<form.Field
 							name="role"
@@ -160,7 +164,7 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 										value={field.state.value}
 										disabled={isPending}
 										onValueChange={(r) => {
-											if (r) field.handleChange(r as Role);
+											if (r) field.handleChange(r);
 										}}
 									>
 										<SelectTrigger>
@@ -180,17 +184,17 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 							)}
 						/>
 					</FieldGroup>
-					<DrawerFooter>
-						<Button type="submit" disabled={isPending}>
-							{isPending && <Spinner />}
-							Submit
-						</Button>
-						<DrawerClose render={<Button variant="outline" />}>
-							Cancel
-						</DrawerClose>
-					</DrawerFooter>
-				</DrawerContent>
-			</form>
+				</DrawerInner>
+				<DrawerFooter>
+					<Button type="submit" disabled={isPending}>
+						{isPending && <Spinner />}
+						Submit
+					</Button>
+					<DrawerClose render={<Button variant="outline" />}>
+						Cancel
+					</DrawerClose>
+				</DrawerFooter>
+			</DrawerContent>
 		</Drawer>
 	);
 }

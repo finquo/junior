@@ -156,7 +156,6 @@ function DrawerContent({
 						data-slot="drawer-content"
 						className={cn(
 							"flex min-h-0 flex-1 select-text flex-col overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-swiping/drawer-popup:select-none group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100",
-							showSwipeHandle ? "space-y-4 pe-3" : "space-y-4",
 						)}
 					>
 						{children}
@@ -185,6 +184,16 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="drawer-footer"
 			className={cn("mt-auto flex shrink-0 flex-col gap-2 p-4 pt-0", className)}
+			{...props}
+		/>
+	);
+}
+
+function DrawerInner({ className, ...props }: React.ComponentProps<"div">) {
+	return (
+		<div
+			data-slot="drawer-footer"
+			className={cn("space-y-4 p-4", className)}
 			{...props}
 		/>
 	);
@@ -223,6 +232,7 @@ export {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerOverlay,
 	DrawerPortal,
 	DrawerSwipeHandle,
