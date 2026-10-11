@@ -90,14 +90,7 @@ export const teacherRouter = {
 			);
 		}),
 	updateLeaves: teacherProcedure
-		.input(
-			leaveItemZod
-				.transform((l) => {
-					if (l.type === "full") return { ...l, end: l.start };
-					return l;
-				})
-				.array(),
-		)
+		.input(leaveItemZod.array())
 		.handler(async ({ context, input }) => {
 			return await tryAPI(
 				"db-teacher-update-leaves",
@@ -109,12 +102,7 @@ export const teacherRouter = {
 			);
 		}),
 	addLeave: teacherProcedure
-		.input(
-			leaveItemZod.transform((l) => {
-				if (l.type === "full") return { ...l, end: l.start };
-				return l;
-			}),
-		)
+		.input(leaveItemZod)
 		.handler(async ({ context, input }) => {
 			return await tryAPI(
 				"db-teacher-add-leave",

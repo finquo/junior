@@ -27,12 +27,26 @@ export const getDaykey = (i: number) => {
 	return key;
 };
 
-const timeRangeZod = z.object({ start: z.string(), end: z.string() });
+const timeSchema = z.string().refine((value) => {
+	const [hours, minutes] = value.split(":");
+	if (!hours || !minutes) return false;
 
-export const availabilityZod = z.record(
-	dayKeysZod,
-	z.object({ enabled: z.boolean(), ranges: timeRangeZod.array().default([]) }),
-);
+	const validStrings = /^\d{2}$/.test(hours) && /^\d{2}$/.test(minutes);
+
+	if (!validStrings) return false;
+
+	const h = Number(hours);
+	const m = Number(minutes);
+
+	return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+}, "Invalid time, expected HH:MM");
+
+const enabledZod = z.object({
+	enabled: z.boolean(),
+	ranges: z.object({ start: timeSchema, end: timeSchema }).array().default([]),
+});
+
+export const availabilityZod = z.record(dayKeysZod, enabledZod);
 
 export type Availability = z.infer<typeof availabilityZod>;
 
@@ -48,3 +62,5 @@ export const intervalHourZod = z
 	.transform(({ hours, minutes }) => `${hours} hours ${minutes} minutes`);
 
 export * from "../db/column/leave-range";
+
+console.log(timeSchema.parse("11:31"));

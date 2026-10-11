@@ -247,13 +247,36 @@ export const teacherRouter = {
 					.returning(),
 			);
 		}),
+	updateLeaves: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			SelectTeacherSchema.pick({ id: true }).safeExtend({
+				leaves: leaveItemZod.array(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			return await tryAPI(
+				"db-core-teacher-add-leave",
+				db
+					.update(schema.teacher)
+					.set({
+						leaves: input.leaves,
+					})
+					.where(
+						MapRole(context.role, {
+							admin: eq(schema.teacher.id, input.id),
+							scheduler: and(
+								eq(schema.teacher.id, input.id),
+								eq(schema.teacher.supervisorId, context.user.id),
+							),
+						}),
+					)
+					.returning(),
+			);
+		}),
 	addLeave: getRolesProcedure(["admin", "scheduler"])
 		.input(
 			SelectTeacherSchema.pick({ id: true }).safeExtend({
-				leave: leaveItemZod.transform((l) => {
-					if (l.type === "full") return { ...l, end: l.start };
-					return l;
-				}),
+				leave: leaveItemZod,
 			}),
 		)
 		.handler(async ({ input, context }) => {
