@@ -1,4 +1,5 @@
 import { sileo as toast } from "sileo";
+import { mergeDateWithTimeString } from "utils";
 import { create } from "zustand";
 import type { API_Params } from "@/lib/api";
 
@@ -63,18 +64,8 @@ export const useLeaveForm = create<LeaveFormState>((set, get, init) => ({
 
 		if (!startDate || !startTime || !endTime) return;
 
-		const [startH, startM] = startTime.split(":").map(Number);
-		const [endH, endM] = endTime.split(":").map(Number);
-
-		if (!startH || !startM || !endH || !endM) return;
-
-		if ([startH, startM, endH, endM].some(Number.isNaN)) return;
-
-		const start = new Date(startDate);
-		start.setHours(startH, startM, 0, 0);
-
-		const end = new Date(startDate);
-		end.setHours(endH, endM, 0, 0);
+		const start = mergeDateWithTimeString(startDate, startTime);
+		const end = mergeDateWithTimeString(startDate, endTime);
 
 		if (end.getTime() <= start.getTime()) {
 			toast.error({

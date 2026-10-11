@@ -145,12 +145,13 @@ export const teacherRouter = {
 				return {
 					isAvailable: false,
 					reason: "Teacher is not available on this day",
-				};
+				} as const;
 			}
 
 			const { isLeave, type, time } = checkAgainstLeaves(
 				targetDate,
-				teacherRecord.leaves,
+				teacherRecord.leaves ?? [],
+				input.period,
 			);
 
 			if (isLeave)
@@ -162,12 +163,12 @@ export const teacherRouter = {
 						full: "Teacher took a full leave on this date",
 						multiple: "Teacher took multiple leaves, including this date",
 					}),
-				};
+				} as const;
 
 			return {
 				isAvailable: true,
 				availableSlots: [],
-			};
+			} as const;
 		}),
 	getSlots: getRolesProcedure(["admin", "scheduler"])
 		.input(

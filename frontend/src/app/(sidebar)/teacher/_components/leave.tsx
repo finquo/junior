@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
+import { mergeDateWithTimeString } from "utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -74,15 +75,9 @@ export function AddLeaveDrawer() {
 
 	const handlePartialConfirm = () => {
 		if (!startDate || !startTime || !endTime) return;
-		const [startH, startM] = startTime.split(":").map(Number);
-		const [endH, endM] = endTime.split(":").map(Number);
 
-		if (!startH || !startM || !endH || !endM) return;
-
-		const start = new Date(startDate);
-		start.setHours(startH, startM, 0, 0);
-		const end = new Date(startDate);
-		end.setHours(endH, endM, 0, 0);
+		const start = mergeDateWithTimeString(startDate, startTime);
+		const end = mergeDateWithTimeString(startDate, endTime);
 
 		if (end.getTime() <= start.getTime()) {
 			toast.error({

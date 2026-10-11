@@ -1,5 +1,7 @@
 import z from "zod";
 
+export const period = [30, 60, 120, 180];
+
 export const periodZod = z
 	.number()
 	.min(15)

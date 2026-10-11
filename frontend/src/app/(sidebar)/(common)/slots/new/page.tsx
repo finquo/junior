@@ -1,8 +1,12 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
+import { period } from "backend/config";
 import { CircleCheckIcon } from "lucide-react";
 import { parseAsIsoDate, useQueryState } from "nuqs";
 import { useState } from "react";
+import { sileo as toast } from "sileo";
+import { mergeDateWithTimeString } from "utils";
 import DaySlider from "@/components/day-slider";
 import {
 	Alert,
@@ -30,6 +34,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -42,8 +47,6 @@ import { useTimePeriodGroups } from "@/hooks/period";
 import { RenderWhenRole } from "@/hooks/role";
 import { CalenderPicker } from "../_components/calender";
 import { UserSelector } from "../_components/selecter";
-
-const period = [30, 60, 120, 180];
 
 export default function Pattern() {
 	const [schedulerId, setSchedulerId] = useQueryState("schedulerId");
@@ -62,6 +65,54 @@ export default function Pattern() {
 
 	const [hour, setHour] = useState(true);
 	const TIME_PERIOD_GROUPS = useTimePeriodGroups(lowerLimit, upperLimit, hour);
+
+	const { mutate: checkAvailability, isPending: isChecking } = useMutation(
+		api.core.teacher.checkAvailability.mutationOptions({
+			onSuccess: (result) => {
+				if (result.isAvailable) {
+					toast.success({
+						title: "Teacher is available!",
+						description:
+							"Teacher is available on this date for the selected duration.",
+					});
+				} else {
+					toast.warning({
+						title: "Teacher is unavailable",
+						description:
+							result.reason || "Teacher is not available for this period.",
+					});
+				}
+			},
+			onError: (error) => {
+				toast.error({
+					title: error.message || "Failed to check availability",
+				});
+			},
+		}),
+	);
+
+	const handleCheckAvailability = () => {
+		if (!teacherId) {
+			toast.error({ title: "Please select a teacher first" });
+			return;
+		}
+		if (!date) {
+			toast.error({ title: "Please select a date first" });
+			return;
+		}
+
+		const dateWithTime = selectedTime
+			? mergeDateWithTimeString(date, selectedTime)
+			: date;
+
+		console.log(dateWithTime);
+
+		checkAvailability({
+			id: teacherId,
+			date: dateWithTime,
+			period: duration,
+		});
+	};
 
 	return (
 		<div className="flex flex-col flex-wrap gap-3 md:h-svh md:flex-row md:items-start">
@@ -172,6 +223,13 @@ export default function Pattern() {
 								/>
 							</DialogContent>
 						</Dialog>
+						<Button
+							disabled={isChecking || !teacherId || !date}
+							onClick={handleCheckAvailability}
+						>
+							{isChecking && <Spinner />}
+							Check Availability
+						</Button>
 					</CardFooter>
 				</Card>
 			</div>

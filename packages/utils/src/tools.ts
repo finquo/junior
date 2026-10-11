@@ -19,3 +19,12 @@ export const formatTimeString = (time: string) => {
 		long: true,
 	});
 };
+
+export const mergeDateWithTimeString = (date: Date, time: string) => {
+	const [hours = 0, minutes = 0, seconds = 0, milisecond = 0] = time
+		.split(":")
+		.map(Number);
+	const result = new Date(date);
+	result.setHours(hours, minutes, seconds, milisecond);
+	return result;
+};
