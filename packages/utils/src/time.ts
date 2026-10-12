@@ -21,10 +21,18 @@ export const formatTimeString = (time: string) => {
 };
 
 export const mergeDateWithTimeString = (date: Date, time: string) => {
-	const [hours = 0, minutes = 0, seconds = 0, milisecond = 0] = time
+	const [hours = 0, minutes = 0, seconds = 0, milliseconds = 0] = time
 		.split(":")
 		.map(Number);
 	const result = new Date(date);
-	result.setHours(hours, minutes, seconds, milisecond);
+	result.setHours(hours, minutes, seconds, milliseconds);
 	return result;
+};
+
+export const getDurationFromInterval = (time: string) => {
+	const [hours = 0, minutes = 0, seconds = 0, milliseconds = 0] = time
+		.split(":")
+		.map(Number);
+
+	return hours * 60 + minutes + seconds / 60 + milliseconds / 60_000;
 };

@@ -1,9 +1,7 @@
 "use client";
 
-import { period } from "backend/config";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
+import { getDurationFromInterval } from "utils";
 import {
 	Card,
 	CardContent,
@@ -13,22 +11,20 @@ import {
 } from "@/components/ui/card";
 import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
-import { LessonSelector, UserSelector } from "./selecter";
+import { LessonSelector, PeriodSelector, UserSelector } from "./selecter";
 
 export function UsersCard() {
 	const [, setTeacherId] = useQueryState("teacherId");
 	const [, setSchedulerId] = useQueryState("schedulerId");
-	const [duration, setDuration] = useQueryState(
+	const [, setDuration] = useQueryState(
 		"duration",
 		parseAsInteger.withDefault(25),
 	);
 
-	const isDurationSelected = (val: number) => duration === val;
-
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Select Users</CardTitle>
+				<CardTitle>Select Users & Lessons</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<UserSelector
@@ -56,25 +52,14 @@ export function UsersCard() {
 						api={api.core.scheduler.list.queryOptions()}
 					/>
 				</RenderWhenRole>
-				<LessonSelector name="lessonId" label="Lesson" />
+				<LessonSelector
+					onSelect={(l) => {
+						if (l.period) setDuration(getDurationFromInterval(l.period));
+					}}
+				/>
 			</CardContent>
 			<CardFooter>
-				<ButtonGroup>
-					<ButtonGroupText>Durations</ButtonGroupText>
-					{period.map((value) => {
-						const isSelected = isDurationSelected(value);
-						const variant = isSelected ? "default" : "outline";
-						return (
-							<Button
-								key={value}
-								variant={variant}
-								onClick={() => setDuration(value)}
-							>
-								{value} mins
-							</Button>
-						);
-					})}
-				</ButtonGroup>
+				<PeriodSelector />
 			</CardFooter>
 		</Card>
 	);
