@@ -1,25 +1,41 @@
 import { sql } from "drizzle-orm";
-import { interval, jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
+import {
+	index,
+	interval,
+	jsonb,
+	pgEnum,
+	pgTable,
+	text,
+} from "drizzle-orm/pg-core";
 import type { LanguageCodes } from "@/config";
 import type { Anwser, Quiz } from "@/config/quiz";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { student } from "./student";
 
-export const lesson = pgTable("lesson", {
-	id: generateId().primaryKey(),
+export const lesson = pgTable(
+	"lesson",
+	{
+		id: generateId().primaryKey(),
 
-	name: text().notNull(),
-	description: text(),
-	language: text().$type<LanguageCodes>().notNull(),
+		name: text().notNull(),
+		description: text(),
+		language: text().$type<LanguageCodes>().notNull(),
 
-	quiz: jsonb().$type<Quiz[]>(),
-	period: interval({ fields: "hour to minute" }).default(
-		sql`INTERVAL '1' HOUR`,
-	),
+		quiz: jsonb().$type<Quiz[]>(),
+		period: interval({ fields: "hour to minute" }).default(
+			sql`INTERVAL '1' HOUR`,
+		),
 
-	createdAt: createdAt(),
-	updatedAt: updatedAt(),
-});
+		createdAt: createdAt(),
+		updatedAt: updatedAt(),
+	},
+	(table) => [
+		index("lesson_name_trigram_idx").using(
+			"gin",
+			sql`${table.name} gin_trgm_ops`,
+		),
+	],
+);
 
 export const answerStatusEnum = pgEnum("answer_status", [
 	"pending",

@@ -26,6 +26,10 @@ export const user = pgTable(
 			"gin",
 			sql`${table.name} gin_trgm_ops`,
 		),
+		index("user_email_trigram_idx").using(
+			"gin",
+			sql`${table.email} gin_trgm_ops`,
+		),
 	],
 );
 

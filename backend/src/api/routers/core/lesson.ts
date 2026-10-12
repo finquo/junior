@@ -1,7 +1,11 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
-import { InsertLessonSchema, UpdateLessonSchema } from "@/db/zod";
+import {
+	InsertLessonSchema,
+	SelectLessonSchema,
+	UpdateLessonSchema,
+} from "@/db/zod";
 import { db } from "@/services";
 
 export const lessonRouter = {
@@ -16,6 +20,30 @@ export const lessonRouter = {
 			[],
 		),
 	),
+	search: getRolesProcedure(["admin", "teacher", "scheduler"])
+		.input(
+			SelectLessonSchema.pick({ name: true }).extend({
+				searchQuery: SelectLessonSchema.shape.name
+					.min(3, { message: "Type at least 3 letters" })
+					.optional(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const query = input.searchQuery || input.name;
+			return await getAPI(
+				"db-core-search-lessons-query",
+				db
+					.select()
+					.from(schema.lesson)
+					.where(query ? sql`${schema.lesson.name} % ${query}` : undefined)
+					.orderBy(
+						query
+							? sql`similarity(${schema.lesson.name}, ${query}) DESC`
+							: desc(schema.lesson.createdAt),
+					),
+				[],
+			);
+		}),
 	create: getRolesProcedure(["admin", "scheduler"])
 		.input(
 			InsertLessonSchema.omit({
