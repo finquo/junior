@@ -2,7 +2,16 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
-import { BookOpenIcon, GripIcon, ImportIcon, PlusIcon } from "lucide-react";
+import {
+	BookOpenIcon,
+	CalendarIcon,
+	EllipsisVerticalIcon,
+	GripIcon,
+	ImportIcon,
+	PlusIcon,
+	TrashIcon,
+} from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
 import { formatTimeString } from "utils";
@@ -34,6 +43,12 @@ import {
 	DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
 	Item,
 	ItemActions,
 	ItemContent,
@@ -63,11 +78,6 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 				queryClient.invalidateQueries();
 				toast.success({ title: "Lesson order updated" });
 			},
-			onError: (err) => {
-				toast.error({
-					title: err.message || "Failed to update lesson order",
-				});
-			},
 		}),
 	);
 
@@ -84,6 +94,15 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 		const newIds = [...items, selectedLessonId];
 		setOrderedIds(newIds);
 		setSelectedLessonId("");
+		await updateStudentLessons({
+			id: studentId,
+			lessons: newIds,
+		});
+	};
+
+	const handleDeleteLesson = async (idToDelete: string) => {
+		const newIds = items.filter((id) => id !== idToDelete);
+		setOrderedIds(newIds);
 		await updateStudentLessons({
 			id: studentId,
 			lessons: newIds,
@@ -166,7 +185,7 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 						strategy="vertical"
 						className="space-y-3"
 					>
-						{items.map((lessonId, index) => (
+						{items.map((lessonId) => (
 							<SortableItem key={lessonId} value={lessonId}>
 								<Item variant="outline">
 									<SortableItemHandle className="opacity-40">
@@ -205,6 +224,42 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 															{formatTimeString(lesson.period)}
 														</Badge>
 													)}
+												</ItemActions>
+												<ItemActions>
+													<DropdownMenu>
+														<DropdownMenuTrigger
+															render={
+																<Button variant="ghost" size="icon-sm">
+																	<EllipsisVerticalIcon />
+																</Button>
+															}
+														/>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem
+																render={
+																	<Link
+																		href={{
+																			pathname: "/slots/new",
+																			query: {
+																				studentId,
+																				lessonId,
+																			},
+																		}}
+																	/>
+																}
+															>
+																<CalendarIcon />
+																Schedule
+															</DropdownMenuItem>
+															<DropdownMenuItem
+																variant="destructive"
+																onClick={() => handleDeleteLesson(lessonId)}
+															>
+																<TrashIcon />
+																Delete
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
 												</ItemActions>
 											</>
 										)}
