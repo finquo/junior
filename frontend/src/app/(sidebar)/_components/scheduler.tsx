@@ -5,6 +5,7 @@ import {
 	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
 	GraduationCapIcon,
+	PlusIcon,
 	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -61,10 +62,10 @@ export function SidebarConfig({
 							title: "Programs",
 							url: "/admin/programs",
 							icon: <VideoIcon />,
-							subItems: plans.map((p) => ({
-								title: p.name,
-								url: "#",
-							})),
+							fetchItems: {
+								api: api.sidebar.programs.queryOptions(),
+								getLink: (id) => `/admin/programs/${id}`,
+							},
 						},
 						{
 							title: "Lessons",
@@ -72,6 +73,7 @@ export function SidebarConfig({
 							icon: <BookOpenCheckIcon />,
 							subItems: [
 								{
+									icon: <PlusIcon />,
 									title: "Create New Lesson",
 									url: "/lessons/new",
 								},
@@ -83,6 +85,7 @@ export function SidebarConfig({
 							icon: <VideoIcon />,
 							subItems: [
 								{
+									icon: <PlusIcon />,
 									title: "Create New Slot",
 									url: "/slots/new",
 								},

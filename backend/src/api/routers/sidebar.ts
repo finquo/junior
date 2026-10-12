@@ -1,54 +1,130 @@
-import { publicProcedure } from "../procedure";
+import { getAPI, getRolesProcedure, publicProcedure } from "@/api/procedure";
+import { plans } from "@/config";
+import { db } from "@/services";
+import { MapRole } from "@/utils/role";
 
 export const sidebarRouter = {
 	example: publicProcedure.handler(() => [
 		{
-			title: "Rajat",
-			id: "1234567890",
-		},
-		{
-			title: "Rajat Sandeep",
-			id: "0987654321",
-		},
-	]),
-	schedulers: publicProcedure.handler(() => [
-		{
-			title: "Schedulers 1",
-			id: "0987654321",
-		},
-		{
-			title: "Schedulers 2",
+			title: "Title",
 			id: "1234567890",
 		},
 	]),
-	teachers: publicProcedure.handler(() => [
-		{
-			title: "Teachers 1",
-			id: "0987654321",
+	schedulers: getRolesProcedure(["admin"]).handler(async ({ context }) => {
+		const data = await getAPI(
+			"db-sidebar-get-schedulers-query",
+			db.query.scheduler.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+				}),
+				orderBy: { createdAt: "desc" },
+				limit: 5,
+				with: {
+					user: true,
+				},
+			}),
+			[],
+		);
+
+		return data.map((item) => ({
+			id: item.id,
+			title: item.user?.name ?? item.id,
+		}));
+	}),
+	teachers: getRolesProcedure(["admin", "scheduler"]).handler(
+		async ({ context }) => {
+			const data = await getAPI(
+				"db-sidebar-get-teachers-query",
+				db.query.teacher.findMany({
+					where: MapRole(context.role, {
+						admin: {},
+						scheduler: {
+							supervisorId: context.user.id,
+						},
+					}),
+					orderBy: { createdAt: "desc" },
+					limit: 5,
+					with: {
+						user: true,
+					},
+				}),
+				[],
+			);
+
+			return data.map((item) => ({
+				id: item.id,
+				title: item.user?.name ?? item.id,
+			}));
 		},
-		{
-			title: "Teachers 2",
-			id: "1234567890",
+	),
+	students: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
+		async ({ context }) => {
+			const data = await getAPI(
+				"db-sidebar-get-students-query",
+				db.query.student.findMany({
+					where: MapRole(context.role, {
+						admin: {},
+						scheduler: {
+							supervisorId: context.user.id,
+						},
+						teacher: {
+							mentorId: context.user.id,
+						},
+					}),
+					orderBy: { createdAt: "desc" },
+					limit: 5,
+					with: {
+						user: true,
+					},
+				}),
+				[],
+			);
+
+			return data.map((item) => ({
+				id: item.id,
+				title: item.user?.name ?? item.id,
+			}));
 		},
-	]),
-	students: publicProcedure.handler(() => [
-		{
-			title: "Students 1",
-			id: "0987654321",
+	),
+	slots: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
+		async ({ context }) => {
+			const data = await getAPI(
+				"db-sidebar-get-slots-query",
+				db.query.slot.findMany({
+					where: MapRole(context.role, {
+						admin: {},
+						scheduler: {
+							schedulerId: context.user.id,
+						},
+						teacher: {
+							teacherId: context.user.id,
+						},
+					}),
+					orderBy: {
+						startTime: "desc",
+					},
+					limit: 5,
+					with: {
+						teacher: { with: { user: true } },
+						student: { with: { user: true } },
+						lesson: true,
+					},
+				}),
+				[],
+			);
+
+			return data.map((item) => ({
+				id: item.id,
+				title: item.lesson?.name
+					? `${item.lesson.name} (${item.student?.user?.name ?? "Student"})`
+					: (item.student?.user?.name ?? "Slot"),
+			}));
 		},
-		{
-			title: "Students 2",
-			id: "1234567890",
-		},
-	]),
-	slots: publicProcedure.handler(() => [
-		{
-			title: "Slots 1",
-			id: "0987654321",
-		},
-		{
-			title: "Slots 2",
-			id: "1234567890",
-		},
-	]),
+	),
+	programs: getRolesProcedure(["admin"]).handler(() => {
+		return plans.map((plan) => ({
+			id: plan.id,
+			title: plan.name,
+		}));
+	}),
 };

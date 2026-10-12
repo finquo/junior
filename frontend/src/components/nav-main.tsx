@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import {
 	Collapsible,
@@ -30,6 +30,7 @@ export type NavMainType = {
 		isActive?: boolean;
 		fetchItems?: FetchItemsType;
 		subItems?: {
+			icon?: React.ReactNode;
 			title: string;
 			url: string;
 		}[];
@@ -73,6 +74,7 @@ export function NavMain({ title, items }: NavMainType) {
 								{item.subItems?.map((subItem) => (
 									<SidebarMenuSubItem key={subItem.title}>
 										<SidebarMenuSubButton render={<a href={subItem.url} />}>
+											{subItem.icon}
 											<span>{subItem.title}</span>
 										</SidebarMenuSubButton>
 									</SidebarMenuSubItem>

@@ -6,6 +6,7 @@ import {
 	BriefcaseBusinessIcon,
 	ComponentIcon,
 	GraduationCapIcon,
+	PlusIcon,
 	ScanEyeIcon,
 	UserPenIcon,
 	UserRoundCogIcon,
@@ -44,6 +45,7 @@ export function SidebarConfig({
 							icon: <UserRoundGroupIcon />,
 							subItems: [
 								{
+									icon: <PlusIcon />,
 									title: "Create User",
 									url: "/admin/users/new",
 								},
@@ -55,10 +57,15 @@ export function SidebarConfig({
 							icon: <UserRoundCogIcon />,
 							subItems: [
 								{
-									title: "Create New Scheduler",
+									icon: <PlusIcon />,
+									title: "Create New",
 									url: "/schedulers/new",
 								},
 							],
+							fetchItems: {
+								api: api.sidebar.schedulers.queryOptions(),
+								getLink: (id) => `/schedulers/${id}`,
+							},
 						},
 						{
 							title: "Teachers",
@@ -66,7 +73,8 @@ export function SidebarConfig({
 							icon: <BriefcaseBusinessIcon />,
 							subItems: [
 								{
-									title: "Create New Teacher",
+									icon: <PlusIcon />,
+									title: "Create New",
 									url: "/teachers/new",
 								},
 							],
@@ -81,7 +89,8 @@ export function SidebarConfig({
 							icon: <GraduationCapIcon />,
 							subItems: [
 								{
-									title: "Create New Student",
+									icon: <PlusIcon />,
+									title: "Create New",
 									url: "/students/new",
 								},
 							],
@@ -98,11 +107,11 @@ export function SidebarConfig({
 						{
 							title: "Programs",
 							url: "/admin/programs",
-							icon: <ComponentIcon />,
-							subItems: plans.map((p) => ({
-								title: p.name,
-								url: "#",
-							})),
+							icon: <VideoIcon />,
+							fetchItems: {
+								api: api.sidebar.programs.queryOptions(),
+								getLink: (id) => `/admin/programs/${id}`,
+							},
 						},
 						{
 							title: "Lessons",
@@ -110,7 +119,8 @@ export function SidebarConfig({
 							icon: <BookOpenCheckIcon />,
 							subItems: [
 								{
-									title: "Create New Lesson",
+									icon: <PlusIcon />,
+									title: "Create New",
 									url: "/lessons/new",
 								},
 							],
@@ -121,7 +131,8 @@ export function SidebarConfig({
 							icon: <VideoIcon />,
 							subItems: [
 								{
-									title: "Create New Slot",
+									icon: <PlusIcon />,
+									title: "Create New",
 									url: "/slots/new",
 								},
 							],
