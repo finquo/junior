@@ -2,7 +2,7 @@
 	"name": "backend",
 	"type": "module",
 	"scripts": {
-		"cf:dev": "wrangler dev --port 3000",
+		"cf:dev": "wrangler dev --port 3000 --env-file=../.env",
 		"compile": "varlock codegen && tsdown",
 		"construct": "varlock codegen && tsdown",
 		"build": "varlock codegen && tsdown",

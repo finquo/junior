@@ -378,7 +378,6 @@ export function EditTeacherDrawer({
 									Save Changes
 								</Button>
 								<DrawerClose
-									nativeButton={false}
 									render={<Button variant="outline" type="button" />}
 								>
 									Close

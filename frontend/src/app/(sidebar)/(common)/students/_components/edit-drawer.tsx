@@ -461,7 +461,6 @@ export function EditStudentDrawer({
 									Save Changes
 								</Button>
 								<DrawerClose
-									nativeButton={false}
 									render={<Button variant="outline" type="button" />}
 								>
 									Close

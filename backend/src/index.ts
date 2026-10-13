@@ -92,7 +92,7 @@ app.use("/openapi/*", async (c, next) => {
 								},
 								{
 									name: "Cloudflare",
-									url: "https://app.finquo.workers.dev/api",
+									url: "https://junior.finquo.workers.dev/api",
 								},
 							],
 						},
