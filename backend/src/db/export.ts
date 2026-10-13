@@ -1,6 +1,6 @@
-import type { scheduler, student, teacher, user } from "@/db/schema";
+import type { scheduler, student, teacher, user } from "./schema";
 
-export * from "@/db/zod";
+export * from "./zod";
 
 export type SchedulerType = typeof scheduler.$inferSelect;
 export type TeacherType = typeof teacher.$inferSelect;

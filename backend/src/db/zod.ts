@@ -105,7 +105,7 @@ export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
 		period: intervalHourZod.optional(),
 	});
 
-export const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
+const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
 	schema: T,
 ) =>
 	schema

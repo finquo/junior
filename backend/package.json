@@ -37,6 +37,11 @@
 			"types": "./dist/auth/export.d.mts",
 			"default": "./dist/auth/export.mjs"
 		},
+		"./db": {
+			"import": "./dist/db/export.mjs",
+			"types": "./dist/db/export.d.mts",
+			"default": "./dist/db/export.mjs"
+		},
 		"./api": {
 			"types": "./dist/api/index.d.mts",
 			"import": "./dist/api/index.mjs",

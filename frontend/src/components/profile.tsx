@@ -1,12 +1,10 @@
+import type { Address, Experience, Note } from "backend/config";
 import type {
-	Address,
-	Experience,
-	Note,
 	SchedulerType,
 	StudentType,
 	TeacherType,
 	UserType,
-} from "backend/config";
+} from "backend/db";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	Avatar,

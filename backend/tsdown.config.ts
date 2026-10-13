@@ -19,6 +19,7 @@ export default defineConfig([
 			"./src/auth/export.ts",
 			"./src/api/index.ts",
 			"./src/config/index.ts",
+			"./src/db/export.ts",
 		],
 		format: "esm",
 		outDir: "./dist",

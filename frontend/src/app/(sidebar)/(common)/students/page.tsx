@@ -18,7 +18,8 @@ import {
 	tableFeatures,
 	useTable,
 } from "@tanstack/react-table";
-import { Languages, type StudentType } from "backend/config";
+import { Languages } from "backend/config";
+import type { StudentType } from "backend/db";
 import { PenIcon } from "lucide-react";
 import { getRelateTime } from "utils";
 import Loader from "@/components/loader";

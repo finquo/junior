@@ -9,9 +9,8 @@ import {
 	plans,
 	type Schooling,
 	schoolingZod,
-	UpdateStudentSchema,
 } from "backend/config";
-import { PenIcon } from "lucide-react";
+import { UpdateStudentSchema } from "backend/db";
 import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
