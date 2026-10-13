@@ -51,6 +51,7 @@
 				}
 			},
 			"a11y": {
+				"useSemanticElements": "info",
 				"useKeyWithClickEvents": "info",
 				"useValidAriaRole": "info",
 				"noStaticElementInteractions": "info"

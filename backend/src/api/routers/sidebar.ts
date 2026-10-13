@@ -125,6 +125,6 @@ export const sidebarRouter = {
 		return plans.map((plan) => ({
 			id: plan.id,
 			title: plan.name,
-		}));
+		})) as Record<"id" | "title", string>[];
 	}),
 };
