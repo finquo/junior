@@ -1,13 +1,13 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
 import { admin as adminPlugin } from "better-auth/plugins";
-import { createDb } from "@/db";
+import type { Database } from "@/db";
 import * as schema from "@/db/schema/auth";
 import { ac, roles } from "./permissions";
 
 export * from "./permissions";
 
-export function createAuth() {
+export function createAuth(db: Database) {
 	return betterAuth({
 		appName: "Finquo Junior",
 		secret: process.env.BETTER_AUTH_SECRET,
@@ -19,9 +19,10 @@ export function createAuth() {
 			enabled: true,
 			disableSignUp: false,
 		},
-		database: drizzleAdapter(createDb(), {
+		database: drizzleAdapter(db, {
 			provider: "pg",
 			schema,
+			transaction: true,
 		}),
 		authCookie: { name: "auth-session" },
 		onAPIError: {
@@ -29,6 +30,9 @@ export function createAuth() {
 			onError: (error) => {
 				console.error("Auth Error:", error);
 			},
+		},
+		logger: {
+			level: "debug",
 		},
 		advanced: {
 			cookiePrefix: "finquo-auth",

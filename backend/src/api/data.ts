@@ -1,5 +1,5 @@
 import type { Role } from "@/auth";
-import type { SchedulerType, StudentType, TeacherType } from "@/config";
+import type { SchedulerType, StudentType, TeacherType } from "@/db/export";
 import { db } from "@/services";
 import { getError, protectedProcedure, tryAPI } from "./procedure";
 
