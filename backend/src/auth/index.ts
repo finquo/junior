@@ -38,6 +38,11 @@ export function createAuth() {
 				httpOnly: true,
 			},
 		},
+		session: {
+			cookieCache: {
+				enabled: true,
+			},
+		},
 		plugins: [
 			adminPlugin({
 				defaultRole: "user",

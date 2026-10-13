@@ -5,12 +5,14 @@ import {
 	ExternalLinkIcon,
 	PenIcon,
 	PlusIcon,
+	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardAction,
@@ -19,15 +21,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Drawer,
-	DrawerClose,
-	DrawerContent,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 import {
 	Table,
@@ -41,6 +34,7 @@ import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials } from "@/lib/utils";
+import { EditStudentDrawer } from "./edit-drawer";
 
 type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
 
@@ -72,37 +66,42 @@ export function StudentProfile({ data }: { data: StudentData }) {
 				</FetchUser>
 
 				<CardAction>
-					<Button
-						variant="outline"
-						size="sm"
-						nativeButton={false}
-						render={<Link href={`/students/${data.id}/lessons`} />}
-					>
-						<BookOpenIcon />
-						Manage Lessons
-					</Button>
-
-					<RenderWhenRole role="scheduler">
-						<Drawer>
-							<DrawerTrigger
-								render={
-									<Button variant="outline" size="sm">
-										<PenIcon />
-										Edit Student
-									</Button>
-								}
-							/>
-							<DrawerContent>
-								<DrawerHeader>
-									<DrawerTitle>Edit Student</DrawerTitle>
-								</DrawerHeader>
-								<DrawerFooter>
-									<DrawerClose render={<Button variant="outline" />}>
-										Close
-									</DrawerClose>
-								</DrawerFooter>
-							</DrawerContent>
-						</Drawer>
+					<ButtonGroup>
+						<Button
+							variant="outline"
+							size="sm"
+							nativeButton={false}
+							render={
+								<Link
+									href={{
+										pathname: "/slots/new",
+										query: {
+											studentId: data.id,
+										},
+									}}
+								/>
+							}
+						>
+							<VideoIcon />
+							Schedule Session
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							nativeButton={false}
+							render={<Link href={`/students/${data.id}/lessons`} />}
+						>
+							<BookOpenIcon />
+							Manage Lessons
+						</Button>
+					</ButtonGroup>
+					<RenderWhenRole role={["admin", "scheduler"]}>
+						<EditStudentDrawer student={data}>
+							<Button variant="outline" size="sm">
+								<PenIcon />
+								Edit
+							</Button>
+						</EditStudentDrawer>
 					</RenderWhenRole>
 				</CardAction>
 			</CardHeader>
@@ -110,6 +109,7 @@ export function StudentProfile({ data }: { data: StudentData }) {
 			<CardContent>
 				<Table>
 					<TableBody>
+						\n{" "}
 						<TableRow>
 							<TableCell>User ID</TableCell>
 							<TableCell>{data.id}</TableCell>

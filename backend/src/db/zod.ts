@@ -1,5 +1,5 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
-import { type ZodObject, type ZodRawShape, type ZodString, z } from "zod";
+import type { ZodObject, ZodRawShape, ZodString } from "zod";
 import {
 	addressZod,
 	availabilityZod,
@@ -7,21 +7,18 @@ import {
 	intervalHourZod,
 	LanguageCodeZod,
 	noteZod,
-	type PlayKeys,
-	planKeys,
+	ProgramZod,
 	quizZod,
 	schoolingZod,
 } from "@/config";
 import * as schema from "./schema/index";
 
-export const { createInsertSchema, createSelectSchema, createUpdateSchema } =
+const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({
 		coerce: {
 			date: true,
 		},
 	});
-
-export const ProgramZod = z.enum(planKeys as [PlayKeys, ...PlayKeys[]]);
 
 // User
 export const SelectUserSchema = createSelectSchema(schema.user);

@@ -14,15 +14,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Drawer,
-	DrawerClose,
-	DrawerContent,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 import {
 	Table,
@@ -36,6 +27,7 @@ import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials } from "@/lib/utils";
+import { EditTeacherDrawer } from "./edit-drawer";
 
 type TeacherData = NonNullable<API_Returns["core"]["teacher"]["get"]>;
 
@@ -76,27 +68,13 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 						View Sessions
 					</Button>
 
-					<RenderWhenRole role="scheduler">
-						<Drawer>
-							<DrawerTrigger
-								render={
-									<Button variant="outline" size="sm">
-										<PenIcon />
-										Edit Teacher
-									</Button>
-								}
-							/>
-							<DrawerContent>
-								<DrawerHeader>
-									<DrawerTitle>Edit Teacher</DrawerTitle>
-								</DrawerHeader>
-								<DrawerFooter>
-									<DrawerClose render={<Button variant="outline" />}>
-										Close
-									</DrawerClose>
-								</DrawerFooter>
-							</DrawerContent>
-						</Drawer>
+					<RenderWhenRole role={["admin", "scheduler"]}>
+						<EditTeacherDrawer teacher={data}>
+							<Button variant="outline" size="sm">
+								<PenIcon />
+								Edit
+							</Button>
+						</EditTeacherDrawer>
 					</RenderWhenRole>
 				</CardAction>
 			</CardHeader>

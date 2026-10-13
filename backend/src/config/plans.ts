@@ -54,4 +54,6 @@ export const plans = [
 
 export const planKeys = plans.map((p) => p.id);
 
+export const ProgramZod = z.enum(planKeys);
+
 export type PlayKeys = (typeof planKeys)[number];

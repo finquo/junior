@@ -65,6 +65,7 @@ import {
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
+import { EditStudentDrawer } from "./_components/edit-drawer";
 
 const features = tableFeatures({
 	columnFilteringFeature,
@@ -254,27 +255,11 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			id: "edit",
 			header: "Edit",
 			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<PenIcon />
-							</Button>
-						}
-					/>
-					<DrawerContent className="overflow-y-auto">
-						<DrawerHeader>
-							<DrawerTitle>Edit Student</DrawerTitle>
-							<DrawerDescription>Edit student record</DrawerDescription>
-						</DrawerHeader>
-						<div className="p-4" />
-						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
+				<EditStudentDrawer student={row.original}>
+					<Button variant="outline" size="icon-sm">
+						<PenIcon />
+					</Button>
+				</EditStudentDrawer>
 			),
 		}),
 	]);

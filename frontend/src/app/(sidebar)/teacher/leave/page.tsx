@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { LeaveRangeOutput } from "backend/config";
+import { PlusIcon } from "lucide-react";
 import { getRangeTime } from "utils";
 import Loader from "@/components/loader";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/components/reui/frame";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ColorBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Table,
@@ -49,7 +51,12 @@ export function LeavesCard({
 				<FrameDescription>View and manage your leaves</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
-						<AddLeaveDrawer />
+						<AddLeaveDrawer>
+							<Button size="sm">
+								<PlusIcon />
+								Add Leave
+							</Button>
+						</AddLeaveDrawer>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>

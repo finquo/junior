@@ -9,6 +9,7 @@ import {
 	inferAdditionalFields,
 	magicLinkClient,
 } from "better-auth/client/plugins";
+import { sileo as toast } from "sileo";
 
 export type { Role, SESSION, USER } from "backend/auth";
 
@@ -24,6 +25,14 @@ export const authConfig = {
 	...(process.env.NEXT_PUBLIC_SERVER_URL
 		? { baseURL: process.env.NEXT_PUBLIC_SERVER_URL }
 		: {}),
+	fetchOptions: {
+		onError: ({ error }) => {
+			toast.error({
+				title: error.name,
+				description: error.message,
+			});
+		},
+	},
 } satisfies BetterAuthClientOptions;
 
 export const authClient = createAuthClient(authConfig);

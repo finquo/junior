@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
 import { mergeDateWithTimeString } from "utils";
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/tabs";
 import { api, refetchAPIs } from "@/hooks/api";
 
-export function AddLeaveDrawer() {
+export function AddLeaveDrawer({ children }: TriggerType) {
 	const [open, setOpen] = useState(false);
 
 	const [startDate, setStartDate] = useState<Date>();
@@ -95,14 +94,7 @@ export function AddLeaveDrawer() {
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger
-				render={
-					<Button size="sm">
-						<PlusIcon />
-						Add Leave
-					</Button>
-				}
-			/>
+			<DrawerTrigger render={children} />
 			<DrawerContent render={<TabsRoot defaultValue="full" />}>
 				<DrawerHeader>
 					<DrawerTitle>Add Leave</DrawerTitle>

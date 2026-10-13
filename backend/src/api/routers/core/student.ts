@@ -131,7 +131,6 @@ export const studentRouter = {
 	update: getRolesProcedure(["admin", "scheduler"])
 		.input(
 			UpdateStudentSchema.omit({
-				supervisorId: true,
 				createdAt: true,
 				updatedAt: true,
 			}).required({

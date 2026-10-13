@@ -67,6 +67,8 @@ import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 
+import { EditTeacherDrawer } from "./_components/edit-drawer";
+
 type TeacherRecord = API_Returns["core"]["teacher"]["list"][number];
 
 const features = tableFeatures({
@@ -258,27 +260,11 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			id: "edit",
 			header: "Edit",
 			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<PenIcon />
-							</Button>
-						}
-					/>
-					<DrawerContent className="overflow-y-auto">
-						<DrawerHeader>
-							<DrawerTitle>Edit Teacher</DrawerTitle>
-							<DrawerDescription>Edit teacher details</DrawerDescription>
-						</DrawerHeader>
-						<div className="p-4" />
-						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
+				<EditTeacherDrawer teacher={row.original}>
+					<Button variant="outline" size="icon-sm">
+						<PenIcon />
+					</Button>
+				</EditTeacherDrawer>
 			),
 		}),
 	]);

@@ -8,8 +8,8 @@ import {
 } from "@tanstack/react-query";
 import { period } from "backend/config";
 import { parseAsInteger, useQueryState } from "nuqs";
+import { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
 	Select,
@@ -45,6 +45,17 @@ export function UserSelector<
 	const [user, setUser] = useQueryState(name);
 	const { data: list } = useQuery(api);
 
+	useEffect(() => {
+		if (onSelect) {
+			if (!list) return;
+
+			const selectedItem = list.find((item) => item.id === user);
+			if (selectedItem) {
+				onSelect(selectedItem);
+			}
+		}
+	}, [user, list, onSelect]);
+
 	return (
 		<Field className="w-auto">
 			<Select
@@ -53,12 +64,6 @@ export function UserSelector<
 				onValueChange={(selectedId) => {
 					if (!selectedId) return;
 					setUser(selectedId);
-					if (onSelect && list) {
-						const selectedItem = list.find((item) => item.id === selectedId);
-						if (selectedItem) {
-							onSelect(selectedItem);
-						}
-					}
 				}}
 			>
 				<SelectTrigger title="Hi">
@@ -118,19 +123,25 @@ export function LessonSelector({
 	const [lesson, setLesson] = useQueryState("lessonId");
 	const { data: list } = useQuery(api.core.lesson.list.queryOptions());
 
+	useEffect(() => {
+		if (onSelect) {
+			if (!list) return;
+
+			const selectedItem = list.find((item) => item.id === lesson);
+			if (selectedItem) {
+				onSelect(selectedItem);
+			}
+		}
+	}, [lesson, list, onSelect]);
+
 	return (
 		<Field className="w-auto">
 			<Select
 				defaultValue={defaultLesson}
 				value={lesson}
 				onValueChange={(c) => {
+					if (!c) return;
 					setLesson(c);
-					if (onSelect && list) {
-						const selectedItem = list.find((item) => item.id === lesson);
-						if (selectedItem) {
-							onSelect(selectedItem);
-						}
-					}
 				}}
 			>
 				<SelectTrigger>
