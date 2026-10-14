@@ -197,23 +197,23 @@ function DataTableDateFilterContent<TData extends RowData>({
 
 	return (
 		<Popover>
-			<PopoverTrigger
-				render={<Button variant="outline" className="border-dashed" />}
-			>
-				{hasValue ? (
-					<div
-						role="button"
-						aria-label={`Clear ${title} filter`}
-						tabIndex={0}
-						onClick={onReset}
-						className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-					>
-						<XCircle />
-					</div>
-				) : (
-					<CalendarIcon />
-				)}
-				{label}
+			<PopoverTrigger asChild>
+				<Button variant="outline" className="border-dashed">
+					{hasValue ? (
+						<div
+							role="button"
+							aria-label={`Clear ${title} filter`}
+							tabIndex={0}
+							onClick={onReset}
+							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						>
+							<XCircle />
+						</div>
+					) : (
+						<CalendarIcon />
+					)}
+					{label}
+				</Button>
 			</PopoverTrigger>
 			<PopoverContent dir={dir} className="w-auto p-0" align="start">
 				{multiple ? (

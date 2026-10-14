@@ -202,27 +202,23 @@ function CopyMenu({ fromDay, fromLabel, onApply }: CopyMenuProps) {
 	return (
 		<DropdownMenu open={open} onOpenChange={setOpen}>
 			<Tooltip>
-				<TooltipTrigger
-					render={
-						<DropdownMenuTrigger
-							render={
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon-sm"
-									aria-label={`Copy ${fromLabel} hours to other days`}
-									className="text-muted-foreground hover:text-foreground"
-								>
-									{copied ? (
-										<Check className="size-4 text-primary" />
-									) : (
-										<Copy className="size-4" />
-									)}
-								</Button>
-							}
-						/>
-					}
-				/>
+				<TooltipTrigger asChild>
+					<DropdownMenuTrigger asChild>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							aria-label={`Copy ${fromLabel} hours to other days`}
+							className="text-muted-foreground hover:text-foreground"
+						>
+							{copied ? (
+								<Check className="size-4 text-primary" />
+							) : (
+								<Copy className="size-4" />
+							)}
+						</Button>
+					</DropdownMenuTrigger>
+				</TooltipTrigger>
 				<TooltipContent>Copy times</TooltipContent>
 			</Tooltip>
 
@@ -333,20 +329,18 @@ function DayRow({ day, label, state, options, onChange, onCopy }: DayRowProps) {
 	const actions = (
 		<>
 			<Tooltip>
-				<TooltipTrigger
-					render={
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon-sm"
-							aria-label={`Add time range to ${label}`}
-							onClick={addRange}
-							className="text-muted-foreground hover:text-foreground"
-						>
-							<Plus className="size-4" />
-						</Button>
-					}
-				/>
+				<TooltipTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						aria-label={`Add time range to ${label}`}
+						onClick={addRange}
+						className="text-muted-foreground hover:text-foreground"
+					>
+						<Plus className="size-4" />
+					</Button>
+				</TooltipTrigger>
 				<TooltipContent>Add time</TooltipContent>
 			</Tooltip>
 			<CopyMenu fromDay={day} fromLabel={label} onApply={onCopy} />
@@ -434,20 +428,18 @@ function DayRow({ day, label, state, options, onChange, onCopy }: DayRowProps) {
 							</div>
 
 							<Tooltip>
-								<TooltipTrigger
-									render={
-										<Button
-											type="button"
-											variant="ghost"
-											size="icon-sm"
-											aria-label="Remove time range"
-											onClick={() => removeRange(r.id)}
-											className="text-muted-foreground hover:text-foreground"
-										>
-											<X className="size-4" />
-										</Button>
-									}
-								/>
+								<TooltipTrigger asChild>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon-sm"
+										aria-label="Remove time range"
+										onClick={() => removeRange(r.id)}
+										className="text-muted-foreground hover:text-foreground"
+									>
+										<X className="size-4" />
+									</Button>
+								</TooltipTrigger>
 								<TooltipContent>Remove</TooltipContent>
 							</Tooltip>
 						</div>

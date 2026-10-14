@@ -10,26 +10,24 @@ export function ErrorAuthCardFooter(props?: { link?: string; label?: string }) {
 	return (
 		<CardFooter>
 			<Button
-				render={<Link href={"/"} />}
+				asChild
 				className="flex-1"
 				variant={"secondary"}
-				nativeButton={false}
 			>
-				Go to Home
+				<Link href={"/"}>Go to Home</Link>
 			</Button>
 			<Button
 				className="flex-1"
-				nativeButton={false}
-				render={
-					<Link
-						href={
-							(props?.link as "/") ??
-							`/login?redirect_to=${encodeURIComponent(pathname)}`
-						}
-					/>
-				}
+				asChild
 			>
-				Go to {props?.label ?? "Login"}
+				<Link
+					href={
+						(props?.link as "/") ??
+						`/login?redirect_to=${encodeURIComponent(pathname)}`
+					}
+				>
+					Go to {props?.label ?? "Login"}
+				</Link>
 			</Button>
 		</CardFooter>
 	);

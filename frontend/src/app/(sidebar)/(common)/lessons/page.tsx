@@ -86,20 +86,17 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				const lesson = row.original;
 				return (
 					<Drawer>
-						<DrawerTrigger
-							nativeButton={false}
-							render={
-								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-							}
-						>
-							<ItemContent>
-								<ItemTitle>{lesson.name}</ItemTitle>
-								{lesson.description && (
-									<ItemDescription className="line-clamp-1">
-										{lesson.description}
-									</ItemDescription>
-								)}
-							</ItemContent>
+						<DrawerTrigger asChild>
+							<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+								<ItemContent>
+									<ItemTitle>{lesson.name}</ItemTitle>
+									{lesson.description && (
+										<ItemDescription className="line-clamp-1">
+											{lesson.description}
+										</ItemDescription>
+									)}
+								</ItemContent>
+							</Item>
 						</DrawerTrigger>
 						<DrawerContent className="overflow-y-auto">
 							<DrawerHeader>
@@ -149,8 +146,8 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 								</Table>
 							</div>
 							<DrawerFooter>
-								<DrawerClose render={<Button variant="outline" />}>
-									Close
+								<DrawerClose asChild>
+									<Button variant="outline">Close</Button>
 								</DrawerClose>
 							</DrawerFooter>
 						</DrawerContent>
@@ -159,31 +156,18 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			},
 		}),
 		columnHelper.accessor("language", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Language</TooltipTrigger>
-					<TooltipContent>Instruction medium of the lesson</TooltipContent>
-				</Tooltip>
+			header: "Language",
+			cell: ({ getValue }) => (
+				<Badge variant="outline">
+					{Languages[getValue() as keyof typeof Languages] ?? getValue()}
+				</Badge>
 			),
-			cell: ({ getValue }) => {
-				const val = getValue();
-				return (
-					<Badge variant="secondary">
-						{Languages[val as keyof typeof Languages] ?? val}
-					</Badge>
-				);
-			},
 		}),
 		columnHelper.accessor("period", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Period</TooltipTrigger>
-					<TooltipContent>Duration or interval of the lesson</TooltipContent>
-				</Tooltip>
-			),
+			header: "Duration",
 			cell: ({ getValue }) => {
 				const val = getValue();
-				return val ? String(val) : "—";
+				return val ? `${val} mins` : "—";
 			},
 		}),
 		columnHelper.accessor("createdAt", {
@@ -195,21 +179,19 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			header: "Edit",
 			cell: ({ row }) => (
 				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<PenIcon />
-							</Button>
-						}
-					/>
+					<DrawerTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<PenIcon />
+						</Button>
+					</DrawerTrigger>
 					<DrawerContent className="overflow-y-auto">
 						<DrawerHeader>
 							<DrawerTitle>Edit Lesson</DrawerTitle>
 							<DrawerDescription>Edit {row.original.name}</DrawerDescription>
 						</DrawerHeader>
 						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
+							<DrawerClose asChild>
+								<Button variant="outline">Close</Button>
 							</DrawerClose>
 						</DrawerFooter>
 					</DrawerContent>
@@ -236,9 +218,11 @@ export default function Page() {
 	return (
 		<Frame>
 			<FrameHeader className="flex flex-row items-center justify-end">
-				<Button render={<Link href="/lessons/new" />} nativeButton={false}>
-					<PlusIcon />
-					Create Lesson
+				<Button asChild>
+					<Link href="/lessons/new">
+						<PlusIcon />
+						Create Lesson
+					</Link>
 				</Button>
 			</FrameHeader>
 			<FramePanel>

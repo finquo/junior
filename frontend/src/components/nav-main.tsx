@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRightIcon, PlusIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import {
 	Collapsible,
@@ -47,41 +47,47 @@ export function NavMain({ title, items }: NavMainType) {
 						key={item.title}
 						defaultOpen={item.isActive}
 						className="group/collapsible"
-						render={<SidebarMenuItem />}
+						asChild
 					>
-						<SidebarMenuButton
-							tooltip={item.title}
-							render={<CollapsibleTrigger />}
-						>
-							<Link href={item.url as "/"}>{item.icon}</Link>
-							<span>{item.title}</span>
-							<Button
-								disabled={
-									(!item.subItems || item.subItems.length === 0) &&
-									!item.fetchItems
-								}
-								className={"ml-auto"}
-								variant={"outline"}
-								size={"icon-xs"}
-								render={<div />}
-								nativeButton={false}
-							>
-								<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-							</Button>
-						</SidebarMenuButton>
-						<CollapsibleContent>
-							<SidebarMenuSub>
-								{item.subItems?.map((subItem) => (
-									<SidebarMenuSubItem key={subItem.title}>
-										<SidebarMenuSubButton render={<a href={subItem.url} />}>
-											{subItem.icon}
-											<span>{subItem.title}</span>
-										</SidebarMenuSubButton>
-									</SidebarMenuSubItem>
-								))}
-								{item.fetchItems && <FetchSideBarItems {...item.fetchItems} />}
-							</SidebarMenuSub>
-						</CollapsibleContent>
+						<SidebarMenuItem>
+							<CollapsibleTrigger asChild>
+								<SidebarMenuButton tooltip={item.title}>
+									<Link href={item.url as "/"}>{item.icon}</Link>
+									<span>{item.title}</span>
+									<Button
+										disabled={
+											(!item.subItems || item.subItems.length === 0) &&
+											!item.fetchItems
+										}
+										className={"ml-auto"}
+										variant={"outline"}
+										size={"icon-xs"}
+										asChild
+									>
+										<div>
+											<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+										</div>
+									</Button>
+								</SidebarMenuButton>
+							</CollapsibleTrigger>
+							<CollapsibleContent>
+								<SidebarMenuSub>
+									{item.subItems?.map((subItem) => (
+										<SidebarMenuSubItem key={subItem.title}>
+											<SidebarMenuSubButton asChild>
+												<a href={subItem.url}>
+													{subItem.icon}
+													<span>{subItem.title}</span>
+												</a>
+											</SidebarMenuSubButton>
+										</SidebarMenuSubItem>
+									))}
+									{item.fetchItems && (
+										<FetchSideBarItems {...item.fetchItems} />
+									)}
+								</SidebarMenuSub>
+							</CollapsibleContent>
+						</SidebarMenuItem>
 					</Collapsible>
 				))}
 			</SidebarMenu>
@@ -112,8 +118,10 @@ const FetchSideBarItems = ({ api, getLink }: FetchItemsType) => {
 
 	return items?.map((subItem) => (
 		<SidebarMenuSubItem key={subItem.title}>
-			<SidebarMenuSubButton render={<Link href={getLink(subItem.id) as "/"} />}>
-				<span>{subItem.title}</span>
+			<SidebarMenuSubButton asChild>
+				<Link href={getLink(subItem.id) as "/"}>
+					<span>{subItem.title}</span>
+				</Link>
 			</SidebarMenuSubButton>
 		</SidebarMenuSubItem>
 	));

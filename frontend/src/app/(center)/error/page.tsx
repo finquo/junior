@@ -49,17 +49,15 @@ export default function () {
 				<Button
 					className="grow"
 					variant={"secondary"}
-					render={<Link href={`mailto:${supportEmailLink}`} />}
-					nativeButton={false}
+					asChild
 				>
-					Contact Support
+					<Link href={`mailto:${supportEmailLink}`}>Contact Support</Link>
 				</Button>
 				<Button
 					className="grow"
-					render={<Link href={"/"} />}
-					nativeButton={false}
+					asChild
 				>
-					Go to Homepage
+					<Link href={"/"}>Go to Homepage</Link>
 				</Button>
 			</CardFooter>
 		</Card>

@@ -74,11 +74,9 @@ export function TimeCard() {
 					<TabsList className="w-auto">
 						{TIME_PERIOD_GROUPS.map((group) => (
 							<Tooltip key={group.key}>
-								<TooltipTrigger
-									render={
-										<TabsTrigger value={group.key}>{group.label}</TabsTrigger>
-									}
-								/>
+								<TooltipTrigger asChild>
+									<TabsTrigger value={group.key}>{group.label}</TabsTrigger>
+								</TooltipTrigger>
 								<TooltipContent className="capitalize">
 									{group.key}
 								</TooltipContent>
@@ -108,8 +106,10 @@ export function TimeCard() {
 			</CardContent>
 			<CardFooter>
 				<Dialog>
-					<DialogTrigger render={<Button variant="outline" size="sm" />}>
-						Pick Presize Time
+					<DialogTrigger asChild>
+						<Button variant="outline" size="sm">
+							Pick Presize Time
+						</Button>
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>

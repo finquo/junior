@@ -94,122 +94,117 @@ export function AddLeaveDrawer({ children }: TriggerType) {
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger render={children} />
-			<DrawerContent render={<TabsRoot defaultValue="full" />}>
-				<DrawerHeader>
-					<DrawerTitle>Add Leave</DrawerTitle>
-					<DrawerDescription>
-						Choose leave duration and select dates.
-					</DrawerDescription>
-				</DrawerHeader>
-				<DrawerInner>
-					<TabsList className="w-full">
-						<TabsTrigger value="full">Full Day</TabsTrigger>
-						<TabsTrigger value="multiple">Multiple Days</TabsTrigger>
-						<TabsTrigger value="partial">Partial Day</TabsTrigger>
-					</TabsList>
+			<DrawerTrigger asChild>{children}</DrawerTrigger>
+			<DrawerContent>
+				<TabsRoot defaultValue="full">
+					<DrawerHeader>
+						<DrawerTitle>Add Leave</DrawerTitle>
+						<DrawerDescription>
+							Choose leave duration and select dates.
+						</DrawerDescription>
+					</DrawerHeader>
+					<DrawerInner>
+						<TabsList className="w-full">
+							<TabsTrigger value="full">Full Day</TabsTrigger>
+							<TabsTrigger value="multiple">Multiple Days</TabsTrigger>
+							<TabsTrigger value="partial">Partial Day</TabsTrigger>
+						</TabsList>
 
-					<TabsContent value="full">
-						<Calendar
-							className="w-full rounded-xl"
-							buttonVariant="default"
-							mode="single"
-							disablePreviousDates
-							selected={startDate}
-							onSelect={setStartDate}
-							defaultMonth={new Date()}
-							showOutsideDays={false}
-						/>
-					</TabsContent>
-
-					<TabsContent value="multiple">
-						<Calendar
-							className="w-full rounded-xl"
-							buttonVariant="default"
-							mode="range"
-							numberOfMonths={1}
-							disablePreviousDates
-							selected={
-								startDate ? { from: startDate, to: endDate } : undefined
-							}
-							onSelect={(range) => {
-								setStartDate(range?.from);
-								setEndDate(range?.to);
-							}}
-							defaultMonth={new Date()}
-							showOutsideDays={false}
-						/>
-					</TabsContent>
-
-					<TabsContent value="partial">
-						<Calendar
-							className="w-full rounded-xl"
-							buttonVariant="default"
-							mode="single"
-							disablePreviousDates
-							selected={startDate}
-							onSelect={setStartDate}
-							defaultMonth={new Date()}
-							showOutsideDays={false}
-						/>
-						<Field>
-							<FieldLabel>Start Time</FieldLabel>
-							<Input
-								type="time"
-								value={startTime}
-								onChange={(e) => setStartTime(e.target.value)}
+						<TabsContent value="full">
+							<Calendar
+								className="w-full rounded-xl"
+								buttonVariant="default"
+								mode="single"
+								disablePreviousDates
+								selected={startDate}
+								onSelect={setStartDate}
+								defaultMonth={new Date()}
+								showOutsideDays={false}
 							/>
-						</Field>
-						<Field>
-							<FieldLabel>End Time</FieldLabel>
-							<Input
-								type="time"
-								value={endTime}
-								onChange={(e) => setEndTime(e.target.value)}
-							/>
-						</Field>
-					</TabsContent>
-				</DrawerInner>
+						</TabsContent>
 
-				<DrawerFooter>
-					<TabsPanel
-						value="full"
-						render={
+						<TabsContent value="multiple">
+							<Calendar
+								className="w-full rounded-xl"
+								buttonVariant="default"
+								mode="range"
+								numberOfMonths={1}
+								disablePreviousDates
+								selected={
+									startDate ? { from: startDate, to: endDate } : undefined
+								}
+								onSelect={(range) => {
+									setStartDate(range?.from);
+									setEndDate(range?.to);
+								}}
+								defaultMonth={new Date()}
+								showOutsideDays={false}
+							/>
+						</TabsContent>
+
+						<TabsContent value="partial">
+							<Calendar
+								className="w-full rounded-xl"
+								buttonVariant="default"
+								mode="single"
+								disablePreviousDates
+								selected={startDate}
+								onSelect={setStartDate}
+								defaultMonth={new Date()}
+								showOutsideDays={false}
+							/>
+							<Field>
+								<FieldLabel>Start Time</FieldLabel>
+								<Input
+									type="time"
+									value={startTime}
+									onChange={(e) => setStartTime(e.target.value)}
+								/>
+							</Field>
+							<Field>
+								<FieldLabel>End Time</FieldLabel>
+								<Input
+									type="time"
+									value={endTime}
+									onChange={(e) => setEndTime(e.target.value)}
+								/>
+							</Field>
+						</TabsContent>
+					</DrawerInner>
+
+					<DrawerFooter>
+						<TabsPanel value="full" asChild>
 							<Button
 								disabled={!startDate || isPending}
 								onClick={handleFullConfirm}
-							/>
-						}
-					>
-						{isPending && <Spinner />}
-						Confirm Full Day Leave
-					</TabsPanel>
-					<TabsPanel
-						value="multiple"
-						render={
+							>
+								{isPending && <Spinner />}
+								Confirm Full Day Leave
+							</Button>
+						</TabsPanel>
+						<TabsPanel value="multiple" asChild>
 							<Button
 								disabled={!startDate || !endDate || isPending}
 								onClick={handleMultipleConfirm}
-							/>
-						}
-					>
-						{isPending && <Spinner />}
-						Confirm Multiple Days Leave
-					</TabsPanel>
-					<TabsPanel
-						value="partial"
-						render={
+							>
+								{isPending && <Spinner />}
+								Confirm Multiple Days Leave
+							</Button>
+						</TabsPanel>
+						<TabsPanel value="partial" asChild>
 							<Button
 								disabled={!startDate || !startTime || !endTime || isPending}
 								onClick={handlePartialConfirm}
-							/>
-						}
-					>
-						{isPending && <Spinner />}
-						Confirm Partial Leave
-					</TabsPanel>
-					<DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
-				</DrawerFooter>
+							>
+								{isPending && <Spinner />}
+								Confirm Partial Leave
+							</Button>
+						</TabsPanel>
+						<DrawerClose asChild>
+							<Button variant="outline">Close</Button>
+						</DrawerClose>
+					</DrawerFooter>
+				</TabsRoot>
 			</DrawerContent>
 		</Drawer>
 	);

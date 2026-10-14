@@ -97,12 +97,8 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 				const user = row.original.user;
 				return (
 					<Drawer>
-						<DrawerTrigger
-							nativeButton={false}
-							render={
-								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-							}
-						>
+						<DrawerTrigger asChild>
+							<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
 							<ItemMedia>
 								<Avatar size="sm">
 									<AvatarImage
@@ -116,6 +112,7 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 								<ItemTitle>{user?.name ?? "Teacher"}</ItemTitle>
 								<ItemDescription>{user?.email ?? "—"}</ItemDescription>
 							</ItemContent>
+						</Item>
 						</DrawerTrigger>
 						<DrawerContent className="overflow-y-auto">
 							<DrawerHeader>
@@ -127,9 +124,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 								<TeacherProfile teacher={row.original} />
 							</div>
 							<DrawerFooter>
-								<DrawerClose render={<Button variant="outline" />}>
-									Close
-								</DrawerClose>
+								<DrawerClose asChild>
+								<Button variant="outline">Close</Button>
+							</DrawerClose>
 							</DrawerFooter>
 						</DrawerContent>
 					</Drawer>
@@ -177,17 +174,15 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 				}
 				return (
 					<HoverCard>
-						<HoverCardTrigger
-							render={
-								<span
-									role="button"
-									className="cursor-pointer font-medium text-xs underline decoration-dotted"
-								/>
-							}
-						>
-							<FetchUser id={supervisorId} isPending={<Spinner />}>
+						<HoverCardTrigger asChild>
+							<span
+								role="button"
+								className="cursor-pointer font-medium text-xs underline decoration-dotted"
+							>
+								<FetchUser id={supervisorId} isPending={<Spinner />}>
 								{(supervisor) => supervisor.name}
 							</FetchUser>
+							</span>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-64">
 							<FetchUser id={supervisorId} isPending={<Spinner />}>
@@ -228,13 +223,11 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			),
 			cell: ({ row }) => (
 				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<CalendarIcon />
-							</Button>
-						}
-					/>
+					<DrawerTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<CalendarIcon />
+						</Button>
+					</DrawerTrigger>
 					<DrawerContent className="overflow-y-auto">
 						<DrawerHeader>
 							<DrawerTitle>Teacher Availability</DrawerTitle>
@@ -244,8 +237,8 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 						</DrawerHeader>
 						<div className="p-4" />
 						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
+							<DrawerClose asChild>
+								<Button variant="outline">Close</Button>
 							</DrawerClose>
 						</DrawerFooter>
 					</DrawerContent>

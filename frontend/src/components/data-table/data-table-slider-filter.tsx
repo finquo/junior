@@ -175,34 +175,34 @@ function DataTableSliderFilterContent<TData extends RowData>({
 
 	return (
 		<Popover>
-			<PopoverTrigger
-				render={<Button variant="outline" className="border-dashed" />}
-			>
-				{columnFilterValue ? (
-					<div
-						role="button"
-						aria-label={`Clear ${title} filter`}
-						tabIndex={0}
-						className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						onClick={onReset}
-					>
-						<XCircle />
-					</div>
-				) : (
-					<PlusCircle />
-				)}
-				<span>{title}</span>
-				{columnFilterValue ? (
-					<>
-						<Separator
-							orientation="vertical"
-							className="mx-0.5 data-vertical:h-4 data-vertical:self-center"
-						/>
-						{formatValue(columnFilterValue[0])} -{" "}
-						{formatValue(columnFilterValue[1])}
-						{unit ? ` ${unit}` : ""}
-					</>
-				) : null}
+			<PopoverTrigger asChild>
+				<Button variant="outline" className="border-dashed">
+					{columnFilterValue ? (
+						<div
+							role="button"
+							aria-label={`Clear ${title} filter`}
+							tabIndex={0}
+							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+							onClick={onReset}
+						>
+							<XCircle />
+						</div>
+					) : (
+						<PlusCircle />
+					)}
+					<span>{title}</span>
+					{columnFilterValue ? (
+						<>
+							<Separator
+								orientation="vertical"
+								className="mx-0.5 data-vertical:h-4 data-vertical:self-center"
+							/>
+							{formatValue(columnFilterValue[0])} -{" "}
+							{formatValue(columnFilterValue[1])}
+							{unit ? ` ${unit}` : ""}
+						</>
+					) : null}
+				</Button>
 			</PopoverTrigger>
 			<PopoverContent
 				dir={dir}

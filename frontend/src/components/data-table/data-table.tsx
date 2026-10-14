@@ -1,7 +1,5 @@
 "use client";
 
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import {
 	FlexRender,
 	type Row,
@@ -10,6 +8,7 @@ import {
 	type Table as TanstackTable,
 } from "@tanstack/react-table";
 import { cn } from "cn";
+import { Slot } from "radix-ui";
 import * as React from "react";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { useDirection } from "@/components/ui/direction";
@@ -117,11 +116,15 @@ function DataTableHeader<TData extends RowData>({
 							{headerGroup.headers.map((header) => (
 								<DataTableCellSlot
 									key={header.id}
-									render={<TableHead colSpan={header.colSpan} />}
+									asChild
 									pinned={!!header.column.getIsPinned()}
 									style={getColumnPinningStyle(header.column)}
 								>
-									{header.isPlaceholder ? null : <FlexRender header={header} />}
+									<TableHead colSpan={header.colSpan}>
+										{header.isPlaceholder ? null : (
+											<FlexRender header={header} />
+										)}
+									</TableHead>
 								</DataTableCellSlot>
 							))}
 						</TableRow>
@@ -205,11 +208,13 @@ function DataTableRow<TData extends RowData>({
 								{cells.map(({ cell, pinned, style }) => (
 									<DataTableCellSlot
 										key={cell.id}
-										render={<TableCell />}
+										asChild
 										pinned={pinned}
 										style={style}
 									>
-										<FlexRender cell={cell} />
+										<TableCell>
+											<FlexRender cell={cell} />
+										</TableCell>
 									</DataTableCellSlot>
 								))}
 							</TableRow>
@@ -242,29 +247,30 @@ function DataTableActionBar<TData extends RowData>({
 	);
 }
 
-interface DataTableCellSlotProps extends useRender.ComponentProps<"td"> {
+interface DataTableCellSlotProps extends React.ComponentProps<"td"> {
+	asChild?: boolean;
 	pinned?: boolean;
 }
 
 function DataTableCellSlot({
 	pinned = false,
 	className,
-	render,
+	asChild = false,
+	children,
 	...props
 }: DataTableCellSlotProps) {
-	return useRender({
-		defaultTagName: "td",
-		props: mergeProps<"td">(
-			{
-				className: cn(
-					"overflow-hidden",
-					pinned &&
-						"bg-background transition-colors group-hover/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-has-aria-expanded/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-data-[state=selected]/row:bg-muted",
-					className,
-				),
-			},
-			props,
-		),
-		render,
-	});
+	const cellClassName = cn(
+		"overflow-hidden",
+		pinned &&
+			"bg-background transition-colors group-hover/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-has-aria-expanded/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-data-[state=selected]/row:bg-muted",
+		className,
+	);
+
+	const Comp = asChild ? Slot.Root : "td";
+
+	return (
+		<Comp className={cellClassName} {...props}>
+			{children}
+		</Comp>
+	);
 }

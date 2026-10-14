@@ -94,12 +94,8 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 				<FetchUser id={row.original.id} isPending={<Spinner />}>
 					{(user) => (
 						<Drawer>
-							<DrawerTrigger
-								nativeButton={false}
-								render={
-									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-								}
-							>
+							<DrawerTrigger asChild>
+								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
 								<ItemMedia>
 									<Avatar size="sm">
 										<AvatarImage
@@ -113,7 +109,8 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 									<ItemTitle>{user.name}</ItemTitle>
 									<ItemDescription>{user.email}</ItemDescription>
 								</ItemContent>
-							</DrawerTrigger>
+							</Item>
+						</DrawerTrigger>
 							<DrawerContent className="overflow-y-auto">
 								<DrawerHeader>
 									<DrawerTitle>{user.name}</DrawerTitle>
@@ -124,9 +121,9 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 									<StudentProfile student={row.original} />
 								</div>
 								<DrawerFooter>
-									<DrawerClose render={<Button variant="outline" />}>
-										Close
-									</DrawerClose>
+									<DrawerClose asChild>
+									<Button variant="outline">Close</Button>
+								</DrawerClose>
 								</DrawerFooter>
 							</DrawerContent>
 						</Drawer>
@@ -185,17 +182,15 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 				}
 				return (
 					<HoverCard>
-						<HoverCardTrigger
-							render={
-								<span
-									role="button"
-									className="cursor-pointer font-medium text-xs underline decoration-dotted"
-								/>
-							}
-						>
-							<FetchUser id={supervisorId} isPending={<Spinner />}>
+						<HoverCardTrigger asChild>
+							<span
+								role="button"
+								className="cursor-pointer font-medium text-xs underline decoration-dotted"
+							>
+								<FetchUser id={supervisorId} isPending={<Spinner />}>
 								{(supervisor) => supervisor.name}
 							</FetchUser>
+							</span>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-64">
 							<FetchUser id={supervisorId} isPending={<Spinner />}>
@@ -240,10 +235,11 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 					<Button
 						variant="outline"
 						size="sm"
-						nativeButton={false}
-						render={<a href={link} target="_blank" rel="noreferrer" />}
+						asChild
 					>
-						Join
+						<a href={link} target="_blank" rel="noreferrer">
+							Join
+						</a>
 					</Button>
 				);
 			},

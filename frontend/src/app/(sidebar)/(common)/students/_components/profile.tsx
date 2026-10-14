@@ -70,29 +70,29 @@ export function StudentProfile({ data }: { data: StudentData }) {
 						<Button
 							variant="outline"
 							size="sm"
-							nativeButton={false}
-							render={
-								<Link
-									href={{
-										pathname: "/slots/new",
-										query: {
-											studentId: data.id,
-										},
-									}}
-								/>
-							}
+							asChild
 						>
-							<VideoIcon />
-							Schedule Session
+							<Link
+								href={{
+									pathname: "/slots/new",
+									query: {
+										studentId: data.id,
+									},
+								}}
+							>
+								<VideoIcon />
+								Schedule Session
+							</Link>
 						</Button>
 						<Button
 							variant="outline"
 							size="sm"
-							nativeButton={false}
-							render={<Link href={`/students/${data.id}/lessons`} />}
+							asChild
 						>
-							<BookOpenIcon />
+							<Link href={`/students/${data.id}/lessons`}>
+								<BookOpenIcon />
 							Manage Lessons
+							</Link>
 						</Button>
 					</ButtonGroup>
 					<RenderWhenRole role={["admin", "scheduler"]}>
@@ -128,11 +128,12 @@ export function StudentProfile({ data }: { data: StudentData }) {
 								<Button
 									variant="link"
 									size="sm"
-									nativeButton={false}
-									render={<Link href={`/students/${data.id}/lessons`} />}
+									asChild
 								>
-									{data.lessons?.length ?? 0} lessons
+									<Link href={`/students/${data.id}/lessons`}>
+										{data.lessons?.length ?? 0} lessons
 									<ExternalLinkIcon />
+									</Link>
 								</Button>
 							</TableCell>
 						</TableRow>

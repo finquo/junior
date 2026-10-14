@@ -1,8 +1,7 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { cn } from "cn";
 import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
-import type * as React from "react";
+import { Slot } from "radix-ui";
+import * as React from "react";
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
 	return (
@@ -39,29 +38,28 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 function BreadcrumbLink({
+	asChild,
 	className,
-	render,
 	...props
-}: useRender.ComponentProps<"a">) {
-	return useRender({
-		defaultTagName: "a",
-		props: mergeProps<"a">(
-			{
-				className: cn("transition-colors hover:text-foreground", className),
-			},
-			props,
-		),
-		render,
-		state: {
-			slot: "breadcrumb-link",
-		},
-	});
+}: React.ComponentProps<"a"> & {
+	asChild?: boolean;
+}) {
+	const Comp = asChild ? Slot.Root : "a";
+
+	return (
+		<Comp
+			data-slot="breadcrumb-link"
+			className={cn("transition-colors hover:text-foreground", className)}
+			{...props}
+		/>
+	);
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
 	return (
 		<span
 			data-slot="breadcrumb-page"
+			role="link"
 			aria-disabled="true"
 			aria-current="page"
 			className={cn("font-normal text-foreground", className)}
@@ -82,9 +80,7 @@ function BreadcrumbSeparator({
 			aria-hidden="true"
 			className={cn("[&>svg]:size-3.5", className)}
 			{...props}
-		>
-			{children ?? <ChevronRightIcon />}
-		</li>
+		/>
 	);
 }
 
@@ -102,10 +98,7 @@ function BreadcrumbEllipsis({
 				className,
 			)}
 			{...props}
-		>
-			<MoreHorizontalIcon />
-			<span className="sr-only">More</span>
-		</span>
+		/>
 	);
 }
 

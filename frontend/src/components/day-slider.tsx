@@ -717,38 +717,34 @@ export function DaySlider({
 					{/* Quick jump step buttons */}
 					<div className="flex items-center gap-0.5">
 						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										type="button"
-										variant="outline"
-										size="icon-xs"
-										disabled={disabled || !hasAvailableSpace}
-										onClick={jumpToPrevSlot}
-										aria-label="Previous slot"
-									>
-										<ChevronLeft className="size-3" />
-									</Button>
-								}
-							/>
+							<TooltipTrigger asChild>
+								<Button
+									type="button"
+									variant="outline"
+									size="icon-xs"
+									disabled={disabled || !hasAvailableSpace}
+									onClick={jumpToPrevSlot}
+									aria-label="Previous slot"
+								>
+									<ChevronLeft className="size-3" />
+								</Button>
+							</TooltipTrigger>
 							<TooltipContent>Previous slot</TooltipContent>
 						</Tooltip>
 
 						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										type="button"
-										variant="outline"
-										size="icon-xs"
-										disabled={disabled || !hasAvailableSpace}
-										onClick={jumpToNextSlot}
-										aria-label="Next slot"
-									>
-										<ChevronRight className="size-3" />
-									</Button>
-								}
-							/>
+							<TooltipTrigger asChild>
+								<Button
+									type="button"
+									variant="outline"
+									size="icon-xs"
+									disabled={disabled || !hasAvailableSpace}
+									onClick={jumpToNextSlot}
+									aria-label="Next slot"
+								>
+									<ChevronRight className="size-3" />
+								</Button>
+							</TooltipTrigger>
 							<TooltipContent>Next slot</TooltipContent>
 						</Tooltip>
 					</div>
@@ -761,12 +757,15 @@ export function DaySlider({
 				<div
 					ref={trackRef}
 					onPointerDown={handleTrackPointerDown}
-					className="relative h-12 w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/40 shadow-inner"
+					className="relative h-11 w-full cursor-pointer rounded-lg border border-border bg-muted/40 shadow-inner"
 				>
-					{/* Shaded buffer area: Before lowerLimit */}
-					{lowerMin > trackStartMin && (
+					{/* Lower Bounded Buffer Area (before lowerLimit) */}
+					{isBounded && lowerMin > trackStartMin && (
 						<div
-							style={{ left: 0, width: toPercent(lowerMin) }}
+							style={{
+								left: "0%",
+								width: toPercent(lowerMin),
+							}}
 							className="absolute inset-y-0 border-primary/40 border-r-2 border-dashed bg-muted/80 backdrop-blur-[1px]"
 							title={`Outside active window (before ${minutesToTimeString(lowerMin)})`}
 						>
@@ -774,8 +773,8 @@ export function DaySlider({
 						</div>
 					)}
 
-					{/* Shaded buffer area: After upperLimit */}
-					{upperMin < trackEndMin && (
+					{/* Upper Bounded Buffer Area (after upperLimit) */}
+					{isBounded && upperMin < trackEndMin && (
 						<div
 							style={{
 								left: toPercent(upperMin),
@@ -796,24 +795,22 @@ export function DaySlider({
 
 						return (
 							<Tooltip key={b.id}>
-								<TooltipTrigger
-									render={
-										<div
-											style={{
-												left: toPercent(visibleStart),
-												width: toWidthPercent(visibleEnd - visibleStart),
-											}}
-											className="absolute inset-y-0 z-10 flex cursor-not-allowed items-center justify-center border-border/80 border-r border-l bg-destructive/15 transition-colors hover:bg-destructive/25"
-										>
-											<div className="flex items-center gap-1 overflow-hidden px-1 text-destructive">
-												<Lock className="size-3 shrink-0" />
-												<span className="truncate font-medium text-[10px]">
-													{b.label}
-												</span>
-											</div>
+								<TooltipTrigger asChild>
+									<div
+										style={{
+											left: toPercent(visibleStart),
+											width: toWidthPercent(visibleEnd - visibleStart),
+										}}
+										className="absolute inset-y-0 z-10 flex cursor-not-allowed items-center justify-center border-border/80 border-r border-l bg-destructive/15 transition-colors hover:bg-destructive/25"
+									>
+										<div className="flex items-center gap-1 overflow-hidden px-1 text-destructive">
+											<Lock className="size-3 shrink-0" />
+											<span className="truncate font-medium text-[10px]">
+												{b.label}
+											</span>
 										</div>
-									}
-								/>
+									</div>
+								</TooltipTrigger>
 								<TooltipContent>
 									<p className="font-semibold">{b.label}</p>
 									<p className="text-[11px] opacity-80">

@@ -22,18 +22,16 @@ export default function () {
 				<Button variant={"destructive"}>Logout</Button>
 				<ButtonGroup>
 					<Button
-						nativeButton={false}
+						asChild
 						variant={"outline"}
-						render={<Link href={"/user/edit"} />}
 					>
-						Edit Profile
+						<Link href={"/user/edit"}>Edit Profile</Link>
 					</Button>
 					<Button
-						nativeButton={false}
+						asChild
 						variant={"outline"}
-						render={<Link href={"/me"} />}
 					>
-						Refresh
+						<Link href={"/me"}>Refresh</Link>
 					</Button>
 				</ButtonGroup>
 			</CardFooter>

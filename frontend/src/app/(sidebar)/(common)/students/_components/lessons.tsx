@@ -119,14 +119,12 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 				<FrameTitle>Enrolled Lessons</FrameTitle>
 				<FrameActions>
 					<Drawer>
-						<DrawerTrigger
-							render={
-								<Button variant="outline">
-									<PlusIcon />
-									Add Lesson
-								</Button>
-							}
-						/>
+						<DrawerTrigger asChild>
+							<Button variant="outline">
+								<PlusIcon />
+								Add Lesson
+							</Button>
+						</DrawerTrigger>
 						<DrawerContent>
 							<DrawerHeader>
 								<DrawerTitle>Add Lesson</DrawerTitle>
@@ -156,14 +154,16 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 								<DrawerClose
 									disabled={!selectedLessonId}
 									onClick={handleAddLesson}
-									render={<Button />}
+									asChild
 								>
-									<PlusIcon />
-									Add
+									<Button>
+										<PlusIcon />
+										Add
+									</Button>
 								</DrawerClose>
 
-								<DrawerClose render={<Button variant="outline" />}>
-									Close
+								<DrawerClose asChild>
+									<Button variant="outline">Close</Button>
 								</DrawerClose>
 							</DrawerFooter>
 						</DrawerContent>
@@ -227,29 +227,25 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 												</ItemActions>
 												<ItemActions>
 													<DropdownMenu>
-														<DropdownMenuTrigger
-															render={
-																<Button variant="ghost" size="icon-sm">
-																	<EllipsisVerticalIcon />
-																</Button>
-															}
-														/>
+														<DropdownMenuTrigger asChild>
+															<Button variant="ghost" size="icon-sm">
+																<EllipsisVerticalIcon />
+															</Button>
+														</DropdownMenuTrigger>
 														<DropdownMenuContent align="end">
-															<DropdownMenuItem
-																render={
-																	<Link
-																		href={{
-																			pathname: "/slots/new",
-																			query: {
-																				studentId,
-																				lessonId,
-																			},
-																		}}
-																	/>
-																}
-															>
-																<CalendarIcon />
-																Schedule
+															<DropdownMenuItem asChild>
+																<Link
+																	href={{
+																		pathname: "/slots/new",
+																		query: {
+																			studentId,
+																			lessonId,
+																		},
+																	}}
+																>
+																	<CalendarIcon />
+																	Schedule
+																</Link>
 															</DropdownMenuItem>
 															<DropdownMenuItem
 																variant="destructive"

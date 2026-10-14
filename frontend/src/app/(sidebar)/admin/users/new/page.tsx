@@ -352,12 +352,11 @@ export default function CreateUserPage() {
 					<CardFooter className="flex justify-end gap-3 pt-6">
 						<Button
 							variant="outline"
-							render={<Link href="/admin/users" />}
-							nativeButton={false}
-							disabled={isPending}
-						>
-							Cancel
-						</Button>
+						asChild
+						disabled={isPending}
+					>
+						<Link href="/admin/users">Cancel</Link>
+					</Button>
 						<Button type="submit" disabled={isPending}>
 							{isPending ? <Spinner className="size-4" /> : <UserPlusIcon />}
 							Create User

@@ -91,32 +91,32 @@ function DataTableFacetedFilterContent<TData extends RowData, TValue>({
 			items={options}
 			multiple={multiple}
 		>
-			<FacetedTrigger
-				render={<Button variant="outline" className="border-dashed" />}
-			>
-				{hasSelection ? (
-					<div
-						role="button"
-						aria-label={`Clear ${title} filter`}
-						tabIndex={0}
-						className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-						onClick={onReset}
-					>
-						<XCircle />
-					</div>
-				) : (
-					<PlusCircle />
-				)}
-				{title}
-				{hasSelection && (
-					<>
-						<Separator
-							orientation="vertical"
-							className="mx-0.5 data-vertical:h-4 data-vertical:self-center"
-						/>
-						<FacetedValue />
-					</>
-				)}
+			<FacetedTrigger asChild>
+				<Button variant="outline" className="border-dashed">
+					{hasSelection ? (
+						<div
+							role="button"
+							aria-label={`Clear ${title} filter`}
+							tabIndex={0}
+							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+							onClick={onReset}
+						>
+							<XCircle />
+						</div>
+					) : (
+						<PlusCircle />
+					)}
+					{title}
+					{hasSelection && (
+						<>
+							<Separator
+								orientation="vertical"
+								className="mx-0.5 data-vertical:h-4 data-vertical:self-center"
+							/>
+							<FacetedValue />
+						</>
+					)}
+				</Button>
 			</FacetedTrigger>
 			<FacetedContent dir={dir} className="w-50">
 				<FacetedInput placeholder={title} />

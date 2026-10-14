@@ -1,10 +1,9 @@
 "use client";
 
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { Command as CommandPrimitive } from "cmdk";
 import { cn } from "cn";
 import { Check, ChevronDown } from "lucide-react";
+import { Slot } from "radix-ui";
 import * as React from "react";
 import {
 	Command,
@@ -315,25 +314,23 @@ function FacetedBadgeList({
 
 function FacetedBadge({
 	className,
-	render,
+	asChild = false,
 	...props
-}: useRender.ComponentProps<"span">) {
-	return useRender({
-		defaultTagName: "span",
-		render,
-		state: {
-			slot: "faceted-badge",
-		},
-		props: mergeProps<"span">(
-			{
-				className: cn(
-					"flex h-[calc(--spacing(5.25))] w-fit min-w-0 max-w-full items-center justify-center gap-1 whitespace-nowrap rounded-sm bg-input/60 px-1.5 font-medium text-foreground text-xs [&_svg]:pointer-events-none [&_svg]:size-3 [&_svg]:shrink-0",
-					className,
-				),
-			},
-			props,
-		),
-	});
+}: React.ComponentProps<"span"> & {
+	asChild?: boolean;
+}) {
+	const Comp = asChild ? Slot.Root : "span";
+
+	return (
+		<Comp
+			data-slot="faceted-badge"
+			className={cn(
+				"flex h-[calc(--spacing(5.25))] w-fit min-w-0 max-w-full items-center justify-center gap-1 whitespace-nowrap rounded-sm bg-input/60 px-1.5 font-medium text-foreground text-xs [&_svg]:pointer-events-none [&_svg]:size-3 [&_svg]:shrink-0",
+				className,
+			)}
+			{...props}
+		/>
+	);
 }
 
 function FacetedContent({
@@ -385,19 +382,14 @@ function FacetedCommandItem({
 				"group/command-item relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-selected:bg-muted data-selected:text-foreground data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 data-selected:*:[svg]:text-foreground",
 				className,
 			)}
-			{...mergeProps<"div">(
-				{
-					onPointerDownCapture(event) {
-						// A focusable item steals the input on pointerdown.
-						event.preventDefault();
-					},
-					onMouseDown(event) {
-						// iOS Safari can emit a synthetic mousedown without a pointerdown.
-						event.preventDefault();
-					},
-				},
-				{ onPointerDownCapture, onMouseDown },
-			)}
+			onPointerDownCapture={(event) => {
+				event.preventDefault();
+				onPointerDownCapture?.(event);
+			}}
+			onMouseDown={(event) => {
+				event.preventDefault();
+				onMouseDown?.(event);
+			}}
 			onSelect={onSelect}
 			{...props}
 		/>

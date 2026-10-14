@@ -95,12 +95,9 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					<FetchUser id={studentId} isPending={<Spinner />}>
 						{(user) => (
 							<Drawer>
-								<DrawerTrigger
-									render={
-										<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-									}
-								>
-									<ItemMedia>
+								<DrawerTrigger asChild>
+									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+										<ItemMedia>
 										<Avatar size="sm">
 											<AvatarImage
 												src={user.image ?? undefined}
@@ -113,6 +110,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ItemTitle>{user.name}</ItemTitle>
 										<ItemDescription>{user.email}</ItemDescription>
 									</ItemContent>
+									</Item>
 								</DrawerTrigger>
 								<DrawerContent className="overflow-y-auto">
 									<DrawerHeader>
@@ -123,9 +121,9 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ProfileCard user={user} />
 									</div>
 									<DrawerFooter>
-										<DrawerClose render={<Button variant="outline" />}>
-											Close
-										</DrawerClose>
+										<DrawerClose asChild>
+										<Button variant="outline">Close</Button>
+									</DrawerClose>
 									</DrawerFooter>
 								</DrawerContent>
 							</Drawer>
@@ -146,12 +144,9 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					<FetchUser id={teacherId} isPending={<Spinner />}>
 						{(user) => (
 							<Drawer>
-								<DrawerTrigger
-									render={
-										<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-									}
-								>
-									<ItemMedia>
+								<DrawerTrigger asChild>
+									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+										<ItemMedia>
 										<Avatar size="sm">
 											<AvatarImage
 												src={user.image ?? undefined}
@@ -164,6 +159,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ItemTitle>{user.name}</ItemTitle>
 										<ItemDescription>{user.email}</ItemDescription>
 									</ItemContent>
+									</Item>
 								</DrawerTrigger>
 								<DrawerContent className="overflow-y-auto">
 									<DrawerHeader>
@@ -174,9 +170,9 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 										<ProfileCard user={user} />
 									</div>
 									<DrawerFooter>
-										<DrawerClose render={<Button variant="outline" />}>
-											Close
-										</DrawerClose>
+										<DrawerClose asChild>
+										<Button variant="outline">Close</Button>
+									</DrawerClose>
 									</DrawerFooter>
 								</DrawerContent>
 							</Drawer>
@@ -242,10 +238,11 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					<Button
 						variant="outline"
 						size="sm"
-						nativeButton={false}
-						render={<a href={link} target="_blank" rel="noreferrer" />}
+						asChild
 					>
-						Join
+						<a href={link} target="_blank" rel="noreferrer">
+							Join
+						</a>
 					</Button>
 				);
 			},
@@ -259,13 +256,11 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			header: "Edit",
 			cell: ({ row }) => (
 				<Drawer>
-					<DrawerTrigger
-						render={
-							<Button variant="outline" size="icon-sm">
-								<PenIcon />
-							</Button>
-						}
-					/>
+					<DrawerTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<PenIcon />
+						</Button>
+					</DrawerTrigger>
 					<DrawerContent className="overflow-y-auto">
 						<DrawerHeader>
 							<DrawerTitle>Edit Session</DrawerTitle>
@@ -274,9 +269,9 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 							</DrawerDescription>
 						</DrawerHeader>
 						<DrawerFooter>
-							<DrawerClose render={<Button variant="outline" />}>
-								Close
-							</DrawerClose>
+							<DrawerClose asChild>
+										<Button variant="outline">Close</Button>
+									</DrawerClose>
 						</DrawerFooter>
 					</DrawerContent>
 				</Drawer>

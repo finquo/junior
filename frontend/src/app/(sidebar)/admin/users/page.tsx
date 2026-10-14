@@ -134,24 +134,19 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger
-				render={
-					<Button variant="outline" size="icon-sm">
-						<PenIcon />
-					</Button>
-				}
-			/>
-			<DrawerContent
-				render={
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							form.handleSubmit();
-						}}
-					/>
-				}
-			>
+			<DrawerTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<PenIcon />
+				</Button>
+			</DrawerTrigger>
+			<DrawerContent>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
 				<DrawerHeader>
 					<DrawerTitle>Edit User Role</DrawerTitle>
 					<DrawerDescription>
@@ -196,10 +191,11 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 						{isPending && <Spinner />}
 						Submit
 					</Button>
-					<DrawerClose render={<Button variant="outline" />}>
-						Cancel
+					<DrawerClose asChild>
+						<Button variant="outline">Cancel</Button>
 					</DrawerClose>
 				</DrawerFooter>
+				</form>
 			</DrawerContent>
 		</Drawer>
 	);
@@ -233,13 +229,11 @@ function UserActionsCell({ user }: { user: UserRecord }) {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger
-				render={
-					<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
-						{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
-					</Button>
-				}
-			/>
+			<DropdownMenuTrigger asChild>
+				<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
+					{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
+				</Button>
+			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem onClick={() => impersonate()}>
 					<ExternalLinkIcon />
@@ -299,12 +293,8 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 				const member = row.original;
 				return (
 					<Drawer>
-						<DrawerTrigger
-							nativeButton={false}
-							render={
-								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80" />
-							}
-						>
+						<DrawerTrigger asChild>
+							<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
 							<ItemMedia>
 								<Avatar size="sm">
 									<AvatarImage
@@ -318,6 +308,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								<ItemTitle>{member.name}</ItemTitle>
 								<ItemDescription>{member.email}</ItemDescription>
 							</ItemContent>
+						</Item>
 						</DrawerTrigger>
 						<DrawerContent>
 							<DrawerHeader>
@@ -326,9 +317,9 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 							</DrawerHeader>
 							<ProfileCard user={member} />
 							<DrawerFooter>
-								<DrawerClose render={<Button variant="outline" />}>
-									Close
-								</DrawerClose>
+								<DrawerClose asChild>
+								<Button variant="outline">Close</Button>
+							</DrawerClose>
 							</DrawerFooter>
 						</DrawerContent>
 					</Drawer>
@@ -466,12 +457,11 @@ export default function Page() {
 								</SelectGroup>
 							</SelectContent>
 						</Select>
-						<Button
-							render={<Link href="/admin/users/new" />}
-							nativeButton={false}
-						>
-							<UserPlusIcon />
+						<Button asChild>
+							<Link href="/admin/users/new">
+								<UserPlusIcon />
 							Create User
+							</Link>
 						</Button>
 					</ButtonGroup>
 				</FrameActions>

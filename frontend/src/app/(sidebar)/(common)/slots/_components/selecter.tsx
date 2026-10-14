@@ -20,6 +20,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -43,7 +44,7 @@ export function UserSelector<
 	api: UseQueryOptions<TData, TError, TData, TQueryKey>;
 }) {
 	const [user, setUser] = useQueryState(name);
-	const { data: list } = useQuery(api);
+	const { data: list, isPending } = useQuery(api);
 
 	useEffect(() => {
 		if (onSelect) {
@@ -56,8 +57,19 @@ export function UserSelector<
 		}
 	}, [user, list, onSelect]);
 
+	if (isPending) {
+		return (
+			<Field className="w-full sm:w-auto min-w-[200px]">
+				<div className="flex h-9 w-full min-w-[200px] items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs">
+					<Skeleton className="size-5 rounded-full" />
+					<Skeleton className="h-4 w-28" />
+				</div>
+			</Field>
+		);
+	}
+
 	return (
-		<Field className="w-auto">
+		<Field className="w-full sm:w-auto min-w-[200px]">
 			<Select
 				defaultValue={defaultUser}
 				value={user}
@@ -66,12 +78,18 @@ export function UserSelector<
 					setUser(selectedId);
 				}}
 			>
-				<SelectTrigger title="Hi">
+				<SelectTrigger className="w-full min-w-[200px]" title="Hi">
 					<SelectValue
 						placeholder={`Select a ${label}`}
 						children={(item: string) => (
 							<FetchUser
 								id={item}
+								isPending={
+									<span className="flex items-center gap-2">
+										<Skeleton className="size-5 rounded-full" />
+										<Skeleton className="h-4 w-24" />
+									</span>
+								}
 								children={(user) => (
 									<span className="flex items-center gap-2">
 										<Avatar className="size-5">
@@ -92,6 +110,12 @@ export function UserSelector<
 							<SelectItem key={l.id} value={l.id}>
 								<FetchUser
 									id={l.id}
+									isPending={
+										<span className="flex items-center gap-2">
+											<Skeleton className="size-5 rounded-full" />
+											<Skeleton className="h-4 w-24" />
+										</span>
+									}
 									children={(user) => (
 										<span className="flex items-center gap-2">
 											<Avatar className="size-5">
@@ -121,7 +145,7 @@ export function LessonSelector({
 	onSelect?: (item: API_Returns["core"]["lesson"]["list"][number]) => void;
 }) {
 	const [lesson, setLesson] = useQueryState("lessonId");
-	const { data: list } = useQuery(api.core.lesson.list.queryOptions());
+	const { data: list, isPending } = useQuery(api.core.lesson.list.queryOptions());
 
 	useEffect(() => {
 		if (onSelect) {
@@ -134,8 +158,18 @@ export function LessonSelector({
 		}
 	}, [lesson, list, onSelect]);
 
+	if (isPending) {
+		return (
+			<Field className="w-full sm:w-auto min-w-[200px]">
+				<div className="flex h-9 w-full min-w-[200px] items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs">
+					<Skeleton className="h-4 w-28" />
+				</div>
+			</Field>
+		);
+	}
+
 	return (
-		<Field className="w-auto">
+		<Field className="w-full sm:w-auto min-w-[200px]">
 			<Select
 				defaultValue={defaultLesson}
 				value={lesson}
@@ -144,7 +178,7 @@ export function LessonSelector({
 					setLesson(c);
 				}}
 			>
-				<SelectTrigger>
+				<SelectTrigger className="w-full min-w-[200px]">
 					<SelectValue
 						placeholder={"Select a Lesson"}
 						children={(item: string) => {
@@ -172,9 +206,9 @@ export function PeriodSelector() {
 	const [duration, setDuration] = useQueryState("duration", parseAsInteger);
 
 	return (
-		<Field className="w-auto">
+		<Field className="w-full sm:w-auto min-w-[200px]">
 			<Select value={duration} onValueChange={(p) => setDuration(p)}>
-				<SelectTrigger>
+				<SelectTrigger className="w-full min-w-[200px]">
 					<SelectValue
 						placeholder={"Pick Duration"}
 						children={(item?: number) => {

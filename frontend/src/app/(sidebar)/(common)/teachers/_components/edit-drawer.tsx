@@ -224,7 +224,7 @@ export function EditTeacherDrawer({
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger render={children} />
+			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>Edit Teacher</DrawerTitle>
@@ -377,10 +377,10 @@ export function EditTeacherDrawer({
 									{isPending && <Spinner />}
 									Save Changes
 								</Button>
-								<DrawerClose
-									render={<Button variant="outline" type="button" />}
-								>
-									Close
+								<DrawerClose asChild>
+									<Button variant="outline" type="button">
+										Close
+									</Button>
 								</DrawerClose>
 							</DrawerFooter>
 						)}

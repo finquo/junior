@@ -1,7 +1,7 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import { Slot } from "radix-ui";
+import type * as React from "react";
 import { selectDeterministically } from "@/lib/utils";
 
 const badgeVariants = cva(
@@ -50,26 +50,27 @@ const badgeVariants = cva(
 	},
 );
 
+export interface BadgeProps
+	extends React.ComponentProps<"span">,
+		VariantProps<typeof badgeVariants> {
+	asChild?: boolean;
+}
+
 function Badge({
 	className,
 	variant = "default",
-	render,
+	asChild = false,
 	...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
-	return useRender({
-		defaultTagName: "span",
-		props: mergeProps<"span">(
-			{
-				className: cn(badgeVariants({ variant }), className),
-			},
-			props,
-		),
-		render,
-		state: {
-			slot: "badge",
-			variant,
-		},
-	});
+}: BadgeProps) {
+	const Comp = asChild ? Slot.Root : "span";
+
+	return (
+		<Comp
+			data-slot="badge"
+			className={cn(badgeVariants({ variant }), className)}
+			{...props}
+		/>
+	);
 }
 
 const choices = [
@@ -92,34 +93,37 @@ const choices = [
 	"red",
 ] as const;
 
+export interface ColorBadgeProps
+	extends Omit<React.ComponentProps<"span">, "children">,
+		VariantProps<typeof badgeVariants> {
+	children?: string | null | undefined;
+	asChild?: boolean;
+}
+
 function ColorBadge({
 	className,
 	variant,
-	render,
+	asChild = false,
+	children,
 	...props
-}: Omit<useRender.ComponentProps<"span">, "children"> &
-	VariantProps<typeof badgeVariants> & {
-		children?: string | null | undefined;
-	}) {
-	if (!props.children) return null;
+}: ColorBadgeProps) {
+	if (!children) return null;
 
-	const staticVarient = !variant
-		? selectDeterministically(choices, props.children)
+	const staticVariant = !variant
+		? selectDeterministically(choices, children)
 		: variant;
-	return useRender({
-		defaultTagName: "span",
-		props: mergeProps<"span">(
-			{
-				className: cn(badgeVariants({ variant: staticVarient }), className),
-			},
-			props,
-		),
-		render,
-		state: {
-			slot: "badge",
-			variant,
-		},
-	});
+
+	const Comp = asChild ? Slot.Root : "span";
+
+	return (
+		<Comp
+			data-slot="badge"
+			className={cn(badgeVariants({ variant: staticVariant }), className)}
+			{...props}
+		>
+			{children}
+		</Comp>
+	);
 }
 
 export { Badge, badgeVariants, ColorBadge };

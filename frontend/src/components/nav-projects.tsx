@@ -19,14 +19,16 @@ export type NavProjectsType = {
 
 export function NavProjects({ title, link }: NavProjectsType) {
 	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+		<SidebarGroup>
 			<SidebarGroupLabel>{title}</SidebarGroupLabel>
 			<SidebarMenu>
 				{link.map((item) => (
 					<SidebarMenuItem key={item.name}>
-						<SidebarMenuButton render={<a href={item.url} />}>
-							{item.icon}
-							<span>{item.name}</span>
+						<SidebarMenuButton asChild>
+							<a href={item.url}>
+								{item.icon}
+								<span>{item.name}</span>
+							</a>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				))}

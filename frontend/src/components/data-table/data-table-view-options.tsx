@@ -53,19 +53,17 @@ export function DataTableViewOptions<TData extends RowData>({
 						.filter((column) => columnVisibility[column.id] !== false)
 						.map((column) => column.id)}
 				>
-					<FacetedTrigger
-						render={
-							<Button
-								aria-label="Toggle columns"
-								role="combobox"
-								variant="outline"
-								className="ms-auto hidden lg:flex"
-								disabled={disabled}
-							/>
-						}
-					>
-						<Settings2 className="text-muted-foreground" />
-						View
+					<FacetedTrigger asChild>
+						<Button
+							aria-label="Toggle columns"
+							role="combobox"
+							variant="outline"
+							className="ms-auto hidden lg:flex"
+							disabled={disabled}
+						>
+							<Settings2 className="text-muted-foreground" />
+							View
+						</Button>
 					</FacetedTrigger>
 					<FacetedContent
 						dir={dir}

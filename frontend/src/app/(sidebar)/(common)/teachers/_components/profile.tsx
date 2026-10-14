@@ -61,11 +61,12 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 					<Button
 						variant="outline"
 						size="sm"
-						nativeButton={false}
-						render={<Link href={`/slots/${data.id}`} />}
+						asChild
 					>
-						<CalendarIcon />
+						<Link href={`/slots/${data.id}`}>
+							<CalendarIcon />
 						View Sessions
+						</Link>
 					</Button>
 
 					<RenderWhenRole role={["admin", "scheduler"]}>
