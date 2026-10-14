@@ -16,6 +16,7 @@
 			"@orpc/zod": "^2.0.0-beta.40",
 			"@types/node": "^26.4.1",
 			"better-auth": "1.7.5",
+			"next": "^16.3.4",
 			"typescript": "^6.0.3",
 			"varlock": "1.21.0",
 			"wrangler": "^4.139.0",
@@ -36,6 +37,7 @@
 		"env:generate": "vp run -r env:generate"
 	},
 	"dependencies": {
+		"next": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

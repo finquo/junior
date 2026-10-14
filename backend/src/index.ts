@@ -94,6 +94,10 @@ app.use("/openapi/*", async (c, next) => {
 									name: "Cloudflare",
 									url: "https://junior.finquo.workers.dev/api",
 								},
+								{
+									name: "Vercel",
+									url: "https://finquo-junior.vercel.app/api",
+								},
 							],
 						},
 					}),
