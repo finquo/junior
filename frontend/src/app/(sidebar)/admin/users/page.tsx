@@ -2,50 +2,36 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-	type ColumnDef,
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	createColumnHelper,
-	createFilteredRowModel,
-	createPaginatedRowModel,
-	createSortedRowModel,
-	filterFn_includesString,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	sortFn_alphanumeric,
-	sortFn_text,
-	tableFeatures,
-	useTable,
-} from "@tanstack/react-table";
-import { useDebounce } from "@uidotdev/usehooks";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
 	PenIcon,
-	Search,
 	TrashIcon,
+	UserIcon,
 	UserPlusIcon,
 	UserXIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useQueryState } from "nuqs";
-import { useState } from "react";
 import { sileo as toast } from "sileo";
 import { getRelateTime } from "utils";
-import Loader from "@/components/loader";
+import { CopyButton } from "@/components/copy";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { ProfileCard } from "@/components/profile";
 import {
 	Frame,
 	FrameActions,
+	FrameDescription,
 	FrameHeader,
 	FramePanel,
+	FrameTitle,
 } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -66,11 +52,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from "@/components/ui/input-group";
-import {
 	Item,
 	ItemContent,
 	ItemDescription,
@@ -87,35 +68,36 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { api } from "@/hooks/api";
+import { api, queryClient } from "@/hooks/api";
 import { authClient } from "@/hooks/auth";
+import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
-import type { Role } from "@/lib/auth";
+import type { DataTableFeatures } from "@/lib/data-table-features";
 import { rolesObject } from "@/lib/role";
 import { snakeToTitleCase } from "@/lib/utils";
 
 type UserRecord = API_Returns["admin"]["getUsers"][number];
 
-function EditUserDrawer({ user }: { user: UserRecord }) {
-	const [open, setOpen] = useState(false);
+const roleFilterOptions = rolesObject.map((item) => ({
+	label: item.label ?? item.value,
+	value: item.value,
+}));
 
+const statusFilterOptions = [
+	{ label: "Active", value: "active" },
+	{ label: "Banned", value: "banned" },
+];
+
+function EditRoleDrawerContent({ user }: { user: UserRecord }) {
 	const { mutateAsync, isPending } = useMutation(
 		api.admin.promote.mutationOptions({
 			onSuccess: () => {
+				queryClient.invalidateQueries();
 				toast.success({ title: "Role updated successfully" });
-				setOpen(false);
 			},
 		}),
 	);
@@ -133,20 +115,14 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 	});
 
 	return (
-		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger asChild>
-				<Button variant="outline" size="icon-sm">
-					<PenIcon />
-				</Button>
-			</DrawerTrigger>
-			<DrawerContent>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						form.handleSubmit();
-					}}
-				>
+		<DrawerContent>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+			>
 				<DrawerHeader>
 					<DrawerTitle>Edit User Role</DrawerTitle>
 					<DrawerDescription>
@@ -192,16 +168,15 @@ function EditUserDrawer({ user }: { user: UserRecord }) {
 						Submit
 					</Button>
 					<DrawerClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Close</Button>
 					</DrawerClose>
 				</DrawerFooter>
-				</form>
-			</DrawerContent>
-		</Drawer>
+			</form>
+		</DrawerContent>
 	);
 }
 
-function UserActionsCell({ user }: { user: UserRecord }) {
+function UserActions({ user }: { user: UserRecord }) {
 	const { mutateAsync: impersonate, isPending: isImpersonating } = useMutation({
 		mutationKey: ["impersonating-user", user.id],
 		mutationFn: async () => {
@@ -216,7 +191,7 @@ function UserActionsCell({ user }: { user: UserRecord }) {
 		},
 		onSuccess: (data) => {
 			toast.success({
-				title: `You’re viewing as a ${data?.user.role ?? user.role}!`,
+				title: `You're viewing as a ${data?.user.role ?? user.role}!`,
 				description: "Any actions you take will be performed as this user.",
 			});
 		},
@@ -227,129 +202,238 @@ function UserActionsCell({ user }: { user: UserRecord }) {
 		},
 	});
 
+	const roleProfilePath =
+		user.role === "teacher"
+			? `/teachers/${user.id}`
+			: user.role === "student"
+				? `/students/${user.id}`
+				: user.role === "scheduler"
+					? `/schedulers/${user.id}`
+					: null;
+
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
-					{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => impersonate()}>
-					<ExternalLinkIcon />
-					Impersonate
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={() => {
-						toast.info({
-							title: `Revoked active sessions for ${user.name}`,
-						});
-					}}
-				>
-					<UserXIcon />
-					Revoke Sessions
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
-					variant="destructive"
-					onClick={() => {
-						toast.error({
-							title: `Delete action requested for ${user.name}`,
-							description: "This is a placeholder action.",
-						});
-					}}
-				>
-					<TrashIcon />
-					Delete User
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<Drawer>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
+						{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem onClick={() => impersonate()}>
+						<ExternalLinkIcon />
+						Impersonate
+					</DropdownMenuItem>
+					<DrawerTrigger asChild>
+						<DropdownMenuItem>
+							<PenIcon />
+							Edit Role
+						</DropdownMenuItem>
+					</DrawerTrigger>
+					{roleProfilePath && (
+						<DropdownMenuItem asChild>
+							<Button variant="link" asChild>
+								<Link href={roleProfilePath as "/"}>
+									<UserIcon />
+									View {snakeToTitleCase(user.role)} Profile
+								</Link>
+							</Button>
+						</DropdownMenuItem>
+					)}
+					<DropdownMenuItem
+						onClick={() => {
+							toast.info({
+								title: `Revoked active sessions for ${user.name}`,
+							});
+						}}
+					>
+						<UserXIcon />
+						Revoke Sessions
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						variant="destructive"
+						onClick={() => {
+							toast.error({
+								title: `Delete action requested for ${user.name}`,
+								description: "This is a placeholder action.",
+							});
+						}}
+					>
+						<TrashIcon />
+						Delete User
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<EditRoleDrawerContent user={user} />
+		</Drawer>
 	);
 }
-
-const features = tableFeatures({
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	filteredRowModel: createFilteredRowModel(),
-	paginatedRowModel: createPaginatedRowModel(),
-	sortedRowModel: createSortedRowModel(),
-	filterFns: { includesString: filterFn_includesString },
-	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
-});
-
-type DataTableFeatures = typeof features;
 
 const columnHelper = createColumnHelper<DataTableFeatures, UserRecord>();
 
 const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 	columnHelper.columns([
-		columnHelper.display({
-			id: "user",
-			header: "User",
+		columnHelper.accessor("name", {
+			id: "name",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="User" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "User",
+				placeholder: "Search name...",
+				variant: "text",
+			},
 			cell: ({ row }) => {
 				const member = row.original;
+				const roleProfilePath =
+					member.role === "teacher"
+						? `/teachers/${member.id}`
+						: member.role === "student"
+							? `/students/${member.id}`
+							: member.role === "scheduler"
+								? `/schedulers/${member.id}`
+								: null;
+
 				return (
 					<Drawer>
 						<DrawerTrigger asChild>
-							<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
-							<ItemMedia>
-								<Avatar size="sm">
-									<AvatarImage
-										src={member.image ?? undefined}
-										alt={member.name}
-									/>
-									<AvatarFallback>{member.name?.[0] ?? "U"}</AvatarFallback>
-								</Avatar>
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>{member.name}</ItemTitle>
-								<ItemDescription>{member.email}</ItemDescription>
-							</ItemContent>
-						</Item>
+							<Item>
+								<ItemMedia>
+									<Avatar size="sm">
+										<AvatarImage
+											src={member.image ?? undefined}
+											alt={member.name}
+										/>
+										<AvatarFallback>{member.name?.[0] ?? "U"}</AvatarFallback>
+									</Avatar>
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>{member.name}</ItemTitle>
+									{member.email && (
+										<ItemDescription>{member.email}</ItemDescription>
+									)}
+								</ItemContent>
+							</Item>
 						</DrawerTrigger>
 						<DrawerContent>
 							<DrawerHeader>
 								<DrawerTitle>{member.name}</DrawerTitle>
-								<DrawerDescription>{member.email}</DrawerDescription>
+								{member.email && (
+									<DrawerDescription>{member.email}</DrawerDescription>
+								)}
 							</DrawerHeader>
-							<ProfileCard user={member} />
+							<DrawerInner>
+								<ProfileCard user={member} />
+							</DrawerInner>
 							<DrawerFooter>
+								<CopyButton
+									text={() => member.id}
+									label="User ID"
+									variant="outline"
+								/>
+								{roleProfilePath && (
+									<Button asChild>
+										<Link href={roleProfilePath as "/"}>
+											View {snakeToTitleCase(member.role)} Profile
+										</Link>
+									</Button>
+								)}
 								<DrawerClose asChild>
-								<Button variant="outline">Close</Button>
-							</DrawerClose>
+									<Button variant="outline">Close</Button>
+								</DrawerClose>
 							</DrawerFooter>
 						</DrawerContent>
 					</Drawer>
 				);
 			},
 		}),
-		columnHelper.display({
-			id: "role",
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Role</TooltipTrigger>
-					<TooltipContent>System authorization and access level</TooltipContent>
-				</Tooltip>
+		columnHelper.accessor("id", {
+			id: "id",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="User ID" />
 			),
-			cell: ({ row }) => (
-				<ColorBadge>
-					{snakeToTitleCase(row.original.role) ?? "Not Assigned"}
-				</ColorBadge>
-			),
+			enableSorting: true,
+			cell: ({ row, getValue }) => {
+				const id = getValue();
+				if (!id) return null;
+				const role = row.original.role;
+				const path =
+					role === "teacher"
+						? `/teachers/${id}`
+						: role === "student"
+							? `/students/${id}`
+							: role === "scheduler"
+								? `/schedulers/${id}`
+								: null;
+
+				return (
+					<ButtonGroup>
+						{path ? (
+							<Button variant="link" asChild>
+								<Link href={path as "/"}>{id}</Link>
+							</Button>
+						) : (
+							<ButtonGroupText>{id}</ButtonGroupText>
+						)}
+						<CopyButton
+							text={() => id}
+							label="User ID"
+							variant="ghost"
+							size="icon-sm"
+						/>
+					</ButtonGroup>
+				);
+			},
 		}),
-		columnHelper.display({
-			id: "status",
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">
-						Account Status
-					</TooltipTrigger>
-					<TooltipContent>Active or suspended/banned status</TooltipContent>
-				</Tooltip>
+		columnHelper.accessor("email", {
+			id: "email",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Email" />
 			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Email",
+				placeholder: "Search email...",
+				variant: "text",
+			},
+			cell: ({ getValue }) => getValue() ?? null,
+		}),
+		columnHelper.accessor("role", {
+			id: "role",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Role" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Role",
+				variant: "multiSelect",
+				options: roleFilterOptions,
+			},
+			cell: ({ getValue }) => {
+				const role = getValue();
+				return (
+					<ColorBadge>{snakeToTitleCase(role) ?? "Not Assigned"}</ColorBadge>
+				);
+			},
+		}),
+		columnHelper.accessor((row) => (row.banned ? "banned" : "active"), {
+			id: "status",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Status" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Status",
+				variant: "multiSelect",
+				options: statusFilterOptions,
+			},
 			cell: ({ row }) => {
 				const member = row.original;
 				if (member.banned) {
@@ -359,7 +443,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								<ColorBadge variant="destructive">Banned</ColorBadge>
 							</TooltipTrigger>
 							<TooltipContent>
-								<div className="flex flex-col gap-1 text-xs">
+								<FieldGroup>
 									{member.banReason && <span>Reason: {member.banReason}</span>}
 									<span>
 										Expires:{" "}
@@ -367,7 +451,7 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 											? `${getRelateTime(new Date(member.banExpires))} ago`
 											: "Never"}
 									</span>
-								</div>
+								</FieldGroup>
 							</TooltipContent>
 						</Tooltip>
 					);
@@ -376,7 +460,11 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			},
 		}),
 		columnHelper.accessor("createdAt", {
-			header: "Joined",
+			id: "createdAt",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Joined" />
+			),
+			enableSorting: true,
 			cell: ({ getValue }) => (
 				<span className="text-muted-foreground text-xs">
 					{getRelateTime(new Date(getValue()))} ago
@@ -384,123 +472,57 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 			),
 		}),
 		columnHelper.display({
-			id: "edit",
-			header: "Edit",
-			cell: ({ row }) => <EditUserDrawer user={row.original} />,
-		}),
-		columnHelper.display({
 			id: "actions",
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Actions</TooltipTrigger>
-					<TooltipContent>Administrative options and tools</TooltipContent>
-				</Tooltip>
-			),
-			cell: ({ row }) => <UserActionsCell user={row.original} />,
+			header: "Actions",
+			enableSorting: false,
+			enableHiding: false,
+			cell: ({ row }) => <UserActions user={row.original} />,
 		}),
 	]);
 
 export default function Page() {
-	const [search, setSearch] = useQueryState("q");
-	const [role, setRole] = useQueryState("role");
-	const searchQuery = useDebounce(search ?? undefined, 500);
-
 	const { data = [], isPending } = useQuery(
-		api.admin.getUsers.queryOptions({
-			input: {
-				searchQuery,
-				role: (role as Role) ?? undefined,
-			},
-		}),
+		api.admin.getUsers.queryOptions({ input: {} }),
 	);
 
-	const table = useTable({
-		features,
+	const { table } = useDataTable({
 		data,
 		columns,
+		mode: "client",
+		initialState: {
+			sorting: [{ id: "createdAt", desc: true }],
+			pagination: { pageIndex: 0, pageSize: 10 },
+		},
+		getRowId: (row) => row.id,
 	});
-
-	if (isPending && !data.length) {
-		return <Loader />;
-	}
 
 	return (
 		<Frame>
 			<FrameHeader>
-				<InputGroup className="w-xs">
-					<InputGroupInput
-						value={search ?? ""}
-						onChange={(v) => setSearch(v.target.value)}
-						placeholder="Search users"
-					/>
-					<InputGroupAddon>
-						<Search />
-					</InputGroupAddon>
-				</InputGroup>
+				<FrameTitle>Users Management</FrameTitle>
+				<FrameDescription>
+					Manage platform user accounts and role assignments
+				</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
-						<Select
-							items={rolesObject}
-							value={role ?? undefined}
-							onValueChange={(r) => setRole((r as Role) ?? null)}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Filter Roles" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									{rolesObject.map((item) => (
-										<SelectItem key={item.value} value={item.value}>
-											{item.label}
-										</SelectItem>
-									))}
-								</SelectGroup>
-							</SelectContent>
-						</Select>
+						{isPending && (
+							<Button variant="outline" size="icon" disabled>
+								<Spinner />
+							</Button>
+						)}
 						<Button asChild>
-							<Link href="/admin/users/new">
-								<UserPlusIcon />
+						<Link href="/admin/users/new">
+							<UserPlusIcon />
 							Create User
-							</Link>
-						</Button>
+						</Link>
+					</Button>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder ? null : (
-											<table.FlexRender header={header} />
-										)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											<table.FlexRender cell={cell} />
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="text-center">
-									No users found
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
+				<DataTable table={table}>
+					<DataTableToolbar table={table} />
+				</DataTable>
 			</FramePanel>
 		</Frame>
 	);

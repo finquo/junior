@@ -1,33 +1,34 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ColumnDef,
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	createColumnHelper,
-	createFilteredRowModel,
-	createPaginatedRowModel,
-	createSortedRowModel,
-	filterFn_includesString,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	sortFn_alphanumeric,
-	sortFn_text,
-	tableFeatures,
-	useTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { Languages } from "backend/config";
-import type { StudentType } from "backend/db";
-import { PenIcon } from "lucide-react";
+import {
+	ExternalLinkIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	PlusIcon,
+	UserIcon,
+} from "lucide-react";
+import Link from "next/link";
 import { getRelateTime } from "utils";
-import Loader from "@/components/loader";
+import { CopyButton } from "@/components/copy";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { ProfileCard, StudentProfile } from "@/components/profile";
-import { Frame, FramePanel } from "@/components/reui/frame";
+import {
+	Frame,
+	FrameActions,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -35,9 +36,16 @@ import {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	HoverCard,
 	HoverCardContent,
@@ -50,80 +58,129 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
+import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
+import type { API_Returns } from "@/lib/api";
+import type { DataTableFeatures } from "@/lib/data-table-features";
 import { EditStudentDrawer } from "./_components/edit-drawer";
 
-const features = tableFeatures({
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	filteredRowModel: createFilteredRowModel(),
-	paginatedRowModel: createPaginatedRowModel(),
-	sortedRowModel: createSortedRowModel(),
-	filterFns: { includesString: filterFn_includesString },
-	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
-});
+type StudentRecord = API_Returns["core"]["student"]["list"][number];
 
-type DataTableFeatures = typeof features;
+function UserCellSkeleton() {
+	return (
+		<Item>
+			<ItemMedia>
+				<Skeleton className="size-8 rounded-full" />
+			</ItemMedia>
+			<ItemContent>
+				<Skeleton className="h-4 w-24" />
+				<Skeleton className="h-3 w-32" />
+			</ItemContent>
+		</Item>
+	);
+}
 
-const columnHelper = createColumnHelper<DataTableFeatures, StudentType>();
+function UserInlineSkeleton() {
+	return <Skeleton className="h-4 w-20" />;
+}
 
-const columns: ColumnDef<DataTableFeatures, StudentType>[] =
+function StudentActions({ student }: { student: StudentRecord }) {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<MoreHorizontalIcon />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuItem asChild>
+					<Button variant="link" asChild>
+						<Link href={`/students/${student.id}` as "/"}>
+							<ExternalLinkIcon />
+							View Profile
+						</Link>
+					</Button>
+				</DropdownMenuItem>
+				<EditStudentDrawer student={student}>
+					<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+						<PenIcon />
+						Edit Student
+					</DropdownMenuItem>
+				</EditStudentDrawer>
+				{student.supervisorId && (
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link href={`/schedulers/${student.supervisorId}` as "/"}>
+								<UserIcon />
+								View Supervisor
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+}
+
+const columnHelper = createColumnHelper<DataTableFeatures, StudentRecord>();
+
+const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 	columnHelper.columns([
 		columnHelper.display({
 			id: "student",
 			header: "Student",
 			cell: ({ row }) => (
-				<FetchUser id={row.original.id} isPending={<Spinner />}>
+				<FetchUser id={row.original.id} isPending={<UserCellSkeleton />}>
 					{(user) => (
 						<Drawer>
 							<DrawerTrigger asChild>
-								<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
-								<ItemMedia>
-									<Avatar size="sm">
-										<AvatarImage
-											src={user.image ?? undefined}
-											alt={user.name}
-										/>
-										<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
-									</Avatar>
-								</ItemMedia>
-								<ItemContent>
-									<ItemTitle>{user.name}</ItemTitle>
-									<ItemDescription>{user.email}</ItemDescription>
-								</ItemContent>
-							</Item>
-						</DrawerTrigger>
-							<DrawerContent className="overflow-y-auto">
+								<Item>
+									<ItemMedia>
+										<Avatar size="sm">
+											<AvatarImage
+												src={user.image ?? undefined}
+												alt={user.name}
+											/>
+											<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
+										</Avatar>
+									</ItemMedia>
+									<ItemContent>
+										<ItemTitle>{user.name}</ItemTitle>
+										<ItemDescription>{user.email}</ItemDescription>
+									</ItemContent>
+								</Item>
+							</DrawerTrigger>
+							<DrawerContent>
 								<DrawerHeader>
 									<DrawerTitle>{user.name}</DrawerTitle>
 									<DrawerDescription>{user.email}</DrawerDescription>
 								</DrawerHeader>
-								<div className="flex flex-col gap-4 p-4">
+								<DrawerInner>
 									<ProfileCard user={user} />
 									<StudentProfile student={row.original} />
-								</div>
+								</DrawerInner>
 								<DrawerFooter>
+									<CopyButton
+										text={() => row.original.id}
+										label="Student ID"
+										variant="outline"
+									/>
+									<Button asChild>
+										<Link href={`/students/${row.original.id}` as "/"}>
+											View Full Profile
+										</Link>
+									</Button>
 									<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
+										<Button variant="outline">Close</Button>
+									</DrawerClose>
 								</DrawerFooter>
 							</DrawerContent>
 						</Drawer>
@@ -131,31 +188,68 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 				</FetchUser>
 			),
 		}),
-		columnHelper.accessor("program", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Program</TooltipTrigger>
-					<TooltipContent>Enrolled study track or course plan</TooltipContent>
-				</Tooltip>
+		columnHelper.accessor("id", {
+			id: "id",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Student ID" />
 			),
-			cell: ({ getValue }) => getValue() ?? "—",
+			enableSorting: true,
+			cell: ({ getValue }) => {
+				const id = getValue();
+				if (!id) return null;
+				return (
+					<ButtonGroup>
+						<Button variant="link" asChild>
+							<Link href={`/students/${id}` as "/"}>{id}</Link>
+						</Button>
+						<CopyButton
+							text={() => id}
+							label="Student ID"
+							variant="ghost"
+							size="icon-sm"
+						/>
+					</ButtonGroup>
+				);
+			},
+		}),
+		columnHelper.accessor("program", {
+			id: "program",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Program" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Program",
+				placeholder: "Search program...",
+				variant: "text",
+			},
+			cell: ({ getValue }) => getValue() ?? null,
 		}),
 		columnHelper.accessor("schooling", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Schooling</TooltipTrigger>
-					<TooltipContent>Student's affiliated curriculum board</TooltipContent>
-				</Tooltip>
+			id: "schooling",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Schooling" />
 			),
-			cell: ({ getValue }) => getValue() ?? "—",
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Schooling",
+				placeholder: "Search schooling...",
+				variant: "text",
+			},
+			cell: ({ getValue }) => getValue() ?? null,
 		}),
 		columnHelper.display({
 			id: "languages",
 			header: "Languages",
-			cell: ({ row }) =>
-				row.original.languages
-					?.map((code) => Languages[code as keyof typeof Languages] ?? code)
-					.join(", ") || "—",
+			cell: ({ row }) => {
+				const langs = row.original.languages;
+				if (!langs?.length) return null;
+				return langs
+					.map((code) => Languages[code as keyof typeof Languages] ?? code)
+					.join(", ");
+			},
 		}),
 		columnHelper.display({
 			id: "lessons",
@@ -183,19 +277,21 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 				return (
 					<HoverCard>
 						<HoverCardTrigger asChild>
-							<span
-								role="button"
-								className="cursor-pointer font-medium text-xs underline decoration-dotted"
-							>
-								<FetchUser id={supervisorId} isPending={<Spinner />}>
-								{(supervisor) => supervisor.name}
-							</FetchUser>
-							</span>
+							<Button variant="link" asChild>
+								<Link href={`/schedulers/${supervisorId}` as "/"}>
+									<FetchUser
+										id={supervisorId}
+										isPending={<UserInlineSkeleton />}
+									>
+										{(supervisor) => supervisor.name}
+									</FetchUser>
+								</Link>
+							</Button>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-64">
-							<FetchUser id={supervisorId} isPending={<Spinner />}>
+							<FetchUser id={supervisorId} isPending={<UserCellSkeleton />}>
 								{(supervisor) => (
-									<Item className="p-0 text-left">
+									<Item>
 										<ItemMedia>
 											<Avatar size="sm">
 												<AvatarImage
@@ -220,23 +316,13 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			},
 		}),
 		columnHelper.accessor("meetingLink", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Meeting</TooltipTrigger>
-					<TooltipContent>
-						Direct video conference classroom link
-					</TooltipContent>
-				</Tooltip>
-			),
+			id: "meetingLink",
+			header: "Meeting",
 			cell: ({ getValue }) => {
 				const link = getValue();
-				if (!link) return "—";
+				if (!link) return null;
 				return (
-					<Button
-						variant="outline"
-						size="sm"
-						asChild
-					>
+					<Button variant="link" asChild>
 						<a href={link} target="_blank" rel="noreferrer">
 							Join
 						</a>
@@ -245,74 +331,63 @@ const columns: ColumnDef<DataTableFeatures, StudentType>[] =
 			},
 		}),
 		columnHelper.accessor("createdAt", {
-			header: "Joined",
+			id: "createdAt",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Joined" />
+			),
+			enableSorting: true,
 			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
-			id: "edit",
-			header: "Edit",
-			cell: ({ row }) => (
-				<EditStudentDrawer student={row.original}>
-					<Button variant="outline" size="icon-sm">
-						<PenIcon />
-					</Button>
-				</EditStudentDrawer>
-			),
+			id: "actions",
+			header: "Actions",
+			enableSorting: false,
+			enableHiding: false,
+			cell: ({ row }) => <StudentActions student={row.original} />,
 		}),
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(
-		api.core.student.list.queryOptions(),
-	);
+	const { data = [], isPending } = useQuery(api.core.student.list.queryOptions());
 
-	const table = useTable({
-		features,
+	const { table } = useDataTable({
 		data,
 		columns,
+		mode: "client",
+		initialState: {
+			sorting: [{ id: "createdAt", desc: true }],
+			pagination: { pageIndex: 0, pageSize: 10 },
+		},
+		getRowId: (row) => row.id,
 	});
-
-	if (isPending) {
-		return <Loader />;
-	}
 
 	return (
 		<Frame>
-			<FramePanel>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder ? null : (
-											<table.FlexRender header={header} />
-										)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											<table.FlexRender cell={cell} />
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="text-center">
-									No students found
-								</TableCell>
-							</TableRow>
+			<FrameHeader>
+				<FrameTitle>Students</FrameTitle>
+				<FrameDescription>
+					Manage student profiles and enrollment
+				</FrameDescription>
+				<FrameActions>
+					<ButtonGroup>
+						{isPending && (
+							<Button variant="outline" size="icon" disabled>
+								<Spinner />
+							</Button>
 						)}
-					</TableBody>
-				</Table>
+						<Button asChild>
+						<Link href="/admin/users/new">
+							<PlusIcon />
+							Add Student
+						</Link>
+					</Button>
+					</ButtonGroup>
+				</FrameActions>
+			</FrameHeader>
+			<FramePanel>
+				<DataTable table={table}>
+					<DataTableToolbar table={table} />
+				</DataTable>
 			</FramePanel>
 		</Frame>
 	);

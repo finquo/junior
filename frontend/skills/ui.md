@@ -15,65 +15,67 @@ Depending on the specific user request, you **MUST** read the corresponding spec
 
 ---
 
-## 1. Native Button Rule (`nativeButton`)
+## 1. Radix Composition Rule (`asChild` vs. Render Props)
 
-Base UI and shadcn `<Button>` (and button-backed primitives like `DrawerTrigger`, `DialogTrigger`) default to rendering a `<button>` DOM element.
+This codebase uses **Radix UI** primitives and `@radix-ui/react-slot`. Render props (`render={...}`) and Base UI DOM attributes (`nativeButton`) are strictly forbidden and eliminated.
 
 ### The Rule
-- **When rendering an anchor tag (`<a>` or `<Link />`)**:
-  Always pass `nativeButton={false}`.
-- **When rendering a button element (`<button>` or `<Button />`)**:
-  Never pass `nativeButton`.
+- **Whenever a trigger, button, or primitive renders a custom element, anchor, or component**:
+  Pass `asChild` and nest the element directly inside.
+- **Never pass `render={...}` or `nativeButton`**:
+  Base UI attributes do not exist in this codebase.
 
 ### Examples
 ```tsx
-// ✅ CORRECT: Button as a Link (anchor tag)
-<Button
-  variant="outline"
-  size="sm"
-  nativeButton={false}
-  render={<Link href={`/students/${studentId}`} />}
->
-  <ArrowLeftIcon />
-  Back
+// ✅ CORRECT: Button as a Next.js Link
+<Button asChild variant="outline" size="sm">
+  <Link href={`/students/${studentId}`}>
+    <ArrowLeftIcon />
+    Back
+  </Link>
 </Button>
 
-// ✅ CORRECT: External anchor link
-<Button
-  variant="outline"
-  size="sm"
-  nativeButton={false}
-  render={<a href={meetingUrl} target="_blank" rel="noreferrer" />}
->
-  Join Meeting
+// ✅ CORRECT: Button as an external anchor
+<Button asChild variant="outline" size="sm">
+  <a href={meetingUrl} target="_blank" rel="noreferrer">
+    Join Meeting
+  </a>
 </Button>
 
-// ✅ CORRECT: Trigger rendering a Button component (NO nativeButton)
-<DrawerTrigger
-  render={
-    <Button variant="outline" size="sm">
-      <PenIcon />
-      Edit
-    </Button>
-  }
-/>
+// ✅ CORRECT: Trigger rendering a Button
+<DrawerTrigger asChild>
+  <Button variant="outline" size="sm">
+    <PenIcon />
+    Edit
+  </Button>
+</DrawerTrigger>
 
-// ❌ WRONG: Passing nativeButton={false} when the rendered element IS a button
-<DrawerTrigger
-  nativeButton={false} // DO NOT DO THIS
-  render={
-    <Button variant="outline" size="sm">
-      <PenIcon />
-    </Button>
-  }
-/>
+// ✅ CORRECT: DrawerClose rendering a Button
+<DrawerFooter>
+  <DrawerClose asChild>
+    <Button variant="outline">Close</Button>
+  </DrawerClose>
+</DrawerFooter>
 
-// ❌ WRONG: Missing nativeButton={false} on an anchor/Link
+// ✅ CORRECT: HoverCard or Tooltip trigger wrapping custom inline trigger
+<HoverCardTrigger asChild>
+  <span role="button" className="cursor-pointer text-xs underline decoration-dotted">
+    {userName}
+  </span>
+</HoverCardTrigger>
+
+// ❌ WRONG: Using Base UI render props (DO NOT DO THIS)
 <Button
-  render={<Link href="/scheduler/lessons" />} // Missing nativeButton={false}!
+  render={<Link href="/scheduler/lessons" />} // FORBIDDEN: Use asChild
+  nativeButton={false} // FORBIDDEN: Does not exist
 >
   Lessons
 </Button>
+
+// ❌ WRONG: Trigger with render prop
+<DrawerTrigger
+  render={<Button variant="outline">Edit</Button>} // FORBIDDEN: Use asChild
+/>
 ```
 
 ---
@@ -111,7 +113,31 @@ The design system handles accessibility, CSS variables, container queries, and l
 
 ---
 
-## 3. Stop Being "Oversmart"
+## 3. Component Interaction & State Standards
+
+### A. Drawer Architecture & Drag Handle Placement
+- Built on `vaul` with Radix Dialog primitives.
+- `<DrawerContent>` automatically mounts `<DrawerHandle />` (or `<DrawerSwipeHandle />`).
+- **Drag Handle Placement**:
+  - The handle is placed on the **opposite side of the drawer's opening edge** and oriented **parallel** to that opening edge.
+  - **Right Drawer** (Desktop default): Handle sits on the **left edge** (`absolute inset-y-0 left-0 w-4`), oriented **vertically** (`!h-14 !w-1 rounded-full`), centered vertically.
+  - **Left Drawer**: Handle sits on the **right edge** (`absolute inset-y-0 right-0 w-4`), oriented **vertically** (`!h-14 !w-1 rounded-full`), centered vertically.
+  - **Bottom Drawer** (Mobile default): Handle sits on the **top edge** (`w-full pt-3 pb-1`), oriented **horizontally** (`!h-1 !w-12 rounded-full`), centered horizontally.
+  - **Top Drawer**: Handle sits on the **bottom edge** (`order-last w-full pb-3 pt-1`), oriented **horizontally** (`!h-1 !w-12 rounded-full`), centered horizontally.
+  - Handle styling uses subtle opacity (`bg-muted-foreground/20 hover:bg-muted-foreground/40`).
+
+### B. Radix Tabs Trigger State Styling
+- Radix Tabs triggers emit `data-state="active"` (instead of Base UI's `data-active`).
+- Always style active tab triggers with `data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs` (or the line variant counterpart), never `data-active:*`.
+
+### C. Async Selectors & Fallback UI
+- Entity selectors fetching async data (e.g. `UserSelector`, `LessonSelector`) must have:
+  - Minimum width defined on the field and trigger (`min-w-[200px] w-full`) to prevent layout squishing.
+  - Clear `<Skeleton className="..." />` placeholders during `isPending` state so the trigger does not flicker or shift.
+
+---
+
+## 4. Stop Being "Oversmart"
 
 - **The Developer Has Visual Context; AI Does Not**:
   Developers visually inspect and fine-tune UI layouts. Do not invent arbitrary Tailwind utility chains (`h-full grow min-h-20 aspect-video rounded-xl bg-muted/50`, etc.) to "guess" visual layout.
@@ -122,7 +148,7 @@ The design system handles accessibility, CSS variables, container queries, and l
 
 ---
 
-## 4. Directory Architecture: `components/` vs. `_components/`
+## 5. Directory Architecture: `components/` vs. `_components/`
 
 Keep a strict boundary between globally shared components and route-specific child components:
 
@@ -145,7 +171,7 @@ Keep a strict boundary between globally shared components and route-specific chi
 
 ---
 
-## 5. Page Architecture & React Hook Rules
+## 6. Page Architecture & React Hook Rules
 
 ### React Rule of Hooks: No Conditional Hook Execution
 Never place a `useQuery` call after an early `if (!id) return ...` check in the same component. That violates React's Rules of Hooks.
@@ -214,7 +240,7 @@ export default function Page() {
 
 ---
 
-## 6. End-to-End Type Safety & Zero Manual Casting
+## 7. End-to-End Type Safety & Zero Manual Casting
 
 - **Never Cast Backend Types Manually**:
   Do **not** use manual type assertions like `data.address as Address` or `(data.notes ?? []) as Note[]`.
@@ -223,7 +249,7 @@ export default function Page() {
 
 ---
 
-## 7. List Rendering & Key Casting (`i as number`)
+## 8. List Rendering & Key Casting (`i as number`)
 
 When rendering lists of mapped elements using the loop index as a key (e.g., in tables or list sections), always explicitly cast the index as a number:
 
@@ -245,7 +271,7 @@ When rendering lists of mapped elements using the loop index as a key (e.g., in 
 
 ---
 
-## 8. Custom Hooks & Role Guards
+## 9. Custom Hooks & Role Guards
 
 Keep authorization and logic modular with dedicated hooks:
 
@@ -258,11 +284,13 @@ import { RenderWhenRole, useHasRole } from "@/hooks/role";
 // Component-based guard (renders only if current user has the role)
 <RenderWhenRole role="scheduler">
   <Drawer>
-    <DrawerTrigger render={<Button variant="outline" size="sm" />}>
-      <PenIcon />
-      Edit Student
+    <DrawerTrigger asChild>
+      <Button variant="outline" size="sm">
+        <PenIcon />
+        Edit Student
+      </Button>
     </DrawerTrigger>
-    ...
+    {/* ... */}
   </Drawer>
 </RenderWhenRole>
 

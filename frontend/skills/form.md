@@ -11,7 +11,7 @@ This guide establishes the architecture, conventions, and rules for building for
 - **Server State & Mutations**: TanStack Query (`@tanstack/react-query`) with oRPC utilities (`@/hooks/api`)
 - **Schema Validation**: Zod (`zod`) via Standard Schema, reusing backend schemas directly from `backend/config`
 - **Type Utilities**: `GetFormZod` from `@/lib/utils` for TanStack Form validator schema typing
-- **Design System**: shadcn/ui components backed by Base UI (`@base-ui/react`) and Tailwind CSS
+- **Design System**: shadcn/ui components backed by Radix UI (`@radix-ui/*`) and Tailwind CSS
 - **Notifications**: `sileo` as `toast` (`import { sileo as toast } from "sileo"`)
 - **Data & Auth Queries**: `getUserData()` (`@/hooks/user`) and Better Auth (`@/hooks/auth`)
 
@@ -57,27 +57,35 @@ Never write custom Tailwind classes for layout spacing (`space-y-*`), arbitrary 
     <FieldLabel htmlFor="agree-terms">I agree to the terms</FieldLabel>
   </Field>
   ```
+- **Async Selectors Fallback UI**: Any selector fetching remote data (e.g. `UserSelector`, `LessonSelector`) must define a minimum width (`min-w-[200px] w-full`) and provide `<Skeleton />` placeholder elements while `isPending` is true to prevent layout squishing and jumping.
 - **Sanitize Input on Change**: Normalize values immediately in `onChange` and in `onSubmit` (e.g. `.toLowerCase()` for emails and usernames).
 
-### C. Buttons, Triggers & Base UI (`nativeButton={false}`)
-- **No Icon Sizing Inside Buttons**: The `Button` component automatically manages SVG sizes. Never write `<Icon className="size-4" />` inside a button — always use bare `<Icon />`.
-- **`nativeButton={false}` Requirement**: Whenever a Base UI component renders a custom `<Button ... />` or `<Link ... />` via the `render` prop (e.g. `DrawerTrigger`, `DrawerClose`, or `Button render={<Link ... />}`), **always pass `nativeButton={false}`** to prevent Base UI DOM attribute conflicts:
+### C. Buttons, Triggers & Radix Composition (`asChild`)
+- **No Render Props or `nativeButton`**: Render props (`render={...}`) and Base UI properties (`nativeButton`) are strictly forbidden. Always use Radix's **`asChild`** pattern via `@radix-ui/react-slot`.
+- **`asChild` for Custom Triggers & Links**: Whenever a button or trigger renders a custom component or anchor/Link, pass `asChild` and nest the child element directly:
   ```tsx
-  <DrawerTrigger
-    nativeButton={false}
-    render={<Button variant="outline" size="sm" />}
-  >
-    Open
+  // Trigger rendering a Button
+  <DrawerTrigger asChild>
+    <Button variant="outline" size="sm">
+      Open
+    </Button>
   </DrawerTrigger>
 
-  <Button
-    variant="outline"
-    render={<Link href="/scheduler/sessions" />}
-    nativeButton={false}
-  >
-    Cancel
+  // Button rendering a Next.js Link
+  <Button asChild variant="outline">
+    <Link href="/scheduler/sessions">
+      Cancel
+    </Link>
   </Button>
+
+  // Drawer close button
+  <DrawerClose asChild>
+    <Button variant="outline">
+      Close
+    </Button>
+  </DrawerClose>
   ```
+- **No Icon Sizing Inside Buttons**: The `Button` component automatically manages SVG sizes. Never write `<Icon className="size-4" />` inside a button — always use bare `<Icon />`.
 - **Semantic Button Variants**: Use built-in variants instead of custom colors. For destructive or removal actions, use `variant="destructive"` instead of custom Tailwind classes like `text-destructive hover:bg-destructive/10`.
 - **Submit Loading States**: Use `<Spinner />` inside the submit button and disable interactive elements when `isPending` is true.
 
@@ -114,7 +122,7 @@ const formSchema = z.object({
       if (val) field.handleChange(val as LanguageCodes);
     }}
   >
-    <SelectTrigger id={field.name}>
+    <SelectTrigger id={field.name} className="min-w-[200px] w-full">
       <SelectValue placeholder="Select language" />
     </SelectTrigger>
     <SelectContent>
@@ -375,7 +383,8 @@ When an interactive component (e.g. file dropzones, calendar schedulers) uses an
 - [ ] Passed dictionary record directly to `<Select items={...}>` and mapped `Object.entries(...)`.
 - [ ] Strictly zero custom `<div>` wrappers around labels/inputs and no raw `<label>` tags; used `<Field>`, `<FieldLabel>`, etc.
 - [ ] Used `<Field orientation="horizontal">` for checkboxes with labels.
-- [ ] Supplied `nativeButton={false}` on all Base UI trigger/button render prop targets (`Button render={<Link ... />}`, `DrawerTrigger`, `DrawerClose`).
+- [ ] Used `asChild` on all Radix trigger and button composition targets (`<Button asChild><Link ... /></Button>`, `<DrawerTrigger asChild>`, `<DrawerClose asChild>`). Strictly zero render props (`render=`) or `nativeButton`.
+- [ ] Ensured async selectors have `min-w-[200px] w-full` and `<Skeleton />` fallbacks for `isPending` states.
 - [ ] Sanitized string inputs on change (e.g. `.toLowerCase()` for emails and usernames).
 - [ ] No manual `useState` for loading flags; used `useMutation`'s `isPending`.
 - [ ] Passed `onSuccess` and `onError` directly into `.mutationOptions({...})`.

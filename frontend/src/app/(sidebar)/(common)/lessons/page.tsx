@@ -3,29 +3,32 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	type ColumnDef,
-	columnFilteringFeature,
-	columnVisibilityFeature,
 	createColumnHelper,
-	createFilteredRowModel,
-	createPaginatedRowModel,
-	createSortedRowModel,
-	filterFn_includesString,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	sortFn_alphanumeric,
-	sortFn_text,
-	tableFeatures,
-	useTable,
 } from "@tanstack/react-table";
 import { Languages } from "backend/config";
-import { PenIcon, PlusIcon } from "lucide-react";
+import {
+	ExternalLinkIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	PlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
-import Loader from "@/components/loader";
-import { Frame, FrameHeader, FramePanel } from "@/components/reui/frame";
+import { CopyButton } from "@/components/copy";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import {
+	Frame,
+	FrameActions,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -33,84 +36,165 @@ import {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Item,
 	ItemContent,
 	ItemDescription,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
 import {
 	Table,
 	TableBody,
 	TableCell,
-	TableHead,
-	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
+import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
-
-const features = tableFeatures({
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	filteredRowModel: createFilteredRowModel(),
-	paginatedRowModel: createPaginatedRowModel(),
-	sortedRowModel: createSortedRowModel(),
-	filterFns: { includesString: filterFn_includesString },
-	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
-});
-
-type DataTableFeatures = typeof features;
+import type { DataTableFeatures } from "@/lib/data-table-features";
 
 type LessonRecord = API_Returns["core"]["lesson"]["list"][number];
+
+const languageOptions = Object.entries(Languages).map(([value, label]) => ({
+	label,
+	value,
+}));
+
+function LessonActions({ lesson }: { lesson: LessonRecord }) {
+	return (
+		<Drawer>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="outline" size="icon-sm">
+						<MoreHorizontalIcon />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link href="/" as={`/lessons/${lesson.id}`}>
+								<ExternalLinkIcon />
+								View Lesson Page
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+					<DrawerTrigger asChild>
+						<DropdownMenuItem>
+							<PenIcon />
+							Edit Lesson
+						</DropdownMenuItem>
+					</DrawerTrigger>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle>Edit Lesson</DrawerTitle>
+					<DrawerDescription>Edit details for {lesson.name}</DrawerDescription>
+				</DrawerHeader>
+				<DrawerInner>
+					<Table>
+						<TableBody>
+							<TableRow>
+								<TableCell className="font-medium">Lesson ID</TableCell>
+								<TableCell>
+									<Button variant="link" asChild>
+										<Link href="/" as={`/lessons/${lesson.id}`}>
+											{lesson.id}
+										</Link>
+									</Button>
+								</TableCell>
+							</TableRow>
+							<TableRow>
+								<TableCell className="font-medium">Language</TableCell>
+								<TableCell>
+									<Badge variant="secondary">
+										{Languages[lesson.language as keyof typeof Languages] ??
+											lesson.language}
+									</Badge>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+				</DrawerInner>
+				<DrawerFooter>
+					<CopyButton
+						text={() => lesson.id}
+						label="Lesson ID"
+						variant="outline"
+					/>
+					<Button asChild>
+						<Link href="/" as={`/lessons/${lesson.id}`}>Open Full Page</Link>
+					</Button>
+					<DrawerClose asChild>
+						<Button variant="outline">Close</Button>
+					</DrawerClose>
+				</DrawerFooter>
+			</DrawerContent>
+		</Drawer>
+	);
+}
 
 const columnHelper = createColumnHelper<DataTableFeatures, LessonRecord>();
 
 const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 	columnHelper.columns([
-		columnHelper.display({
-			id: "lesson",
-			header: "Lesson",
+		columnHelper.accessor("name", {
+			id: "name",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Lesson" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Lesson",
+				placeholder: "Search lessons...",
+				variant: "text",
+			},
 			cell: ({ row }) => {
 				const lesson = row.original;
 				return (
 					<Drawer>
 						<DrawerTrigger asChild>
-							<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+							<Item>
 								<ItemContent>
 									<ItemTitle>{lesson.name}</ItemTitle>
 									{lesson.description && (
-										<ItemDescription className="line-clamp-1">
-											{lesson.description}
-										</ItemDescription>
+										<ItemDescription>{lesson.description}</ItemDescription>
 									)}
 								</ItemContent>
 							</Item>
 						</DrawerTrigger>
-						<DrawerContent className="overflow-y-auto">
+						<DrawerContent>
 							<DrawerHeader>
 								<DrawerTitle>{lesson.name}</DrawerTitle>
-								<DrawerDescription>
-									{lesson.description ?? "No description provided"}
-								</DrawerDescription>
+								{lesson.description && (
+									<DrawerDescription>{lesson.description}</DrawerDescription>
+								)}
 							</DrawerHeader>
-							<div className="flex flex-col gap-4 p-4">
+							<DrawerInner>
 								<Table>
 									<TableBody>
 										<TableRow>
 											<TableCell className="font-medium">Lesson ID</TableCell>
-											<TableCell>{lesson.id}</TableCell>
+											<TableCell>
+												<Button variant="link" asChild>
+													<Link href="/" as={`/lessons/${lesson.id}`}>
+														{lesson.id}
+													</Link>
+												</Button>
+											</TableCell>
 										</TableRow>
 										<TableRow>
 											<TableCell className="font-medium">Language</TableCell>
@@ -125,7 +209,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 										{lesson.period && (
 											<TableRow>
 												<TableCell className="font-medium">Duration</TableCell>
-												<TableCell>{String(lesson.period)}</TableCell>
+												<TableCell>{lesson.period} mins</TableCell>
 											</TableRow>
 										)}
 										<TableRow>
@@ -144,8 +228,16 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 										</TableRow>
 									</TableBody>
 								</Table>
-							</div>
+							</DrawerInner>
 							<DrawerFooter>
+								<CopyButton
+									text={() => lesson.id}
+									label="Lesson ID"
+									variant="outline"
+								/>
+								<Button asChild>
+									<Link href="/" as={`/lessons/${lesson.id}`}>Open Page</Link>
+								</Button>
 								<DrawerClose asChild>
 									<Button variant="outline">Close</Button>
 								</DrawerClose>
@@ -155,121 +247,126 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				);
 			},
 		}),
-		columnHelper.accessor("language", {
-			header: "Language",
-			cell: ({ getValue }) => (
-				<Badge variant="outline">
-					{Languages[getValue() as keyof typeof Languages] ?? getValue()}
-				</Badge>
+		columnHelper.accessor("id", {
+			id: "id",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Lesson ID" />
 			),
+			enableSorting: true,
+			cell: ({ getValue }) => {
+				const id = getValue();
+				if (!id) return null;
+				return (
+					<ButtonGroup>
+						<Button variant="link" asChild>
+							<Link href="/" as={`/lessons/${id}`}>{id}</Link>
+						</Button>
+						<CopyButton
+							text={() => id}
+							label="Lesson ID"
+							variant="ghost"
+							size="icon-sm"
+						/>
+					</ButtonGroup>
+				);
+			},
+		}),
+		columnHelper.accessor("language", {
+			id: "language",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Language" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Language",
+				variant: "multiSelect",
+				options: languageOptions,
+			},
+			cell: ({ getValue }) => {
+				const code = getValue();
+				if (!code) return null;
+				return (
+					<Badge variant="outline">
+						{Languages[code as keyof typeof Languages] ?? code}
+					</Badge>
+				);
+			},
 		}),
 		columnHelper.accessor("period", {
-			header: "Duration",
+			id: "period",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Duration" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Duration",
+				variant: "number",
+				unit: "mins",
+			},
 			cell: ({ getValue }) => {
 				const val = getValue();
-				return val ? `${val} mins` : "—";
+				return val ? `${val} mins` : null;
 			},
 		}),
 		columnHelper.accessor("createdAt", {
-			header: "Created",
-			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+			id: "createdAt",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Created" />
+			),
+			enableSorting: true,
+			cell: ({ getValue }) =>
+				`${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
-			id: "edit",
-			header: "Edit",
-			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger asChild>
-						<Button variant="outline" size="icon-sm">
-							<PenIcon />
-						</Button>
-					</DrawerTrigger>
-					<DrawerContent className="overflow-y-auto">
-						<DrawerHeader>
-							<DrawerTitle>Edit Lesson</DrawerTitle>
-							<DrawerDescription>Edit {row.original.name}</DrawerDescription>
-						</DrawerHeader>
-						<DrawerFooter>
-							<DrawerClose asChild>
-								<Button variant="outline">Close</Button>
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
-			),
+			id: "actions",
+			header: "Actions",
+			enableSorting: false,
+			enableHiding: false,
+			cell: ({ row }) => <LessonActions lesson={row.original} />,
 		}),
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(
-		api.core.lesson.list.queryOptions(),
-	);
+	const { data = [], isPending } = useQuery(api.core.lesson.list.queryOptions());
 
-	const table = useTable({
-		features,
+	const { table } = useDataTable({
 		data,
 		columns,
+		mode: "client",
+		initialState: {
+			sorting: [{ id: "createdAt", desc: true }],
+			pagination: { pageIndex: 0, pageSize: 10 },
+		},
+		getRowId: (row) => row.id,
 	});
-
-	if (isPending) {
-		return <Loader />;
-	}
 
 	return (
 		<Frame>
-			<FrameHeader className="flex flex-row items-center justify-end">
-				<Button asChild>
-					<Link href="/lessons/new">
-						<PlusIcon />
-						Create Lesson
-					</Link>
-				</Button>
+			<FrameHeader>
+				<FrameTitle>Lessons</FrameTitle>
+				<FrameDescription>Manage curriculum and course lessons</FrameDescription>
+				<FrameActions>
+					<ButtonGroup>
+						{isPending && (
+							<Button variant="outline" size="icon" disabled>
+								<Spinner />
+							</Button>
+						)}
+						<Button asChild>
+							<Link href="/lessons/new">
+								<PlusIcon />
+								Create Lesson
+							</Link>
+						</Button>
+					</ButtonGroup>
+				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder
-											? null
-											: typeof header.column.columnDef.header === "function"
-												? header.column.columnDef.header(header.getContext())
-												: header.column.columnDef.header}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
-								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{typeof cell.column.columnDef.cell === "function"
-												? cell.column.columnDef.cell(cell.getContext())
-												: cell.getValue()}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-24 text-center"
-								>
-									No lessons found.
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
+				<DataTable table={table}>
+					<DataTableToolbar table={table} />
+				</DataTable>
 			</FramePanel>
 		</Frame>
 	);

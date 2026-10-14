@@ -3,29 +3,34 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	type ColumnDef,
-	columnFilteringFeature,
-	columnVisibilityFeature,
 	createColumnHelper,
-	createFilteredRowModel,
-	createPaginatedRowModel,
-	createSortedRowModel,
-	filterFn_includesString,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	sortFn_alphanumeric,
-	sortFn_text,
-	tableFeatures,
-	useTable,
 } from "@tanstack/react-table";
-import { PenIcon } from "lucide-react";
+import {
+	ExternalLinkIcon,
+	MoreHorizontalIcon,
+	PenIcon,
+	PlusIcon,
+	UserIcon,
+} from "lucide-react";
+import Link from "next/link";
 import { getRelateTime } from "utils";
-import Loader from "@/components/loader";
+import { CopyButton } from "@/components/copy";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { ProfileCard } from "@/components/profile";
-import { Frame, FramePanel } from "@/components/reui/frame";
+import {
+	Frame,
+	FrameActions,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -33,9 +38,16 @@ import {
 	DrawerDescription,
 	DrawerFooter,
 	DrawerHeader,
+	DrawerInner,
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Item,
 	ItemContent,
@@ -43,41 +55,144 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import {
 	Table,
 	TableBody,
 	TableCell,
-	TableHead,
-	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
+import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
+import type { DataTableFeatures } from "@/lib/data-table-features";
 import { snakeToTitleCase } from "@/lib/utils";
 
 type SlotRecord = API_Returns["core"]["slot"]["list"][number];
 
-const features = tableFeatures({
-	columnFilteringFeature,
-	columnVisibilityFeature,
-	rowPaginationFeature,
-	rowSelectionFeature,
-	rowSortingFeature,
-	filteredRowModel: createFilteredRowModel(),
-	paginatedRowModel: createPaginatedRowModel(),
-	sortedRowModel: createSortedRowModel(),
-	filterFns: { includesString: filterFn_includesString },
-	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
-});
+const statusOptions = [
+	{ label: "Scheduled", value: "scheduled" },
+	{ label: "Started", value: "started" },
+	{ label: "Rescheduled", value: "rescheduled" },
+	{ label: "Request Reschedule", value: "request_reschedule" },
+	{ label: "Attended", value: "attended" },
+];
 
-type DataTableFeatures = typeof features;
+function UserCellSkeleton() {
+	return (
+		<Item>
+			<ItemMedia>
+				<Skeleton className="size-8 rounded-full" />
+			</ItemMedia>
+			<ItemContent>
+				<Skeleton className="h-4 w-24" />
+				<Skeleton className="h-3 w-32" />
+			</ItemContent>
+		</Item>
+	);
+}
+
+function SlotActions({ slot }: { slot: SlotRecord }) {
+	return (
+		<Drawer>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="outline" size="icon-sm">
+						<MoreHorizontalIcon />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link href="/" as={`/slots/${slot.id}`}>
+								<ExternalLinkIcon />
+								View Session
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+					{slot.studentId && (
+						<DropdownMenuItem asChild>
+							<Button variant="link" asChild>
+								<Link href="/" as={`/students/${slot.studentId}`}>
+									<UserIcon />
+									View Student
+								</Link>
+							</Button>
+						</DropdownMenuItem>
+					)}
+					{slot.teacherId && (
+						<DropdownMenuItem asChild>
+							<Button variant="link" asChild>
+								<Link href="/" as={`/teachers/${slot.teacherId}`}>
+									<UserIcon />
+									View Teacher
+								</Link>
+							</Button>
+						</DropdownMenuItem>
+					)}
+					<DrawerTrigger asChild>
+						<DropdownMenuItem>
+							<PenIcon />
+							Edit Session
+						</DropdownMenuItem>
+					</DrawerTrigger>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle>Edit Session</DrawerTitle>
+					<DrawerDescription>Session #{slot.id}</DrawerDescription>
+				</DrawerHeader>
+				<DrawerInner>
+					<Table>
+						<TableBody>
+							<TableRow>
+								<TableCell className="font-medium">Status</TableCell>
+								<TableCell>
+									<Badge variant="secondary">
+										{snakeToTitleCase(slot.status)}
+									</Badge>
+								</TableCell>
+							</TableRow>
+							<TableRow>
+								<TableCell className="font-medium">Date & Time</TableCell>
+								<TableCell>{new Date(slot.startTime).toLocaleString()}</TableCell>
+							</TableRow>
+							{slot.meetingLink && (
+								<TableRow>
+									<TableCell className="font-medium">Meeting</TableCell>
+									<TableCell>
+										<Button variant="link" asChild>
+											<a href={slot.meetingLink} target="_blank" rel="noreferrer">
+												Join
+											</a>
+										</Button>
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
+				</DrawerInner>
+				<DrawerFooter>
+					<CopyButton
+						text={() => slot.id}
+						label="Session ID"
+						variant="outline"
+					/>
+					<Button asChild>
+						<Link href="/" as={`/slots/${slot.id}`}>Open Session Page</Link>
+					</Button>
+					<DrawerClose asChild>
+						<Button variant="outline">Close</Button>
+					</DrawerClose>
+				</DrawerFooter>
+			</DrawerContent>
+		</Drawer>
+	);
+}
 
 const columnHelper = createColumnHelper<DataTableFeatures, SlotRecord>();
 
@@ -92,38 +207,43 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					return <Badge variant="outline">Not Assigned</Badge>;
 				}
 				return (
-					<FetchUser id={studentId} isPending={<Spinner />}>
+					<FetchUser id={studentId} isPending={<UserCellSkeleton />}>
 						{(user) => (
 							<Drawer>
 								<DrawerTrigger asChild>
-									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+									<Item>
 										<ItemMedia>
-										<Avatar size="sm">
-											<AvatarImage
-												src={user.image ?? undefined}
-												alt={user.name}
-											/>
-											<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
-										</Avatar>
-									</ItemMedia>
-									<ItemContent>
-										<ItemTitle>{user.name}</ItemTitle>
-										<ItemDescription>{user.email}</ItemDescription>
-									</ItemContent>
+											<Avatar size="sm">
+												<AvatarImage
+													src={user.image ?? undefined}
+													alt={user.name}
+												/>
+												<AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
+											</Avatar>
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>{user.name}</ItemTitle>
+											<ItemDescription>{user.email}</ItemDescription>
+										</ItemContent>
 									</Item>
 								</DrawerTrigger>
-								<DrawerContent className="overflow-y-auto">
+								<DrawerContent>
 									<DrawerHeader>
 										<DrawerTitle>{user.name}</DrawerTitle>
 										<DrawerDescription>{user.email}</DrawerDescription>
 									</DrawerHeader>
-									<div className="flex flex-col gap-4 p-4">
+									<DrawerInner>
 										<ProfileCard user={user} />
-									</div>
+									</DrawerInner>
 									<DrawerFooter>
+										<Button asChild>
+											<Link href="/" as={`/students/${studentId}`}>
+												View Student Profile
+											</Link>
+										</Button>
 										<DrawerClose asChild>
-										<Button variant="outline">Close</Button>
-									</DrawerClose>
+											<Button variant="outline">Close</Button>
+										</DrawerClose>
 									</DrawerFooter>
 								</DrawerContent>
 							</Drawer>
@@ -141,38 +261,43 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					return <Badge variant="outline">Not Assigned</Badge>;
 				}
 				return (
-					<FetchUser id={teacherId} isPending={<Spinner />}>
+					<FetchUser id={teacherId} isPending={<UserCellSkeleton />}>
 						{(user) => (
 							<Drawer>
 								<DrawerTrigger asChild>
-									<Item className="cursor-pointer p-0 text-left transition-opacity hover:opacity-80">
+									<Item>
 										<ItemMedia>
-										<Avatar size="sm">
-											<AvatarImage
-												src={user.image ?? undefined}
-												alt={user.name}
-											/>
-											<AvatarFallback>{user.name?.[0] ?? "T"}</AvatarFallback>
-										</Avatar>
-									</ItemMedia>
-									<ItemContent>
-										<ItemTitle>{user.name}</ItemTitle>
-										<ItemDescription>{user.email}</ItemDescription>
-									</ItemContent>
+											<Avatar size="sm">
+												<AvatarImage
+													src={user.image ?? undefined}
+													alt={user.name}
+												/>
+												<AvatarFallback>{user.name?.[0] ?? "T"}</AvatarFallback>
+											</Avatar>
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>{user.name}</ItemTitle>
+											<ItemDescription>{user.email}</ItemDescription>
+										</ItemContent>
 									</Item>
 								</DrawerTrigger>
-								<DrawerContent className="overflow-y-auto">
+								<DrawerContent>
 									<DrawerHeader>
 										<DrawerTitle>{user.name}</DrawerTitle>
 										<DrawerDescription>{user.email}</DrawerDescription>
 									</DrawerHeader>
-									<div className="flex flex-col gap-4 p-4">
+									<DrawerInner>
 										<ProfileCard user={user} />
-									</div>
+									</DrawerInner>
 									<DrawerFooter>
+										<Button asChild>
+											<Link href="/" as={`/teachers/${teacherId}`}>
+												View Teacher Profile
+											</Link>
+										</Button>
 										<DrawerClose asChild>
-										<Button variant="outline">Close</Button>
-									</DrawerClose>
+											<Button variant="outline">Close</Button>
+										</DrawerClose>
 									</DrawerFooter>
 								</DrawerContent>
 							</Drawer>
@@ -182,14 +307,17 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			},
 		}),
 		columnHelper.accessor("status", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Status</TooltipTrigger>
-					<TooltipContent>
-						Lifecycle state of the scheduled session
-					</TooltipContent>
-				</Tooltip>
+			id: "status",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Status" />
 			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Status",
+				variant: "multiSelect",
+				options: statusOptions,
+			},
 			cell: ({ getValue }) => {
 				const status = getValue();
 				const variantMap: Record<
@@ -210,8 +338,13 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			},
 		}),
 		columnHelper.accessor("startTime", {
-			header: "Date",
-			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+			id: "startTime",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Date" />
+			),
+			enableSorting: true,
+			cell: ({ getValue }) =>
+				new Date(getValue()).toLocaleDateString(),
 		}),
 		columnHelper.display({
 			id: "time",
@@ -223,23 +356,13 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			},
 		}),
 		columnHelper.accessor("meetingLink", {
-			header: () => (
-				<Tooltip>
-					<TooltipTrigger className="cursor-help">Meeting</TooltipTrigger>
-					<TooltipContent>
-						Online classroom video conference link
-					</TooltipContent>
-				</Tooltip>
-			),
+			id: "meetingLink",
+			header: "Meeting",
 			cell: ({ getValue }) => {
 				const link = getValue();
-				if (!link) return "—";
+				if (!link) return null;
 				return (
-					<Button
-						variant="outline"
-						size="sm"
-						asChild
-					>
+					<Button variant="link" asChild>
 						<a href={link} target="_blank" rel="noreferrer">
 							Join
 						</a>
@@ -248,87 +371,62 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			},
 		}),
 		columnHelper.accessor("createdAt", {
-			header: "Created",
-			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+			id: "createdAt",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Created" />
+			),
+			enableSorting: true,
+			cell: ({ getValue }) =>
+				`${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
-			id: "edit",
-			header: "Edit",
-			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger asChild>
-						<Button variant="outline" size="icon-sm">
-							<PenIcon />
-						</Button>
-					</DrawerTrigger>
-					<DrawerContent className="overflow-y-auto">
-						<DrawerHeader>
-							<DrawerTitle>Edit Session</DrawerTitle>
-							<DrawerDescription>
-								Edit slot and reschedule details
-							</DrawerDescription>
-						</DrawerHeader>
-						<DrawerFooter>
-							<DrawerClose asChild>
-										<Button variant="outline">Close</Button>
-									</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
-			),
+			id: "actions",
+			header: "Actions",
+			enableSorting: false,
+			enableHiding: false,
+			cell: ({ row }) => <SlotActions slot={row.original} />,
 		}),
 	]);
 
 export default function Page() {
 	const { data = [], isPending } = useQuery(api.core.slot.list.queryOptions());
 
-	const table = useTable({
-		features,
+	const { table } = useDataTable({
 		data,
 		columns,
+		mode: "client",
+		initialState: {
+			sorting: [{ id: "startTime", desc: true }],
+			pagination: { pageIndex: 0, pageSize: 10 },
+		},
+		getRowId: (row) => row.id,
 	});
-
-	if (isPending) {
-		return <Loader />;
-	}
 
 	return (
 		<Frame>
-			<FramePanel>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder ? null : (
-											<table.FlexRender header={header} />
-										)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											<table.FlexRender cell={cell} />
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="text-center">
-									No sessions found
-								</TableCell>
-							</TableRow>
+			<FrameHeader>
+				<FrameTitle>Sessions & Slots</FrameTitle>
+				<FrameDescription>Manage scheduled calendar sessions</FrameDescription>
+				<FrameActions>
+					<ButtonGroup>
+						{isPending && (
+							<Button variant="outline" size="icon" disabled>
+								<Spinner />
+							</Button>
 						)}
-					</TableBody>
-				</Table>
+						<Button asChild>
+							<Link href="/slots/new">
+								<PlusIcon />
+								Create Session
+							</Link>
+						</Button>
+					</ButtonGroup>
+				</FrameActions>
+			</FrameHeader>
+			<FramePanel>
+				<DataTable table={table}>
+					<DataTableToolbar table={table} />
+				</DataTable>
 			</FramePanel>
 		</Frame>
 	);
