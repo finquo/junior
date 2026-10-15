@@ -87,6 +87,7 @@ export const SelectLessonSchema = createSelectSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod,
+		program: ProgramZod,
 		quiz: quizZod.array(),
 		period: intervalHourZod,
 	});
@@ -94,6 +95,7 @@ export const InsertLessonSchema = createInsertSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod,
+		program: ProgramZod,
 		quiz: quizZod.array().optional(),
 		period: intervalHourZod.optional(),
 	});
@@ -101,6 +103,7 @@ export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod.optional(),
+		program: ProgramZod.optional(),
 		quiz: quizZod.array().optional(),
 		period: intervalHourZod.optional(),
 	});

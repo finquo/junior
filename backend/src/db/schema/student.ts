@@ -7,7 +7,7 @@ import {
 	pgTable,
 	text,
 } from "drizzle-orm/pg-core";
-import type { CurrencyCodes, LanguageCodes, PlayKeys } from "@/config";
+import type { CurrencyCodes, LanguageCodes, ProgramKeys } from "@/config";
 import type { Address, Note, Schooling } from "@/config/profile";
 import {
 	createdAt,
@@ -40,7 +40,7 @@ export const student = pgTable(
 			.array()
 			.$default(() => []),
 
-		program: text().$type<PlayKeys>(),
+		program: text().$type<ProgramKeys>(),
 		lessons: getId().array().default([]),
 		meetingLink: text(),
 
@@ -68,7 +68,7 @@ export const payment = pgTable(
 			.notNull()
 			.references(() => student.id),
 
-		program: text().$type<PlayKeys>().notNull(),
+		program: text().$type<ProgramKeys>().notNull(),
 		transactionId: text(),
 
 		amount: integer().notNull(),

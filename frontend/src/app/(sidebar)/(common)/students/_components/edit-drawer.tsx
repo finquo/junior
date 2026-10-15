@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import {
 	type LanguageCodes,
 	Languages,
-	type PlayKeys,
-	plans,
+	type ProgramKeys,
+	programs,
 	type Schooling,
 	schoolingZod,
 } from "backend/config";
@@ -114,7 +114,7 @@ export function EditStudentDrawer({
 										<Select
 											value={field.state.value ?? ""}
 											onValueChange={(val) =>
-												field.handleChange((val as PlayKeys) || undefined)
+												field.handleChange((val as ProgramKeys) || undefined)
 											}
 											disabled={isPending}
 										>
@@ -123,7 +123,7 @@ export function EditStudentDrawer({
 											</SelectTrigger>
 											<SelectContent>
 												<SelectGroup>
-													{plans.map((p) => (
+													{programs.map((p) => (
 														<SelectItem key={p.id} value={p.id}>
 															{p.name}
 														</SelectItem>

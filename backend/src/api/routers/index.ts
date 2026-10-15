@@ -3,6 +3,7 @@ import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
 import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
+import { programRouter as programCore } from "./core/program";
 import { schedulerRouter as schedulerCore } from "./core/scheduler";
 import { selfRouter as selfCore } from "./core/self";
 import { slotRouter as slotCore } from "./core/slot";
@@ -27,6 +28,7 @@ export const appRouter = {
 	common,
 	core: {
 		lesson: lessonCore,
+		program: programCore,
 		scheduler: schedulerCore,
 		self: selfCore,
 		slot: slotCore,

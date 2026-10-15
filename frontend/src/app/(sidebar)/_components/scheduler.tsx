@@ -1,6 +1,5 @@
 "use client";
 
-import { plans } from "backend/config";
 import {
 	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,

@@ -2,7 +2,14 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
+import {
+	type LanguageCodes,
+	LanguageCodeZod,
+	Languages,
+	type ProgramKeys,
+	ProgramZod,
+	programs,
+} from "backend/config";
 import { BookOpenIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import { z } from "zod";
@@ -44,6 +51,7 @@ const createLessonSchema = z.object({
 	name: z.string().trim().min(1, "Lesson name is required"),
 	description: z.string().optional(),
 	language: LanguageCodeZod,
+	program: ProgramZod,
 	period: z.number(),
 });
 
@@ -65,6 +73,7 @@ export default function CreateLessonPage() {
 			name: "",
 			description: "",
 			language: "en-IN" as LanguageCodes,
+			program: programs[0].id,
 			period: 60,
 		} as z.infer<typeof createLessonSchema>,
 		validators: {
@@ -75,6 +84,7 @@ export default function CreateLessonPage() {
 				name: value.name.trim(),
 				description: value.description?.trim() || null,
 				language: value.language,
+				program: value.program,
 				period: value.period,
 			});
 		},
@@ -193,6 +203,49 @@ export default function CreateLessonPage() {
 											</Select>
 											<FieldDescription>
 												Teaching language used for this lesson.
+											</FieldDescription>
+											{isInvalid && (
+												<FieldError
+													errors={field.state.meta.errors.map((err) =>
+														typeof err === "string" ? { message: err } : err,
+													)}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+
+							<form.Field
+								name="program"
+								children={(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel htmlFor={field.name}>Program</FieldLabel>
+											<Select
+												value={field.state.value}
+												disabled={isPending}
+												onValueChange={(val) => {
+													if (val) field.handleChange(val as ProgramKeys);
+												}}
+											>
+												<SelectTrigger id={field.name}>
+													<SelectValue placeholder="Select program" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														{programs.map((program) => (
+															<SelectItem key={program.id} value={program.id}>
+																{program.name}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+											<FieldDescription>
+												Program this lesson belongs to.
 											</FieldDescription>
 											{isInvalid && (
 												<FieldError

@@ -1,5 +1,5 @@
 import { getAPI, getRolesProcedure, publicProcedure } from "@/api/procedure";
-import { plans } from "@/config";
+import { programs } from "@/config";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 
@@ -122,9 +122,9 @@ export const sidebarRouter = {
 		},
 	),
 	programs: getRolesProcedure(["admin"]).handler(() => {
-		return plans.map((plan) => ({
-			id: plan.id,
-			title: plan.name,
+		return programs.map((program) => ({
+			id: program.id,
+			title: program.name,
 		})) as Record<"id" | "title", string>[];
 	}),
 };
