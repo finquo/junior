@@ -244,9 +244,11 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: "Actions",
+			header: () => null,
+			size: 44,
 			enableSorting: false,
 			enableHiding: false,
+			meta: { align: "right" },
 			cell: ({ row }) => <SchedulerActions scheduler={row.original} />,
 		}),
 	]);
@@ -263,6 +265,7 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "createdAt", desc: true }],
 			pagination: { pageIndex: 0, pageSize: 10 },
+			columnVisibility: { id: false, email: false },
 		},
 		getRowId: (row) => row.id,
 	});

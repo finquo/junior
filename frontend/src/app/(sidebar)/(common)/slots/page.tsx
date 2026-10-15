@@ -381,9 +381,11 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: "Actions",
+			header: () => null,
+			size: 44,
 			enableSorting: false,
 			enableHiding: false,
+			meta: { align: "right" },
 			cell: ({ row }) => <SlotActions slot={row.original} />,
 		}),
 	]);

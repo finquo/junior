@@ -13,7 +13,7 @@ import {
 	PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getRelateTime } from "utils";
+import { getDurationFromInterval, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -209,7 +209,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 										{lesson.period && (
 											<TableRow>
 												<TableCell className="font-medium">Duration</TableCell>
-												<TableCell>{lesson.period} mins</TableCell>
+												<TableCell>{getDurationFromInterval(lesson.period)} mins</TableCell>
 											</TableRow>
 										)}
 										<TableRow>
@@ -307,7 +307,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			},
 			cell: ({ getValue }) => {
 				const val = getValue();
-				return val ? `${val} mins` : null;
+				return val ? `${getDurationFromInterval(val)} mins` : null;
 			},
 		}),
 		columnHelper.accessor("createdAt", {
@@ -321,9 +321,11 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: "Actions",
+			header: () => null,
+			size: 44,
 			enableSorting: false,
 			enableHiding: false,
+			meta: { align: "right" },
 			cell: ({ row }) => <LessonActions lesson={row.original} />,
 		}),
 	]);
@@ -338,6 +340,7 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "createdAt", desc: true }],
 			pagination: { pageIndex: 0, pageSize: 10 },
+			columnVisibility: { id: false },
 		},
 		getRowId: (row) => row.id,
 	});

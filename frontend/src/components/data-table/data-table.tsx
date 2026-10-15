@@ -117,6 +117,7 @@ function DataTableHeader<TData extends RowData>({
 								<DataTableCellSlot
 									key={header.id}
 									asChild
+									align={header.column.columnDef.meta?.align}
 									pinned={!!header.column.getIsPinned()}
 									style={getColumnPinningStyle(header.column)}
 								>
@@ -209,6 +210,7 @@ function DataTableRow<TData extends RowData>({
 									<DataTableCellSlot
 										key={cell.id}
 										asChild
+										align={cell.column.columnDef.meta?.align}
 										pinned={pinned}
 										style={style}
 									>
@@ -249,11 +251,19 @@ function DataTableActionBar<TData extends RowData>({
 
 interface DataTableCellSlotProps extends React.ComponentProps<"td"> {
 	asChild?: boolean;
+	align?: "left" | "center" | "right";
 	pinned?: boolean;
 }
 
+const cellAlignClassName = {
+	left: "text-left",
+	center: "text-center",
+	right: "text-right",
+} as const;
+
 function DataTableCellSlot({
 	pinned = false,
+	align,
 	className,
 	asChild = false,
 	children,
@@ -261,6 +271,7 @@ function DataTableCellSlot({
 }: DataTableCellSlotProps) {
 	const cellClassName = cn(
 		"overflow-hidden",
+		align && cellAlignClassName[align],
 		pinned &&
 			"bg-background transition-colors group-hover/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-has-aria-expanded/row:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))] group-data-[state=selected]/row:bg-muted",
 		className,

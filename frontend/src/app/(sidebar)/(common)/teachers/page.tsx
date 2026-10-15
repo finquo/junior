@@ -362,9 +362,11 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: "Actions",
+			header: () => null,
+			size: 44,
 			enableSorting: false,
 			enableHiding: false,
+			meta: { align: "right" },
 			cell: ({ row }) => <TeacherActions teacher={row.original} />,
 		}),
 	]);
@@ -381,6 +383,7 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "createdAt", desc: true }],
 			pagination: { pageIndex: 0, pageSize: 10 },
+			columnVisibility: { id: false },
 		},
 		getRowId: (row) => row.id,
 	});

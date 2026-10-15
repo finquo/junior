@@ -3,10 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { langFlag, langName } from "language-emoji";
-import {
-	InfoIcon,
-	PlusIcon,
-} from "lucide-react";
+import { InfoIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatTimeString } from "utils";
@@ -63,9 +60,7 @@ function getSlotEventColor(status: string): string {
 }
 
 export default function CalendarPage() {
-	const { data: slots = [] } = useQuery(
-		api.core.slot.list.queryOptions(),
-	);
+	const { data: slots = [] } = useQuery(api.core.slot.list.queryOptions());
 
 	const [selectedSlot, setSelectedSlot] = useState<SlotRecord | null>(null);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -227,7 +222,7 @@ export default function CalendarPage() {
 			</FramePanel>
 
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+				<DialogContent className="max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>Session Details</DialogTitle>
 						<DialogDescription>

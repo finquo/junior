@@ -20,6 +20,7 @@ export interface DataTableColumnMeta {
 	range?: [number, number];
 	unit?: string;
 	icon?: React.ComponentType<React.ComponentProps<"svg">>;
+	align?: "left" | "center" | "right";
 }
 
 export interface DataTableQueryKeys {

@@ -90,7 +90,12 @@ function SelectValue({
 	const context = React.useContext(SelectContext);
 	const currentValue = context?.value;
 
-	let renderedContent: React.ReactNode = null;
+	// Keep this `undefined` (not `null`) when there is nothing custom to render.
+	// Radix's Select.Value treats `children !== undefined` as "value node has
+	// children", which disables the built-in portal that mirrors the selected
+	// item's text into the trigger. Returning `null` here would therefore blank
+	// out both the placeholder and the selected value.
+	let renderedContent: React.ReactNode;
 	if (typeof children === "function") {
 		if (currentValue != null && currentValue !== "") {
 			renderedContent = (children as (val: any) => React.ReactNode)(
