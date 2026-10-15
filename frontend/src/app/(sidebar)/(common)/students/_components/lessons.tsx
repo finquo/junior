@@ -56,9 +56,9 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Marker, MarkerContent } from "@/components/ui/marker";
-import { api, queryClient } from "@/hooks/api";
+import { api, refetchAPIs } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
-import { LessonSelector } from "./selector";
+import { MultiLessonSelector } from "./selector";
 
 export function StudentLessons({ studentId }: { studentId: string }) {
 	const { data: studentLessonIds = [], isPending } = useQuery(
@@ -68,14 +68,18 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 	);
 
 	const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
-	const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+	const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
 
 	const items = orderedIds ?? studentLessonIds;
 
 	const { mutateAsync: updateStudentLessons } = useMutation(
 		api.core.student.updateLessons.mutationOptions({
 			onSuccess: () => {
-				queryClient.invalidateQueries();
+				refetchAPIs([
+					api.core.student.getLessons.queryKey({
+						input: { id: studentId },
+					}),
+				]);
 				toast.success({ title: "Lesson order updated" });
 			},
 		}),
@@ -90,10 +94,10 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 	};
 
 	const handleAddLesson = async () => {
-		if (!selectedLessonId) return;
-		const newIds = [...items, selectedLessonId];
+		if (selectedLessonIds.length === 0) return;
+		const newIds = [...items, ...selectedLessonIds];
 		setOrderedIds(newIds);
-		setSelectedLessonId("");
+		setSelectedLessonIds([]);
 		await updateStudentLessons({
 			id: studentId,
 			lessons: newIds,
@@ -134,10 +138,10 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 							</DrawerHeader>
 
 							<DrawerInner>
-								<LessonSelector
+								<MultiLessonSelector
 									enrolledLessonIds={items}
-									value={selectedLessonId}
-									onValueChange={setSelectedLessonId}
+									value={selectedLessonIds}
+									onValueChange={setSelectedLessonIds}
 								/>
 
 								<Marker variant="separator">
@@ -152,7 +156,7 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 
 							<DrawerFooter>
 								<DrawerClose
-									disabled={!selectedLessonId}
+									disabled={selectedLessonIds.length === 0}
 									onClick={handleAddLesson}
 									asChild
 								>
