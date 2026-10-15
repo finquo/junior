@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "cn";
+import { Slot } from "radix-ui";
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -253,9 +254,14 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-function DrawerInner({ className, ...props }: React.ComponentProps<"div">) {
+function DrawerInner({
+	className,
+	asChild = false,
+	...props
+}: React.ComponentProps<"div"> & { asChild?: boolean }) {
+	const Comp = asChild ? Slot.Root : "div";
 	return (
-		<div
+		<Comp
 			data-slot="drawer-inner"
 			className={cn("flex flex-1 flex-col overflow-y-auto p-4", className)}
 			{...props}

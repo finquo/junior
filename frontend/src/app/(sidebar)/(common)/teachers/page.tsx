@@ -66,7 +66,9 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { api } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -116,6 +118,14 @@ function TeacherActions({ teacher }: { teacher: TeacherRecord }) {
 						Edit Teacher
 					</DropdownMenuItem>
 				</EditTeacherDrawer>
+				<RenderWhenRole role="admin">
+					<UserEditDrawer userId={teacher.id} userData={teacher.user}>
+						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+							<PenIcon />
+							Edit User
+						</DropdownMenuItem>
+					</UserEditDrawer>
+				</RenderWhenRole>
 				{teacher.supervisorId && (
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
@@ -360,7 +370,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(api.core.teacher.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.teacher.list.queryOptions(),
+	);
 
 	const { table } = useDataTable({
 		data,
@@ -378,7 +390,7 @@ export default function Page() {
 			<FrameHeader>
 				<FrameTitle>Teachers</FrameTitle>
 				<FrameDescription>
-					Manage platform teachers and instructors
+					Manage teaching faculty, credentials, and availability
 				</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
@@ -388,11 +400,11 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-						<Link href="/admin/users/new">
-							<PlusIcon />
-							Add Teacher
-						</Link>
-					</Button>
+							<Link href="/admin/users/new">
+								<PlusIcon />
+								Add Teacher
+							</Link>
+						</Button>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>

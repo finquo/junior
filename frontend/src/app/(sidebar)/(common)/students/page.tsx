@@ -65,7 +65,9 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { api } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -115,6 +117,14 @@ function StudentActions({ student }: { student: StudentRecord }) {
 						Edit Student
 					</DropdownMenuItem>
 				</EditStudentDrawer>
+				<RenderWhenRole role="admin">
+					<UserEditDrawer userId={student.id}>
+						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+							<PenIcon />
+							Edit User
+						</DropdownMenuItem>
+					</UserEditDrawer>
+				</RenderWhenRole>
 				{student.supervisorId && (
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
@@ -348,7 +358,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(api.core.student.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.student.list.queryOptions(),
+	);
 
 	const { table } = useDataTable({
 		data,
@@ -376,11 +388,11 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-						<Link href="/admin/users/new">
-							<PlusIcon />
-							Add Student
-						</Link>
-					</Button>
+							<Link href="/admin/users/new">
+								<PlusIcon />
+								Add Student
+							</Link>
+						</Button>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>

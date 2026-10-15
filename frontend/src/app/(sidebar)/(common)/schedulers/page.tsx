@@ -1,13 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ColumnDef,
-	createColumnHelper,
-} from "@tanstack/react-table";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
+	PenIcon,
 	PlusIcon,
 	UserIcon,
 } from "lucide-react";
@@ -54,7 +52,9 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
+import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { api } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
@@ -73,7 +73,7 @@ function SchedulerActions({ scheduler }: { scheduler: SchedulerRecord }) {
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
-							<Link href="/" as={`/schedulers/${scheduler.id}`}>
+							<Link href={`/schedulers/${scheduler.id}` as "/"}>
 								<ExternalLinkIcon />
 								View Profile
 							</Link>
@@ -85,6 +85,14 @@ function SchedulerActions({ scheduler }: { scheduler: SchedulerRecord }) {
 							Quick Preview
 						</DropdownMenuItem>
 					</DrawerTrigger>
+					<RenderWhenRole role="admin">
+						<UserEditDrawer userId={scheduler.id} userData={scheduler.user}>
+							<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+								<PenIcon />
+								Edit User
+							</DropdownMenuItem>
+						</UserEditDrawer>
+					</RenderWhenRole>
 				</DropdownMenuContent>
 			</DropdownMenu>
 
@@ -107,7 +115,7 @@ function SchedulerActions({ scheduler }: { scheduler: SchedulerRecord }) {
 						variant="outline"
 					/>
 					<Button asChild>
-						<Link href="/" as={`/schedulers/${scheduler.id}`}>
+						<Link href={`/schedulers/${scheduler.id}` as "/"}>
 							View Full Profile
 						</Link>
 					</Button>
@@ -149,9 +157,7 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 											src={user?.image ?? undefined}
 											alt={user?.name ?? "Scheduler"}
 										/>
-										<AvatarFallback>
-											{user?.name?.[0] ?? "S"}
-										</AvatarFallback>
+										<AvatarFallback>{user?.name?.[0] ?? "S"}</AvatarFallback>
 									</Avatar>
 								</ItemMedia>
 								<ItemContent>
@@ -169,9 +175,7 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 									<DrawerDescription>{user.email}</DrawerDescription>
 								)}
 							</DrawerHeader>
-							<DrawerInner>
-								{user && <ProfileCard user={user} />}
-							</DrawerInner>
+							<DrawerInner>{user && <ProfileCard user={user} />}</DrawerInner>
 							<DrawerFooter>
 								<CopyButton
 									text={() => scheduler.id}
@@ -179,7 +183,7 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 									variant="outline"
 								/>
 								<Button asChild>
-									<Link href="/" as={`/schedulers/${scheduler.id}`}>
+									<Link href={`/schedulers/${scheduler.id}` as "/"}>
 										View Full Profile
 									</Link>
 								</Button>
@@ -204,7 +208,7 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 				return (
 					<ButtonGroup>
 						<Button variant="link" asChild>
-							<Link href="/" as={`/schedulers/${id}`}>{id}</Link>
+							<Link href={`/schedulers/${id}` as "/"}>{id}</Link>
 						</Button>
 						<CopyButton
 							text={() => id}
@@ -236,8 +240,7 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 				<DataTableColumnHeader column={column} label="Joined" />
 			),
 			enableSorting: true,
-			cell: ({ getValue }) =>
-				`${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
 			id: "actions",
@@ -249,7 +252,9 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(api.core.scheduler.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.scheduler.list.queryOptions(),
+	);
 
 	const { table } = useDataTable({
 		data,
@@ -266,7 +271,9 @@ export default function Page() {
 		<Frame>
 			<FrameHeader>
 				<FrameTitle>Schedulers</FrameTitle>
-				<FrameDescription>Manage platform session supervisors</FrameDescription>
+				<FrameDescription>
+					Manage scheduling team members and assignments
+				</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
 						{isPending && (
@@ -275,9 +282,9 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-							<Link href="/schedulers/new">
+							<Link href="/admin/users/new">
 								<PlusIcon />
-								Create Scheduler
+								Add Scheduler
 							</Link>
 						</Button>
 					</ButtonGroup>
