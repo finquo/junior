@@ -121,7 +121,7 @@ export const sidebarRouter = {
 			}));
 		},
 	),
-	programs: getRolesProcedure(["admin"]).handler(() => {
+	programs: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(() => {
 		return programs.map((program) => ({
 			id: program.id,
 			title: program.name,

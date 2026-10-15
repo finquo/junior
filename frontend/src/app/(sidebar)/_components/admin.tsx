@@ -105,11 +105,11 @@ export function SidebarConfig({
 					items={[
 						{
 							title: "Programs",
-							url: "/admin/programs",
+							url: "/programs",
 							icon: <VideoIcon />,
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
-								getLink: (id) => `/admin/programs/${id}`,
+								getLink: (id) => `/programs/${id}`,
 							},
 						},
 						{

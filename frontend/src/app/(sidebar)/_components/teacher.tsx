@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	BookOpenCheckIcon,
 	CalendarFoldIcon,
 	CalendarX2Icon,
 	GraduationCapIcon,
@@ -47,6 +48,15 @@ export function SidebarConfig({
 				<NavMain
 					title="Platform"
 					items={[
+						{
+							title: "Programs",
+							url: "/programs",
+							icon: <BookOpenCheckIcon />,
+							fetchItems: {
+								api: api.sidebar.programs.queryOptions(),
+								getLink: (id) => `/programs/${id}`,
+							},
+						},
 						{
 							title: "Slots",
 							url: "/slots",

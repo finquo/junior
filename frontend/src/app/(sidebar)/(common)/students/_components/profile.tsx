@@ -1,14 +1,21 @@
 "use client";
 
+import { programs } from "backend/config";
+import { langFlag, langName } from "language-emoji";
 import {
 	BookOpenIcon,
 	ExternalLinkIcon,
+	GraduationCapIcon,
+	LanguagesIcon,
+	MapPinIcon,
+	NotebookPenIcon,
 	PenIcon,
-	PlusIcon,
+	SchoolIcon,
+	UserRoundIcon,
 	VideoIcon,
+	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,26 +28,108 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemMedia,
+	ItemTitle,
+} from "@/components/ui/item";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FetchLesson } from "@/hooks/lesson";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
-import { formatDate, getInitials } from "@/lib/utils";
+import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 import { EditStudentDrawer } from "./edit-drawer";
 
 type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
 
+function PersonItem({
+	label,
+	name,
+	email,
+	image,
+	href,
+}: {
+	label: string;
+	name: string;
+	email?: string | null;
+	image?: string | null;
+	href: string;
+}) {
+	return (
+		<Item variant="outline" asChild>
+			<Link href={href as "/"}>
+				<ItemMedia>
+					<Avatar size="sm">
+						{image && <AvatarImage src={image} alt={name} />}
+						<AvatarFallback>{getInitials(name)}</AvatarFallback>
+					</Avatar>
+				</ItemMedia>
+				<ItemContent>
+					<ItemTitle>{name}</ItemTitle>
+					{email && <ItemDescription>{email}</ItemDescription>}
+				</ItemContent>
+				<ItemActions>
+					<ColorBadge variant="secondary">{label}</ColorBadge>
+				</ItemActions>
+			</Link>
+		</Item>
+	);
+}
+
+function EmptyPersonItem({ label }: { label: string }) {
+	return (
+		<Item variant="outline">
+			<ItemMedia variant="icon">
+				<UserRoundIcon />
+			</ItemMedia>
+			<ItemContent>
+				<ItemTitle>{label}</ItemTitle>
+				<ItemDescription>Not assigned</ItemDescription>
+			</ItemContent>
+		</Item>
+	);
+}
+
+function PersonItemSkeleton({ label }: { label: string }) {
+	return (
+		<Item variant="outline">
+			<ItemMedia>
+				<Skeleton className="size-8 rounded-full" />
+			</ItemMedia>
+			<ItemContent>
+				<ItemTitle>{label}</ItemTitle>
+				<Skeleton className="h-3 w-32" />
+			</ItemContent>
+		</Item>
+	);
+}
+
 export function StudentProfile({ data }: { data: StudentData }) {
-	const address = data.address;
 	const notes = data.notes ?? [];
+	const lessonIds = data.lessons ?? [];
+	const languages = data.languages ?? [];
+	const program = programs.find((p) => p.id === data.program);
+
+	const total = data.amount ?? 0;
+	const remaining = data.remaining ?? 0;
+	const paidAmount = Math.max(total - remaining, 0);
+	const paymentProgress =
+		total > 0 ? Math.round((paidAmount / total) * 100) : data.paid ? 100 : 0;
 
 	return (
 		<Card>
@@ -54,12 +143,13 @@ export function StudentProfile({ data }: { data: StudentData }) {
 							</Avatar>
 							<CardTitle>{user.name}</CardTitle>
 							<CardDescription>{user.email}</CardDescription>
-							<ColorBadge variant="info">Student</ColorBadge>
-							<ColorBadge variant={user.emailVerified ? "success" : "warning"}>
-								{user.emailVerified ? "Verified" : "Unverified"}
+							<ColorBadge variant="info" className="col-span-full">
+								Student
 							</ColorBadge>
 							{user.banned && (
-								<ColorBadge variant="destructive">Banned</ColorBadge>
+								<ColorBadge variant="destructive" className="col-span-full">
+									Banned
+								</ColorBadge>
 							)}
 						</>
 					)}
@@ -67,214 +157,382 @@ export function StudentProfile({ data }: { data: StudentData }) {
 
 				<CardAction>
 					<ButtonGroup>
-						<Button
-							variant="outline"
-							size="sm"
-							asChild
-						>
+						<Button variant="outline" size="sm" asChild>
 							<Link
 								href={{
 									pathname: "/slots/new",
-									query: {
-										studentId: data.id,
-									},
+									query: { studentId: data.id },
 								}}
 							>
 								<VideoIcon />
 								Schedule Session
 							</Link>
 						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							asChild
-						>
-							<Link href={`/students/${data.id}/lessons`}>
+						<Button variant="outline" size="sm" asChild>
+							<Link href={`/students/${data.id}/lessons` as "/"}>
 								<BookOpenIcon />
-							Manage Lessons
+								Manage Lessons
 							</Link>
 						</Button>
+						<RenderWhenRole role={["admin", "scheduler"]}>
+							<EditStudentDrawer student={data}>
+								<Button variant="outline" size="sm">
+									<PenIcon />
+									Edit
+								</Button>
+							</EditStudentDrawer>
+						</RenderWhenRole>
 					</ButtonGroup>
-					<RenderWhenRole role={["admin", "scheduler"]}>
-						<EditStudentDrawer student={data}>
-							<Button variant="outline" size="sm">
-								<PenIcon />
-								Edit
-							</Button>
-						</EditStudentDrawer>
-					</RenderWhenRole>
 				</CardAction>
 			</CardHeader>
 
 			<CardContent>
-				<Table>
-					<TableBody>
-						\n{" "}
-						<TableRow>
-							<TableCell>User ID</TableCell>
-							<TableCell>{data.id}</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Program</TableCell>
-							<TableCell>{data.program ?? "None"}</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Schooling</TableCell>
-							<TableCell>{data.schooling ?? "None"}</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Lessons Enrolled</TableCell>
-							<TableCell>
-								<Button
-									variant="link"
-									size="sm"
-									asChild
-								>
-									<Link href={`/students/${data.id}/lessons`}>
-										{data.lessons?.length ?? 0} lessons
-									<ExternalLinkIcon />
-									</Link>
-								</Button>
-							</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Languages</TableCell>
-							<TableCell>
-								{Array.isArray(data.languages) && data.languages.length
-									? data.languages.map((lang) => (
-											<Badge key={String(lang)} variant="secondary">
-												{String(lang)}
-											</Badge>
-										))
-									: "None"}
-							</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Fee Status</TableCell>
-							<TableCell>
-								<ColorBadge variant={data.paid ? "success" : "warning"}>
-									{data.paid ? "Paid" : "Pending"}
-								</ColorBadge>
-							</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Total Amount</TableCell>
-							<TableCell>₹{data.amount ?? 0}</TableCell>
-						</TableRow>
-						<TableRow>
-							<TableCell>Remaining Balance</TableCell>
-							<TableCell>₹{data.remaining ?? 0}</TableCell>
-						</TableRow>
-						{data.meetingLink && (
-							<TableRow>
-								<TableCell>Meeting Link</TableCell>
-								<TableCell>
-									<a
-										href={data.meetingLink}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										{data.meetingLink}
-									</a>
-								</TableCell>
-							</TableRow>
-						)}
-						{data.mentorId && (
-							<TableRow>
-								<TableCell>Mentor ID</TableCell>
-								<TableCell>{data.mentorId}</TableCell>
-							</TableRow>
-						)}
-						{data.supervisorId && (
-							<TableRow>
-								<TableCell>Supervisor ID</TableCell>
-								<TableCell>{data.supervisorId}</TableCell>
-							</TableRow>
-						)}
-						<TableRow>
-							<TableCell>Joined</TableCell>
-							<TableCell>{formatDate(data.createdAt)}</TableCell>
-						</TableRow>
-					</TableBody>
-				</Table>
+				<Tabs defaultValue="overview">
+					<TabsList>
+						<TabsTrigger value="overview">
+							<UserRoundIcon />
+							Overview
+						</TabsTrigger>
+						<TabsTrigger value="lessons">
+							<BookOpenIcon />
+							Lessons
+						</TabsTrigger>
+						<TabsTrigger value="notes">
+							<NotebookPenIcon />
+							Notes
+						</TabsTrigger>
+					</TabsList>
 
-				{address && (
-					<>
-						<Separator />
-						<Card>
+					<TabsContent value="overview" className="flex flex-col gap-4">
+						<Card size="sm">
 							<CardHeader>
-								<CardTitle>Address</CardTitle>
+								<CardTitle>Mentorship</CardTitle>
+								<CardDescription>
+									Assigned mentor and scheduling supervisor.
+								</CardDescription>
 							</CardHeader>
 							<CardContent>
+								<ItemGroup>
+									{data.mentorId ? (
+										<FetchUser
+											id={data.mentorId}
+											isPending={<PersonItemSkeleton label="Mentor" />}
+											notFound={<EmptyPersonItem label="Mentor" />}
+										>
+											{(mentor) => (
+												<PersonItem
+													label="Mentor"
+													name={mentor.name}
+													email={mentor.email}
+													image={mentor.image}
+													href={`/teachers/${mentor.id}`}
+												/>
+											)}
+										</FetchUser>
+									) : (
+										<EmptyPersonItem label="Mentor" />
+									)}
+									{data.supervisorId ? (
+										<FetchUser
+											id={data.supervisorId}
+											isPending={<PersonItemSkeleton label="Supervisor" />}
+											notFound={<EmptyPersonItem label="Supervisor" />}
+										>
+											{(supervisor) => (
+												<PersonItem
+													label="Supervisor"
+													name={supervisor.name}
+													email={supervisor.email}
+													image={supervisor.image}
+													href={`/schedulers/${supervisor.id}`}
+												/>
+											)}
+										</FetchUser>
+									) : (
+										<EmptyPersonItem label="Supervisor" />
+									)}
+								</ItemGroup>
+							</CardContent>
+						</Card>
+
+						<Card size="sm">
+							<CardHeader>
+								<CardTitle>Enrollment</CardTitle>
+								<CardDescription>
+									Academic details and program placement.
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="grid gap-4 sm:grid-cols-2">
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<GraduationCapIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Program</ItemTitle>
+											<ItemDescription>
+												{program?.name ?? "No program assigned"}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<SchoolIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Schooling</ItemTitle>
+											<ItemDescription className="capitalize">
+												{data.schooling ?? "Not specified"}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<LanguagesIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Languages</ItemTitle>
+										</ItemContent>
+										<ItemActions>
+											{languages.length > 0 ? (
+												languages.map((code) => (
+													<Badge key={code} variant="secondary">
+														{langFlag(code)} {langName(code)}
+													</Badge>
+												))
+											) : (
+												<Badge variant="outline">Not specified</Badge>
+											)}
+										</ItemActions>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<WalletIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Enrolled On</ItemTitle>
+											<ItemDescription>
+												{formatDate(data.createdAt)}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+								</div>
+							</CardContent>
+						</Card>
+
+						<Card size="sm">
+							<CardHeader>
+								<CardTitle>Fee Payment</CardTitle>
+								<CardDescription>
+									Track the student's program fee and balance.
+								</CardDescription>
+								<CardAction>
+									<ColorBadge variant={data.paid ? "success" : "warning"}>
+										{data.paid ? "Fully Paid" : "Payment Pending"}
+									</ColorBadge>
+								</CardAction>
+							</CardHeader>
+							<CardContent>
+								<Progress value={paymentProgress} />
 								<Table>
 									<TableBody>
 										<TableRow>
-											<TableCell>Street</TableCell>
-											<TableCell>
-												{address.line1}
-												{address.line2 ? `, ${address.line2}` : ""}
-											</TableCell>
+											<TableCell>Total Amount</TableCell>
+											<TableCell>₹{total}</TableCell>
 										</TableRow>
 										<TableRow>
-											<TableCell>City / State</TableCell>
-											<TableCell>
-												{address.city}, {address.state}
-											</TableCell>
+											<TableCell>Paid</TableCell>
+											<TableCell>₹{paidAmount}</TableCell>
 										</TableRow>
 										<TableRow>
-											<TableCell>Postal Code / Country</TableCell>
-											<TableCell>
-												{address.postalCode}, {address.country}
-											</TableCell>
+											<TableCell>Remaining</TableCell>
+											<TableCell>₹{remaining}</TableCell>
 										</TableRow>
 									</TableBody>
 								</Table>
 							</CardContent>
 						</Card>
-					</>
-				)}
 
-				<Separator />
-				<Card>
-					<CardHeader>
-						<CardTitle>Notes</CardTitle>
-						<CardAction>
-							<Button variant="outline" size="sm">
-								<PlusIcon />
-								Add Note
-							</Button>
-						</CardAction>
-					</CardHeader>
-					<CardContent>
-						{notes.length === 0 ? (
-							<Alert>
-								<AlertTitle>No notes</AlertTitle>
-								<AlertDescription>
-									No notes recorded for this student.
-								</AlertDescription>
-							</Alert>
-						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Note</TableHead>
-										<TableHead>Author</TableHead>
-										<TableHead>Date</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{notes.map((note, idx) => (
-										<TableRow key={idx as number}>
-											<TableCell>{note.text}</TableCell>
-											<TableCell>{note.writterBy}</TableCell>
-											<TableCell>{formatDate(note.createdAt)}</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+						{data.address && (
+							<Card size="sm">
+								<CardHeader>
+									<CardTitle>Address</CardTitle>
+									<CardDescription>Contact address on record.</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<ItemGroup>
+										<Item variant="muted">
+											<ItemMedia variant="icon">
+												<MapPinIcon />
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>
+													{data.address.line1}
+													{data.address.line2 ? `, ${data.address.line2}` : ""}
+												</ItemTitle>
+												<ItemDescription>
+													{data.address.city}, {data.address.state},{" "}
+													{data.address.postalCode}, {data.address.country}
+												</ItemDescription>
+											</ItemContent>
+										</Item>
+									</ItemGroup>
+								</CardContent>
+							</Card>
 						)}
-					</CardContent>
-				</Card>
+
+						{data.meetingLink && (
+							<Card size="sm">
+								<CardHeader>
+									<CardTitle>Meeting Link</CardTitle>
+									<CardDescription>
+										Default link used for this student's sessions.
+									</CardDescription>
+									<CardAction>
+										<Button variant="outline" size="sm" asChild>
+											<a
+												href={data.meetingLink}
+												target="_blank"
+												rel="noreferrer"
+											>
+												<VideoIcon />
+												Join
+											</a>
+										</Button>
+									</CardAction>
+								</CardHeader>
+							</Card>
+						)}
+					</TabsContent>
+
+					<TabsContent value="lessons" className="flex flex-col gap-4">
+						<Card size="sm">
+							<CardHeader>
+								<CardTitle>Enrolled Lessons</CardTitle>
+								<CardDescription>
+									Lessons assigned to {lessonIds.length} position
+									{lessonIds.length === 1 ? "" : "s"} of the curriculum.
+								</CardDescription>
+								<CardAction>
+									<Button variant="outline" size="sm" asChild>
+										<Link href={`/students/${data.id}/lessons` as "/"}>
+											<PenIcon />
+											Manage
+										</Link>
+									</Button>
+								</CardAction>
+							</CardHeader>
+							<CardContent>
+								{lessonIds.length === 0 ? (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<BookOpenIcon />
+											</EmptyMedia>
+											<EmptyTitle>No lessons enrolled</EmptyTitle>
+											<EmptyDescription>
+												Assign lessons to build this student's curriculum.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								) : (
+									<ItemGroup>
+										{lessonIds.map((lessonId) => (
+											<FetchLesson
+												key={lessonId}
+												id={lessonId}
+												isPending={
+													<Item variant="outline">
+														<ItemContent>
+															<ItemTitle>Loading…</ItemTitle>
+														</ItemContent>
+													</Item>
+												}
+												notFound={
+													<Item variant="outline">
+														<ItemContent>
+															<ItemTitle>Lesson not found</ItemTitle>
+														</ItemContent>
+													</Item>
+												}
+											>
+												{(lesson) => (
+													<Item variant="outline">
+														<ItemMedia variant="icon">
+															<BookOpenIcon />
+														</ItemMedia>
+														<ItemContent>
+															<ItemTitle>{lesson.name}</ItemTitle>
+															{lesson.description && (
+																<ItemDescription>
+																	{lesson.description}
+																</ItemDescription>
+															)}
+														</ItemContent>
+														<ItemActions>
+															<Badge variant="secondary">
+																{langFlag(lesson.language)}{" "}
+																{langName(lesson.language)}
+															</Badge>
+															<Button variant="ghost" size="sm" asChild>
+																<Link href={`/lessons/${lessonId}` as "/"}>
+																	Open
+																	<ExternalLinkIcon />
+																</Link>
+															</Button>
+														</ItemActions>
+													</Item>
+												)}
+											</FetchLesson>
+										))}
+									</ItemGroup>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					<TabsContent value="notes" className="flex flex-col gap-4">
+						<Card size="sm">
+							<CardHeader>
+								<CardTitle>Notes</CardTitle>
+								<CardDescription>
+									Internal observations recorded for this student.
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								{notes.length === 0 ? (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<NotebookPenIcon />
+											</EmptyMedia>
+											<EmptyTitle>No notes yet</EmptyTitle>
+											<EmptyDescription>
+												Notes written about this student will appear here.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								) : (
+									<Table>
+										<TableBody>
+											{notes.map((note, idx) => (
+												<TableRow key={idx as number}>
+													<TableCell>{note.text}</TableCell>
+													<TableCell>
+														<ColorBadge>
+															{snakeToTitleCase(note.writterBy)}
+														</ColorBadge>
+													</TableCell>
+													<TableCell>{formatDate(note.createdAt)}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
 			</CardContent>
 		</Card>
 	);
