@@ -1,4 +1,5 @@
 import { desc, eq, sql } from "drizzle-orm";
+import z from "zod";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
 import {
@@ -20,16 +21,25 @@ export const lessonRouter = {
 			[],
 		),
 	),
+	get: getRolesProcedure(["admin", "teacher", "scheduler", "student"])
+		.input(SelectLessonSchema.pick({ id: true }))
+		.handler(async ({ input }) => {
+			return await tryAPI(
+				"db-core-get-lesson",
+				db.query.lesson.findFirst({
+					where: {
+						id: input.id,
+					},
+				}),
+			);
+		}),
 	search: getRolesProcedure(["admin", "teacher", "scheduler"])
 		.input(
-			SelectLessonSchema.pick({ name: true }).extend({
-				searchQuery: SelectLessonSchema.shape.name
-					.min(3, { message: "Type at least 3 letters" })
-					.optional(),
+			z.object({
+				query: z.string().min(3, { message: "Type at least 3 letters" }),
 			}),
 		)
-		.handler(async ({ input }) => {
-			const query = input.searchQuery || input.name;
+		.handler(async ({ input: { query } }) => {
 			return await getAPI(
 				"db-core-search-lessons-query",
 				db

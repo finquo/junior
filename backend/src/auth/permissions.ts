@@ -28,6 +28,7 @@ const admin = ac.newRole({
 });
 
 const scheduler = ac.newRole({
+	user: ["update"],
 	scheduler: ["update"],
 	student: ["update", "delete"],
 	teacher: ["update", "delete"],

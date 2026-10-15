@@ -65,14 +65,11 @@ export const studentRouter = {
 		}),
 	search: getRolesProcedure(["admin", "teacher", "scheduler"])
 		.input(
-			SelectUserSchema.pick({ name: true }).extend({
-				searchQuery: SelectUserSchema.shape.name
-					.min(3, { message: "Type at least 3 letters" })
-					.optional(),
+			z.object({
+				query: z.string().min(3, { message: "Type at least 3 letters" }),
 			}),
 		)
-		.handler(async ({ input, context }) => {
-			const query = input.searchQuery || input.name;
+		.handler(async ({ input: { query }, context }) => {
 			return await getAPI(
 				"db-core-search-students-query",
 				db

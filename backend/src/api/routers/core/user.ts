@@ -1,6 +1,8 @@
+import { or, sql } from "drizzle-orm";
 import z from "zod";
-import { getRolesProcedure, tryAPI } from "@/api/procedure";
+import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { roleEnumZod } from "@/auth";
+import { schema } from "@/db";
 import { auth, db } from "@/services";
 
 export const userRouter = {
@@ -23,6 +25,30 @@ export const userRouter = {
 						studentData: true,
 					},
 				}),
+			);
+		}),
+	search: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				query: z.string().min(3, { message: "Type at least 3 letters" }),
+			}),
+		)
+		.handler(async ({ input: { query } }) => {
+			return await getAPI(
+				"db-core-search-users-query",
+				db
+					.select()
+					.from(schema.user)
+					.where(
+						or(
+							sql`${schema.user.name} % ${query}`,
+							sql`${schema.user.email} % ${query}`,
+						),
+					)
+					.orderBy(
+						sql`GREATEST(similarity(${schema.user.name}, ${query}), similarity(${schema.user.email}, ${query})) DESC`,
+					),
+				[],
 			);
 		}),
 	createAccount: getRolesProcedure(["admin", "enrollment_advisor"])
