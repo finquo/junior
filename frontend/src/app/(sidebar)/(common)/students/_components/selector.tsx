@@ -51,19 +51,19 @@ export function LessonComboboxItem({
 	};
 }) {
 	return (
-		<div className="flex w-full items-center justify-between gap-2 py-0.5">
-			<ItemContent className="min-w-0 flex-1">
+		<div className="flex w-full flex-col gap-2 py-1.5">
+			<ItemContent className="min-w-0">
 				<ItemTitle>
 					<BookOpenIcon className="size-4 shrink-0 text-muted-foreground" />
 					<span className="truncate">{lesson.name}</span>
 				</ItemTitle>
 				{lesson.description && (
-					<ItemDescription className="truncate">
+					<ItemDescription className="line-clamp-2">
 						{lesson.description}
 					</ItemDescription>
 				)}
 			</ItemContent>
-			<ItemActions className="shrink-0">
+			<ItemActions>
 				{lesson.language && (
 					<Badge variant="secondary" className="text-xs">
 						{langFlag(lesson.language)} {langName(lesson.language)}
@@ -84,11 +84,13 @@ export function MultiLessonSelector({
 	enrolledLessonIds = [],
 	value = [],
 	onValueChange,
+	container,
 }: {
 	label?: string;
 	enrolledLessonIds?: string[];
 	value?: string[];
 	onValueChange?: (val: string[]) => void;
+	container?: HTMLElement | null;
 }) {
 	const anchor = useComboboxAnchor();
 	const { data = [] } = useQuery(api.core.lesson.list.queryOptions());
@@ -145,7 +147,11 @@ export function MultiLessonSelector({
 						)}
 					</ComboboxValue>
 				</ComboboxChips>
-				<ComboboxContent anchor={anchor} className="max-h-72">
+				<ComboboxContent
+					anchor={anchor}
+					container={container}
+					className="max-h-72"
+				>
 					<ComboboxEmpty>
 						{availableLessons.length === 0
 							? "All lessons already enrolled"

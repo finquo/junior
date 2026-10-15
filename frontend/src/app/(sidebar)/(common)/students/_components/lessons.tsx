@@ -69,6 +69,9 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 
 	const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
 	const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
+	const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
+		null,
+	);
 
 	const items = orderedIds ?? studentLessonIds;
 
@@ -129,7 +132,7 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 								Add Lesson
 							</Button>
 						</DrawerTrigger>
-						<DrawerContent>
+						<DrawerContent ref={setPortalContainer}>
 							<DrawerHeader>
 								<DrawerTitle>Add Lesson</DrawerTitle>
 								<DrawerDescription>
@@ -142,6 +145,7 @@ export function StudentLessons({ studentId }: { studentId: string }) {
 									enrolledLessonIds={items}
 									value={selectedLessonIds}
 									onValueChange={setSelectedLessonIds}
+									container={portalContainer}
 								/>
 
 								<Marker variant="separator">
