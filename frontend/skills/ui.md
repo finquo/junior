@@ -15,6 +15,35 @@ Depending on the specific user request, you **MUST** read the corresponding spec
 
 ---
 
+## Tips & Tricks for Developers & Agents
+
+These essential rules of thumb will keep your work fast, consistent, and cleanly integrated with the codebase:
+
+### 1. Collaboration: Ask Questions Instead of Guessing
+- **Never guess**: If a requirement, naming convention, or component detail is open-ended or ambiguous, ask directly rather than assuming.
+- **Lean on the developer**: The developer has full visual and business context and can immediately point you to the right direction.
+- **Targeted file reading**: Do not waste time wandering through irrelevant files. Ask the developer which files are important for the task.
+
+### 2. Read Official Docs, Never Bundled npm Packages
+- **Never inspect bundled/minified package files in `node_modules`**: Reverse-engineering `.bun/` or `node_modules` is slow and error-prone.
+- **Read official online docs directly**: Use official markdown docs (such as [shadcn documentation](https://ui.shadcn.com/docs/components/)) for clean APIs, supported props, and standard patterns.
+
+### 3. Targeted Cache Invalidation with `refetchAPIs`
+- **Never call blanket `queryClient.invalidateQueries()`**: Invalidate queries indiscriminately triggers cascading network requests across unrelated features.
+- **Always use `refetchAPIs`**: In mutation `onSuccess` handlers, pass the specific query keys to `refetchAPIs([api.<router>.<procedure>.queryKey(...)])` to refresh only the affected data.
+
+### 4. Strict Workspace & Component Boundaries
+- **Strict Frontend Boundary**: Only write inside `frontend/`. Backend files are read-only references for API routes and Zod schemas.
+- **`src/components/ui/` is Reserved**: Never create custom components in `src/components/ui/`. That directory is exclusively for official shadcn UI primitives installed via `bun shadcn add <component>`.
+- **Colocate in Nearest `_components/`**: Place feature-specific and route-private components in the nearest `_components/` folder where they are consumed.
+- **Preserve Existing Components**: When asked to add a new component variant, never remove or overwrite the existing component unless explicitly instructed.
+
+### 5. Zero Custom Divs & Maximum Shadcn Primitives
+- **Never wrap with unnecessary `div`s**: Redundant wrappers break flex layouts, container queries, and accessibility trees.
+- **Compose with shadcn primitives**: Maximize existing UI components (`Item`, `Card`, `Badge`, `Alert`, etc.) instead of crafting ad-hoc flexbox utility chains.
+
+---
+
 ## 1. Radix Composition Rule (`asChild` vs. Render Props)
 
 This codebase uses **Radix UI** primitives and `@radix-ui/react-slot`. Render props (`render={...}`) and Base UI DOM attributes (`nativeButton`) are strictly forbidden and eliminated.
@@ -162,6 +191,7 @@ Keep a strict boundary between globally shared components and route-specific chi
 - Colocate feature logic:
   - `profile.tsx`: Pure view component.
   - `lessons.tsx`: Route-specific management component.
+  - `selector.tsx`: Domain selectors (single and multi).
   - `index.ts`: Barrel export for the private components.
 
 ### Pure View Rules for `_components/`:
@@ -308,4 +338,5 @@ const isScheduler = useHasRole("scheduler");
 - **Current User Profile**: `getUserData()` (`@/hooks/user`)
 - **Entity Resolution**: `<FetchUser id={userId} />` (`@/hooks/user`), `<FetchLesson id={lessonId} />` (`@/hooks/lesson`)
 - **API Queries & Mutations**: `api.<router>.<procedure>.queryOptions()` / `.mutationOptions()` with TanStack Query (`@/hooks/api`)
+- **Cache Invalidation**: `refetchAPIs([api.<router>.<procedure>.queryKey(...)])` (`@/hooks/api`)
 - **Notifications**: `import { sileo as toast } from "sileo";`
