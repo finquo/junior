@@ -7,7 +7,7 @@ import {
 	pgTable,
 	text,
 } from "drizzle-orm/pg-core";
-import type { CurrencyCodes, LanguageCodes } from "@/config";
+import type { CurrencyCodes, LanguageCodes } from "utils";
 import type { Address, Note, Schooling } from "@/config/profile";
 import {
 	createdAt,
@@ -79,7 +79,7 @@ export const payment = pgTable(
 		currency: text()
 			.$type<CurrencyCodes>()
 			.notNull()
-			.$default(() => "₹"),
+			.$default(() => "INR"),
 
 		createdAt: createdAt(),
 	},

@@ -1,4 +1,5 @@
 import { SidebarConfig as AdminSidebar } from "@/app/(sidebar)/_components/admin";
+import { SidebarConfig as EmptySidebar } from "@/app/(sidebar)/_components/empty";
 import { SidebarConfig as SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { SidebarConfig as TeacherSidebar } from "@/app/(sidebar)/_components/teacher";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -16,7 +17,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				enrollment_advisor={null}
 				student={null}
 				qa_auditor={null}
-			/>
+			>
+				<EmptySidebar />
+			</RoleRender>
 			<SidebarInset>
 				<SideBarHeader />
 				<div className="relative min-h-svh p-3">{children}</div>

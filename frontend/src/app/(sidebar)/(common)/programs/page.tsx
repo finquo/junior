@@ -2,19 +2,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { Countries, type CountryCodes } from "backend/config";
 import {
+	BookOpenIcon,
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
+	PlusIcon,
 	ScanEyeIcon,
 } from "lucide-react";
 import Link from "next/link";
+import {
+	Countries,
+	type CountryCodes,
+	getCountryCurrencySymbol,
+	getCountryName,
+} from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import {
 	Frame,
+	FrameActions,
 	FrameDescription,
 	FrameHeader,
 	FramePanel,
@@ -45,6 +53,7 @@ import {
 	ItemDescription,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
@@ -53,13 +62,8 @@ import type { DataTableFeatures } from "@/lib/data-table-features";
 
 type ProgramRecord = API_Returns["core"]["program"]["list"][number];
 
-const currencySymbol: Record<CountryCodes, string> = {
-	IN: "₹",
-	US: "$",
-};
-
 function formatPrice(code: CountryCodes, amount: number) {
-	return `${currencySymbol[code]}${amount.toLocaleString()}`;
+	return `${getCountryCurrencySymbol(code)}${amount.toLocaleString()}`;
 }
 
 function ProgramDrawer({ program }: { program: ProgramRecord }) {
@@ -78,12 +82,12 @@ function ProgramDrawer({ program }: { program: ProgramRecord }) {
 						</TableRow>
 						<TableRow>
 							<TableCell className="font-medium">Lessons</TableCell>
-							<TableCell>{program.count}</TableCell>
+							<TableCell>{program.lessonCount}</TableCell>
 						</TableRow>
 						{Object.entries(program.price).map(([code, amount]) => (
 							<TableRow key={code}>
 								<TableCell className="font-medium">
-									{Countries[code as CountryCodes] ?? code}
+									{getCountryName(code)}
 								</TableCell>
 								<TableCell>
 									{formatPrice(code as CountryCodes, amount)}
@@ -119,12 +123,25 @@ function ProgramActions({ program }: { program: ProgramRecord }) {
 						<MoreHorizontalIcon />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
+				<DropdownMenuContent>
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
 							<Link href={`/programs/${program.id}` as "/"}>
 								<ExternalLinkIcon />
 								View Program Page
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link
+								href={{
+									pathname: "/lessons/new",
+									query: { programId: program.id },
+								}}
+							>
+								<BookOpenIcon />
+								Create Lesson
 							</Link>
 						</Button>
 					</DropdownMenuItem>
@@ -210,7 +227,7 @@ const columns: ColumnDef<DataTableFeatures, ProgramRecord>[] =
 				);
 			},
 		}),
-		columnHelper.accessor("count", {
+		columnHelper.accessor("lessonCount", {
 			id: "count",
 			header: ({ column }) => (
 				<DataTableColumnHeader column={column} label="Lessons" />
@@ -233,7 +250,9 @@ const columns: ColumnDef<DataTableFeatures, ProgramRecord>[] =
 	]);
 
 export default function Page() {
-	const { data = [] } = useQuery(api.core.program.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.program.list.queryOptions(),
+	);
 
 	const { table } = useDataTable({
 		data,
@@ -254,6 +273,21 @@ export default function Page() {
 				<FrameDescription>
 					Explore the platform programs and pricing
 				</FrameDescription>
+				<FrameActions>
+					<ButtonGroup>
+						{isPending && (
+							<Button variant="outline" size="icon" disabled>
+								<Spinner />
+							</Button>
+						)}
+						<Button asChild>
+							<Link href="/programs/new">
+								<PlusIcon />
+								Create Program
+							</Link>
+						</Button>
+					</ButtonGroup>
+				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
 				<DataTable table={table}>

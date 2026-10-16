@@ -2,10 +2,11 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
 import { BookOpenIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { sileo as toast } from "sileo";
+import { type LanguageCodes, LanguageCodeZod, Languages } from "utils";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -54,6 +55,8 @@ export default function CreateLessonPage() {
 		api.core.program.list.queryOptions(),
 	);
 
+	const [programId] = useQueryState("programId");
+
 	const { mutateAsync, isPending } = useMutation(
 		api.core.lesson.create.mutationOptions({
 			onSuccess: () => {
@@ -89,11 +92,14 @@ export default function CreateLessonPage() {
 	});
 
 	useEffect(() => {
-		const first = programs[0];
-		if (first && !form.state.values.program) {
-			form.setFieldValue("program", first.id);
+		if (form.state.values.program) return;
+		const initial = programId
+			? programs.find((program) => program.id === programId)
+			: programs[0];
+		if (initial) {
+			form.setFieldValue("program", initial.id);
 		}
-	}, [programs, form]);
+	}, [programs, form, programId]);
 
 	return (
 		<div>

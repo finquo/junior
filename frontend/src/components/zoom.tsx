@@ -16,13 +16,19 @@ export function ZoomButton({
 	...props
 }: ZoomButtonProps) {
 	return (
-		<Button asChild size="sm" variant="outline" className={className} {...props}>
+		<Button
+			asChild
+			size="sm"
+			variant="outline"
+			className={className}
+			{...props}
+		>
 			<a
 				href={meetingLink || "https://zoom.us/join"}
 				target="_blank"
 				rel="noreferrer"
 			>
-				<VideoIcon className="size-4" />
+				<VideoIcon />
 				{children ?? "Join Zoom Meeting"}
 			</a>
 		</Button>

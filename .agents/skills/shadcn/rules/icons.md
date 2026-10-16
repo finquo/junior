@@ -41,7 +41,7 @@ Components handle icon sizing via CSS. Don't add `size-4`, `w-4 h-4`, or other s
 
 ```tsx
 <Button>
-  <SearchIcon className="size-4" data-icon="inline-start" />
+  <SearchIcon data-icon="inline-start" />
   Search
 </Button>
 

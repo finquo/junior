@@ -211,11 +211,7 @@ function CopyMenu({ fromDay, fromLabel, onApply }: CopyMenuProps) {
 							aria-label={`Copy ${fromLabel} hours to other days`}
 							className="text-muted-foreground hover:text-foreground"
 						>
-							{copied ? (
-								<Check className="size-4 text-primary" />
-							) : (
-								<Copy className="size-4" />
-							)}
+							{copied ? <Check className="text-primary" /> : <Copy />}
 						</Button>
 					</DropdownMenuTrigger>
 				</TooltipTrigger>
@@ -338,7 +334,7 @@ function DayRow({ day, label, state, options, onChange, onCopy }: DayRowProps) {
 						onClick={addRange}
 						className="text-muted-foreground hover:text-foreground"
 					>
-						<Plus className="size-4" />
+						<Plus />
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>Add time</TooltipContent>
@@ -437,7 +433,7 @@ function DayRow({ day, label, state, options, onChange, onCopy }: DayRowProps) {
 										onClick={() => removeRange(r.id)}
 										className="text-muted-foreground hover:text-foreground"
 									>
-										<X className="size-4" />
+										<X />
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent>Remove</TooltipContent>

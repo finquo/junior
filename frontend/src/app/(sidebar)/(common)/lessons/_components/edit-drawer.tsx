@@ -2,11 +2,15 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
 import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
-import { getDurationFromInterval } from "utils";
+import {
+	getDurationFromInterval,
+	type LanguageCodes,
+	LanguageCodeZod,
+	Languages,
+} from "utils";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";

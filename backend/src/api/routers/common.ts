@@ -1,5 +1,5 @@
+import { Countries, Currencies, Languages } from "utils";
 import z from "zod";
-import { Countries, Currencies, Languages } from "@/config";
 import { db } from "@/services";
 import { protectedProcedure, publicProcedure, tryAPI } from "../procedure";
 

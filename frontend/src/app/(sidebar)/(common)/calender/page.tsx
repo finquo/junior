@@ -93,7 +93,7 @@ export default function CalendarPage() {
 				<FrameActions>
 					<Button asChild size="sm">
 						<Link href="/slots/new">
-							<PlusIcon className="size-4" />
+							<PlusIcon />
 							New Slot
 						</Link>
 					</Button>
@@ -210,12 +210,6 @@ export default function CalendarPage() {
 						</div>
 						<EventCalendarTitle className="ms-3" />
 						<div className="grow" />
-						<Button asChild size="sm" variant="outline" className="me-2">
-							<Link href="/slots/new">
-								<PlusIcon className="size-4" />
-								New Slot
-							</Link>
-						</Button>
 					</EventCalendarNav>
 					<EventCalendarContent />
 				</EventCalendar>

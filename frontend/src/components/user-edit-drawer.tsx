@@ -394,7 +394,7 @@ export function UserEditDrawer({
 
 						<DrawerFooter>
 							<Button type="submit" disabled={isPending}>
-								{isPending ? <Spinner className="size-4" /> : <PenIcon />}
+								{isPending ? <Spinner /> : <PenIcon />}
 								Save Changes
 							</Button>
 							<DrawerClose asChild>

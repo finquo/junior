@@ -24,12 +24,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { ZoomMeetingButton } from "@/components/zoom";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -109,7 +104,7 @@ export function SlotDetails({
 					<TableRow>
 						<TableCell className="w-28 font-medium text-muted-foreground">
 							<div className="flex items-center gap-2">
-								<CalendarIcon className="size-4" />
+								<CalendarIcon />
 								<span>Date</span>
 							</div>
 						</TableCell>
@@ -120,7 +115,7 @@ export function SlotDetails({
 					<TableRow>
 						<TableCell className="w-28 font-medium text-muted-foreground">
 							<div className="flex items-center gap-2">
-								<ClockIcon className="size-4" />
+								<ClockIcon />
 								<span>Time</span>
 							</div>
 						</TableCell>
@@ -133,7 +128,7 @@ export function SlotDetails({
 					<TableRow>
 						<TableCell className="w-28 font-medium text-muted-foreground">
 							<div className="flex items-center gap-2">
-								<VideoIcon className="size-4" />
+								<VideoIcon />
 								<span>Meeting</span>
 							</div>
 						</TableCell>
@@ -191,7 +186,7 @@ export function SlotDetails({
 							<ItemActions>
 								<Button asChild variant="ghost" size="icon-sm">
 									<Link href={`/students/${slot.studentId}`}>
-										<ExternalLinkIcon className="size-4" />
+										<ExternalLinkIcon />
 									</Link>
 								</Button>
 							</ItemActions>
@@ -221,7 +216,7 @@ export function SlotDetails({
 								<ItemActions>
 									<Button asChild variant="ghost" size="icon-sm">
 										<Link href={`/students/${slot.studentId}`}>
-											<ExternalLinkIcon className="size-4" />
+											<ExternalLinkIcon />
 										</Link>
 									</Button>
 								</ItemActions>
@@ -259,7 +254,7 @@ export function SlotDetails({
 							<ItemActions>
 								<Button asChild variant="ghost" size="icon-sm">
 									<Link href={`/teachers/${slot.teacherId}`}>
-										<ExternalLinkIcon className="size-4" />
+										<ExternalLinkIcon />
 									</Link>
 								</Button>
 							</ItemActions>
@@ -289,7 +284,7 @@ export function SlotDetails({
 								<ItemActions>
 									<Button asChild variant="ghost" size="icon-sm">
 										<Link href={`/teachers/${slot.teacherId}`}>
-											<ExternalLinkIcon className="size-4" />
+											<ExternalLinkIcon />
 										</Link>
 									</Button>
 								</ItemActions>
@@ -330,7 +325,7 @@ export function SlotDetails({
 			{showLinkButton && (
 				<Button asChild className="mt-2 w-full">
 					<Link href={`/slots/${slot.id}`}>
-						<ExternalLinkIcon className="size-4" />
+						<ExternalLinkIcon />
 						View Full Session Page
 					</Link>
 				</Button>

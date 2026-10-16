@@ -1,6 +1,5 @@
 "use client";
 
-import { Countries, type CountryCodes } from "backend/config";
 import {
 	BookOpenIcon,
 	CircleDollarSignIcon,
@@ -12,9 +11,16 @@ import {
 	UserRoundIcon,
 } from "lucide-react";
 import Link from "next/link";
+import {
+	type CountryCodes,
+	getCountryCurrencySymbol,
+	getCountryName,
+} from "utils";
 import { CopyButton } from "@/components/copy";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardAction,
@@ -49,13 +55,8 @@ type ProgramData = NonNullable<API_Returns["core"]["program"]["get"]>;
 type ProgramStudent = API_Returns["core"]["program"]["students"][number];
 type ProgramLesson = API_Returns["core"]["program"]["lessons"][number];
 
-const currencySymbol: Record<CountryCodes, string> = {
-	IN: "₹",
-	US: "$",
-};
-
 function formatPrice(code: CountryCodes, amount: number) {
-	return `${currencySymbol[code]}${amount.toLocaleString()}`;
+	return `${getCountryCurrencySymbol(code)}${amount.toLocaleString()}`;
 }
 
 function StudentItem({ student }: { student: ProgramStudent }) {
@@ -101,7 +102,7 @@ function LessonSkeleton() {
 	return (
 		<Item variant="outline">
 			<ItemMedia variant="icon">
-				<Skeleton className="size-4" />
+				<Skeleton />
 			</ItemMedia>
 			<ItemContent>
 				<Skeleton className="h-4 w-40" />
@@ -130,7 +131,7 @@ export function ProgramProfile({
 				<CardTitle>{data.name}</CardTitle>
 				<CardDescription>{data.description}</CardDescription>
 				<ColorBadge variant="info">Program</ColorBadge>
-				<Badge variant="outline">{data.count} Lessons</Badge>
+				<Badge variant="outline">{data.lessonCount} Lessons</Badge>
 				{!studentsPending && (
 					<Badge variant="outline">{students.length} Students</Badge>
 				)}
@@ -138,12 +139,25 @@ export function ProgramProfile({
 					<Badge variant="outline">{lessons.length} Published</Badge>
 				)}
 				<CardAction>
-					<CopyButton
-						text={() => data.id}
-						label="Program ID"
-						variant="outline"
-						size="sm"
-					/>
+					<ButtonGroup>
+						<CopyButton
+							text={() => data.id}
+							label="Program ID"
+							variant="outline"
+							size="sm"
+						/>
+						<Button asChild size="sm">
+							<Link
+								href={{
+									pathname: "/lessons/new",
+									query: { programId: data.id },
+								}}
+							>
+								<BookOpenIcon />
+								Create Lesson
+							</Link>
+						</Button>
+					</ButtonGroup>
 				</CardAction>
 			</CardHeader>
 
@@ -198,7 +212,7 @@ export function ProgramProfile({
 										<ItemContent>
 											<ItemTitle>Lessons Included</ItemTitle>
 											<ItemDescription>
-												{data.count} lessons in the curriculum
+												{data.lessonCount} lessons in the curriculum
 											</ItemDescription>
 										</ItemContent>
 									</Item>
@@ -234,9 +248,7 @@ export function ProgramProfile({
 												<CircleDollarSignIcon />
 											</ItemMedia>
 											<ItemContent>
-												<ItemTitle>
-													{Countries[code as CountryCodes] ?? code}
-												</ItemTitle>
+												<ItemTitle>{getCountryName(code)}</ItemTitle>
 												<ItemDescription>
 													{formatPrice(code as CountryCodes, amount)}
 												</ItemDescription>

@@ -2,9 +2,15 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
+import { experienceZod } from "backend/config";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useEffect } from "react";
 import { sileo as toast } from "sileo";
+import {
+	type LanguageCodes,
+	LanguageCodeZod,
+	Languages,
+} from "utils";
 import { z } from "zod";
 import EditProfile from "@/app/(center)/user/edit/page";
 import { Button } from "@/components/ui/button";
@@ -37,9 +43,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/hooks/auth";
-import { experienceZod, LanguageCodeZod, Languages, LanguageCodeKey, type LanguageCodes } from "backend/config";
 import { api } from "@/hooks/api";
+import { useAuth } from "@/hooks/auth";
 import { getUserData } from "@/hooks/user";
 
 const teacherFormSchema = z.object({
@@ -85,7 +90,9 @@ function ExperienceItem({
 								subField.state.meta.isTouched && !subField.state.meta.isValid;
 							return (
 								<Field data-invalid={isInvalid}>
-									<FieldLabel htmlFor={subField.name}>Job Title / Role</FieldLabel>
+									<FieldLabel htmlFor={subField.name}>
+										Job Title / Role
+									</FieldLabel>
 									<Input
 										id={subField.name}
 										name={subField.name}
@@ -213,27 +220,29 @@ function ExperienceItem({
 	);
 }
 
-export default function() {
+export default function () {
 	const { data: user } = useAuth();
-	const { data } = getUserData()
+	const { data } = getUserData();
 
-	const { mutateAsync, isPending } = useMutation(api.teacher.update.mutationOptions({
-		onSuccess: () => {
-			toast.success({
-				title: "Teacher profile updated successfully",
-			});
-		},
-		onError: (error) => {
-			toast.error({
-				title: error.message || "Failed to update teacher profile",
-			});
-		},
-	}));
+	const { mutateAsync, isPending } = useMutation(
+		api.teacher.update.mutationOptions({
+			onSuccess: () => {
+				toast.success({
+					title: "Teacher profile updated successfully",
+				});
+			},
+			onError: (error) => {
+				toast.error({
+					title: error.message || "Failed to update teacher profile",
+				});
+			},
+		}),
+	);
 
 	const form = useForm({
 		defaultValues: {
-			languages: (data?.teacherData?.languages ?? []),
-			experiences: (data?.teacherData?.experiences ?? []),
+			languages: data?.teacherData?.languages ?? [],
+			experiences: data?.teacherData?.experiences ?? [],
 		},
 		validators: {
 			onSubmit: teacherFormSchema,
@@ -281,7 +290,10 @@ export default function() {
 										field.state.meta.isTouched && !field.state.meta.isValid;
 									const selectedLanguages = field.state.value ?? [];
 
-									const toggleLanguage = (code: LanguageCodes, checked: boolean) => {
+									const toggleLanguage = (
+										code: LanguageCodes,
+										checked: boolean,
+									) => {
 										if (checked) {
 											if (!selectedLanguages.includes(code)) {
 												field.handleChange([...selectedLanguages, code]);
@@ -301,7 +313,9 @@ export default function() {
 											</FieldDescription>
 
 											<FieldGroup data-slot="checkbox-group">
-												{(Object.entries(Languages) as [LanguageCodes, string][]).map(([code, label]) => {
+												{(
+													Object.entries(Languages) as [LanguageCodes, string][]
+												).map(([code, label]) => {
 													const isChecked = selectedLanguages.includes(code);
 													return (
 														<Field key={code} orientation="horizontal">
@@ -339,8 +353,8 @@ export default function() {
 								name="experiences"
 								mode="array"
 								children={(field: any) => {
-									const experiences =
-										(field.state.value ?? []) as TeacherFormValues["experiences"];
+									const experiences = (field.state.value ??
+										[]) as TeacherFormValues["experiences"];
 
 									const addExperience = () => {
 										field.pushValue({
@@ -363,7 +377,8 @@ export default function() {
 											<CardHeader>
 												<CardTitle>Professional Experiences</CardTitle>
 												<CardDescription>
-													List your teaching history and relevant work experience.
+													List your teaching history and relevant work
+													experience.
 												</CardDescription>
 												<CardAction>
 													<Button
@@ -384,7 +399,8 @@ export default function() {
 														<EmptyHeader>
 															<EmptyTitle>No experiences added</EmptyTitle>
 															<EmptyDescription>
-																Add your teaching history and relevant work experience.
+																Add your teaching history and relevant work
+																experience.
 															</EmptyDescription>
 														</EmptyHeader>
 													</Empty>

@@ -3,6 +3,7 @@
 import {
 	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
+	CalendarHeartIcon,
 	GraduationCapIcon,
 	PlusIcon,
 	UserPenIcon,
@@ -95,6 +96,11 @@ export function SidebarConfig({
 				<NavProjects
 					title="Profile"
 					link={[
+						{
+							name: "Calender",
+							url: "/calender",
+							icon: <CalendarHeartIcon />,
+						},
 						{
 							name: "Edit",
 							url: "/scheduler/edit",

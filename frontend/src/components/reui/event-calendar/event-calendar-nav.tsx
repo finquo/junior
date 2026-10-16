@@ -188,7 +188,7 @@ function EventCalendarNavPrev({
 				asChild={asChild}
 				{...props}
 			>
-				{children ?? <ChevronLeftIcon className="size-4" aria-hidden="true" />}
+				{children ?? <ChevronLeftIcon aria-hidden="true" />}
 			</Button>
 		</NavTooltip>
 	);
@@ -218,7 +218,7 @@ function EventCalendarNavNext({
 				asChild={asChild}
 				{...props}
 			>
-				{children ?? <ChevronRightIcon className="size-4" aria-hidden="true" />}
+				{children ?? <ChevronRightIcon aria-hidden="true" />}
 			</Button>
 		</NavTooltip>
 	);
@@ -473,7 +473,7 @@ function EventCalendarDatePicker({
 						className={cn(nav.className, className)}
 						asChild={asChild}
 					>
-						{children ?? <CalendarIcon className="size-4" aria-hidden="true" />}
+						{children ?? <CalendarIcon aria-hidden="true" />}
 					</Button>
 				</PopoverTrigger>
 			</NavTooltip>

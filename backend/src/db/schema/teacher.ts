@@ -1,5 +1,6 @@
 import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import type { Experience, LanguageCodes } from "@/config";
+import type { LanguageCodes } from "utils";
+import type { Experience } from "@/config";
 import type { Availability } from "@/config/time";
 import { leaveRange } from "../column/leave-range";
 import { createdAt, generateId, getTempId, updatedAt } from "../utils";

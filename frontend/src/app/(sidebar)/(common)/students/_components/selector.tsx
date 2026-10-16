@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
-import { BookOpenIcon } from "lucide-react";
+import { BookOpenIcon, LayersIcon } from "lucide-react";
 import * as React from "react";
 import { formatTimeString } from "utils";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { Field } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
 	ItemActions,
 	ItemContent,
@@ -230,6 +230,75 @@ export function LessonSelector({
 											</span>
 										)}
 									/>
+								</SelectItem>
+							))
+						)}
+					</SelectGroup>
+				</SelectContent>
+			</Select>
+		</Field>
+	);
+}
+
+export type ProgramItemData = API_Returns["core"]["program"]["list"][number];
+
+export function ProgramSelector({
+	id,
+	label = "Program",
+	value,
+	onValueChange,
+	onSelect,
+	disabled,
+}: {
+	id?: string;
+	label?: string;
+	value?: string | null;
+	onValueChange?: (val: string) => void;
+	onSelect?: (program: ProgramItemData) => void;
+	disabled?: boolean;
+}) {
+	const { data = [] } = useQuery(api.core.program.list.queryOptions());
+
+	return (
+		<Field>
+			<FieldLabel htmlFor={id}>{label}</FieldLabel>
+			<Select
+				value={value ?? ""}
+				disabled={disabled}
+				onValueChange={(val) => {
+					if (!val) return;
+					onValueChange?.(val);
+					const program = data.find((p) => p.id === val);
+					if (program) onSelect?.(program);
+				}}
+			>
+				<SelectTrigger id={id} className="w-full">
+					<SelectValue
+						placeholder={`Select a ${label.toLowerCase()}`}
+						children={(programId: string) => (
+							<span>
+								{data.find((p) => p.id === programId)?.name ?? programId}
+							</span>
+						)}
+					/>
+				</SelectTrigger>
+				<SelectContent alignItemWithTrigger={false}>
+					<SelectGroup>
+						<SelectLabel>Available Programs</SelectLabel>
+						{data.length === 0 ? (
+							<SelectItem value="none" disabled>
+								No programs available
+							</SelectItem>
+						) : (
+							data.map((program) => (
+								<SelectItem key={program.id} value={program.id}>
+									<span className="flex items-center gap-2">
+										<LayersIcon className="size-4 text-muted-foreground" />
+										<span>{program.name}</span>
+										<Badge variant="secondary" className="text-xs">
+											{program.lessonCount} lessons
+										</Badge>
+									</span>
 								</SelectItem>
 							))
 						)}

@@ -1,17 +1,13 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-	type LanguageCodes,
-	Languages,
-	type Schooling,
-	schoolingZod,
-} from "backend/config";
+import { useMutation } from "@tanstack/react-query";
+import { type Schooling, schoolingZod } from "backend/config";
 import { UpdateStudentSchema } from "backend/db";
 import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
+import { type LanguageCodes, Languages, resolveDefaultAmount } from "utils";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,8 +39,11 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { UserFormSelector } from "@/components/user-selector";
 import { api, queryClient } from "@/hooks/api";
+import { RoleRender } from "@/hooks/role";
 import type { GetFormZod } from "@/lib/utils";
+import { ProgramSelector } from "./selector";
 
 const studentUpdateFormSchema = UpdateStudentSchema.required({
 	id: true,
@@ -60,9 +59,6 @@ export function EditStudentDrawer({
 	children: React.ReactElement;
 }) {
 	const [open, setOpen] = useState(false);
-	const { data: programs = [] } = useQuery(
-		api.core.program.list.queryOptions(),
-	);
 
 	const { mutateAsync, isPending } = useMutation(
 		api.core.student.update.mutationOptions({
@@ -110,29 +106,22 @@ export function EditStudentDrawer({
 							<form.Field
 								name="program"
 								children={(field) => (
-									<Field>
-										<FieldLabel htmlFor={field.name}>Program</FieldLabel>
-										<Select
-											value={field.state.value ?? ""}
-											onValueChange={(val) =>
-												field.handleChange(val || undefined)
-											}
-											disabled={isPending}
-										>
-											<SelectTrigger id={field.name}>
-												<SelectValue placeholder="Select program" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectGroup>
-													{programs.map((p) => (
-														<SelectItem key={p.id} value={p.id}>
-															{p.name}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-									</Field>
+									<ProgramSelector
+										id={field.name}
+										value={field.state.value}
+										onValueChange={(val) =>
+											field.handleChange(val || undefined)
+										}
+										onSelect={(program) => {
+											const amount = resolveDefaultAmount(
+												program.price,
+												form.state.values.address?.country,
+											);
+											form.setFieldValue("amount", amount);
+											form.setFieldValue("remaining", amount);
+										}}
+										disabled={isPending}
+									/>
 								)}
 							/>
 
@@ -192,28 +181,45 @@ export function EditStudentDrawer({
 
 							<form.Field
 								name="mentorId"
-								children={(field) => {
-									const isInvalid =
-										field.state.meta.isTouched && !field.state.meta.isValid;
-									return (
-										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>Mentor ID</FieldLabel>
-											<Input
-												id={field.name}
-												name={field.name}
-												value={field.state.value ?? ""}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												placeholder="Teacher ID"
-												disabled={isPending}
-											/>
-											{isInvalid && (
-												<FieldError errors={field.state.meta.errors} />
-											)}
-										</Field>
-									);
-								}}
+								children={(field) => (
+									<UserFormSelector
+										id={field.name}
+										label="Mentor"
+										value={field.state.value}
+										onValueChange={(val) =>
+											field.handleChange(val ?? undefined)
+										}
+										api={api.core.teacher.list.queryOptions()}
+										disabled={isPending}
+									/>
+								)}
 							/>
+
+							<RoleRender
+								admin={undefined}
+								enrollment_advisor={undefined}
+								qa_auditor={undefined}
+								scheduler={false}
+								student={undefined}
+								teacher={undefined}
+								user={undefined}
+							>
+								<form.Field
+									name="supervisorId"
+									children={(field) => (
+										<UserFormSelector
+											id={field.name}
+											label="Supervisor"
+											value={field.state.value}
+											onValueChange={(val) =>
+												field.handleChange(val ?? undefined)
+											}
+											api={api.core.scheduler.list.queryOptions()}
+											disabled={isPending}
+										/>
+									)}
+								/>
+							</RoleRender>
 
 							<FieldSet>
 								<FieldLegend>Languages</FieldLegend>

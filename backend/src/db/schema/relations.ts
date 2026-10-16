@@ -104,7 +104,7 @@ const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 	program: {
-		lessons: r.many.lesson({
+		lessonList: r.many.lesson({
 			from: r.program.id,
 			to: r.lesson.program,
 		}),

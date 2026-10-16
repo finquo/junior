@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
@@ -29,13 +29,34 @@ const orderLessons = <T extends { id: string }>(
 export const programRouter = {
 	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
 		async () => {
-			return await getAPI(
+			const programs = await getAPI(
 				"db-core-list-programs",
 				db.query.program.findMany({
 					orderBy: { name: "asc" },
 				}),
 				[],
 			);
+
+			const counts = await getAPI(
+				"db-core-list-program-lesson-counts",
+				db
+					.select({
+						program: schema.lesson.program,
+						count: count(),
+					})
+					.from(schema.lesson)
+					.groupBy(schema.lesson.program),
+				[],
+			);
+
+			const countByProgram = new Map(
+				counts.map((row) => [row.program, row.count]),
+			);
+
+			return programs.map((program) => ({
+				...program,
+				lessonCount: countByProgram.get(program.id) ?? 0,
+			}));
 		},
 	),
 	get: getRolesProcedure(["admin", "scheduler", "teacher"])
@@ -56,7 +77,16 @@ export const programRouter = {
 
 			if (!program) throw getError("NOT_FOUND", "Program not found");
 
-			return program;
+			const [lessonTotals] = await getAPI(
+				"db-core-get-program-lesson-count",
+				db
+					.select({ count: count() })
+					.from(schema.lesson)
+					.where(eq(schema.lesson.program, input.id)),
+				[{ count: 0 }],
+			);
+
+			return { ...program, lessonCount: lessonTotals?.count ?? 0 };
 		}),
 	create: getRolesProcedure(["admin"])
 		.input(

@@ -1,6 +1,6 @@
 "use client";
 
-import { type Availability, dayKeys, type LanguageCodes } from "backend/config";
+import { type Availability, dayKeys } from "backend/config";
 import { langFlag, langName } from "language-emoji";
 import {
 	BriefcaseIcon,
@@ -14,6 +14,7 @@ import {
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
+import type { LanguageCodes } from "utils";
 import {
 	Accordion,
 	AccordionContent,

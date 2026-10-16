@@ -2,12 +2,13 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { type Experience, type LanguageCodes, Languages } from "backend/config";
+import type { Experience } from "backend/config";
 import { UpdateTeacherSchema } from "backend/db";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
+import { type LanguageCodes, Languages } from "utils";
 import type z from "zod";
 import { Button } from "@/components/ui/button";
 import {

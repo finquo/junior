@@ -1,5 +1,5 @@
-import { integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import type { CountryCodes } from "@/config";
+import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import type { CountryCodes } from "utils";
 import { createdAt, getId, updatedAt } from "../utils";
 
 /**
@@ -14,7 +14,6 @@ export const program = pgTable("program", {
 
 	name: text().notNull(),
 	description: text(),
-	count: integer().notNull().default(0),
 	price: jsonb()
 		.$type<Partial<Record<CountryCodes, number>>>()
 		.default({})

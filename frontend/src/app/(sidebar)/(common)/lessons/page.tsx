@@ -1,11 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ColumnDef,
-	createColumnHelper,
-} from "@tanstack/react-table";
-import { Languages } from "backend/config";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
@@ -13,7 +9,12 @@ import {
 	PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getDurationFromInterval, getRelateTime } from "utils";
+import {
+	getDurationFromInterval,
+	getLanguageName,
+	getRelateTime,
+	Languages,
+} from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -53,12 +54,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
@@ -120,8 +116,7 @@ function LessonActions({ lesson }: { lesson: LessonRecord }) {
 								<TableCell className="font-medium">Language</TableCell>
 								<TableCell>
 									<Badge variant="secondary">
-										{Languages[lesson.language as keyof typeof Languages] ??
-											lesson.language}
+										{getLanguageName(lesson.language)}
 									</Badge>
 								</TableCell>
 							</TableRow>
@@ -135,7 +130,9 @@ function LessonActions({ lesson }: { lesson: LessonRecord }) {
 						variant="outline"
 					/>
 					<Button asChild>
-						<Link href="/" as={`/lessons/${lesson.id}`}>Open Full Page</Link>
+						<Link href="/" as={`/lessons/${lesson.id}`}>
+							Open Full Page
+						</Link>
 					</Button>
 					<DrawerClose asChild>
 						<Button variant="outline">Close</Button>
@@ -200,16 +197,16 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 											<TableCell className="font-medium">Language</TableCell>
 											<TableCell>
 												<Badge variant="secondary">
-													{Languages[
-														lesson.language as keyof typeof Languages
-													] ?? lesson.language}
+													{getLanguageName(lesson.language)}
 												</Badge>
 											</TableCell>
 										</TableRow>
 										{lesson.period && (
 											<TableRow>
 												<TableCell className="font-medium">Duration</TableCell>
-												<TableCell>{getDurationFromInterval(lesson.period)} mins</TableCell>
+												<TableCell>
+													{getDurationFromInterval(lesson.period)} mins
+												</TableCell>
 											</TableRow>
 										)}
 										<TableRow>
@@ -236,7 +233,9 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 									variant="outline"
 								/>
 								<Button asChild>
-									<Link href="/" as={`/lessons/${lesson.id}`}>Open Page</Link>
+									<Link href="/" as={`/lessons/${lesson.id}`}>
+										Open Page
+									</Link>
 								</Button>
 								<DrawerClose asChild>
 									<Button variant="outline">Close</Button>
@@ -259,7 +258,9 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				return (
 					<ButtonGroup>
 						<Button variant="link" asChild>
-							<Link href="/" as={`/lessons/${id}`}>{id}</Link>
+							<Link href="/" as={`/lessons/${id}`}>
+								{id}
+							</Link>
 						</Button>
 						<CopyButton
 							text={() => id}
@@ -286,11 +287,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			cell: ({ getValue }) => {
 				const code = getValue();
 				if (!code) return null;
-				return (
-					<Badge variant="outline">
-						{Languages[code as keyof typeof Languages] ?? code}
-					</Badge>
-				);
+				return <Badge variant="outline">{getLanguageName(code)}</Badge>;
 			},
 		}),
 		columnHelper.accessor("period", {
@@ -316,8 +313,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				<DataTableColumnHeader column={column} label="Created" />
 			),
 			enableSorting: true,
-			cell: ({ getValue }) =>
-				`${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
 			id: "actions",
@@ -331,7 +327,9 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 	]);
 
 export default function Page() {
-	const { data = [], isPending } = useQuery(api.core.lesson.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.lesson.list.queryOptions(),
+	);
 
 	const { table } = useDataTable({
 		data,
@@ -349,7 +347,9 @@ export default function Page() {
 		<Frame>
 			<FrameHeader>
 				<FrameTitle>Lessons</FrameTitle>
-				<FrameDescription>Manage curriculum and course lessons</FrameDescription>
+				<FrameDescription>
+					Manage curriculum and course lessons
+				</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
 						{isPending && (

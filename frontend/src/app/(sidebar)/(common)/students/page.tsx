@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { Languages } from "backend/config";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
@@ -11,7 +10,7 @@ import {
 	UserIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getRelateTime } from "utils";
+import { getLanguageName, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -256,9 +255,7 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 			cell: ({ row }) => {
 				const langs = row.original.languages;
 				if (!langs?.length) return null;
-				return langs
-					.map((code) => Languages[code as keyof typeof Languages] ?? code)
-					.join(", ");
+				return langs?.map((code) => getLanguageName(code)).join(", ");
 			},
 		}),
 		columnHelper.display({

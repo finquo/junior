@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
+import { resolveDefaultAmount } from "utils";
 import z from "zod";
-import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
 import {
 	SelectStudentSchema,
@@ -245,6 +246,54 @@ export const studentRouter = {
 							),
 						}),
 					)
+					.returning(),
+			);
+		}),
+	assignProgram: getRolesProcedure(["admin"])
+		.input(
+			SelectStudentSchema.pick({ id: true }).extend({
+				program: z.string(),
+				amount: z.number().int().min(0).optional(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const student = await tryAPI(
+				"db-core-assign-program-get-student",
+				db.query.student.findFirst({
+					where: { id: input.id },
+					columns: {
+						id: true,
+						address: true,
+					},
+				}),
+			);
+
+			if (!student) throw getError("NOT_FOUND", "Student not found");
+
+			const program = await tryAPI(
+				"db-core-assign-program-get-program",
+				db.query.program.findFirst({
+					where: { id: input.program },
+				}),
+			);
+
+			if (!program) throw getError("NOT_FOUND", "Program not found");
+
+			const amount =
+				input.amount ??
+				resolveDefaultAmount(program.price, student.address?.country);
+
+			return await tryAPI(
+				"db-core-assign-program-update-student",
+				db
+					.update(schema.student)
+					.set({
+						program: input.program,
+						amount,
+						remaining: amount,
+						paid: false,
+					})
+					.where(eq(schema.student.id, input.id))
 					.returning(),
 			);
 		}),

@@ -3,6 +3,7 @@
 import {
 	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
+	CalendarHeartIcon,
 	ComponentIcon,
 	GraduationCapIcon,
 	PlusIcon,
@@ -111,6 +112,13 @@ export function SidebarConfig({
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,
 							},
+							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Create New",
+									url: "/programs/new",
+								},
+							],
 						},
 						{
 							title: "Lessons",
@@ -141,6 +149,11 @@ export function SidebarConfig({
 				<NavProjects
 					title="Profile"
 					link={[
+						{
+							name: "Calender",
+							url: "/calender",
+							icon: <CalendarHeartIcon />,
+						},
 						{
 							name: "Home",
 							url: "/admin",

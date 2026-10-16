@@ -1,11 +1,11 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
+import { LanguageCodeZod } from "utils";
 import z, { type ZodObject, type ZodRawShape, type ZodString } from "zod";
 import {
 	addressZod,
 	availabilityZod,
 	experienceZod,
 	intervalHourZod,
-	LanguageCodeZod,
 	noteZod,
 	quizZod,
 	schoolingZod,
