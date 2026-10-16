@@ -4,8 +4,6 @@ import { type Availability, getDaykey } from "backend/config";
 import { ClockIcon } from "lucide-react";
 import { parseAsInteger, parseAsIsoDate, useQueryState } from "nuqs";
 import { useState } from "react";
-import { sileo as toast } from "sileo";
-import { mergeDateWithTimeString } from "utils";
 import DaySlider from "@/components/day-slider";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -25,24 +23,9 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { api } from "@/hooks/api";
-import { MutationButton } from "@/hooks/button";
 import { useTimePeriodGroups } from "@/hooks/period";
 import type { API_Returns } from "@/lib/api";
 
@@ -53,7 +36,6 @@ export function TimeCard({
 	availability?: Availability | null;
 	unavailable?: API_Returns["core"]["slot"]["check"]["unavailable"];
 }) {
-	const [teacherId] = useQueryState("teacherId");
 	const [duration] = useQueryState("duration", parseAsInteger.withDefault(25));
 	const [date] = useQueryState("date", parseAsIsoDate);
 	const [selectedTime, setSelectedTime] = useQueryState("time", {
@@ -65,14 +47,6 @@ export function TimeCard({
 
 	const [hour, setHour] = useState(true);
 	const TIME_PERIOD_GROUPS = useTimePeriodGroups(lowerLimit, upperLimit, hour);
-
-	const isCheckDisabled = Boolean(!teacherId || !date);
-
-	const dateWithTime = date
-		? selectedTime
-			? mergeDateWithTimeString(date, selectedTime)
-			: date
-		: new Date();
 
 	const timeToMinutes = (time: string) => {
 		const [hours = 0, minutes = 0] = time.split(":").map(Number);
@@ -147,7 +121,8 @@ export function TimeCard({
 		const start = timeToMinutes(time);
 		const end = start + duration;
 		return blockedTimes.some(
-			(block) => start < timeToMinutes(block.end) && end > timeToMinutes(block.start),
+			(block) =>
+				start < timeToMinutes(block.end) && end > timeToMinutes(block.start),
 		);
 	};
 
@@ -163,17 +138,12 @@ export function TimeCard({
 				</CardAction>
 			</CardHeader>
 			<CardContent>
-				<Tabs>
+				<Tabs defaultValue={TIME_PERIOD_GROUPS[0].key}>
 					<TabsList className="w-auto">
 						{TIME_PERIOD_GROUPS.map((group) => (
-							<Tooltip key={group.key}>
-								<TooltipTrigger asChild>
-									<TabsTrigger value={group.key}>{group.label}</TabsTrigger>
-								</TooltipTrigger>
-								<TooltipContent className="capitalize">
-									{group.key}
-								</TooltipContent>
-							</Tooltip>
+							<TabsTrigger key={group.key} value={group.key} className="capitalize">
+								{group.label} {group.key}
+							</TabsTrigger>
 						))}
 					</TabsList>
 					{TIME_PERIOD_GROUPS.map((group) => (
@@ -231,96 +201,6 @@ export function TimeCard({
 						<ClockIcon />
 						{selectedTime}
 					</Button>
-				</ButtonGroup>
-				<ButtonGroup>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="secondary" size="sm" disabled={isCheckDisabled}>
-								Check Availability
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start">
-							<DropdownMenuLabel>Availability checks</DropdownMenuLabel>
-							<MutationButton
-								api={api.core.teacher.checkAvailability.mutationOptions()}
-								onSuccess={(result) => {
-									if (result.isAvailable) {
-										toast.success({
-											title: "Teacher is available!",
-											description:
-												"Teacher is available on this date for the selected duration.",
-										});
-									} else {
-										toast.warning({
-											title: "Teacher is unavailable",
-											description:
-												result.reason ||
-												"Teacher is not available for this period.",
-										});
-									}
-								}}
-								isPending={
-									<DropdownMenuItem disabled>
-										<Spinner />
-										Checking teacher availability…
-									</DropdownMenuItem>
-								}
-								mutate={(mutate) => (
-									<DropdownMenuItem
-										onSelect={() => {
-											if (!teacherId || !date) return;
-											mutate({
-												id: teacherId,
-												date: dateWithTime,
-												period: duration,
-											});
-										}}
-									>
-										Check teacher availability
-									</DropdownMenuItem>
-								)}
-							/>
-						</DropdownMenuContent>
-					</DropdownMenu>
-					<MutationButton
-						api={api.core.slot.checkAvailability.mutationOptions()}
-						onSuccess={(result) => {
-							if (result.existingSlots && result.existingSlots.length > 0) {
-								toast.warning({
-									title: "Slot conflict detected",
-									description: `${result.existingSlots.length} active slot(s) already booked during this time.`,
-								});
-							} else {
-								toast.success({
-									title: "Slot is available!",
-									description: "No conflicting slots found for this time.",
-								});
-							}
-						}}
-						isPending={
-							<Button variant="secondary" size="sm" disabled>
-								<Spinner />
-								Check Slot Availability
-							</Button>
-						}
-						mutate={(mutate) => (
-							<Button
-								variant="secondary"
-								size="sm"
-								disabled={isCheckDisabled}
-								onClick={() => {
-									if (!teacherId || !date) return;
-									mutate({
-										teacherId,
-										date: dateWithTime,
-										period: duration,
-									});
-								}}
-							>
-								Check Slot Availability
-							</Button>
-						)}
-					/>
 				</ButtonGroup>
 			</CardFooter>
 		</Card>

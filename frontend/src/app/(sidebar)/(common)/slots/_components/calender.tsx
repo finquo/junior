@@ -46,8 +46,6 @@ export function CalenderPicker() {
 					<Button variant={"secondary"} onClick={() => setDate(getTomorrow())}>
 						Tomorrow
 					</Button>
-				</ButtonGroup>
-				<ButtonGroup>
 					<Button
 						variant={"secondary"}
 						onClick={() => setDate(getNextDayOfWeek(6))}

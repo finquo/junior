@@ -64,6 +64,11 @@ export function UsersCard() {
 					}}
 				/>
 				<StudentProgramField />
+				<LessonSelector
+					onSelect={(l) => {
+						if (l.period) setDuration(getDurationFromInterval(l.period));
+					}}
+				/>
 				<UserSelector
 					name="teacherId"
 					label="Teacher"
@@ -76,11 +81,6 @@ export function UsersCard() {
 						api={api.core.scheduler.list.queryOptions()}
 					/>
 				</RenderWhenRole>
-				<LessonSelector
-					onSelect={(l) => {
-						if (l.period) setDuration(getDurationFromInterval(l.period));
-					}}
-				/>
 			</CardContent>
 			<CardFooter>
 				<PeriodSelector />

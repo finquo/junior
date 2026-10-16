@@ -5,6 +5,7 @@ import {
 	CalendarDaysIcon,
 	CalendarCheckIcon,
 	ClockIcon,
+	EllipsisIcon,
 	GraduationCapIcon,
 	UserRoundIcon,
 	UsersIcon,
@@ -15,6 +16,7 @@ import { sileo as toast } from "sileo";
 import { mergeDateWithTimeString } from "utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardAction,
@@ -24,6 +26,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Item,
 	ItemContent,
@@ -84,6 +93,14 @@ export function PreviewCard() {
 		month: "long",
 	});
 
+	const isCheckDisabled = Boolean(!teacherId || !date);
+
+	const dateWithTime = date
+		? selectedTime
+			? mergeDateWithTimeString(date, selectedTime)
+			: date
+		: new Date();
+
 	return (
 		<Card>
 			<CardHeader>
@@ -96,7 +113,7 @@ export function PreviewCard() {
 				</CardAction>
 			</CardHeader>
 			<CardContent>
-				<ItemGroup>
+				<ItemGroup className="grid grid-cols-2">
 					<SummaryRow icon={<UserRoundIcon />} label="Student">
 						{studentId ? (
 							<FetchUser
@@ -155,57 +172,147 @@ export function PreviewCard() {
 				</ItemGroup>
 			</CardContent>
 			<CardFooter className="justify-end">
-				<MutationButton
-					api={api.core.slot.create.mutationOptions()}
-					onSuccess={() => {
-						refetchAPIs([api.core.slot.list.queryKey()]);
-						toast.success({
-							title: "Slot created successfully!",
-						});
-					}}
-					isPending={
-						<Button
-							disabled
-							className="w-full md:ml-auto md:w-auto"
-							variant="outline"
-						>
-							<Spinner />
-							Confirm
-						</Button>
-					}
-					mutate={(mutate) => (
-						<Button
-							disabled={!isComplete}
-							className="w-full md:ml-auto md:w-auto"
-							onClick={() => {
-								if (
-									!studentId ||
-									!teacherId ||
-									!schedulerId ||
-									!lessonId ||
-									!date ||
-									!selectedTime
-								) {
-									return;
+				<ButtonGroup>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="secondary"
+								size="icon"
+								disabled={isCheckDisabled}
+								aria-label="Availability checks"
+							>
+								<EllipsisIcon />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+							<DropdownMenuLabel>Availability checks</DropdownMenuLabel>
+							<MutationButton
+								api={api.core.teacher.checkAvailability.mutationOptions()}
+								onSuccess={(result) => {
+									if (result.isAvailable) {
+										toast.success({
+											title: "Teacher is available!",
+											description:
+												"Teacher is available on this date for the selected duration.",
+										});
+									} else {
+										toast.warning({
+											title: "Teacher is unavailable",
+											description:
+												result.reason ||
+												"Teacher is not available for this period.",
+										});
+									}
+								}}
+								isPending={
+									<DropdownMenuItem disabled>
+										<Spinner />
+										Checking teacher availability…
+									</DropdownMenuItem>
 								}
-
-								const startTime = mergeDateWithTimeString(date, selectedTime);
-
-								mutate({
-									studentId,
-									teacherId,
-									schedulerId,
-									lessonId,
-									startTime,
-									period: duration,
+								mutate={(mutate) => (
+									<DropdownMenuItem
+										onSelect={() => {
+											if (!teacherId || !date) return;
+											mutate({
+												id: teacherId,
+												date: dateWithTime,
+												period: duration,
+											});
+										}}
+									>
+										Check teacher availability
+									</DropdownMenuItem>
+								)}
+							/>
+						</DropdownMenuContent>
+					</DropdownMenu>
+					<MutationButton
+						api={api.core.slot.checkAvailability.mutationOptions()}
+						onSuccess={(result) => {
+							if (result.existingSlots && result.existingSlots.length > 0) {
+								toast.warning({
+									title: "Slot conflict detected",
+									description: `${result.existingSlots.length} active slot(s) already booked during this time.`,
 								});
-							}}
-						>
-							<CalendarCheckIcon />
-							Confirm
-						</Button>
-					)}
-				/>
+							} else {
+								toast.success({
+									title: "Slot is available!",
+									description: "No conflicting slots found for this time.",
+								});
+							}
+						}}
+						isPending={
+							<Button variant="secondary"  disabled>
+								<Spinner />
+								Check Slot Availability
+							</Button>
+						}
+						mutate={(mutate) => (
+							<Button
+								variant="secondary"
+
+								disabled={isCheckDisabled}
+								onClick={() => {
+									if (!teacherId || !date) return;
+									mutate({
+										teacherId,
+										date: dateWithTime,
+										period: duration,
+									});
+								}}
+							>
+								Check Slot Availability
+							</Button>
+						)}
+					/>
+					<MutationButton
+						api={api.core.slot.create.mutationOptions()}
+						onSuccess={() => {
+							refetchAPIs([api.core.slot.list.queryKey()]);
+							toast.success({
+								title: "Slot created successfully!",
+							});
+						}}
+						isPending={
+							<Button disabled variant="outline">
+								<Spinner />
+								Confirm
+							</Button>
+						}
+						mutate={(mutate) => (
+							<Button
+								disabled={!isComplete}
+								onClick={() => {
+									if (
+										!studentId ||
+										!teacherId ||
+										!schedulerId ||
+										!lessonId ||
+										!date ||
+										!selectedTime
+									) {
+										return;
+									}
+
+									const startTime = mergeDateWithTimeString(date, selectedTime);
+
+									mutate({
+										studentId,
+										teacherId,
+										schedulerId,
+										lessonId,
+										startTime,
+										period: duration,
+									});
+								}}
+							>
+								<CalendarCheckIcon />
+								Confirm
+							</Button>
+						)}
+					/>
+				</ButtonGroup>
 			</CardFooter>
 		</Card>
 	);
