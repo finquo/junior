@@ -8,9 +8,10 @@ import {
 } from "@tanstack/react-query";
 import { period } from "backend/config";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Field } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
 	Select,
 	SelectContent,
@@ -59,7 +60,8 @@ export function UserSelector<
 
 	if (isPending) {
 		return (
-			<Field className="w-full sm:w-auto min-w-[200px]">
+			<Field className="w-full min-w-[200px] sm:w-auto">
+				<FieldLabel htmlFor={name}>{label}</FieldLabel>
 				<div className="flex h-9 w-full min-w-[200px] items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs">
 					<Skeleton className="size-5 rounded-full" />
 					<Skeleton className="h-4 w-28" />
@@ -69,7 +71,8 @@ export function UserSelector<
 	}
 
 	return (
-		<Field className="w-full sm:w-auto min-w-[200px]">
+		<Field className="w-full min-w-[200px] sm:w-auto">
+			<FieldLabel htmlFor={name}>{label}</FieldLabel>
 			<Select
 				defaultValue={defaultUser}
 				value={user}
@@ -78,7 +81,7 @@ export function UserSelector<
 					setUser(selectedId);
 				}}
 			>
-				<SelectTrigger className="w-full min-w-[200px]" title="Hi">
+				<SelectTrigger id={name} className="w-full min-w-[200px]">
 					<SelectValue
 						placeholder={`Select a ${label}`}
 						children={(item: string) => (
@@ -142,25 +145,48 @@ export function LessonSelector({
 	onSelect,
 }: {
 	defaultLesson?: string;
-	onSelect?: (item: API_Returns["core"]["lesson"]["list"][number]) => void;
+	onSelect?: (item: API_Returns["core"]["student"]["lessons"]["lessons"][number]) => void;
 }) {
 	const [lesson, setLesson] = useQueryState("lessonId");
-	const { data: list, isPending } = useQuery(api.core.lesson.list.queryOptions());
+	const [studentId] = useQueryState("studentId");
+	const [onlyUnattended, setOnlyUnattended] = useState(true);
+
+	const { data, isPending } = useQuery({
+		...api.core.student.lessons.queryOptions({
+			input: { id: studentId ?? "" },
+		}),
+		enabled: Boolean(studentId),
+	});
 
 	useEffect(() => {
-		if (onSelect) {
-			if (!list) return;
+		if (!onSelect || !data) return;
 
-			const selectedItem = list.find((item) => item.id === lesson);
-			if (selectedItem) {
-				onSelect(selectedItem);
-			}
+		const list = onlyUnattended ? data.unattendedLessons : data.lessons;
+		const selectedItem = list.find((item) => item.id === lesson);
+		if (selectedItem) {
+			onSelect(selectedItem);
 		}
-	}, [lesson, list, onSelect]);
+	}, [lesson, data, onlyUnattended, onSelect]);
+
+	const list = (onlyUnattended ? data?.unattendedLessons : data?.lessons) ?? [];
+
+	if (!studentId) {
+		return (
+			<Field className="w-full min-w-[200px] sm:w-auto">
+				<FieldLabel htmlFor="lessonId">Lesson</FieldLabel>
+				<Select disabled>
+					<SelectTrigger id="lessonId" className="w-full min-w-[200px]">
+						<SelectValue placeholder="Select a Student first" />
+					</SelectTrigger>
+				</Select>
+			</Field>
+		);
+	}
 
 	if (isPending) {
 		return (
-			<Field className="w-full sm:w-auto min-w-[200px]">
+			<Field className="w-full min-w-[200px] sm:w-auto">
+				<FieldLabel htmlFor="lessonId">Lesson</FieldLabel>
 				<div className="flex h-9 w-full min-w-[200px] items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs">
 					<Skeleton className="h-4 w-28" />
 				</div>
@@ -169,36 +195,49 @@ export function LessonSelector({
 	}
 
 	return (
-		<Field className="w-full sm:w-auto min-w-[200px]">
-			<Select
-				defaultValue={defaultLesson}
-				value={lesson}
-				onValueChange={(c) => {
-					if (!c) return;
-					setLesson(c);
-				}}
-			>
-				<SelectTrigger className="w-full min-w-[200px]">
-					<SelectValue
-						placeholder={"Select a Lesson"}
-						children={(item: string) => {
-							const selected = list?.find((l) => l.id === item);
-							return <span>{selected?.name ?? "Select Lesson"}</span>;
-						}}
-					/>
-				</SelectTrigger>
-				<SelectContent alignItemWithTrigger={false}>
-					<SelectGroup>
-						<SelectLabel>Select a Lesson</SelectLabel>
-						{list?.map((l) => (
-							<SelectItem key={l.id} value={l.id}>
-								{l.name}
-							</SelectItem>
-						))}
-					</SelectGroup>
-				</SelectContent>
-			</Select>
-		</Field>
+		<FieldGroup>
+			<Field className="w-full min-w-[200px] sm:w-auto">
+				<FieldLabel htmlFor="lessonId">Lesson</FieldLabel>
+				<Select
+					defaultValue={defaultLesson}
+					value={lesson}
+					onValueChange={(c) => {
+						if (!c) return;
+						setLesson(c);
+					}}
+				>
+					<SelectTrigger id="lessonId" className="w-full min-w-[200px]">
+						<SelectValue
+							placeholder={"Select a Lesson"}
+							children={(item: string) => {
+								const selected = list.find((l) => l.id === item);
+								return <span>{selected?.name ?? "Select Lesson"}</span>;
+							}}
+						/>
+					</SelectTrigger>
+					<SelectContent alignItemWithTrigger={false}>
+						<SelectGroup>
+							<SelectLabel>Select a Lesson</SelectLabel>
+							{list.map((l) => (
+								<SelectItem key={l.id} value={l.id}>
+									{l.name}
+								</SelectItem>
+							))}
+						</SelectGroup>
+					</SelectContent>
+				</Select>
+			</Field>
+			<Field orientation="horizontal" className="w-fit">
+				<Checkbox
+					id="only-unattended"
+					checked={onlyUnattended}
+					onCheckedChange={(checked) => setOnlyUnattended(Boolean(checked))}
+				/>
+				<FieldLabel htmlFor="only-unattended">
+					Show only unattended lessons
+				</FieldLabel>
+			</Field>
+		</FieldGroup>
 	);
 }
 
@@ -206,9 +245,10 @@ export function PeriodSelector() {
 	const [duration, setDuration] = useQueryState("duration", parseAsInteger);
 
 	return (
-		<Field className="w-full sm:w-auto min-w-[200px]">
+		<Field className="w-full min-w-[200px] sm:w-auto">
+			<FieldLabel htmlFor="duration">Duration</FieldLabel>
 			<Select value={duration} onValueChange={(p) => setDuration(p)}>
-				<SelectTrigger className="w-full min-w-[200px]">
+				<SelectTrigger id="duration" className="w-full min-w-[200px]">
 					<SelectValue
 						placeholder={"Pick Duration"}
 						children={(item?: number) => {

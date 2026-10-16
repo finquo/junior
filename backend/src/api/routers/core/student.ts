@@ -10,6 +10,7 @@ import {
 } from "@/db/zod";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
+import { orderLessons } from "./program";
 
 export const studentRouter = {
 	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
@@ -191,6 +192,74 @@ export const studentRouter = {
 						(position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
 				),
 				attendedLessons,
+			};
+		}),
+	lessons: getRolesProcedure(["admin", "teacher", "scheduler"])
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const student = await tryAPI(
+				"db-core-get-student-lessons",
+				db.query.student.findFirst({
+					where: MapRole(context.role, {
+						admin: {
+							id: input.id,
+						},
+						teacher: {
+							id: input.id,
+							mentorId: context.user.id,
+						},
+						scheduler: {
+							id: input.id,
+							supervisorId: context.user.id,
+						},
+					}),
+					columns: {
+						program: true,
+						attendedLessons: true,
+					},
+				}),
+			);
+
+			const attendedLessons = student?.attendedLessons ?? [];
+
+			if (!student?.program) {
+				return {
+					programInfo: null,
+					lessons: [],
+					attendedLessons,
+					unattendedLessons: [],
+				};
+			}
+
+			const program = await tryAPI(
+				"db-core-get-student-lessons-program",
+				db.query.program.findFirst({
+					where: { id: student.program },
+				}),
+			);
+
+			const lessons = await getAPI(
+				"db-core-get-student-lessons-query",
+				db.query.lesson.findMany({
+					where: { program: student.program },
+					orderBy: { createdAt: "desc" },
+				}),
+				[],
+			);
+
+			const ordered = orderLessons(lessons, program?.lessons ?? []);
+
+			return {
+				programInfo: program ?? null,
+				lessons: ordered,
+				attendedLessons,
+				unattendedLessons: ordered.filter(
+					(lesson) => !attendedLessons.includes(lesson.id),
+				),
 			};
 		}),
 	update: getRolesProcedure(["admin", "scheduler"])

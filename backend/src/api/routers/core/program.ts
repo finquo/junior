@@ -14,7 +14,7 @@ import { MapRole } from "@/utils/role";
  * Order lessons using the program's `lessons` array ("lessons to watch").
  * Lessons missing from the array keep their relative position at the end.
  */
-const orderLessons = <T extends { id: string }>(
+export const orderLessons = <T extends { id: string }>(
 	lessons: T[],
 	order: string[],
 ) => {

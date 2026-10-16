@@ -1,7 +1,7 @@
 import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import z from "zod";
-import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
-import { periodZod } from "@/config/time";
+import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
 import { db } from "@/services";
@@ -230,5 +230,167 @@ export const slotRouter = {
 				existingSlots,
 				availableSlots: [],
 			} as const;
+		}),
+	check: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				teacherId: z.string(),
+				date: z.coerce.date(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const targetDate = new Date(input.date);
+			const dayKey = getDaykey(targetDate.getDay());
+
+			const dayStart = new Date(targetDate);
+			dayStart.setHours(0, 0, 0, 0);
+			const dayEnd = new Date(dayStart);
+			dayEnd.setDate(dayEnd.getDate() + 1);
+
+			const teacherRecord = await tryAPI(
+				"db-core-check-slot-teacher",
+				db.query.teacher.findFirst({
+					where: MapRole(context.role, {
+						admin: {
+							id: input.teacherId,
+						},
+						scheduler: {
+							id: input.teacherId,
+							supervisorId: context.user.id,
+						},
+					}),
+				}),
+			);
+
+			if (!teacherRecord) throw getError("NOT_FOUND", "Teacher not found");
+
+			const availability = teacherRecord.availability?.[dayKey] ?? {
+				enabled: false,
+				ranges: [],
+			};
+
+			const leaves = (teacherRecord.leaves ?? [])
+				.filter((leave) => leave.end > dayStart && leave.start < dayEnd)
+				.map((leave) => ({
+					type: leave.type,
+					start: leave.start,
+					end: leave.end,
+				}));
+
+			const bookedSlots = await getAPI(
+				"db-core-check-slot-booked",
+				db
+					.select({
+						id: schema.slot.id,
+						startTime: schema.slot.startTime,
+						expectedEndTime: schema.slot.expectedEndTime,
+						status: schema.slot.status,
+					})
+					.from(schema.slot)
+					.where(
+						and(
+							eq(schema.slot.teacherId, input.teacherId),
+							inArray(schema.slot.status, [
+								"scheduled",
+								"rescheduled",
+								"started",
+							]),
+							lt(schema.slot.startTime, dayEnd),
+							gt(schema.slot.expectedEndTime, dayStart),
+						),
+					),
+				[],
+			);
+
+			const timeToMinutes = (time: string) => {
+				const [hours = 0, minutes = 0] = time.split(":").map(Number);
+				return hours * 60 + minutes;
+			};
+			const minutesToTime = (minutes: number) => {
+				const clamped = Math.max(0, Math.min(24 * 60, minutes));
+				return `${String(Math.floor(clamped / 60)).padStart(2, "0")}:${String(
+					clamped % 60,
+				).padStart(2, "0")}`;
+			};
+			const dateToMinutes = (date: Date) =>
+				Math.round((date.getTime() - dayStart.getTime()) / 60_000);
+
+			const unavailable: {
+				id: string;
+				start: string;
+				end: string;
+				label: string;
+				type: "outside_availability" | "leave" | "conflict";
+			}[] = [];
+
+			const ranges = [...(availability.ranges ?? [])]
+				.map((range) => ({
+					start: timeToMinutes(range.start),
+					end: timeToMinutes(range.end),
+				}))
+				.sort((a, b) => a.start - b.start);
+
+			const gaps: { start: number; end: number }[] = [];
+			if (!availability.enabled || ranges.length === 0) {
+				gaps.push({ start: 0, end: 24 * 60 });
+			} else {
+				let cursor = 0;
+				for (const range of ranges) {
+					if (range.start > cursor)
+						gaps.push({ start: cursor, end: range.start });
+					cursor = Math.max(cursor, range.end);
+				}
+				if (cursor < 24 * 60) gaps.push({ start: cursor, end: 24 * 60 });
+			}
+
+			gaps.forEach((gap, index) => {
+				if (gap.end <= gap.start) return;
+				unavailable.push({
+					id: `availability-${index}`,
+					start: minutesToTime(gap.start),
+					end: minutesToTime(gap.end),
+					label: "Outside teacher availability",
+					type: "outside_availability",
+				});
+			});
+
+			leaves.forEach((leave, index) => {
+				const start = Math.max(0, dateToMinutes(leave.start));
+				const end = Math.min(24 * 60, dateToMinutes(leave.end));
+				if (end <= start) return;
+				unavailable.push({
+					id: `leave-${index}`,
+					start: minutesToTime(start),
+					end: minutesToTime(end),
+					label:
+						leave.type === "full"
+							? "Teacher on leave"
+							: "Teacher on partial leave",
+					type: "leave",
+				});
+			});
+
+			bookedSlots.forEach((slot) => {
+				const start = Math.max(0, dateToMinutes(slot.startTime));
+				const end = Math.min(24 * 60, dateToMinutes(slot.expectedEndTime));
+				if (end <= start) return;
+				unavailable.push({
+					id: slot.id,
+					start: minutesToTime(start),
+					end: minutesToTime(end),
+					label: "Booked slot",
+					type: "conflict",
+				});
+			});
+
+			return {
+				teacherId: input.teacherId,
+				date: targetDate,
+				dayKey,
+				availability,
+				leaves,
+				bookedSlots,
+				unavailable,
+			};
 		}),
 };
