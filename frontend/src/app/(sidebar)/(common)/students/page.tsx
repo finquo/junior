@@ -262,14 +262,14 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 			},
 		}),
 		columnHelper.display({
-			id: "lessons",
+			id: "attendedLessons",
 			header: () => (
 				<Tooltip>
-					<TooltipTrigger className="cursor-help">Lessons</TooltipTrigger>
-					<TooltipContent>Total enrolled lesson sessions</TooltipContent>
+					<TooltipTrigger className="cursor-help">Attended</TooltipTrigger>
+					<TooltipContent>Lessons marked as attended</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ row }) => row.original.lessons?.length ?? 0,
+			cell: ({ row }) => row.original.attendedLessons?.length ?? 0,
 		}),
 		columnHelper.display({
 			id: "supervisor",

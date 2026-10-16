@@ -58,8 +58,8 @@ export function StudentProfile({ student }: { student?: StudentType | null }) {
 							<TableCell>{student.schooling ?? "None"}</TableCell>
 						</TableRow>
 						<TableRow>
-							<TableCell>Lessons Enrolled</TableCell>
-							<TableCell>{student.lessons?.length ?? 0}</TableCell>
+							<TableCell>Lessons Attended</TableCell>
+							<TableCell>{student.attendedLessons?.length ?? 0}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Languages</TableCell>

@@ -1,15 +1,8 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
-import {
-	type LanguageCodes,
-	LanguageCodeZod,
-	Languages,
-	type ProgramKeys,
-	ProgramZod,
-	programs,
-} from "backend/config";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
 import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
@@ -60,7 +53,7 @@ const lessonUpdateFormSchema = z.object({
 	name: z.string().trim().min(1, "Lesson name is required"),
 	description: z.string().nullable(),
 	language: LanguageCodeZod,
-	program: ProgramZod,
+	program: z.string(),
 	period: z.number(),
 });
 
@@ -74,6 +67,9 @@ export function EditLessonDrawer({
 	children: React.ReactElement;
 }) {
 	const [open, setOpen] = useState(false);
+	const { data: programs = [] } = useQuery(
+		api.core.program.list.queryOptions(),
+	);
 
 	const { mutateAsync, isPending } = useMutation(
 		api.core.lesson.update.mutationOptions({
@@ -227,7 +223,7 @@ export function EditLessonDrawer({
 											value={field.state.value}
 											disabled={isPending}
 											onValueChange={(val) => {
-												if (val) field.handleChange(val as ProgramKeys);
+												if (val) field.handleChange(val);
 											}}
 										>
 											<SelectTrigger id={field.name}>

@@ -2,15 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
-import {
-	BookOpenIcon,
-	CalendarIcon,
-	EllipsisVerticalIcon,
-	GripIcon,
-	ImportIcon,
-	PlusIcon,
-	TrashIcon,
-} from "lucide-react";
+import { BookOpenIcon, GraduationCapIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
@@ -18,264 +10,158 @@ import { formatTimeString } from "utils";
 import Loader from "@/components/loader";
 import {
 	Frame,
-	FrameActions,
+	FrameDescription,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
 } from "@/components/reui/frame";
-import {
-	Sortable,
-	SortableItem,
-	SortableItemHandle,
-} from "@/components/reui/sortable";
-import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-	Drawer,
-	DrawerClose,
-	DrawerContent,
-	DrawerDescription,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerInner,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-	Item,
-	ItemActions,
-	ItemContent,
-	ItemDescription,
-	ItemTitle,
-} from "@/components/ui/item";
-import { Marker, MarkerContent } from "@/components/ui/marker";
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { api, refetchAPIs } from "@/hooks/api";
-import { FetchLesson } from "@/hooks/lesson";
-import { MultiLessonSelector } from "./selector";
+import { RenderWhenRole } from "@/hooks/role";
 
 export function StudentLessons({ studentId }: { studentId: string }) {
-	const { data: studentLessonIds = [], isPending } = useQuery(
-		api.core.student.getLessons.queryOptions({
+	const { data, isPending } = useQuery(
+		api.core.student.getCurriculum.queryOptions({
 			input: { id: studentId },
 		}),
 	);
 
-	const [orderedIds, setOrderedIds] = useState<string[] | null>(null);
-	const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
-	const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
-		null,
-	);
+	const [attended, setAttended] = useState<string[] | null>(null);
+	const attendedIds = attended ?? data?.attendedLessons ?? [];
 
-	const items = orderedIds ?? studentLessonIds;
-
-	const { mutateAsync: updateStudentLessons } = useMutation(
-		api.core.student.updateLessons.mutationOptions({
+	const { mutateAsync: updateAttended } = useMutation(
+		api.core.student.updateAttendedLessons.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
-					api.core.student.getLessons.queryKey({
+					api.core.student.getCurriculum.queryKey({
 						input: { id: studentId },
 					}),
 				]);
-				toast.success({ title: "Lesson order updated" });
+				toast.success({ title: "Attendance updated" });
 			},
 		}),
 	);
 
-	const handleValueChange = async (newIds: string[]) => {
-		setOrderedIds(newIds);
-		await updateStudentLessons({
-			id: studentId,
-			lessons: newIds,
-		});
-	};
-
-	const handleAddLesson = async () => {
-		if (selectedLessonIds.length === 0) return;
-		const newIds = [...items, ...selectedLessonIds];
-		setOrderedIds(newIds);
-		setSelectedLessonIds([]);
-		await updateStudentLessons({
-			id: studentId,
-			lessons: newIds,
-		});
-	};
-
-	const handleDeleteLesson = async (idToDelete: string) => {
-		const newIds = items.filter((id) => id !== idToDelete);
-		setOrderedIds(newIds);
-		await updateStudentLessons({
-			id: studentId,
-			lessons: newIds,
-		});
+	const handleToggle = async (lessonId: string, checked: boolean) => {
+		const next = checked
+			? [...attendedIds, lessonId]
+			: attendedIds.filter((id) => id !== lessonId);
+		setAttended(next);
+		await updateAttended({ id: studentId, attendedLessons: next });
 	};
 
 	if (isPending) {
 		return <Loader />;
 	}
 
+	const lessons = data?.lessons ?? [];
+
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Enrolled Lessons</FrameTitle>
-				<FrameActions>
-					<Drawer>
-						<DrawerTrigger asChild>
-							<Button variant="outline">
-								<PlusIcon />
-								Add Lesson
-							</Button>
-						</DrawerTrigger>
-						<DrawerContent ref={setPortalContainer}>
-							<DrawerHeader>
-								<DrawerTitle>Add Lesson</DrawerTitle>
-								<DrawerDescription>
-									Pick from available lessons
-								</DrawerDescription>
-							</DrawerHeader>
-
-							<DrawerInner>
-								<MultiLessonSelector
-									enrolledLessonIds={items}
-									value={selectedLessonIds}
-									onValueChange={setSelectedLessonIds}
-									container={portalContainer}
-								/>
-
-								<Marker variant="separator">
-									<MarkerContent>or</MarkerContent>
-								</Marker>
-
-								<Button>
-									<ImportIcon />
-									Import from another students
-								</Button>
-							</DrawerInner>
-
-							<DrawerFooter>
-								<DrawerClose
-									disabled={selectedLessonIds.length === 0}
-									onClick={handleAddLesson}
-									asChild
-								>
-									<Button>
-										<PlusIcon />
-										Add
-									</Button>
-								</DrawerClose>
-
-								<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
-							</DrawerFooter>
-						</DrawerContent>
-					</Drawer>
-				</FrameActions>
+				<FrameTitle>Curriculum</FrameTitle>
+				<FrameDescription>
+					Lessons to attend, in order. Mark each lesson once attended.
+				</FrameDescription>
 			</FrameHeader>
 
 			<FramePanel>
-				{items.length === 0 ? (
+				{!data?.program ? (
+					<Alert>
+						<GraduationCapIcon />
+						<AlertTitle>No program assigned</AlertTitle>
+						<AlertDescription>
+							Assign a program to this student to build their curriculum.
+						</AlertDescription>
+					</Alert>
+				) : lessons.length === 0 ? (
 					<Alert>
 						<BookOpenIcon />
-						<AlertTitle>No lessons assigned</AlertTitle>
+						<AlertTitle>No lessons in this program</AlertTitle>
+						<AlertDescription>
+							Add lessons to the program to build the curriculum.
+						</AlertDescription>
 					</Alert>
 				) : (
-					<Sortable
-						value={items}
-						onValueChange={handleValueChange}
-						getItemValue={(id) => id}
-						strategy="vertical"
-						className="space-y-3"
-					>
-						{items.map((lessonId) => (
-							<SortableItem key={lessonId} value={lessonId}>
-								<Item variant="outline">
-									<SortableItemHandle className="opacity-40">
-										<GripIcon />
-									</SortableItemHandle>
-									<FetchLesson
-										id={lessonId}
-										isPending={
-											<ItemContent>
-												<ItemTitle>Loading...</ItemTitle>
-											</ItemContent>
-										}
-										notFound={
-											<ItemContent>
-												<ItemTitle>Lesson not found</ItemTitle>
-											</ItemContent>
-										}
-									>
-										{(lesson) => (
-											<>
-												<ItemContent>
-													<ItemTitle>{lesson.name}</ItemTitle>
-													<ItemDescription>
-														{lesson.description}
-													</ItemDescription>
-												</ItemContent>
-												<ItemContent>
-													<Badge variant="secondary">
-														{langFlag(lesson.language)}{" "}
-														{langName(lesson.language)}
-													</Badge>
-												</ItemContent>
-												<ItemActions>
-													{lesson.period && (
-														<Badge variant="outline">
-															{formatTimeString(lesson.period)}
-														</Badge>
-													)}
-												</ItemActions>
-												<ItemActions>
-													<DropdownMenu>
-														<DropdownMenuTrigger asChild>
-															<Button variant="ghost" size="icon-sm">
-																<EllipsisVerticalIcon />
-															</Button>
-														</DropdownMenuTrigger>
-														<DropdownMenuContent align="end">
-															<DropdownMenuItem asChild>
-																<Link
-																	href={{
-																		pathname: "/slots/new",
-																		query: {
-																			studentId,
-																			lessonId,
-																		},
-																	}}
-																>
-																	<CalendarIcon />
-																	Schedule
-																</Link>
-															</DropdownMenuItem>
-															<DropdownMenuItem
-																variant="destructive"
-																onClick={() => handleDeleteLesson(lessonId)}
-															>
-																<TrashIcon />
-																Delete
-															</DropdownMenuItem>
-														</DropdownMenuContent>
-													</DropdownMenu>
-												</ItemActions>
-											</>
-										)}
-									</FetchLesson>
-								</Item>
-							</SortableItem>
-						))}
-					</Sortable>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>#</TableHead>
+								<TableHead>Lesson</TableHead>
+								<TableHead>Language</TableHead>
+								<TableHead>Duration</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead>Attended</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{lessons.map((lesson, index) => {
+								const isAttended = attendedIds.includes(lesson.id);
+								return (
+									<TableRow key={lesson.id}>
+										<TableCell>{index + 1}</TableCell>
+										<TableCell>
+											<Button variant="link" asChild>
+												<Link href={`/lessons/${lesson.id}` as "/"}>
+													{lesson.name}
+												</Link>
+											</Button>
+										</TableCell>
+										<TableCell>
+											<Badge variant="secondary">
+												{langFlag(lesson.language)} {langName(lesson.language)}
+											</Badge>
+										</TableCell>
+										<TableCell>
+											{lesson.period ? (
+												<Badge variant="outline">
+													{formatTimeString(lesson.period)}
+												</Badge>
+											) : null}
+										</TableCell>
+										<TableCell>
+											<ColorBadge variant={isAttended ? "success" : "warning"}>
+												{isAttended ? "Attended" : "Pending"}
+											</ColorBadge>
+										</TableCell>
+										<TableCell>
+											<RenderWhenRole
+												role={["admin", "scheduler"]}
+												fallback={
+													<Checkbox
+														checked={isAttended}
+														disabled
+														aria-label={`${lesson.name} attendance`}
+													/>
+												}
+											>
+												<Checkbox
+													checked={isAttended}
+													onCheckedChange={(checked) =>
+														handleToggle(lesson.id, Boolean(checked))
+													}
+													aria-label={`Mark ${lesson.name} attended`}
+												/>
+											</RenderWhenRole>
+										</TableCell>
+									</TableRow>
+								);
+							})}
+						</TableBody>
+					</Table>
 				)}
 			</FramePanel>
 		</Frame>
 	);
 }
-
-export default StudentLessons;

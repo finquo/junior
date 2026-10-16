@@ -1,5 +1,5 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
-import type { ZodObject, ZodRawShape, ZodString } from "zod";
+import z, { type ZodObject, type ZodRawShape, type ZodString } from "zod";
 import {
 	addressZod,
 	availabilityZod,
@@ -7,7 +7,6 @@ import {
 	intervalHourZod,
 	LanguageCodeZod,
 	noteZod,
-	ProgramZod,
 	quizZod,
 	schoolingZod,
 } from "@/config";
@@ -54,7 +53,7 @@ export const InsertStudentSchema = createInsertSchema(
 ).safeExtend({
 	schooling: schoolingZod.optional(),
 	languages: LanguageCodeZod.array().optional(),
-	program: ProgramZod.nullable().optional(),
+	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
 });
@@ -63,7 +62,7 @@ export const SelectStudentSchema = createSelectSchema(
 ).safeExtend({
 	schooling: schoolingZod.nullable(),
 	languages: LanguageCodeZod.array(),
-	program: ProgramZod.nullable(),
+	program: z.string().nullable(),
 	notes: noteZod.array(),
 	address: addressZod.nullable(),
 });
@@ -72,9 +71,27 @@ export const UpdateStudentSchema = createUpdateSchema(
 ).safeExtend({
 	schooling: schoolingZod.nullable().optional(),
 	languages: LanguageCodeZod.array().optional(),
-	program: ProgramZod.optional(),
+	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.optional(),
+});
+
+// Program
+const priceZod = z.record(z.string(), z.number());
+export const SelectProgramSchema = createSelectSchema(
+	schema.program,
+).safeExtend({
+	price: priceZod,
+});
+export const InsertProgramSchema = createInsertSchema(
+	schema.program,
+).safeExtend({
+	price: priceZod,
+});
+export const UpdateProgramSchema = createUpdateSchema(
+	schema.program,
+).safeExtend({
+	price: priceZod,
 });
 
 // Slot
@@ -87,7 +104,6 @@ export const SelectLessonSchema = createSelectSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod,
-		program: ProgramZod,
 		quiz: quizZod.array(),
 		period: intervalHourZod,
 	});
@@ -95,7 +111,6 @@ export const InsertLessonSchema = createInsertSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod,
-		program: ProgramZod,
 		quiz: quizZod.array().optional(),
 		period: intervalHourZod.optional(),
 	});
@@ -103,7 +118,6 @@ export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
 	.omit({ period: true })
 	.safeExtend({
 		language: LanguageCodeZod.optional(),
-		program: ProgramZod.optional(),
 		quiz: quizZod.array().optional(),
 		period: intervalHourZod.optional(),
 	});

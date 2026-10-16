@@ -1,16 +1,10 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
-import {
-	type LanguageCodes,
-	LanguageCodeZod,
-	Languages,
-	type ProgramKeys,
-	ProgramZod,
-	programs,
-} from "backend/config";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { type LanguageCodes, LanguageCodeZod, Languages } from "backend/config";
 import { BookOpenIcon } from "lucide-react";
+import { useEffect } from "react";
 import { sileo as toast } from "sileo";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -51,11 +45,15 @@ const createLessonSchema = z.object({
 	name: z.string().trim().min(1, "Lesson name is required"),
 	description: z.string().optional(),
 	language: LanguageCodeZod,
-	program: ProgramZod,
+	program: z.string().min(1, "Program is required"),
 	period: z.number(),
 });
 
 export default function CreateLessonPage() {
+	const { data: programs = [] } = useQuery(
+		api.core.program.list.queryOptions(),
+	);
+
 	const { mutateAsync, isPending } = useMutation(
 		api.core.lesson.create.mutationOptions({
 			onSuccess: () => {
@@ -73,7 +71,7 @@ export default function CreateLessonPage() {
 			name: "",
 			description: "",
 			language: "en-IN" as LanguageCodes,
-			program: programs[0].id,
+			program: "",
 			period: 60,
 		} as z.infer<typeof createLessonSchema>,
 		validators: {
@@ -89,6 +87,13 @@ export default function CreateLessonPage() {
 			});
 		},
 	});
+
+	useEffect(() => {
+		const first = programs[0];
+		if (first && !form.state.values.program) {
+			form.setFieldValue("program", first.id);
+		}
+	}, [programs, form]);
 
 	return (
 		<div>
@@ -228,7 +233,7 @@ export default function CreateLessonPage() {
 												value={field.state.value}
 												disabled={isPending}
 												onValueChange={(val) => {
-													if (val) field.handleChange(val as ProgramKeys);
+													if (val) field.handleChange(val);
 												}}
 											>
 												<SelectTrigger id={field.name}>

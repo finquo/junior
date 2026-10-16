@@ -2,6 +2,12 @@
 
 Finquo ("junior") monorepo: Bun workspaces driven by Vite+ (`vp`). Frontend is Next.js App Router; backend is Hono + oRPC + Better Auth + Drizzle/Postgres, and contains the API source that the frontend imports.
 
+## Ground rules (read first - these override everything else)
+
+- **Never touch DB CLI commands or migration files.** Do not run `db:generate`, `db:migrate`, `auth:generate`, or any Drizzle/DB CLI. Do not create, edit, or delete anything under `backend/migrations/`. Schema and migrations are the developer's call, end-to-end. Editing `src/db/schema/*` (if asked) never implies permission to generate or apply a migration.
+- **Do not act oversmart.** The developer is a developer using you for speed. They know this codebase and write better code than you do. Defer to them. Do not make unilateral product, schema, architecture, or API-design decisions - and do not "helpfully" make a change self-contained, additive, or future-proof on your own initiative.
+- **Always ask instead of assuming.** If a requirement is ambiguous, or a change has more than one sensible design, stop and ask before implementing - not after. There is always room for iteration; never lock in a decision the developer has not approved.
+
 ## Agent guides
 
 This root guide covers monorepo-wide rules. Each workspace also has its own guide that goes much deeper on that workspace; read the one for wherever you are editing, and keep your edits inside that workspace.
@@ -23,7 +29,7 @@ Run from the repo root unless noted.
 - `bun run build` / `compile` / `construct` - build all workspaces. `construct` is the production build that CI deploys.
 - `bun run env:generate` - regenerate Varlock `env.ts` after editing `.env.schema`
 - `bun run hooks:setup` - install git hooks (`vp config`; staged files run `vp check --fix`)
-- Backend only: `bun run backend db:generate` | `db:migrate` | `auth:generate`
+- Backend only: `bun run backend auth:generate` (regenerates an auth file the developer owns). **DB CLI commands (`db:generate`, `db:migrate`) and everything under `backend/migrations/` are off-limits - see Ground rules.**
 
 `vp` is the vite-plus CLI; the root scripts are thin `vp run` wrappers. There is no test runner configured and no lint/typecheck/test ordering to preserve.
 

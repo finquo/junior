@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import StudentLessons from "../../../students/_components/lessons";
+import { StudentLessons } from "../../../students/_components/lessons";
 
 export default function Page() {
 	const params = useParams<{ id: string }>();

@@ -1,5 +1,4 @@
 import { getAPI, getRolesProcedure, publicProcedure } from "@/api/procedure";
-import { programs } from "@/config";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 
@@ -121,10 +120,20 @@ export const sidebarRouter = {
 			}));
 		},
 	),
-	programs: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(() => {
-		return programs.map((program) => ({
-			id: program.id,
-			title: program.name,
-		})) as Record<"id" | "title", string>[];
-	}),
+	programs: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
+		async () => {
+			const data = await getAPI(
+				"db-sidebar-get-programs-query",
+				db.query.program.findMany({
+					orderBy: { name: "asc" },
+				}),
+				[],
+			);
+
+			return data.map((program) => ({
+				id: program.id,
+				title: program.name,
+			}));
+		},
+	),
 };

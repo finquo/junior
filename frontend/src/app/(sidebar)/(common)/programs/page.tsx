@@ -151,7 +151,7 @@ const priceColumns = (Object.keys(Countries) as CountryCodes[]).map((code) =>
 		),
 		enableSorting: true,
 		meta: { align: "right" },
-		cell: ({ getValue }) => formatPrice(code, getValue()),
+		cell: ({ getValue }) => formatPrice(code, getValue() ?? 0),
 	}),
 );
 

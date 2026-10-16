@@ -76,6 +76,9 @@ export const commonRouter = {
 					where: {
 						id: input.id,
 					},
+					with: {
+						programInfo: true,
+					},
 				}),
 			);
 		}),

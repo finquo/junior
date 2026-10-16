@@ -60,7 +60,7 @@ export const studentRouter = {
 				mentorId: true,
 				supervisorId: true,
 				notes: true,
-				lessons: true,
+				attendedLessons: true,
 				meetingLink: true,
 				paid: true,
 				amount: true,

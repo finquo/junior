@@ -59,6 +59,7 @@ export const studentRouter = {
 					}),
 					with: {
 						user: true,
+						programInfo: true,
 					},
 				}),
 			);
@@ -94,7 +95,7 @@ export const studentRouter = {
 				[],
 			);
 		}),
-	getLessons: getRolesProcedure(["admin", "teacher", "scheduler"])
+	getAttendedLessons: getRolesProcedure(["admin", "teacher", "scheduler"])
 		.input(
 			z.object({
 				id: z.string(),
@@ -102,7 +103,7 @@ export const studentRouter = {
 		)
 		.handler(async ({ input, context }) => {
 			const data = await tryAPI(
-				"db-core-get-student-lessons",
+				"db-core-get-student-attended-lessons",
 				db.query.student.findFirst({
 					where: MapRole(context.role, {
 						admin: {
@@ -118,12 +119,78 @@ export const studentRouter = {
 						},
 					}),
 					columns: {
-						lessons: true,
+						attendedLessons: true,
 					},
 				}),
 			);
 
-			return data?.lessons;
+			return data?.attendedLessons ?? [];
+		}),
+	getCurriculum: getRolesProcedure(["admin", "teacher", "scheduler"])
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const student = await tryAPI(
+				"db-core-get-student-curriculum",
+				db.query.student.findFirst({
+					where: MapRole(context.role, {
+						admin: {
+							id: input.id,
+						},
+						teacher: {
+							id: input.id,
+							mentorId: context.user.id,
+						},
+						scheduler: {
+							id: input.id,
+							supervisorId: context.user.id,
+						},
+					}),
+					columns: {
+						program: true,
+						attendedLessons: true,
+					},
+				}),
+			);
+
+			const attendedLessons = student?.attendedLessons ?? [];
+
+			if (!student?.program) {
+				return { program: null, lessons: [], attendedLessons };
+			}
+
+			const program = await tryAPI(
+				"db-core-get-student-program",
+				db.query.program.findFirst({
+					where: { id: student.program },
+				}),
+			);
+
+			const lessons = await getAPI(
+				"db-core-get-student-program-lessons",
+				db.query.lesson.findMany({
+					where: { program: student.program },
+					orderBy: { createdAt: "desc" },
+				}),
+				[],
+			);
+
+			const position = new Map(
+				(program?.lessons ?? []).map((id, index) => [id, index]),
+			);
+
+			return {
+				program: student.program,
+				lessons: [...lessons].sort(
+					(a, b) =>
+						(position.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+						(position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+				),
+				attendedLessons,
+			};
 		}),
 	update: getRolesProcedure(["admin", "scheduler"])
 		.input(
@@ -154,20 +221,20 @@ export const studentRouter = {
 					.returning(),
 			);
 		}),
-	updateLessons: getRolesProcedure(["admin", "scheduler"])
+	updateAttendedLessons: getRolesProcedure(["admin", "scheduler"])
 		.input(
 			SelectStudentSchema.pick({
 				id: true,
-				lessons: true,
+				attendedLessons: true,
 			}),
 		)
 		.handler(async ({ input, context }) => {
 			return await tryAPI(
-				"db-core-update-student-lessons",
+				"db-core-update-student-attended-lessons",
 				db
 					.update(schema.student)
 					.set({
-						lessons: input.lessons,
+						attendedLessons: input.attendedLessons,
 					})
 					.where(
 						MapRole(context.role, {

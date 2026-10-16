@@ -62,6 +62,10 @@ const relations = defineRelations(schema, (r) => ({
 			from: r.student.supervisorId,
 			to: r.scheduler.id,
 		}),
+		programInfo: r.one.program({
+			from: r.student.program,
+			to: r.program.id,
+		}),
 	},
 	slot: {
 		lesson: r.one.lesson({
@@ -94,6 +98,16 @@ const relations = defineRelations(schema, (r) => ({
 	lesson: {
 		slots: r.many.slot(),
 		answers: r.many.answer(),
+		programInfo: r.one.program({
+			from: r.lesson.program,
+			to: r.program.id,
+		}),
+	},
+	program: {
+		lessons: r.many.lesson({
+			from: r.program.id,
+			to: r.lesson.program,
+		}),
 	},
 }));
 

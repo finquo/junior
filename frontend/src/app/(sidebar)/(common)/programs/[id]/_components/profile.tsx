@@ -1,7 +1,6 @@
 "use client";
 
 import { Countries, type CountryCodes } from "backend/config";
-import { langFlag, langName } from "language-emoji";
 import {
 	BookOpenIcon,
 	CircleDollarSignIcon,
@@ -13,7 +12,6 @@ import {
 	UserRoundIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getDurationFromInterval } from "utils";
 import { CopyButton } from "@/components/copy";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -45,6 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { API_Returns } from "@/lib/api";
 import { getInitials } from "@/lib/utils";
+import { ProgramCurriculum } from "./curriculum";
 
 type ProgramData = NonNullable<API_Returns["core"]["program"]["get"]>;
 type ProgramStudent = API_Returns["core"]["program"]["students"][number];
@@ -77,35 +76,6 @@ function StudentItem({ student }: { student: ProgramStudent }) {
 					{user?.email && <ItemDescription>{user.email}</ItemDescription>}
 				</ItemContent>
 				<ItemActions>
-					<ExternalLinkIcon />
-				</ItemActions>
-			</Link>
-		</Item>
-	);
-}
-
-function LessonItem({ lesson }: { lesson: ProgramLesson }) {
-	return (
-		<Item variant="outline" asChild>
-			<Link href={`/lessons/${lesson.id}` as "/"}>
-				<ItemMedia variant="icon">
-					<BookOpenIcon />
-				</ItemMedia>
-				<ItemContent>
-					<ItemTitle>{lesson.name}</ItemTitle>
-					<ItemDescription>
-						{lesson.description ?? "No description provided."}
-					</ItemDescription>
-				</ItemContent>
-				<ItemActions>
-					<Badge variant="secondary">
-						{langFlag(lesson.language)} {langName(lesson.language)}
-					</Badge>
-					{lesson.period && (
-						<Badge variant="outline">
-							{getDurationFromInterval(lesson.period)} mins
-						</Badge>
-					)}
 					<ExternalLinkIcon />
 				</ItemActions>
 			</Link>
@@ -329,11 +299,7 @@ export function ProgramProfile({
 								</EmptyHeader>
 							</Empty>
 						) : (
-							<ItemGroup>
-								{lessons.map((lesson) => (
-									<LessonItem key={lesson.id} lesson={lesson} />
-								))}
-							</ItemGroup>
+							<ProgramCurriculum programId={data.id} lessons={lessons} />
 						)}
 					</TabsContent>
 				</Tabs>

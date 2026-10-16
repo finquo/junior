@@ -1,14 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { type ProgramKeys, ProgramZod } from "backend/config";
 import { useParams } from "next/navigation";
 import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/hooks/api";
 import { ProgramProfile } from "./_components/profile";
 
-function Program({ programId }: { programId: ProgramKeys }) {
+function Program({ programId }: { programId: string }) {
 	const programQuery = useQuery(
 		api.core.program.get.queryOptions({
 			input: { id: programId },
@@ -53,9 +52,9 @@ function Program({ programId }: { programId: ProgramKeys }) {
 
 export default function Page() {
 	const params = useParams<{ id: string }>();
-	const parsed = params?.id ? ProgramZod.safeParse(params.id) : null;
+	const programId = params?.id;
 
-	if (!parsed?.success) {
+	if (!programId) {
 		return (
 			<Alert variant="destructive">
 				<AlertTitle>Invalid Program</AlertTitle>
@@ -66,5 +65,5 @@ export default function Page() {
 		);
 	}
 
-	return <Program programId={parsed.data} />;
+	return <Program programId={programId} />;
 }

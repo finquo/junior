@@ -1,12 +1,10 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	type LanguageCodes,
 	Languages,
-	type ProgramKeys,
-	programs,
 	type Schooling,
 	schoolingZod,
 } from "backend/config";
@@ -62,6 +60,9 @@ export function EditStudentDrawer({
 	children: React.ReactElement;
 }) {
 	const [open, setOpen] = useState(false);
+	const { data: programs = [] } = useQuery(
+		api.core.program.list.queryOptions(),
+	);
 
 	const { mutateAsync, isPending } = useMutation(
 		api.core.student.update.mutationOptions({
@@ -114,7 +115,7 @@ export function EditStudentDrawer({
 										<Select
 											value={field.state.value ?? ""}
 											onValueChange={(val) =>
-												field.handleChange((val as ProgramKeys) || undefined)
+												field.handleChange(val || undefined)
 											}
 											disabled={isPending}
 										>

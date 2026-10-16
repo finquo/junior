@@ -7,9 +7,10 @@ import {
 	pgTable,
 	text,
 } from "drizzle-orm/pg-core";
-import type { LanguageCodes, ProgramKeys } from "@/config";
+import type { LanguageCodes } from "@/config";
 import type { Anwser, Quiz } from "@/config/quiz";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
+import { program } from "./program";
 import { student } from "./student";
 
 export const lesson = pgTable(
@@ -20,7 +21,7 @@ export const lesson = pgTable(
 		name: text().notNull(),
 		description: text(),
 		language: text().$type<LanguageCodes>().notNull(),
-		program: text().$type<ProgramKeys>().notNull(),
+		program: getId().references(() => program.id, { onDelete: "cascade" }),
 
 		quiz: jsonb().$type<Quiz[]>(),
 		period: interval({ fields: "hour to minute" }).default(

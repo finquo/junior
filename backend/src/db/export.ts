@@ -1,8 +1,9 @@
-import type { scheduler, student, teacher, user } from "./schema";
+import type * as schema from "./schema";
 
 export * from "./zod";
 
-export type SchedulerType = typeof scheduler.$inferSelect;
-export type TeacherType = typeof teacher.$inferSelect;
-export type StudentType = typeof student.$inferSelect;
-export type UserType = typeof user.$inferSelect;
+export type SchedulerType = typeof schema.scheduler.$inferSelect;
+export type TeacherType = typeof schema.teacher.$inferSelect;
+export type StudentType = typeof schema.student.$inferSelect;
+export type UserType = typeof schema.user.$inferSelect;
+export type ProgramType = typeof schema.program.$inferSelect;

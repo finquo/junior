@@ -1,6 +1,5 @@
 "use client";
 
-import { programs } from "backend/config";
 import { langFlag, langName } from "language-emoji";
 import {
 	BookOpenIcon,
@@ -70,7 +69,7 @@ function AnswerRow({ label, correct }: { label: string; correct: boolean }) {
 
 export function LessonProfile({ data }: { data: LessonData }) {
 	const quiz = data.quiz ?? [];
-	const program = programs.find((p) => p.id === data.program);
+	const program = data.programInfo?.name ?? data.program;
 
 	return (
 		<Card>
@@ -82,7 +81,7 @@ export function LessonProfile({ data }: { data: LessonData }) {
 				<Badge variant="secondary">
 					{langFlag(data.language)} {langName(data.language)}
 				</Badge>
-				<ColorBadge variant="info">{program?.name ?? data.program}</ColorBadge>
+				<ColorBadge variant="info">{program}</ColorBadge>
 				<Badge variant="outline">
 					{data.period ? `${getDurationFromInterval(data.period)} mins` : "—"}
 				</Badge>
@@ -147,9 +146,7 @@ export function LessonProfile({ data }: { data: LessonData }) {
 										</ItemMedia>
 										<ItemContent>
 											<ItemTitle>Program</ItemTitle>
-											<ItemDescription>
-												{program?.name ?? data.program}
-											</ItemDescription>
+											<ItemDescription>{program}</ItemDescription>
 										</ItemContent>
 									</Item>
 									<Item variant="muted">

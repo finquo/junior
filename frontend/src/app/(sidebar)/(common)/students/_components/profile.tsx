@@ -1,6 +1,5 @@
 "use client";
 
-import { programs } from "backend/config";
 import { langFlag, langName } from "language-emoji";
 import {
 	BookOpenIcon,
@@ -121,9 +120,9 @@ function PersonItemSkeleton({ label }: { label: string }) {
 
 export function StudentProfile({ data }: { data: StudentData }) {
 	const notes = data.notes ?? [];
-	const lessonIds = data.lessons ?? [];
+	const lessonIds = data.attendedLessons ?? [];
 	const languages = data.languages ?? [];
-	const program = programs.find((p) => p.id === data.program);
+	const program = data.programInfo?.name ?? data.program;
 
 	const total = data.amount ?? 0;
 	const remaining = data.remaining ?? 0;
@@ -271,7 +270,7 @@ export function StudentProfile({ data }: { data: StudentData }) {
 										<ItemContent>
 											<ItemTitle>Program</ItemTitle>
 											<ItemDescription>
-												{program?.name ?? "No program assigned"}
+												{program ?? "No program assigned"}
 											</ItemDescription>
 										</ItemContent>
 									</Item>
@@ -408,10 +407,9 @@ export function StudentProfile({ data }: { data: StudentData }) {
 					<TabsContent value="lessons" className="flex flex-col gap-4">
 						<Card size="sm">
 							<CardHeader>
-								<CardTitle>Enrolled Lessons</CardTitle>
+								<CardTitle>Attended Lessons</CardTitle>
 								<CardDescription>
-									Lessons assigned to {lessonIds.length} position
-									{lessonIds.length === 1 ? "" : "s"} of the curriculum.
+									Lessons this student has attended so far.
 								</CardDescription>
 								<CardAction>
 									<Button variant="outline" size="sm" asChild>
@@ -429,9 +427,9 @@ export function StudentProfile({ data }: { data: StudentData }) {
 											<EmptyMedia variant="icon">
 												<BookOpenIcon />
 											</EmptyMedia>
-											<EmptyTitle>No lessons enrolled</EmptyTitle>
+											<EmptyTitle>No lessons attended</EmptyTitle>
 											<EmptyDescription>
-												Assign lessons to build this student's curriculum.
+												Lessons marked attended will appear here.
 											</EmptyDescription>
 										</EmptyHeader>
 									</Empty>

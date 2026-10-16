@@ -1,6 +1,5 @@
 "use client";
 
-import { programs } from "backend/config";
 import { langFlag, langName } from "language-emoji";
 import {
 	CalendarClockIcon,
@@ -370,10 +369,7 @@ export function SessionProfile({ data }: { data: SlotData }) {
 									<DetailRow
 										icon={<LanguagesIcon />}
 										label="Program"
-										value={
-											programs.find((p) => p.id === lesson.program)?.name ??
-											lesson.program
-										}
+										value={lesson.programInfo?.name ?? lesson.program}
 									/>
 									<DetailRow
 										icon={<ClockIcon />}

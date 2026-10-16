@@ -30,6 +30,9 @@ export const lessonRouter = {
 					where: {
 						id: input.id,
 					},
+					with: {
+						programInfo: true,
+					},
 				}),
 			);
 		}),

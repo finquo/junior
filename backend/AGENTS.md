@@ -6,10 +6,14 @@ Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better
 
 ## Commands (run in `backend/`, or root `bun run backend <script>`)
 
+> ### 🛑 DB commands and migrations are off-limits
+>
+> **Never run `db:generate`, `db:migrate`, or any Drizzle/DB CLI, and never create or edit anything under `backend/migrations/`.** The developer owns schema and migrations end-to-end (see the root `AGENTS.md` Ground rules). If a task seems to need a schema change, propose it and ask - do not generate it.
+
 - `bun run dev` - hot Bun server on `:3000`, loads `--env-file=../.env`.
 - `bun run check` - `tsc --noEmit`. This is the backend typecheck; it must pass.
 - `bun run construct` - `varlock codegen && tsdown` (`build`/`compile` are identical). Emits `out/` (worker entries `index`, `lambda`) and `dist/` (package exports). **Run this after any change the frontend imports.**
-- `bun run db:generate` / `db:migrate` - drizzle-kit (schema `src/db/schema/index.ts`, output `migrations/`).
+- `bun run db:generate` / `db:migrate` - drizzle-kit. **Off-limits - the developer runs these.**
 - `bun run auth:generate` - regenerates `src/db/auth.test.ts` from `src/services.ts`. Never edit that file by hand.
 - `bun run cf:dev` - `wrangler dev`.
 - Seed: `bun script/seed.ts` (drizzle-seed has no npm script).
