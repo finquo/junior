@@ -83,7 +83,13 @@ export function EditStudentDrawer({
 	});
 
 	return (
-		<Drawer open={open} onOpenChange={setOpen}>
+		<Drawer
+			open={open}
+			onOpenChange={(next) => {
+				setOpen(next);
+				if (next) form.reset(student as StudentEditableData);
+			}}
+		>
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>

@@ -73,7 +73,7 @@ export const UpdateStudentSchema = createUpdateSchema(
 	languages: LanguageCodeZod.array().optional(),
 	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
-	address: addressZod.optional(),
+	address: addressZod.nullable().optional(),
 });
 
 // Program

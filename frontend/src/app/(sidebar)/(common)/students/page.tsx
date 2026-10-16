@@ -16,6 +16,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { ProfileCard, StudentProfile } from "@/components/profile";
+import { ProgramLink } from "@/components/program";
 import {
 	Frame,
 	FrameActions,
@@ -233,7 +234,7 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 				placeholder: "Search program...",
 				variant: "text",
 			},
-			cell: ({ getValue }) => getValue() ?? null,
+			cell: ({ getValue }) => <ProgramLink id={getValue()} />,
 		}),
 		columnHelper.accessor("schooling", {
 			id: "schooling",

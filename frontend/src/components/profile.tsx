@@ -5,6 +5,7 @@ import type {
 	TeacherType,
 	UserType,
 } from "backend/db";
+import { ProgramLink } from "@/components/program";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	Avatar,
@@ -51,7 +52,9 @@ export function StudentProfile({ student }: { student?: StudentType | null }) {
 					<TableBody>
 						<TableRow>
 							<TableCell>Program</TableCell>
-							<TableCell>{student.program ?? "None"}</TableCell>
+							<TableCell>
+								<ProgramLink id={student.program} placeholder="None" />
+							</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Schooling</TableCell>

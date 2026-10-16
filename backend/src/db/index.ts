@@ -6,7 +6,7 @@ import { getRelations as relations } from "./schema/relations";
 export function createDb() {
 	const client = postgres(process.env.DATABASE_URL, {
 		prepare: false,
-		max: 1,
+		// max: 1,
 	});
 
 	return drizzle({ client, relations });

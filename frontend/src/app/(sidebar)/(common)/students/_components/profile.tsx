@@ -15,6 +15,7 @@ import {
 	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { ProgramLink } from "@/components/program";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,6 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FetchLesson } from "@/hooks/lesson";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -55,6 +55,7 @@ import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 import { EditStudentDrawer } from "./edit-drawer";
 
 type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
+type CurriculumData = API_Returns["core"]["student"]["getCurriculum"];
 
 function PersonItem({
 	label,
@@ -118,11 +119,15 @@ function PersonItemSkeleton({ label }: { label: string }) {
 	);
 }
 
-export function StudentProfile({ data }: { data: StudentData }) {
+export function StudentProfile({
+	data,
+	curriculum,
+}: {
+	data: StudentData;
+	curriculum?: CurriculumData;
+}) {
 	const notes = data.notes ?? [];
-	const lessonIds = data.attendedLessons ?? [];
 	const languages = data.languages ?? [];
-	const program = data.programInfo?.name ?? data.program;
 
 	const total = data.amount ?? 0;
 	const remaining = data.remaining ?? 0;
@@ -269,9 +274,13 @@ export function StudentProfile({ data }: { data: StudentData }) {
 										</ItemMedia>
 										<ItemContent>
 											<ItemTitle>Program</ItemTitle>
-											<ItemDescription>
-												{program ?? "No program assigned"}
-											</ItemDescription>
+											<ProgramLink
+												id={data.program}
+												name={data.programInfo?.name}
+												placeholder={
+													<ItemDescription>No program assigned</ItemDescription>
+												}
+											/>
 										</ItemContent>
 									</Item>
 									<Item variant="muted">
@@ -407,9 +416,9 @@ export function StudentProfile({ data }: { data: StudentData }) {
 					<TabsContent value="lessons" className="flex flex-col gap-4">
 						<Card size="sm">
 							<CardHeader>
-								<CardTitle>Attended Lessons</CardTitle>
+								<CardTitle>Curriculum</CardTitle>
 								<CardDescription>
-									Lessons this student has attended so far.
+									Lessons in this student's program, in order.
 								</CardDescription>
 								<CardAction>
 									<Button variant="outline" size="sm" asChild>
@@ -421,68 +430,69 @@ export function StudentProfile({ data }: { data: StudentData }) {
 								</CardAction>
 							</CardHeader>
 							<CardContent>
-								{lessonIds.length === 0 ? (
+								{!curriculum?.program ? (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<GraduationCapIcon />
+											</EmptyMedia>
+											<EmptyTitle>No program assigned</EmptyTitle>
+											<EmptyDescription>
+												Assign a program to build this student's curriculum.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								) : curriculum.lessons.length === 0 ? (
 									<Empty>
 										<EmptyHeader>
 											<EmptyMedia variant="icon">
 												<BookOpenIcon />
 											</EmptyMedia>
-											<EmptyTitle>No lessons attended</EmptyTitle>
+											<EmptyTitle>No lessons in this program</EmptyTitle>
 											<EmptyDescription>
-												Lessons marked attended will appear here.
+												Add lessons to the program to build the curriculum.
 											</EmptyDescription>
 										</EmptyHeader>
 									</Empty>
 								) : (
 									<ItemGroup>
-										{lessonIds.map((lessonId) => (
-											<FetchLesson
-												key={lessonId}
-												id={lessonId}
-												isPending={
-													<Item variant="outline">
-														<ItemContent>
-															<ItemTitle>Loading…</ItemTitle>
-														</ItemContent>
-													</Item>
-												}
-												notFound={
-													<Item variant="outline">
-														<ItemContent>
-															<ItemTitle>Lesson not found</ItemTitle>
-														</ItemContent>
-													</Item>
-												}
-											>
-												{(lesson) => (
-													<Item variant="outline">
-														<ItemMedia variant="icon">
-															<BookOpenIcon />
-														</ItemMedia>
-														<ItemContent>
-															<ItemTitle>{lesson.name}</ItemTitle>
-															{lesson.description && (
-																<ItemDescription>
-																	{lesson.description}
-																</ItemDescription>
-															)}
-														</ItemContent>
-														<ItemActions>
-															<Badge variant="secondary">
-																{langFlag(lesson.language)}{" "}
-																{langName(lesson.language)}
-															</Badge>
-															<Button variant="ghost" size="sm" asChild>
-																<Link href={`/lessons/${lessonId}` as "/"}>
-																	Open
-																	<ExternalLinkIcon />
-																</Link>
-															</Button>
-														</ItemActions>
-													</Item>
-												)}
-											</FetchLesson>
-										))}
+										{curriculum.lessons.map((lesson) => {
+											const attended = curriculum.attendedLessons.includes(
+												lesson.id,
+											);
+											return (
+												<Item variant="outline" key={lesson.id}>
+													<ItemMedia variant="icon">
+														<BookOpenIcon />
+													</ItemMedia>
+													<ItemContent>
+														<ItemTitle>{lesson.name}</ItemTitle>
+														{lesson.description && (
+															<ItemDescription>
+																{lesson.description}
+															</ItemDescription>
+														)}
+													</ItemContent>
+													<ItemActions>
+														<Badge variant="secondary">
+															{langFlag(lesson.language)}{" "}
+															{langName(lesson.language)}
+														</Badge>
+														<ColorBadge
+															variant={attended ? "success" : "warning"}
+														>
+															{attended ? "Attended" : "Pending"}
+														</ColorBadge>
+														<Button variant="ghost" size="sm" asChild>
+															<Link href={`/lessons/${lesson.id}` as "/"}>
+																Open
+																<ExternalLinkIcon />
+															</Link>
+														</Button>
+													</ItemActions>
+												</Item>
+											);
+										})}
 									</ItemGroup>
 								)}
 							</CardContent>

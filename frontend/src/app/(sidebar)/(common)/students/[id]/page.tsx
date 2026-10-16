@@ -13,6 +13,11 @@ function Student({ studentId }: { studentId: string }) {
 			input: { id: studentId },
 		}),
 	);
+	const { data: curriculum } = useQuery(
+		api.core.student.getCurriculum.queryOptions({
+			input: { id: studentId },
+		}),
+	);
 
 	if (isPending) {
 		return <Loader />;
@@ -29,7 +34,7 @@ function Student({ studentId }: { studentId: string }) {
 		);
 	}
 
-	return <StudentProfile data={data} />;
+	return <StudentProfile data={data} curriculum={curriculum} />;
 }
 
 export default function Page() {
