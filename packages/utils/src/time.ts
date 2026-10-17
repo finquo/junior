@@ -36,3 +36,15 @@ export const getDurationFromInterval = (time: string) => {
 
 	return hours * 60 + minutes + seconds / 60 + milliseconds / 60_000;
 };
+
+export const timeStringToMinutes = (time: string) => {
+	const [hours = 0, minutes = 0] = time.split(":").map(Number);
+	return hours * 60 + minutes;
+};
+
+export const minutesToTimeString = (minutes: number) => {
+	const clamped = Math.max(0, Math.min(24 * 60, minutes));
+	return `${String(Math.floor(clamped / 60)).padStart(2, "0")}:${String(
+		clamped % 60,
+	).padStart(2, "0")}`;
+};

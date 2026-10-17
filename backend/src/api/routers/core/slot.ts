@@ -1,11 +1,18 @@
-import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
+import { and, eq, gt, inArray, lt } from "drizzle-orm";
+import { SwitchFunc } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
-import { getDaykey, periodZod } from "@/config/time";
+import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
+import {
+	getDayBounds,
+	getLeavesForDay,
+	getSlotCheckStatus,
+	getUnavailableIntervals,
+} from "@/utils/slot";
 
 export const slotRouter = {
 	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
@@ -235,17 +242,19 @@ export const slotRouter = {
 		.input(
 			z.object({
 				teacherId: z.string(),
-				date: z.coerce.date(),
+				date: z.coerce.date().transform((d) => {
+					const targetDate = new Date(d);
+					const dayKey = getDaykey(targetDate.getDay());
+
+					return {
+						...getDayBounds(targetDate),
+						dayKey,
+					};
+				}),
 			}),
 		)
 		.handler(async ({ input, context }) => {
-			const targetDate = new Date(input.date);
-			const dayKey = getDaykey(targetDate.getDay());
-
-			const dayStart = new Date(targetDate);
-			dayStart.setHours(0, 0, 0, 0);
-			const dayEnd = new Date(dayStart);
-			dayEnd.setDate(dayEnd.getDate() + 1);
+			const { dayKey, dayStart, dayEnd } = input.date;
 
 			const teacherRecord = await tryAPI(
 				"db-core-check-slot-teacher",
@@ -264,18 +273,31 @@ export const slotRouter = {
 
 			if (!teacherRecord) throw getError("NOT_FOUND", "Teacher not found");
 
-			const availability = teacherRecord.availability?.[dayKey] ?? {
-				enabled: false,
-				ranges: [],
-			};
+			if (!teacherRecord.availability)
+				throw getError(
+					"NOT_IMPLEMENTED",
+					"Teacher did not updated their availability",
+				);
 
-			const leaves = (teacherRecord.leaves ?? [])
-				.filter((leave) => leave.end > dayStart && leave.start < dayEnd)
-				.map((leave) => ({
-					type: leave.type,
-					start: leave.start,
-					end: leave.end,
-				}));
+			const availability = getAvailabilityForDay(
+				teacherRecord.availability,
+				dayKey,
+			);
+
+			if (!availability.enabled || !availability.ranges.length) {
+				throw getError(
+					"PRECONDITION_FAILED",
+					"Teacher did not updated their availability properly",
+				);
+			}
+
+			const leaves = getLeavesForDay(
+				teacherRecord.leaves ?? [],
+				dayStart,
+				dayEnd,
+			);
+
+			const status = getSlotCheckStatus({ availability, leaves });
 
 			const bookedSlots = await getAPI(
 				"db-core-check-slot-booked",
@@ -302,95 +324,28 @@ export const slotRouter = {
 				[],
 			);
 
-			const timeToMinutes = (time: string) => {
-				const [hours = 0, minutes = 0] = time.split(":").map(Number);
-				return hours * 60 + minutes;
-			};
-			const minutesToTime = (minutes: number) => {
-				const clamped = Math.max(0, Math.min(24 * 60, minutes));
-				return `${String(Math.floor(clamped / 60)).padStart(2, "0")}:${String(
-					clamped % 60,
-				).padStart(2, "0")}`;
-			};
-			const dateToMinutes = (date: Date) =>
-				Math.round((date.getTime() - dayStart.getTime()) / 60_000);
-
-			const unavailable: {
-				id: string;
-				start: string;
-				end: string;
-				label: string;
-				type: "outside_availability" | "leave" | "conflict";
-			}[] = [];
-
-			const ranges = [...(availability.ranges ?? [])]
-				.map((range) => ({
-					start: timeToMinutes(range.start),
-					end: timeToMinutes(range.end),
-				}))
-				.sort((a, b) => a.start - b.start);
-
-			const gaps: { start: number; end: number }[] = [];
-			if (!availability.enabled || ranges.length === 0) {
-				gaps.push({ start: 0, end: 24 * 60 });
-			} else {
-				let cursor = 0;
-				for (const range of ranges) {
-					if (range.start > cursor)
-						gaps.push({ start: cursor, end: range.start });
-					cursor = Math.max(cursor, range.end);
-				}
-				if (cursor < 24 * 60) gaps.push({ start: cursor, end: 24 * 60 });
-			}
-
-			gaps.forEach((gap, index) => {
-				if (gap.end <= gap.start) return;
-				unavailable.push({
-					id: `availability-${index}`,
-					start: minutesToTime(gap.start),
-					end: minutesToTime(gap.end),
-					label: "Outside teacher availability",
-					type: "outside_availability",
-				});
-			});
-
-			leaves.forEach((leave, index) => {
-				const start = Math.max(0, dateToMinutes(leave.start));
-				const end = Math.min(24 * 60, dateToMinutes(leave.end));
-				if (end <= start) return;
-				unavailable.push({
-					id: `leave-${index}`,
-					start: minutesToTime(start),
-					end: minutesToTime(end),
-					label:
-						leave.type === "full"
-							? "Teacher on leave"
-							: "Teacher on partial leave",
-					type: "leave",
-				});
-			});
-
-			bookedSlots.forEach((slot) => {
-				const start = Math.max(0, dateToMinutes(slot.startTime));
-				const end = Math.min(24 * 60, dateToMinutes(slot.expectedEndTime));
-				if (end <= start) return;
-				unavailable.push({
-					id: slot.id,
-					start: minutesToTime(start),
-					end: minutesToTime(end),
-					label: "Booked slot",
-					type: "conflict",
-				});
+			const unavailable = getUnavailableIntervals({
+				availability,
+				leaves,
+				bookedSlots,
+				dayStart,
 			});
 
 			return {
-				teacherId: input.teacherId,
-				date: targetDate,
 				dayKey,
 				availability,
 				leaves,
 				bookedSlots,
 				unavailable,
+				status,
+				message: SwitchFunc(status, {
+					"available-undefined": "Teacher did not updated their availability",
+					available: "Teacher is available for the selected day",
+					unavailable: "Teacher is not available on this date",
+					leave: "Teacher is available, but took a full leave on this date",
+					"partial-leave":
+						"Teacher is available, but took a partial leave inbetween",
+				}),
 			};
 		}),
 };

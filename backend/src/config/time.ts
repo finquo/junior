@@ -49,9 +49,23 @@ const enabledZod = z.object({
 	ranges: z.object({ start: timeSchema, end: timeSchema }).array().default([]),
 });
 
+type EnableType = z.infer<typeof enabledZod>;
+
 export const availabilityZod = z.record(dayKeysZod, enabledZod);
 
 export type Availability = z.infer<typeof availabilityZod>;
+
+export const getAvailabilityForDay = (
+	availability: Availability,
+	dayKey: keyof Availability,
+): EnableType => {
+	return (
+		availability[dayKey] ?? {
+			enabled: false,
+			ranges: [],
+		}
+	);
+};
 
 export const intervalHourZod = z
 	.number()

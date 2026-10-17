@@ -2,7 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
-import { getDaykey, periodZod } from "@/config/time";
+import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { AppendLeave, leaveItemZod } from "@/db/column/leave-range";
 import {
@@ -132,9 +132,12 @@ export const teacherRouter = {
 					"Teacher did not updated their availability",
 				);
 
-			const dayConfig = teacherRecord.availability[dayKey];
+			const availability = getAvailabilityForDay(
+				teacherRecord.availability,
+				dayKey,
+			);
 
-			if (!dayConfig?.enabled || !dayConfig.ranges?.length) {
+			if (!availability?.enabled || !availability.ranges?.length) {
 				return {
 					isAvailable: false,
 					reason: "Teacher is not available on this day",
