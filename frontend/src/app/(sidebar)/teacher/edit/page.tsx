@@ -6,11 +6,7 @@ import { experienceZod } from "backend/config";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useEffect } from "react";
 import { sileo as toast } from "sileo";
-import {
-	type LanguageCodes,
-	LanguageCodeZod,
-	Languages,
-} from "utils";
+import { type LanguageCodes, LanguageCodeZod, Languages } from "utils";
 import { z } from "zod";
 import EditProfile from "@/app/(center)/user/edit/page";
 import { Button } from "@/components/ui/button";

@@ -514,11 +514,11 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-						<Link href="/admin/users/new">
-							<UserPlusIcon />
-							Create User
-						</Link>
-					</Button>
+							<Link href="/admin/users/new">
+								<UserPlusIcon />
+								Create User
+							</Link>
+						</Button>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>

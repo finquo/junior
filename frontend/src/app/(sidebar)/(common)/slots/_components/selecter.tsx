@@ -145,7 +145,9 @@ export function LessonSelector({
 	onSelect,
 }: {
 	defaultLesson?: string;
-	onSelect?: (item: API_Returns["core"]["student"]["lessons"]["lessons"][number]) => void;
+	onSelect?: (
+		item: API_Returns["core"]["student"]["lessons"]["lessons"][number],
+	) => void;
 }) {
 	const [lesson, setLesson] = useQueryState("lessonId");
 	const [studentId] = useQueryState("studentId");

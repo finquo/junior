@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ColumnDef,
-	createColumnHelper,
-} from "@tanstack/react-table";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
@@ -57,12 +54,7 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
@@ -159,14 +151,20 @@ function SlotActions({ slot }: { slot: SlotRecord }) {
 							</TableRow>
 							<TableRow>
 								<TableCell className="font-medium">Date & Time</TableCell>
-								<TableCell>{new Date(slot.startTime).toLocaleString()}</TableCell>
+								<TableCell>
+									{new Date(slot.startTime).toLocaleString()}
+								</TableCell>
 							</TableRow>
 							{slot.meetingLink && (
 								<TableRow>
 									<TableCell className="font-medium">Meeting</TableCell>
 									<TableCell>
 										<Button variant="link" asChild>
-											<a href={slot.meetingLink} target="_blank" rel="noreferrer">
+											<a
+												href={slot.meetingLink}
+												target="_blank"
+												rel="noreferrer"
+											>
 												Join
 											</a>
 										</Button>
@@ -183,7 +181,9 @@ function SlotActions({ slot }: { slot: SlotRecord }) {
 						variant="outline"
 					/>
 					<Button asChild>
-						<Link href="/" as={`/slots/${slot.id}`}>Open Session Page</Link>
+						<Link href="/" as={`/slots/${slot.id}`}>
+							Open Session Page
+						</Link>
 					</Button>
 					<DrawerClose asChild>
 						<Button variant="outline">Close</Button>
@@ -343,8 +343,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				<DataTableColumnHeader column={column} label="Date" />
 			),
 			enableSorting: true,
-			cell: ({ getValue }) =>
-				new Date(getValue()).toLocaleDateString(),
+			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
 		}),
 		columnHelper.display({
 			id: "time",
@@ -376,8 +375,7 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				<DataTableColumnHeader column={column} label="Created" />
 			),
 			enableSorting: true,
-			cell: ({ getValue }) =>
-				`${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
 		}),
 		columnHelper.display({
 			id: "actions",

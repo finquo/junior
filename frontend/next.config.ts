@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
 	reactCompiler: true,
 	transpilePackages: ["backend"],
 	images: { unoptimized: true },
-	allowedDevOrigins: ["192.168.*.*"]
+	allowedDevOrigins: ["192.168.*.*"],
 };
 
 // export default nextConfig;

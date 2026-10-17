@@ -141,7 +141,11 @@ export function TimeCard({
 				<Tabs defaultValue={TIME_PERIOD_GROUPS[0].key}>
 					<TabsList className="w-auto">
 						{TIME_PERIOD_GROUPS.map((group) => (
-							<TabsTrigger key={group.key} value={group.key} className="capitalize">
+							<TabsTrigger
+								key={group.key}
+								value={group.key}
+								className="capitalize"
+							>
 								{group.label} {group.key}
 							</TabsTrigger>
 						))}

@@ -46,17 +46,10 @@ export default function () {
 				</CardContent>
 			)}
 			<CardFooter className="flex-wrap gap-2">
-				<Button
-					className="grow"
-					variant={"secondary"}
-					asChild
-				>
+				<Button className="grow" variant={"secondary"} asChild>
 					<Link href={`mailto:${supportEmailLink}`}>Contact Support</Link>
 				</Button>
-				<Button
-					className="grow"
-					asChild
-				>
+				<Button className="grow" asChild>
 					<Link href={"/"}>Go to Homepage</Link>
 				</Button>
 			</CardFooter>

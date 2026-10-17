@@ -8,10 +8,10 @@ import { PreviewCard } from "../_components/preview-card";
 import { TimeCard } from "../_components/time-card";
 import { UsersCard } from "../_components/users-card";
 import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { Separator } from "@/components/ui/separator";
 
 export default function Pattern() {
@@ -36,17 +36,20 @@ export default function Pattern() {
 			<ResizablePanel className="p-3">
 				<UsersCard />
 			</ResizablePanel>
-			<ResizableHandle withHandle  />
+			<ResizableHandle withHandle />
 			<ResizablePanel className="p-3">
 				<CalenderPicker />
 			</ResizablePanel>
-			<ResizableHandle withHandle  />
+			<ResizableHandle withHandle />
 			<ResizablePanel>
 				<div className="space-3">
 					<div className="p-3">
-						<TimeCard availability={availability} unavailable={check?.unavailable} />
+						<TimeCard
+							availability={availability}
+							unavailable={check?.unavailable}
+						/>
 					</div>
-						<Separator />
+					<Separator />
 					<div className="p-3">
 						<PreviewCard />
 					</div>

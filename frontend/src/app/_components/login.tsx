@@ -9,17 +9,10 @@ export function ErrorAuthCardFooter(props?: { link?: string; label?: string }) {
 	const pathname = usePathname();
 	return (
 		<CardFooter>
-			<Button
-				asChild
-				className="flex-1"
-				variant={"secondary"}
-			>
+			<Button asChild className="flex-1" variant={"secondary"}>
 				<Link href={"/"}>Go to Home</Link>
 			</Button>
-			<Button
-				className="flex-1"
-				asChild
-			>
+			<Button className="flex-1" asChild>
 				<Link
 					href={
 						(props?.link as "/") ??

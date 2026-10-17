@@ -243,7 +243,7 @@ export function PreviewCard() {
 							}
 						}}
 						isPending={
-							<Button variant="secondary"  disabled>
+							<Button variant="secondary" disabled>
 								<Spinner />
 								Check Slot Availability
 							</Button>
@@ -251,7 +251,6 @@ export function PreviewCard() {
 						mutate={(mutate) => (
 							<Button
 								variant="secondary"
-
 								disabled={isCheckDisabled}
 								onClick={() => {
 									if (!teacherId || !date) return;

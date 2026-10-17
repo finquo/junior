@@ -21,16 +21,10 @@ export default function () {
 			<CardFooter className="justify-between">
 				<Button variant={"destructive"}>Logout</Button>
 				<ButtonGroup>
-					<Button
-						asChild
-						variant={"outline"}
-					>
+					<Button asChild variant={"outline"}>
 						<Link href={"/user/edit"}>Edit Profile</Link>
 					</Button>
-					<Button
-						asChild
-						variant={"outline"}
-					>
+					<Button asChild variant={"outline"}>
 						<Link href={"/me"}>Refresh</Link>
 					</Button>
 				</ButtonGroup>
