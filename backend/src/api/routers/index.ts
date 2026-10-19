@@ -10,6 +10,7 @@ import { slotRouter as slotCore } from "./core/slot";
 import { studentRouter as studentCore } from "./core/student";
 import { teacherRouter as teacherCore } from "./core/teacher";
 import { userRouter as userCore } from "./core/user";
+import { meetingRouter as meeting } from "./meeting";
 import { schedulerRouter as scheduler } from "./scheduler";
 import { sidebarRouter as sidebar } from "./sidebar";
 import { studentRouter as student } from "./student";
@@ -26,6 +27,7 @@ export const appRouter = {
 	teacher,
 	student,
 	common,
+	meeting,
 	core: {
 		lesson: lessonCore,
 		program: programCore,

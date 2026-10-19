@@ -34,10 +34,7 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 		if (!timestamp || !signature)
 			return c.json({ message: "Unauthorized request." }, 401);
 
-		const hashForVerify = await hmacSha256Hex(
-			secret,
-			`v0:${timestamp}:${rawBody}`,
-		);
+		const hashForVerify = hmacSha256Hex(secret, `v0:${timestamp}:${rawBody}`);
 
 		if (!timingSafeEqual(signature, `v0=${hashForVerify}`))
 			return c.json({ message: "Unauthorized request." }, 401);
@@ -52,7 +49,7 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 			return c.json(
 				{
 					plainToken,
-					encryptedToken: await hmacSha256Hex(secret, plainToken),
+					encryptedToken: hmacSha256Hex(secret, plainToken),
 				},
 				200,
 			);

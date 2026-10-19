@@ -66,6 +66,8 @@
         "@tanstack/react-table": "^9.2.4",
         "@uidotdev/usehooks": "^2.4.1",
         "@varlock/nextjs-integration": "1.2.2",
+        "@zoom/videosdk": "^2.6.0",
+        "@zoom/videosdk-react": "^0.0.3",
         "babel-plugin-react-compiler": "^1.0.0",
         "backend": "workspace:*",
         "better-auth": "catalog:",
@@ -1183,6 +1185,10 @@
     "@yuku-parser/binding-win32-x64": ["@yuku-parser/binding-win32-x64@0.9.5", "", { "os": "win32", "cpu": "x64" }, "sha512-FrERt9YWatY3bJfSUdi4YWY+6iQcyo3MzCC821BxlWM5TFZEHijnpz/bknR79VHlXY/9CvXz8ZlaAGPsTtN3nw=="],
 
     "@yuku-toolchain/types": ["@yuku-toolchain/types@0.9.5", "", {}, "sha512-KiuLNNgX9uNealaWAR+G3/cMXnRk9x4TY2EkYe/KIag+UPdwiA0RRf1hr1WAxzTP8KGzCTkqUdLPvqh32sEO3w=="],
+
+    "@zoom/videosdk": ["@zoom/videosdk@2.6.0", "", { "bin": { "videosdk": "bin/videosdk-cli.cjs" } }, "sha512-Gj/FekbFrUXN4kdfkP5/r79xdY6rr0hkij9n4ozeNytrDcBlwa5cUdhqSOKWbAB7u+gadtLurJICk3w64pempg=="],
+
+    "@zoom/videosdk-react": ["@zoom/videosdk-react@0.0.3", "", { "peerDependencies": { "@zoom/videosdk": "^2.3.5", "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-UIYidsIkwVr3dREse61W1FUNIUvTUNXAuQxl1JOosKWucCvB1H6O4LhQguQ3uRrT429HgNWc8Y+hhnXhO0/yow=="],
 
     "abort-controller": ["abort-controller@3.0.0", "", { "dependencies": { "event-target-shim": "^5.0.0" } }, "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg=="],
 

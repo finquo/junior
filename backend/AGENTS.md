@@ -63,5 +63,5 @@ The two groups are a deliberate split, not duplicates:
 ## Boundaries and gotchas
 
 - Only edit files under `backend/`. The frontend imports the built package (`backend/api`, `backend/config`, `backend/auth`, `backend/db` resolve to `dist/`, and `import ... from "backend"` to `out/`). Changes to exported types/schemas are invisible to the frontend until `bun run construct` rebuilds `dist/` - and the frontend reuses these schemas/types rather than duplicating them, so change them here.
-- Keep code runtime-agnostic (Cloudflare Workers + Lambda): no Node-only APIs, and keep the `postgres-js` client settings (`prepare: false`, `max: 1`).
+- Keep code compatible with Cloudflare Workers + Lambda: Node built-ins (`node:*`) are allowed because the Workers run with `nodejs_compat` (root and backend `wrangler.json`) and Lambda is native Node. Keep the `postgres-js` client settings (`prepare: false`, `max: 1`).
 - `src/env.ts` and `src/db/auth.test.ts` are generated - do not edit.
