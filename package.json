@@ -45,6 +45,7 @@
 		"@types/node": "catalog:",
 		"@varlock/cloudflare-integration": "^1.6.0",
 		"rolldown": "1.2.7",
+		"skills": "^1.7.2",
 		"typeflare": "^0.0.5",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
