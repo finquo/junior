@@ -16,9 +16,24 @@ import {
 
 const CHUNK_LENGTH_SECONDS = 120;
 
-export const getMediaBucketURL = (
-	file: `${string}/${string}${".mp4" | ".mp3" | ".vtt" | ""}`,
-) => `s3://${MEDIA_BUCKET}/${file}`;
+/**
+	Mirrors unstorage's key handling: normalizeKey turns "/" and "\" into ":"
+	then the S3 driver splits on ":" and joins the segments with "/"
+*/
+const toS3Path = (key: string) =>
+	(key.split("?") as [string])[0]
+		.replace(/[/\\]/g, ":")
+		.replace(/:+/g, ":")
+		.replace(/^:|:$/g, "")
+		.split(":")
+		.filter(Boolean)
+		.join("/");
+
+export const getMediaBucketURL = (key: string) => {
+	const isPrefix = /[/\\:]$/.test(key);
+	const path = toS3Path(key);
+	return `s3://${MEDIA_BUCKET}/${path}${isPrefix ? "/" : ""}`;
+};
 
 export const mediaStorage = createStorage({
 	driver: s3Driver({
@@ -52,6 +67,12 @@ export function createToAudioJob({ id }: { id: string }) {
 		Inputs: [
 			{
 				FileInput: getMediaBucketURL(`${id}/video.mp4`),
+				AudioSelectors: {
+					"Audio Selector 1": {
+						SelectorType: "TRACK",
+						Tracks: [1],
+					},
+				},
 			},
 		],
 		OutputGroups: [
@@ -69,6 +90,7 @@ export function createToAudioJob({ id }: { id: string }) {
 						ContainerSettings: { Container: "RAW" },
 						AudioDescriptions: [
 							{
+								AudioSourceName: "Audio Selector 1",
 								CodecSettings: {
 									Codec: "MP3",
 									Mp3Settings: {
@@ -92,6 +114,12 @@ export function createSplitAudioJob({ id }: { id: string }) {
 		Inputs: [
 			{
 				FileInput: getMediaBucketURL(`${id}/audio.mp3`),
+				AudioSelectors: {
+					"Audio Selector 1": {
+						SelectorType: "TRACK",
+						Tracks: [1],
+					},
+				},
 			},
 		],
 		OutputGroups: [
@@ -100,16 +128,19 @@ export function createSplitAudioJob({ id }: { id: string }) {
 				OutputGroupSettings: {
 					Type: "HLS_GROUP_SETTINGS",
 					HlsGroupSettings: {
-						Destination: getMediaBucketURL(`${id}/audios`),
+						Destination: getMediaBucketURL(`${id}/audios/`),
 						SegmentLength: CHUNK_LENGTH_SECONDS,
+						MinSegmentLength: CHUNK_LENGTH_SECONDS,
 						SegmentControl: "SEGMENTED_FILES",
 					},
 				},
 				Outputs: [
 					{
+						NameModifier: "_audio_chunk",
 						ContainerSettings: { Container: "M3U8" },
 						AudioDescriptions: [
 							{
+								AudioSourceName: "Audio Selector 1",
 								CodecSettings: {
 									Codec: "AAC",
 									AacSettings: {
