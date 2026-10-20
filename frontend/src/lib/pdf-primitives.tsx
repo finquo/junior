@@ -1,4 +1,9 @@
-import type { ReactNode, ImgHTMLAttributes, AnchorHTMLAttributes } from "react";
+import type {
+	AnchorHTMLAttributes,
+	CSSProperties,
+	ImgHTMLAttributes,
+	ReactNode,
+} from "react";
 
 export type Style = Record<string, unknown>;
 
@@ -155,16 +160,16 @@ export const normalizeTakumiStyle = (style: Style): Style => {
 	);
 };
 
-export const flatten = (
-	style?: StyleInput,
-): Record<string, unknown> | undefined => {
+export const flatten = (style?: StyleInput) => {
 	if (!style) {
 		return undefined;
 	}
 	if (Array.isArray(style)) {
-		return normalizeTakumiStyle(Object.assign({}, ...style.filter(Boolean)));
+		return normalizeTakumiStyle(
+			Object.assign({}, ...style.filter(Boolean)),
+		) as CSSProperties;
 	}
-	return normalizeTakumiStyle(style);
+	return normalizeTakumiStyle(style) as CSSProperties;
 };
 
 export const View = ({ children, style, className, ...rest }: ViewProps) => {

@@ -4,13 +4,13 @@ import {
 } from "takumi-pdf/primitives";
 
 import { usePdfcnTheme, useSafeMemo } from "@/components/pdf/theme-provider";
+import type { Style } from "@/lib/pdf-primitives";
 import {
-	View,
+	flatten,
 	Text as PDFText,
 	StyleSheet,
-	flatten,
+	View,
 } from "@/lib/pdf-primitives";
-import type { Style } from "@/lib/pdf-primitives";
 import type { PDFComponentProps } from "@/types/pdf-components";
 import type { PdfcnTheme } from "@/types/pdf-themes";
 
@@ -109,7 +109,7 @@ export const PageNumber = ({
 				if (part === "{page}") {
 					return (
 						<PageNumberPrimitive
-							key={`page-${index}`}
+							key={`page-${index as number}`}
 							style={flatten(textStyles)}
 						/>
 					);
@@ -117,13 +117,13 @@ export const PageNumber = ({
 				if (part === "{total}") {
 					return (
 						<TotalPagesPrimitive
-							key={`total-${index}`}
+							key={`total-${index as number}`}
 							style={flatten(textStyles)}
 						/>
 					);
 				}
 				return (
-					<PDFText key={`text-${index}`} style={textStyles}>
+					<PDFText key={`text-${index as number}`} style={textStyles}>
 						{part}
 					</PDFText>
 				);

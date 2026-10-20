@@ -2,8 +2,8 @@
 
 import {
 	BookOpenIcon,
-	CalendarDaysIcon,
 	CalendarCheckIcon,
+	CalendarDaysIcon,
 	ClockIcon,
 	EllipsisIcon,
 	GraduationCapIcon,
@@ -207,7 +207,7 @@ export function PreviewCard() {
 								isPending={
 									<DropdownMenuItem disabled>
 										<Spinner />
-										Checking teacher availability…
+										Checking Teacher Availability...
 									</DropdownMenuItem>
 								}
 								mutate={(mutate) => (
@@ -221,50 +221,49 @@ export function PreviewCard() {
 											});
 										}}
 									>
-										Check teacher availability
+										Check Teacher Availability
+									</DropdownMenuItem>
+								)}
+							/>
+							<MutationButton
+								api={api.core.slot.checkAvailability.mutationOptions()}
+								onSuccess={(result) => {
+									if (result.existingSlots && result.existingSlots.length > 0) {
+										toast.warning({
+											title: "Slot conflict detected",
+											description: `${result.existingSlots.length} active slot(s) already booked during this time.`,
+										});
+									} else {
+										toast.success({
+											title: "Slot is available!",
+											description: "No conflicting slots found for this time.",
+										});
+									}
+								}}
+								isPending={
+									<DropdownMenuItem disabled>
+										<Spinner />
+										Checking Slot Availability...
+									</DropdownMenuItem>
+								}
+								mutate={(mutate) => (
+									<DropdownMenuItem
+										disabled={isCheckDisabled}
+										onSelect={() => {
+											if (!teacherId || !date) return;
+											mutate({
+												teacherId,
+												date: dateWithTime,
+												period: duration,
+											});
+										}}
+									>
+										Check Slot Availability
 									</DropdownMenuItem>
 								)}
 							/>
 						</DropdownMenuContent>
 					</DropdownMenu>
-					<MutationButton
-						api={api.core.slot.checkAvailability.mutationOptions()}
-						onSuccess={(result) => {
-							if (result.existingSlots && result.existingSlots.length > 0) {
-								toast.warning({
-									title: "Slot conflict detected",
-									description: `${result.existingSlots.length} active slot(s) already booked during this time.`,
-								});
-							} else {
-								toast.success({
-									title: "Slot is available!",
-									description: "No conflicting slots found for this time.",
-								});
-							}
-						}}
-						isPending={
-							<Button variant="secondary" disabled>
-								<Spinner />
-								Check Slot Availability
-							</Button>
-						}
-						mutate={(mutate) => (
-							<Button
-								variant="secondary"
-								disabled={isCheckDisabled}
-								onClick={() => {
-									if (!teacherId || !date) return;
-									mutate({
-										teacherId,
-										date: dateWithTime,
-										period: duration,
-									});
-								}}
-							>
-								Check Slot Availability
-							</Button>
-						)}
-					/>
 					<MutationButton
 						api={api.core.slot.create.mutationOptions()}
 						onSuccess={() => {
