@@ -4,6 +4,7 @@ import { SidebarConfig as GuestSidebar } from "./_components/guest-sidebar";
 import { SidebarConfig as TeacherSidebar } from "./_components/teacher-sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+	return children;
 	return (
 		<SidebarProvider>
 			<RoleRender

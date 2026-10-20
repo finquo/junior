@@ -37,6 +37,7 @@
 		"@varlock/nextjs-integration": "1.2.2",
 		"@zoom/videosdk": "^2.6.0",
 		"@zoom/videosdk-react": "^0.0.3",
+		"@zoom/videosdk-ui-toolkit": "^2.5.0-1",
 		"babel-plugin-react-compiler": "^1.0.0",
 		"backend": "workspace:*",
 		"better-auth": "catalog:",

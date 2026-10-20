@@ -5,7 +5,14 @@ import { publicProcedure, tryAPI } from "../procedure";
 
 const JOIN_WINDOW = 10 * 60 * 1000;
 
+// Dev-only sandbox session. Remove before deploying.
+const DEMO_SESSION = "finquo-demo";
+
 export const meetingRouter = {
+	demo: publicProcedure.handler(async () => ({
+		session: DEMO_SESSION,
+		token: await generateZoomToken(DEMO_SESSION, 1),
+	})),
 	join: publicProcedure
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ input }) => {

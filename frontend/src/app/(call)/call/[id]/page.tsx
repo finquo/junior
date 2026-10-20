@@ -9,9 +9,11 @@ import { CallNotice } from "./_components/call-notice";
 import { CallRoom } from "./_components/call-room";
 
 function Call({ id }: { id: string }) {
-	const { data, isPending, isError } = useQuery(
+	const { data, isPending, isError, error } = useQuery(
 		api.meeting.join.queryOptions({ input: { id } }),
 	);
+
+	console.log(error);
 
 	if (isPending) return <Loader />;
 

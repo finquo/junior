@@ -27,6 +27,7 @@ import {
 } from "@/components/reui/frame";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 
 const videoPlayerStyle = {
 	width: "100%",
@@ -96,43 +97,40 @@ function Session({
 				<FrameTitle>Session: {session}</FrameTitle>
 				<FrameDescription>Live video session</FrameDescription>
 				<FrameActions>
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={() => void toggleMute()}
-						aria-label={isAudioMuted ? "Unmute" : "Mute"}
-					>
-						{isAudioMuted ? <MicOffIcon /> : <MicIcon />}
-					</Button>
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={() => void toggleVideo()}
-						aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
-					>
-						{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-					</Button>
-					<Button
-						variant="destructive"
-						size="icon"
-						onClick={onLeave}
-						aria-label="Leave session"
-					>
-						<PhoneOffIcon />
-					</Button>
+					<ButtonGroup>
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={() => void toggleMute()}
+							aria-label={isAudioMuted ? "Unmute" : "Mute"}
+						>
+							{isAudioMuted ? <MicOffIcon /> : <MicIcon />}
+						</Button>
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={() => void toggleVideo()}
+							aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
+						>
+							{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+						</Button>
+						<Button
+							variant="destructive"
+							size="icon"
+							onClick={onLeave}
+							aria-label="Leave session"
+						>
+							<PhoneOffIcon />
+						</Button>
+					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
-				{isInSession && (
-					<VideoPlayerContainerComponent style={videoPlayerStyle}>
-						{participants.map((participant) => (
-							<VideoPlayerComponent
-								key={participant.userId}
-								user={participant}
-							/>
-						))}
-					</VideoPlayerContainerComponent>
-				)}
+				<VideoPlayerContainerComponent style={videoPlayerStyle}>
+					{participants.map((participant) => (
+						<VideoPlayerComponent key={participant.userId} user={participant} />
+					))}
+				</VideoPlayerContainerComponent>
 			</FramePanel>
 		</Frame>
 	);
