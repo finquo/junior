@@ -5,13 +5,15 @@ import { useParams } from "next/navigation";
 import Script from "next/script";
 import Loader from "@/components/loader";
 import { api } from "@/hooks/api";
-import { CallNotice } from "./_components/call-notice";
-import { CallRoom } from "./_components/call-room";
+import { CallNotice } from "../_components/call-notice";
+import { CallRoom } from "../_components/call-room";
 
 function Call({ id }: { id: string }) {
-	const { data, isPending, isError, error } = useQuery(
-		api.meeting.join.queryOptions({ input: { id } }),
-	);
+	const { data, isPending, isError, error } = useQuery({
+		...api.meeting.join.queryOptions({ input: { id } }),
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
+	});
 
 	console.log(error);
 

@@ -4,13 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import Script from "next/script";
 import Loader from "@/components/loader";
 import { api } from "@/hooks/api";
-import { CallNotice } from "../[id]/_components/call-notice";
-import { CallRoom } from "../[id]/_components/call-room";
+import { CallNotice } from "../_components/call-notice";
+import { CallRoom } from "../_components/call-room";
 
 function Demo() {
-	const { data, isPending, isError } = useQuery(
-		api.meeting.demo.queryOptions(),
-	);
+	const { data, isPending, isError } = useQuery({
+		...api.meeting.demo.queryOptions(),
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
+	});
 
 	if (isPending) return <Loader />;
 

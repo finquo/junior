@@ -199,3 +199,37 @@ html.transitioning *::after {
 		fill 180ms ease-in-out,
 		stroke 180ms ease-in-out !important;
 }
+
+/* Zoom Video SDK custom elements ship no useful layout. Without this grid,
+   every video-player stacks in the same spot and only the local tile shows. */
+video-player-container {
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr);
+	align-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+/* Phones: stack a 1:1 call, then go two-up from three participants. */
+video-player-container:has(> :nth-child(3)) {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Tablets and up: the official quickstart breakpoints. */
+@media (min-width: 640px) {
+	video-player-container:has(> :nth-child(2)) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	video-player-container:has(> :nth-child(5)) {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	video-player-container:has(> :nth-child(17)) {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+video-player {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+}
