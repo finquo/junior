@@ -1,26 +1,28 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { trys } from "utils";
-import type { ZoomEvents } from "./event";
-import { hmacSha256Hex, timingSafeEqual } from "./jwt";
+import type { ZoomSessionKeys, ZoomSessions } from "./event";
+import { hmacSha256Hex, timingSafeEqual, tryAPI } from "./jwt";
 
-interface Payload {
-	event: string;
-	event_ts?: number;
-	payload?: {
+type Payload<
+	D extends { [key: string]: unknown } = {
 		plainToken?: string;
 		account_id?: string;
 		object?: Record<string, unknown>;
 		[key: string]: unknown;
-	};
-	[key: string]: unknown;
-}
+	},
+> = {
+	event: string;
+	event_ts?: number;
+	payload?: D;
+};
 
-type ZoomWebhookEnv = {
+type ZoomWebhookEnv<D extends object | undefined = Payload["payload"]> = {
 	Variables: {
-		zoomWebhook: Payload;
+		data?: D;
 		category: string;
 		event: string;
+		timestamp?: number;
 	};
 };
 
@@ -55,7 +57,7 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 			);
 		}
 
-		c.set("zoomWebhook", body);
+		c.set("data", body.payload);
 		const [category, event] = body.event.split(".");
 
 		if (!category || !event)
@@ -63,54 +65,58 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 
 		c.set("category", category);
 		c.set("event", event);
+		c.set("timestamp", body.event_ts);
 
 		await next();
 	},
 );
 
-type ZoomEventHandler = (
-	c: Context<ZoomWebhookEnv>,
-) => Response | Promise<Response>;
-
-type ZoomEventHook = (c: Context<ZoomWebhookEnv>) => void | Promise<void>;
-
 type ZoomEventHandlers = {
-	[K in keyof ZoomEvents]: Partial<Record<ZoomEvents[K], ZoomEventHandler>>;
-} & {
-	"*"?: {
-		before?: ZoomEventHook;
-		after?: ZoomEventHook;
+	category: {
+		event: (c: Context<ZoomWebhookEnv>) => Promise<void>;
 	};
+	session: Partial<{
+		[K in ZoomSessionKeys]: (
+			c: Context<ZoomWebhookEnv<ZoomSessions[K]>>,
+		) => Promise<void>;
+	}>;
 };
 
-export function zoomEvents(handlers: ZoomEventHandlers) {
+export function zoomEvents(
+	handlers: Partial<ZoomEventHandlers>,
+	hooks?: {
+		before?: (c: Context<ZoomWebhookEnv>) => Promise<void>;
+		after?: (c: Context<ZoomWebhookEnv>) => Promise<void>;
+	},
+) {
 	return async (c: Context<ZoomWebhookEnv>) => {
 		const category = c.get("category");
 		const event = c.get("event");
-		const hooks = handlers["*"];
 
-		const handler =
-			handlers[category as keyof ZoomEvents]?.[
-				event as ZoomEvents[keyof ZoomEvents]
-			];
-
-		await hooks?.before?.(c);
+		if (hooks?.before) await tryAPI("hook-before", hooks.before(c));
 
 		try {
-			if (!handler) {
-				console.error(
-					"Event handler is missing for",
-					"[",
-					category,
-					event,
-					"]",
-				);
-				return c.json({ message: "Authorized request." }, 200);
-			}
+			const getCategory = handlers[category as "category"];
 
-			return await handler(c);
+			if (!getCategory)
+				throw new Error(
+					`Category of handler is missing for [ ${category}:${event} ]`,
+				);
+
+			const handler = getCategory[event as "event"];
+
+			if (!handler)
+				throw new Error(
+					`Event handler is missing for [ ${category}:${event} ]`,
+				);
+
+			await handler(c);
+		} catch (e) {
+			console.error(e);
 		} finally {
-			await hooks?.after?.(c);
+			if (hooks?.after) await tryAPI("hook-after", hooks.after(c));
 		}
+
+		return c.json({ message: "Authorized request." }, 200);
 	};
 }

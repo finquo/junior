@@ -38,18 +38,14 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 app.post(
 	"/zoom/webhook",
 	zoomWebhookMiddleware,
-	zoomEvents({
-		"*": {
-			before: (c) => {
-				console.log("[zoom webhook]", c.get("category"), c.get("event"));
+	zoomEvents(
+		{},
+		{
+			before: async (c) => {
+				console.log(c.var.category, c.var.event, ":", c.var.data);
 			},
 		},
-		session: {
-			ended: (c) => {
-				return c.newResponse(null, 200);
-			},
-		},
-	}),
+	),
 );
 
 const handler = new RPCHandler(appRouter, {
