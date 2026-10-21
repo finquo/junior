@@ -39,6 +39,11 @@ app.post(
 	"/zoom/webhook",
 	zoomWebhookMiddleware,
 	zoomEvents({
+		"*": {
+			before: (c) => {
+				console.log("[zoom webhook]", c.get("category"), c.get("event"));
+			},
+		},
 		session: {
 			ended: (c) => {
 				return c.newResponse(null, 200);

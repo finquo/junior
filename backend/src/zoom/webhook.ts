@@ -68,28 +68,49 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 	},
 );
 
-export function zoomEvents(
-	handlers: Record<
-		keyof ZoomEvents,
-		Partial<
-			Record<
-				ZoomEvents[keyof ZoomEvents],
-				(c: Context<ZoomWebhookEnv>) => Response | Promise<Response>
-			>
-		>
-	>,
-) {
-	return (c: Context<ZoomWebhookEnv>) => {
+type ZoomEventHandler = (
+	c: Context<ZoomWebhookEnv>,
+) => Response | Promise<Response>;
+
+type ZoomEventHook = (c: Context<ZoomWebhookEnv>) => void | Promise<void>;
+
+type ZoomEventHandlers = {
+	[K in keyof ZoomEvents]: Partial<Record<ZoomEvents[K], ZoomEventHandler>>;
+} & {
+	"*"?: {
+		before?: ZoomEventHook;
+		after?: ZoomEventHook;
+	};
+};
+
+export function zoomEvents(handlers: ZoomEventHandlers) {
+	return async (c: Context<ZoomWebhookEnv>) => {
 		const category = c.get("category");
 		const event = c.get("event");
+		const hooks = handlers["*"];
 
-		const handler = handlers[category as "session"][event as "alert"];
+		const handler =
+			handlers[category as keyof ZoomEvents]?.[
+				event as ZoomEvents[keyof ZoomEvents]
+			];
 
-		if (!handler) {
-			console.error("Event handler is missing for", "[", category, event, "]");
-			return c.json({ message: "Authorized request." }, 200);
+		await hooks?.before?.(c);
+
+		try {
+			if (!handler) {
+				console.error(
+					"Event handler is missing for",
+					"[",
+					category,
+					event,
+					"]",
+				);
+				return c.json({ message: "Authorized request." }, 200);
+			}
+
+			return await handler(c);
+		} finally {
+			await hooks?.after?.(c);
 		}
-
-		return handler(c);
 	};
 }
