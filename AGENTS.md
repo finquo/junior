@@ -51,7 +51,7 @@ Run from the repo root unless noted.
 
 - Combined Worker: root `wrangler.json` runs `frontend/server.ts`, which forwards `/api/*` to `backend` and everything else to the OpenNext worker. In dev the two run as separate servers.
 - Standalone backend Worker: `backend/wrangler.json` (`src/index.ts`). Next can also embed the backend at `/api` via `frontend/src/app/api/[[...route]]/route.ts`.
-- CI (`.github/workflows/deploy.yml`) runs `bun install` -> `bun run construct` -> `tofu apply` in `infra/` on push to `main`.
+- CI: `deploy.yml` runs `bun install` -> `bun run construct` -> zip -> `env.json` -> `tofu apply` in `infra/app`; `state.yml` separately applies `infra/state` then runs `db:migrate`. Both share the `deploy-<ref>` concurrency group.
 
 ## Gotchas
 

@@ -3,7 +3,7 @@ name: Test Environment Secrets & Variables
 on:
     workflow_dispatch:
     push:
-        branches: [main, development]
+        branches: ["*"]
         paths:
             - ".github/workflows/*.yml"
             - ".env.schema"
@@ -32,12 +32,6 @@ jobs:
               env:
                   VARLOCK_JSON: ${{ steps.varlock_json.outputs.json-env }}
               run: printf '%s' "$VARLOCK_JSON" > env.json
-
-            - name: Verify env.json
-              run: |
-                  echo "Item count: $(jq 'length' env.json)"
-                  echo "Key name and JSON value type (used by the Terraform tostring filter):"
-                  jq -r 'to_entries[] | "\(.key)=\(.value | type)"' env.json
 
             - name: Print env and secrets info
               run: |

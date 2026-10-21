@@ -7,15 +7,29 @@ terraform {
  	}
 
 	backend "s3" {
-		bucket	= "finquo-app-opentofu-state"
-		key		= "infra/terraform.tfstate"
+		bucket	= "finquo-app-opentofu"
+		key		= "app/terraform.tfstate"
 		region	= "ap-south-1"
 		use_lockfile = true
 	}
 }
 
+variable "environment" {
+	description	= "Deployment environment"
+	type		= string
+	default		= "development"
+}
+
 provider "aws" {
 	region	= "ap-south-1"
+
+	default_tags {
+		tags = {
+			Project		= "finquo"
+			Environment	= var.environment
+			ManagedBy	= "opentofu"
+		}
+	}
 }
 
 provider "aws" {

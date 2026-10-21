@@ -1,3 +1,0 @@
-open-terra-next/*
-!open-terra-next/**/*.tf
-!open-terra-next/modules/

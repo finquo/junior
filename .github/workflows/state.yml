@@ -1,0 +1,81 @@
+name: Shared State
+
+on:
+    workflow_dispatch:
+
+    push:
+        branches: [main]
+        paths:
+            - "infra/state/**/*"
+            - "backend/migrations/**/*"
+            - "backend/drizzle.config.ts"
+            - ".env.schema"
+            - ".github/workflows/state.yml"
+
+# Same group as deploy.yml: GitHub serializes workflows that share a group,
+# so a state apply never runs while an app deploy is in flight.
+concurrency:
+    group: deploy-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    state:
+        name: Apply State & Migrate
+        environment: development
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+                  vars: ${{ toJSON(vars) }}
+
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Set up Bun.js
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: "latest"
+
+            - name: Install dependencies
+              run: bun i
+
+            - name: Load environment variables as JSON
+              id: varlock_json
+              uses: dmno-dev/varlock-action@v1.0.1
+              with:
+                  output-format: "json"
+
+            - name: Write env.json
+              env:
+                  VARLOCK_JSON: ${{ steps.varlock_json.outputs.json-env }}
+              run: |
+                  printf '%s' "$VARLOCK_JSON" > env.json
+                  echo "env.json item count: $(jq 'length' env.json)"
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ap-south-1
+
+            - name: Setup OpenTofu
+              uses: opentofu/setup-opentofu@v1
+
+            - name: OpenTofu Init & Apply (shared state)
+              env:
+                  TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+              run: |
+                  cd infra/state
+                  tofu init
+                  tofu apply -auto-approve
+
+            - name: Run database migrations
+              run: |
+                  cd infra/state
+                  DATABASE_URL="$(tofu output -raw database_url)"
+                  export DATABASE_URL
+                  cd ../../backend
+                  bun run db:migrate

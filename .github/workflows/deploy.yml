@@ -6,12 +6,17 @@ on:
     push:
         branches: [main]
         paths:
-            - "infra/**/*"
+            - "infra/app/**/*"
+            - ".env.schema"
             - ".github/workflows/deploy.yml"
             - "package.json"
             - "packages/**/*"
             - "backend/**/*"
             - "frontend/**/*"
+
+concurrency:
+    group: deploy-${{ github.ref }}
+    cancel-in-progress: false
 
 jobs:
     deploy:
@@ -39,6 +44,25 @@ jobs:
             - name: Build Frontend & Backend
               run: bun run construct
 
+            - name: Package OpenNext server
+              run: |
+                  cd frontend/.open-next/server-functions/default
+                  zip -qr "$GITHUB_WORKSPACE/build.zip" .
+                  ls -lh "$GITHUB_WORKSPACE/build.zip"
+
+            - name: Load environment variables as JSON
+              id: varlock_json
+              uses: dmno-dev/varlock-action@v1.0.1
+              with:
+                  output-format: "json"
+
+            - name: Write env.json
+              env:
+                  VARLOCK_JSON: ${{ steps.varlock_json.outputs.json-env }}
+              run: |
+                  printf '%s' "$VARLOCK_JSON" > env.json
+                  echo "env.json item count: $(jq 'length' env.json)"
+
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
@@ -49,11 +73,10 @@ jobs:
             - name: Setup OpenTofu
               uses: opentofu/setup-opentofu@v1
 
-            - name: OpenTofu Init & Apply
+            - name: OpenTofu Init & Apply (app)
               env:
-                  TF_VAR_github_token: ${{ secrets.GITHUB_TOKEN }}
-                  TF_VAR_github_run_id: ${{ github.run_id }}
+                  TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
               run: |
-                  cd infra
+                  cd infra/app
                   tofu init
                   tofu apply -auto-approve
