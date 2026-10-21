@@ -3,8 +3,11 @@ import {
 	type CreateJobCommandInput,
 	MediaConvertClient,
 } from "@aws-sdk/client-mediaconvert";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createStorage } from "unstorage";
 import s3Driver from "unstorage/drivers/s3";
+import { bucket } from "./bucket";
 import {
 	AWS_REGION,
 	BUCKET_ENDPOINT,
@@ -44,6 +47,14 @@ export const mediaStorage = createStorage({
 		region: AWS_REGION,
 	}),
 });
+
+export function getMediaDownloadURL(key: string, expiresIn = 3600) {
+	return getSignedUrl(
+		bucket,
+		new GetObjectCommand({ Bucket: MEDIA_BUCKET, Key: toS3Path(key) }),
+		{ expiresIn },
+	);
+}
 
 const mediaConvert = new MediaConvertClient({
 	region: AWS_REGION,
@@ -128,7 +139,7 @@ export function createSplitAudioJob({ id }: { id: string }) {
 				OutputGroupSettings: {
 					Type: "HLS_GROUP_SETTINGS",
 					HlsGroupSettings: {
-						Destination: getMediaBucketURL(`${id}/audios/`),
+						Destination: getMediaBucketURL(`${id}/chunks/`),
 						SegmentLength: CHUNK_LENGTH_SECONDS,
 						MinSegmentLength: CHUNK_LENGTH_SECONDS,
 						SegmentControl: "SEGMENTED_FILES",
@@ -136,7 +147,6 @@ export function createSplitAudioJob({ id }: { id: string }) {
 				},
 				Outputs: [
 					{
-						NameModifier: "_audio_chunk",
 						ContainerSettings: { Container: "M3U8" },
 						AudioDescriptions: [
 							{
