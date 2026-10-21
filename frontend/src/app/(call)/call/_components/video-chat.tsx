@@ -17,9 +17,10 @@ import {
 	VideoOffIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { ErrorAuthCardFooter } from "@/app/_components/login";
+import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -118,10 +119,18 @@ function Session({
 
 	if (isError) {
 		return (
-			<Alert variant="destructive">
-				<AlertTitle>Unable to join the session</AlertTitle>
-				<AlertDescription>{error?.reason}</AlertDescription>
-			</Alert>
+			<Container>
+				<Card>
+					<CardHeader>
+						<CardTitle>Unable to join the session</CardTitle>
+						<CardDescription>
+							{error?.reason ??
+								"Something went wrong while joining the meeting."}
+						</CardDescription>
+					</CardHeader>
+					<ErrorAuthCardFooter />
+				</Card>
+			</Container>
 		);
 	}
 

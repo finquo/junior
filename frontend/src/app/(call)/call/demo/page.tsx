@@ -8,15 +8,18 @@ import { CallNotice } from "../_components/call-notice";
 import { CallRoom } from "../_components/call-room";
 
 function Demo() {
-	const { data, isPending, isError } = useQuery({
-		...api.meeting.demo.queryOptions(),
-		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
-	});
+	const { data, isPending, isError, error, refetch } = useQuery(
+		api.meeting.demo.queryOptions({
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+		}),
+	);
 
 	if (isPending) return <Loader />;
 
-	if (isError || !data) return <CallNotice status="error" />;
+	if (isError || !data) {
+		return <CallNotice status="error" error={error} onRefresh={refetch} />;
+	}
 
 	return <CallRoom session={data.session} token={data.token} />;
 }

@@ -1,11 +1,19 @@
-import { Alert, AlertTitle } from "@/components/ui/alert";
+"use client";
+
+import { RefreshCwIcon } from "lucide-react";
+import { useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardContent,
 	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { CallAuthButton } from "./call-auth-button";
 
 export type CallNoticeStatus = "not_found" | "upcoming" | "ended" | "error";
 
@@ -35,8 +43,26 @@ const notices: Record<
 	},
 };
 
-export function CallNotice({ status }: { status: CallNoticeStatus }) {
+// Only states that can change on their own are polled.
+const AUTO_REFRESH_STATUSES: CallNoticeStatus[] = ["upcoming", "error"];
+
+export function CallNotice({
+	status,
+	onRefresh,
+	error,
+}: {
+	status: CallNoticeStatus;
+	onRefresh?: () => void;
+	error?: Error | null;
+}) {
 	const notice = notices[status];
+
+	useEffect(() => {
+		if (!onRefresh || !AUTO_REFRESH_STATUSES.includes(status)) return;
+
+		const interval = setInterval(onRefresh, 30_000);
+		return () => clearInterval(interval);
+	}, [onRefresh, status]);
 
 	return (
 		<Card>
@@ -45,10 +71,29 @@ export function CallNotice({ status }: { status: CallNoticeStatus }) {
 				<CardDescription>{notice.description}</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<Alert>
-					<AlertTitle>{notice.alert}</AlertTitle>
-				</Alert>
+				{error ? (
+					<Alert variant="destructive">
+						<AlertTitle>{error.name || "Error"}</AlertTitle>
+						<AlertDescription>{error.message}</AlertDescription>
+					</Alert>
+				) : (
+					<Alert>
+						<AlertTitle>{notice.alert}</AlertTitle>
+					</Alert>
+				)}
 			</CardContent>
+			<CardFooter className="justify-end">
+				<ButtonGroup>
+					<Button
+						variant="outline"
+						onClick={onRefresh ?? (() => window.location.reload())}
+					>
+						<RefreshCwIcon />
+						Refresh
+					</Button>
+					<CallAuthButton />
+				</ButtonGroup>
+			</CardFooter>
 		</Card>
 	);
 }
