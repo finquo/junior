@@ -1,4 +1,5 @@
 import z from "zod";
+import { summarizeTranscript } from "@/ai/summarize";
 import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
 import {
 	createSplitAudioJob,
@@ -7,6 +8,12 @@ import {
 	mediaStorage,
 } from "@/aws/media";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "../procedure";
+
+type TranscriptSegment = {
+	text: string;
+	startSecond: number;
+	endSecond: number;
+};
 
 export const mediaRouter = {
 	jobs: {
@@ -90,6 +97,92 @@ export const mediaRouter = {
 				chunks,
 			};
 		}),
+
+	summarize: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			const inputKey = `${input.id}/transcript/main.json`;
+			const segments =
+				await mediaStorage.getItem<TranscriptSegment[]>(inputKey);
+			if (!segments)
+				throw getError("NOT_FOUND", `Transcript not found for ${input.id}`);
+
+			const transcript = segments
+				.map(
+					(segment, index) =>
+						`${index + 1}. UNKNOWN [${segment.startSecond}s-${segment.endSecond}s]: ${segment.text.trim()}`,
+				)
+				.join("\n");
+
+			const summary = await tryAPI(
+				"ai-summarize-transcript",
+				summarizeTranscript(transcript),
+			);
+			const outputKey = `${input.id}/summary/main.json`;
+
+			await tryAPI(
+				"aws-s3-save-summary",
+				mediaStorage.setItem(outputKey, JSON.stringify(summary, null, 2)),
+			);
+
+			return { outputKey, summary };
+		}),
+
+	summarizeChunks: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			const keys = await getAPI(
+				"aws-s3-list-transcript-chunks",
+				mediaStorage.getKeys(`${input.id}/transcript/chunks/`),
+				[],
+			);
+			keys.sort();
+
+			const transcripts = await Promise.all(
+				keys.map((key) => mediaStorage.getItem<TranscriptSegment[]>(key)),
+			);
+
+			const transcript = transcripts
+				.map((segments, index) => {
+					if (!segments?.length) return "";
+
+					const lines = segments
+						.map(
+							(segment, line) =>
+								`${line + 1}. UNKNOWN [${segment.startSecond}s-${segment.endSecond}s]: ${segment.text.trim()}`,
+						)
+						.join("\n");
+
+					return `CHUNK ${index + 1}\n${lines}`;
+				})
+				.filter(Boolean)
+				.join("\n\n");
+
+			if (!transcript)
+				throw getError(
+					"NOT_FOUND",
+					`Transcript chunks not found for ${input.id}`,
+				);
+
+			const summary = await tryAPI(
+				"ai-summarize-transcript-chunks",
+				summarizeTranscript(transcript),
+			);
+			const outputKey = `${input.id}/summary/chunks.json`;
+
+			await tryAPI(
+				"aws-s3-save-summary-chunks",
+				mediaStorage.setItem(outputKey, JSON.stringify(summary, null, 2)),
+			);
+
+			return { outputKey, summary };
+		}),
+
+	summarizeRaw: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ text: z.string().min(1) }))
+		.handler(({ input }) =>
+			tryAPI("ai-summarize-raw", summarizeTranscript(input.text)),
+		),
 
 	transcribeAudio: getRolesProcedure(["admin", "scheduler"])
 		.input(z.object({ id: z.string().min(1) }))
