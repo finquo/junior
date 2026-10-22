@@ -1,6 +1,6 @@
 import { handle, type LambdaContext, type LambdaEvent } from "@hono/aws-lambda";
 import { Hono } from "hono";
-import { transcribeS3Object } from "./aws/event";
+import { transcribeAudio, transcribeAudioChunk } from "./ai/transcribe";
 import api from "./index";
 
 type Bindings = {
@@ -19,10 +19,12 @@ export const handler = async (event: any, context: LambdaContext) => {
 	if (event?.Records?.[0]?.eventSource === "aws:s3") {
 		const record = event.Records[0];
 
-		const bucketName = record.s3.bucket.name as string;
 		const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
 
-		return transcribeS3Object(bucketName, key);
+		if (/\/chunks\/audio_\d+\.[^.]+$/.test(key))
+			return transcribeAudioChunk(key);
+
+		return transcribeAudio(key);
 	}
 
 	return lambdaHandler(event, context);
