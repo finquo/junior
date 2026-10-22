@@ -22,18 +22,16 @@ import {
 	LogOutIcon,
 	MicIcon,
 	MicOffIcon,
-	MonitorSmartphoneIcon,
 	PhoneOffIcon,
 	PinIcon,
 	ScreenShareIcon,
 	ScreenShareOffIcon,
-	UserRoundIcon,
 	UsersIcon,
 	UserXIcon,
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { sileo as toast } from "sileo";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
@@ -54,9 +52,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
-	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -68,20 +64,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-	Item,
-	ItemActions,
-	ItemContent,
-	ItemDescription,
-	ItemGroup,
-	ItemMedia,
-	ItemTitle,
-} from "@/components/ui/item";
-import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/auth";
-import { RenderWhenRole } from "@/hooks/role";
 import { cn } from "@/lib/utils";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
@@ -170,165 +152,40 @@ function VideoTile({
 	);
 }
 
-function JoinPreference({
-	icon,
-	label,
-	description,
-	id,
-	checked,
-	disabled,
-	onCheckedChange,
-}: {
-	icon: React.ReactNode;
-	label: string;
-	description: string;
-	id: string;
-	checked: boolean;
-	disabled?: boolean;
-	onCheckedChange: (checked: boolean) => void;
-}) {
-	return (
-		<Item variant="muted" size="sm">
-			<ItemMedia variant="icon">{icon}</ItemMedia>
-			<ItemContent>
-				<ItemTitle>{label}</ItemTitle>
-				<ItemDescription>{description}</ItemDescription>
-			</ItemContent>
-			<ItemActions>
-				<Switch
-					id={id}
-					aria-label={label}
-					checked={checked}
-					disabled={disabled}
-					onCheckedChange={onCheckedChange}
-				/>
-			</ItemActions>
-		</Item>
-	);
-}
-
 export function VideoChat({
 	session,
 	token,
 	slotId,
+	userName,
+	canViewDetails,
+	canEndMeeting,
+	disableVideo,
+	disableAudio,
+	onLeave,
 	onEnd,
 }: {
 	session: string;
 	token: string;
 	slotId?: string;
+	userName: string;
+	canViewDetails: boolean;
+	canEndMeeting: boolean;
+	disableVideo: boolean;
+	disableAudio: boolean;
+	onLeave: () => void;
 	onEnd?: () => void;
 }) {
-	const { data: user, isPending } = useAuth();
-	const [guestName, setGuestName] = useState("");
-	const [joinVideo, setJoinVideo] = useState(true);
-	const [joinAudio, setJoinAudio] = useState(true);
-	const [companion, setCompanion] = useState(false);
-	const [inCall, setInCall] = useState(false);
-
-	if (isPending) return <Loader />;
-
-	const authName = user?.name?.trim();
-	const userName = authName || guestName.trim();
-	const needsName = !authName;
-	const canJoinAsCompanion = user?.role === "teacher";
-
-	const handleCompanion = (checked: boolean) => {
-		setCompanion(checked);
-		if (checked) {
-			setJoinVideo(false);
-			setJoinAudio(false);
-		}
-	};
-
-	if (!inCall) {
-		return (
-			<Frame className="h-full min-h-0 rounded-none">
-				<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
-					<Card className="w-full max-w-md">
-						<CardHeader>
-							<CardTitle>Ready to join?</CardTitle>
-							<CardDescription>
-								Your camera and microphone will start after you join.
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<ItemGroup className="gap-2">
-								{needsName ? (
-									<Field>
-										<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
-										<Input
-											id="guest-name"
-											value={guestName}
-											onChange={(event) => setGuestName(event.target.value)}
-											placeholder="Enter your name"
-											autoComplete="name"
-										/>
-									</Field>
-								) : (
-									<Item variant="muted">
-										<ItemMedia variant="icon">
-											<UserRoundIcon />
-										</ItemMedia>
-										<ItemContent>
-											<ItemDescription>Joining as</ItemDescription>
-											<ItemTitle>{authName}</ItemTitle>
-										</ItemContent>
-									</Item>
-								)}
-
-								<JoinPreference
-									id="join-video"
-									icon={<VideoIcon />}
-									label="Camera"
-									description={joinVideo ? "On" : "Off"}
-									checked={joinVideo}
-									disabled={companion}
-									onCheckedChange={setJoinVideo}
-								/>
-								<JoinPreference
-									id="join-audio"
-									icon={<MicIcon />}
-									label="Microphone"
-									description={joinAudio ? "On" : "Off"}
-									checked={joinAudio}
-									disabled={companion}
-									onCheckedChange={setJoinAudio}
-								/>
-
-								{canJoinAsCompanion && (
-									<JoinPreference
-										id="join-companion"
-										icon={<MonitorSmartphoneIcon />}
-										label="Join as companion"
-										description="Join without camera or microphone, then share your screen from this device."
-										checked={companion}
-										onCheckedChange={handleCompanion}
-									/>
-								)}
-							</ItemGroup>
-						</CardContent>
-						<CardFooter>
-							<Button disabled={!userName} onClick={() => setInCall(true)}>
-								<VideoIcon />
-								Join session
-							</Button>
-						</CardFooter>
-					</Card>
-				</FramePanel>
-			</Frame>
-		);
-	}
-
 	return (
 		<Session
 			session={session}
 			token={token}
 			userName={userName}
 			slotId={slotId}
-			canViewDetails={Boolean(user)}
-			disableVideo={!joinVideo}
-			disableAudio={!joinAudio}
-			onLeave={() => setInCall(false)}
+			canViewDetails={canViewDetails}
+			canEndMeeting={canEndMeeting}
+			disableVideo={disableVideo}
+			disableAudio={disableAudio}
+			onLeave={onLeave}
 			onEnd={onEnd}
 		/>
 	);
@@ -340,6 +197,7 @@ function Session({
 	userName,
 	slotId,
 	canViewDetails,
+	canEndMeeting,
 	disableVideo,
 	disableAudio,
 	onLeave,
@@ -350,6 +208,7 @@ function Session({
 	userName: string;
 	slotId?: string;
 	canViewDetails: boolean;
+	canEndMeeting: boolean;
 	disableVideo: boolean;
 	disableAudio: boolean;
 	onLeave: () => void;
@@ -400,7 +259,10 @@ function Session({
 		.filter((participant) => participant.userId !== myself?.userId)
 		.slice(0, MAX_REMOTE_TILES);
 
-	const isSharing = isScreensharing || screenShareUsers.length > 0;
+	const remoteScreenShareUsers = screenShareUsers.filter(
+		(userId) => userId !== myself?.userId,
+	);
+	const isRemoteSharing = remoteScreenShareUsers.length > 0;
 
 	const endMeeting = async () => {
 		await ZoomVideo.createClient().leave(true);
@@ -408,9 +270,33 @@ function Session({
 		else onLeave();
 	};
 
-	const toggleScreenshare = () => {
-		if (isScreensharing) void stopScreenshare();
-		else startScreenshare();
+	const toggleMicrophone = async () => {
+		const next = !isAudioMuted;
+		await toggleMute();
+		if (next) toast.success({ title: "Microphone on" });
+		else toast.info({ title: "Microphone off" });
+	};
+
+	const toggleCamera = async () => {
+		const next = !isVideoOn;
+		await toggleVideo();
+		if (next) toast.success({ title: "Camera on" });
+		else toast.info({ title: "Camera off" });
+	};
+
+	const toggleScreenshare = async () => {
+		if (isScreensharing) {
+			await stopScreenshare();
+			toast.info({ title: "Screen sharing stopped" });
+			return;
+		}
+
+		try {
+			await startScreenshare();
+			toast.success({ title: "Screen sharing started" });
+		} catch {
+			toast.error({ title: "Could not start screen sharing" });
+		}
 	};
 
 	return (
@@ -418,47 +304,47 @@ function Session({
 			<FramePanel
 				className={cn(
 					"relative grid h-full min-h-0 content-center gap-2 overflow-hidden",
-					isSharing
+					isRemoteSharing
 						? "grid-cols-1"
 						: others.length > 1
 							? "grid-cols-2"
 							: "grid-cols-1",
 				)}
 			>
-				{/* Kept mounted so the SDK always has a share surface to draw into. */}
-				<div
-					className={cn(
-						"call-screenshare col-span-full",
-						isScreensharing ? "h-full w-full" : "hidden",
-					)}
-				>
-					<LocalScreenShareComponent ref={ScreenshareRef} />
-				</div>
-
-				{!isScreensharing && screenShareUsers.length > 0 && (
+				{isRemoteSharing && (
 					<Frame className="col-span-full h-full min-h-0 overflow-hidden">
 						<ScreenShareContainerComponent className="call-screenshare-remote h-full w-full">
-							{screenShareUsers.map((userId) => (
+							{remoteScreenShareUsers.map((userId) => (
 								<ScreenSharePlayerComponent key={userId} userId={userId} />
 							))}
 						</ScreenShareContainerComponent>
 					</Frame>
 				)}
 
-				{!isSharing &&
+				{!isRemoteSharing &&
 					others.map((participant) => (
 						<VideoTile key={participant.userId} user={participant} menu />
 					))}
 
-				{myself && (
-					<div className="absolute right-4 bottom-4 z-10">
+				<div className="absolute right-4 bottom-4 z-10 flex flex-col items-end gap-2">
+					{/* Kept mounted so the SDK always has a share surface to draw into. */}
+					<div
+						className={cn(
+							"call-screenshare aspect-video min-w-64 overflow-hidden rounded-lg shadow-lg",
+							!isScreensharing && "hidden",
+						)}
+					>
+						<LocalScreenShareComponent ref={ScreenshareRef} />
+					</div>
+
+					{myself && (
 						<VideoTile
 							user={myself}
 							voiceOn={!isAudioMuted}
 							className="aspect-video min-w-64 shadow-lg"
 						/>
-					</div>
-				)}
+					)}
+				</div>
 
 				<div className="absolute bottom-4 left-4 z-10">
 					<Frame className="shadow-lg">
@@ -466,7 +352,7 @@ function Session({
 							<Button
 								variant="outline"
 								size="icon-lg"
-								onClick={() => void toggleMute()}
+								onClick={() => void toggleMicrophone()}
 								aria-label={isAudioMuted ? "Unmute" : "Mute"}
 							>
 								{isAudioMuted ? <MicOffIcon /> : <MicIcon />}
@@ -474,7 +360,7 @@ function Session({
 							<Button
 								variant="outline"
 								size="icon-lg"
-								onClick={() => void toggleVideo()}
+								onClick={() => void toggleCamera()}
 								aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
 							>
 								{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
@@ -482,7 +368,7 @@ function Session({
 							<Button
 								variant={isScreensharing ? "default" : "outline"}
 								size="icon-lg"
-								onClick={toggleScreenshare}
+								onClick={() => void toggleScreenshare()}
 								aria-label={
 									isScreensharing ? "Stop sharing screen" : "Share screen"
 								}
@@ -509,7 +395,7 @@ function Session({
 									</Button>
 								</MeetingDetails>
 							)}
-							<RenderWhenRole role={["admin", "scheduler", "teacher"]}>
+							{canEndMeeting && (
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<Button
@@ -539,7 +425,7 @@ function Session({
 										</AlertDialogFooter>
 									</AlertDialogContent>
 								</AlertDialog>
-							</RenderWhenRole>
+							)}
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
 									<Button

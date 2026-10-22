@@ -70,6 +70,24 @@ export const commonRouter = {
 			}),
 		)
 		.handler(async ({ input }) => {
+			// Demo sandbox lesson. Remove this branch before deploying.
+			if (input.id === "demo") {
+				const now = new Date();
+
+				return {
+					id: "demo",
+					name: "Demo lesson",
+					description: "A sample lesson for the demo meeting.",
+					language: "en-IN",
+					program: null,
+					quiz: null,
+					period: "0 hours 45 minutes",
+					createdAt: now,
+					updatedAt: now,
+					programInfo: null,
+				} as const;
+			}
+
 			return await tryAPI(
 				"db-common-get-lesson",
 				db.query.lesson.findFirst({

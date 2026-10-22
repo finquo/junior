@@ -17,6 +17,9 @@ import { generateZoomToken } from "@/zoom/jwt";
 
 const JOIN_WINDOW = 10 * 60 * 1000;
 
+const DEMO_ID = "demo";
+const DEMO_SESSION = "finquo-demo";
+
 export const slotRouter = {
 	join: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
 		.input(
@@ -25,6 +28,25 @@ export const slotRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const role = MapRole(context.role, {
+				admin: 1,
+				scheduler: 1,
+				teacher: 1,
+				student: 0,
+			} as const);
+
+			// Authenticated demo sandbox. Remove this branch before deploying.
+			if (input.id === DEMO_ID) {
+				const now = Date.now();
+				return {
+					status: "live",
+					session: DEMO_SESSION,
+					startTime: new Date(now),
+					endTime: new Date(now + 2 * 60 * 60 * 1000),
+					token: await generateZoomToken(DEMO_SESSION, role),
+				} as const;
+			}
+
 			const slot = await tryAPI(
 				"db-core-join-slot",
 				db.query.slot.findFirst({
@@ -66,15 +88,9 @@ export const slotRouter = {
 			if (now > endTime.getTime())
 				return { status: "ended", startTime, endTime } as const;
 
-			const role = MapRole(context.role, {
-				admin: 1,
-				scheduler: 1,
-				teacher: 1,
-				student: 0,
-			});
-
 			return {
 				status: "live",
+				session: slot.id,
 				startTime,
 				endTime,
 				token: await generateZoomToken(slot.id, role),
@@ -114,6 +130,27 @@ export const slotRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			// Demo sandbox slot. Remove this branch before deploying.
+			if (input.id === DEMO_ID) {
+				const now = new Date();
+				const endTime = new Date(now.getTime() + 45 * 60_000);
+
+				return {
+					id: DEMO_ID,
+					meetingLink: null,
+					studentId: null,
+					teacherId: null,
+					schedulerId: null,
+					lessonId: DEMO_ID,
+					startTime: now,
+					expectedEndTime: endTime,
+					endTime: null,
+					status: "started",
+					createdAt: now,
+					updatedAt: now,
+				} as const;
+			}
+
 			return await tryAPI(
 				"db-core-get-slot",
 				db.query.slot.findFirst({

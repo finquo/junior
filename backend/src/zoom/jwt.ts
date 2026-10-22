@@ -15,7 +15,7 @@ export function timingSafeEqual(a: string, b: string) {
 	return nodeTimingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
-export async function generateZoomToken(sessionName: string, role = 0) {
+export async function generateZoomToken(sessionName: string, role: 1 | 0 = 0) {
 	const iat = Math.round(Date.now() / 1000) - 30;
 	const exp = iat + 60 * 60 * 2;
 

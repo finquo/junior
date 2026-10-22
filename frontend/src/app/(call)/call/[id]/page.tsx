@@ -1,70 +1,267 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import {
+	MicIcon,
+	MicOffIcon,
+	MonitorSmartphoneIcon,
+	UserRoundIcon,
+	VideoIcon,
+	VideoOffIcon,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import Script from "next/script";
+import { useEffect, useState } from "react";
+import { sileo as toast } from "sileo";
 import Loader from "@/components/loader";
-import { api } from "@/hooks/api";
+import { Frame, FramePanel } from "@/components/reui/frame";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemMedia,
+	ItemTitle,
+} from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/auth";
-import { CallNotice } from "../_components/call-notice";
-import { CallRoom } from "../_components/call-room";
+import { getCallName, setCallName } from "../_components/call-name";
+import { useJoinPreferences } from "../_components/call-preferences";
 
-function Call({ id }: { id: string }) {
+async function requestDevices(video: boolean, audio: boolean) {
+	if (!navigator.mediaDevices?.getUserMedia) {
+		toast.error({
+			title: "This browser cannot access your camera or microphone",
+		});
+		return;
+	}
+
+	const requests: Promise<MediaStream>[] = [];
+	if (video)
+		requests.push(navigator.mediaDevices.getUserMedia({ video: true }));
+	if (audio)
+		requests.push(navigator.mediaDevices.getUserMedia({ audio: true }));
+
+	const results = await Promise.allSettled(requests);
+	let failed = false;
+
+	for (const result of results) {
+		if (result.status === "fulfilled") {
+			for (const track of result.value.getTracks()) track.stop();
+		} else {
+			failed = true;
+		}
+	}
+
+	if (failed) {
+		toast.error({
+			title: "Camera or microphone permission was not granted",
+			description:
+				"You can still join and allow access from the in-call controls.",
+		});
+	}
+}
+
+function JoinPreference({
+	icon,
+	label,
+	description,
+	id,
+	checked,
+	disabled,
+	onCheckedChange,
+}: {
+	icon: React.ReactNode;
+	label: string;
+	description: string;
+	id: string;
+	checked: boolean;
+	disabled?: boolean;
+	onCheckedChange: (checked: boolean) => void;
+}) {
+	return (
+		<Item variant="muted" size="sm">
+			<ItemMedia variant="icon">{icon}</ItemMedia>
+			<ItemContent>
+				<ItemTitle>{label}</ItemTitle>
+				<ItemDescription>{description}</ItemDescription>
+			</ItemContent>
+			<ItemActions>
+				<Switch
+					id={id}
+					aria-label={label}
+					checked={checked}
+					disabled={disabled}
+					onCheckedChange={onCheckedChange}
+				/>
+			</ItemActions>
+		</Item>
+	);
+}
+
+function CallGate({ id }: { id: string }) {
 	const router = useRouter();
-	const { data: user, isPending: isAuthPending } = useAuth();
+	const { data: user, isPending } = useAuth();
+	const { camera, setCamera, mic, setMic, companion, setCompanion } =
+		useJoinPreferences();
+	const [guestName, setGuestName] = useState("");
+	const [joining, setJoining] = useState(false);
 
-	const memberJoin = useQuery(
-		api.core.slot.join.queryOptions({
-			input: { id },
-			enabled: Boolean(user),
-			refetchOnWindowFocus: false,
-			refetchOnReconnect: false,
-		}),
-	);
-
-	const guestJoin = useQuery(
-		api.meeting.join.queryOptions({
-			input: { id },
-			enabled: !isAuthPending && !user,
-			refetchOnWindowFocus: false,
-			refetchOnReconnect: false,
-		}),
-	);
-
-	if (isAuthPending) return <Loader />;
-
-	const { data, isPending, isError, error, refetch } = user
-		? memberJoin
-		: guestJoin;
+	useEffect(() => {
+		const stored = getCallName(id);
+		if (stored) setGuestName(stored);
+	}, [id]);
 
 	if (isPending) return <Loader />;
 
-	if (isError || !data) {
-		return <CallNotice status="error" error={error} onRefresh={refetch} />;
-	}
+	const authName = user?.name?.trim();
+	const userName = authName || guestName.trim();
+	const needsName = !authName;
+	const canJoinAsCompanion = user?.role === "teacher";
+	const companionActive = canJoinAsCompanion && companion;
 
-	if (data.status === "live") {
-		return (
-			<CallRoom
-				session={id}
-				token={data.token}
-				slotId={id}
-				onEnd={() => router.push(`/call/${id}/ended` as "/")}
-			/>
-		);
-	}
+	const handleCompanion = (checked: boolean) => {
+		setCompanion(checked);
+		if (checked) {
+			setCamera(false);
+			setMic(false);
+		}
+	};
 
-	return <CallNotice status={data.status} onRefresh={refetch} />;
+	const toggleCamera = () => {
+		const next = !camera;
+		setCamera(next);
+		if (next) toast.success({ title: "Camera on" });
+		else toast.info({ title: "Camera off" });
+	};
+
+	const toggleMic = () => {
+		const next = !mic;
+		setMic(next);
+		if (next) toast.success({ title: "Microphone on" });
+		else toast.info({ title: "Microphone off" });
+	};
+
+	const handleJoin = async () => {
+		if (!userName) return;
+
+		setJoining(true);
+		try {
+			setCallName(id, userName);
+			if (!companionActive) await requestDevices(camera, mic);
+
+			const target = user ? "joined" : "guest";
+			const search = window.location.search;
+			router.push(`/call/${id}/${target}${search}` as "/");
+		} finally {
+			setJoining(false);
+		}
+	};
+
+	return (
+		<Frame className="h-full min-h-0 rounded-none">
+			<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
+				<Card className="w-full max-w-md">
+					<CardHeader>
+						<CardTitle>Ready to join?</CardTitle>
+						<CardDescription>
+							We will ask for camera and microphone access when you join.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<ItemGroup className="gap-2">
+							{needsName ? (
+								<Field>
+									<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
+									<Input
+										id="guest-name"
+										value={guestName}
+										onChange={(event) => setGuestName(event.target.value)}
+										placeholder="Enter your name"
+										autoComplete="name"
+									/>
+								</Field>
+							) : (
+								<Item variant="muted">
+									<ItemMedia variant="icon">
+										<UserRoundIcon />
+									</ItemMedia>
+									<ItemContent>
+										<ItemDescription>Joining as</ItemDescription>
+										<ItemTitle>{authName}</ItemTitle>
+									</ItemContent>
+								</Item>
+							)}
+
+							<ButtonGroup className="w-full">
+								<Button
+									type="button"
+									variant={camera ? "default" : "outline"}
+									className="flex-1"
+									disabled={companionActive}
+									aria-pressed={camera}
+									onClick={toggleCamera}
+								>
+									{camera ? <VideoIcon /> : <VideoOffIcon />}
+									Camera
+								</Button>
+								<Button
+									type="button"
+									variant={mic ? "default" : "outline"}
+									className="flex-1"
+									disabled={companionActive}
+									aria-pressed={mic}
+									onClick={toggleMic}
+								>
+									{mic ? <MicIcon /> : <MicOffIcon />}
+									Microphone
+								</Button>
+							</ButtonGroup>
+
+							{canJoinAsCompanion && (
+								<JoinPreference
+									id="join-companion"
+									icon={<MonitorSmartphoneIcon />}
+									label="Join as companion"
+									description="Join without camera or microphone, then share your screen from this device."
+									checked={companion}
+									onCheckedChange={handleCompanion}
+								/>
+							)}
+						</ItemGroup>
+					</CardContent>
+					<CardFooter>
+						<Button
+							disabled={!userName || joining}
+							onClick={() => void handleJoin()}
+						>
+							{joining ? <Spinner /> : <VideoIcon />}
+							Join session
+						</Button>
+					</CardFooter>
+				</Card>
+			</FramePanel>
+		</Frame>
+	);
 }
 
 export default function Page() {
 	const params = useParams<{ id: string }>();
 	const id = params?.id;
 
-	return (
-		<>
-			<Script src="/coi-serviceworker.js" />
-			{id ? <Call id={id} /> : <CallNotice status="not_found" />}
-		</>
-	);
+	if (!id) return <Loader />;
+
+	return <CallGate id={id} />;
 }

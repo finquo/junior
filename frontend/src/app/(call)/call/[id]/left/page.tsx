@@ -29,12 +29,12 @@ export default function Page() {
 				</CardHeader>
 				<CardFooter className="justify-end">
 					<ButtonGroup>
+						<CallAuthButton />
 						{id && (
 							<Button asChild>
 								<Link href={`/call/${id}` as "/"}>Rejoin meeting</Link>
 							</Button>
 						)}
-						<CallAuthButton />
 					</ButtonGroup>
 				</CardFooter>
 			</Card>

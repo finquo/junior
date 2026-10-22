@@ -8,7 +8,6 @@ import { CopyButton } from "@/components/copy";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
 	DrawerClose,
@@ -24,7 +23,6 @@ import {
 	Item,
 	ItemActions,
 	ItemContent,
-	ItemDescription,
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
@@ -72,10 +70,22 @@ export function ParticipantsDrawer({
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
-					<DrawerTitle>Participants ({participants.length})</DrawerTitle>
-					<DrawerDescription>
-						Everyone currently connected to this session.
-					</DrawerDescription>
+					<Item size="xs">
+						<ItemContent>
+							<DrawerTitle>Participants ({participants.length})</DrawerTitle>
+							<DrawerDescription>
+								Everyone currently connected to this session.
+							</DrawerDescription>
+						</ItemContent>
+						<ItemActions>
+							<CopyButton
+								text={() => window.location.href}
+								label="meeting link"
+								variant="ghost"
+								size="icon"
+							/>
+						</ItemActions>
+					</Item>
 				</DrawerHeader>
 				<DrawerInner>
 					<ItemGroup>
@@ -93,9 +103,6 @@ export function ParticipantsDrawer({
 									</ItemMedia>
 									<ItemContent>
 										<ItemTitle>{participantName(participant)}</ItemTitle>
-										<ItemDescription>
-											{voiceOn ? "Voice on" : "Voice off"}
-										</ItemDescription>
 									</ItemContent>
 									<ItemActions>
 										{voiceOn ? (
@@ -114,24 +121,16 @@ export function ParticipantsDrawer({
 					</ItemGroup>
 				</DrawerInner>
 				<DrawerFooter>
-					<ButtonGroup>
-						<DrawerClose asChild>
-							<Button variant="outline">
-								<XIcon />
-								Close
-							</Button>
-						</DrawerClose>
-						<Button onClick={() => void invite()}>
-							<UserPlusIcon />
-							Invite
+					<DrawerClose asChild>
+						<Button variant="outline">
+							<XIcon />
+							Close
 						</Button>
-						<CopyButton
-							text={() => window.location.href}
-							label="meeting link"
-							variant="outline"
-							size="icon"
-						/>
-					</ButtonGroup>
+					</DrawerClose>
+					<Button onClick={() => void invite()}>
+						<UserPlusIcon />
+						Invite
+					</Button>
 				</DrawerFooter>
 			</DrawerContent>
 		</Drawer>

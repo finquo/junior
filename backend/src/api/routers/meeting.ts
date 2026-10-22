@@ -1,21 +1,27 @@
 import z from "zod";
 import { db } from "@/services";
+import { DEMO_ID, DEMO_SESSION } from "@/zoom/demo";
 import { generateZoomToken } from "@/zoom/jwt";
 import { publicProcedure, tryAPI } from "../procedure";
 
 const JOIN_WINDOW = 10 * 60 * 1000;
 
-// Dev-only sandbox session. Remove before deploying.
-const DEMO_SESSION = "finquo-demo";
-
 export const meetingRouter = {
-	demo: publicProcedure.handler(async () => ({
-		session: DEMO_SESSION,
-		token: await generateZoomToken(DEMO_SESSION, 0),
-	})),
 	join: publicProcedure
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ input }) => {
+			// Guest demo sandbox. Remove this branch before deploying.
+			if (input.id === DEMO_ID) {
+				const now = Date.now();
+				return {
+					status: "live",
+					session: DEMO_SESSION,
+					startTime: new Date(now),
+					endTime: new Date(now + 2 * 60 * 60 * 1000),
+					token: await generateZoomToken(DEMO_SESSION, 0),
+				} as const;
+			}
+
 			const slot = await tryAPI(
 				"db-meeting-join-slot",
 				db.query.slot.findFirst({
@@ -43,6 +49,7 @@ export const meetingRouter = {
 
 			return {
 				status: "live",
+				session: slot.id,
 				startTime,
 				endTime,
 				token: await generateZoomToken(slot.id, 0),
