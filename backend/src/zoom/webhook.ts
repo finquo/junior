@@ -7,6 +7,7 @@ import { hmacSha256Hex, timingSafeEqual, tryAPI } from "./jwt";
 type Payload<
 	D extends { [key: string]: unknown } = {
 		plainToken?: string;
+		download_token?: string;
 		account_id?: string;
 		object?: Record<string, unknown>;
 		[key: string]: unknown;
@@ -14,6 +15,7 @@ type Payload<
 > = {
 	event: string;
 	event_ts?: number;
+	download_token?: string;
 	payload?: D;
 };
 
@@ -23,6 +25,7 @@ type ZoomWebhookEnv<D extends object | undefined = Payload["payload"]> = {
 		category: string;
 		event: string;
 		timestamp?: number;
+		downloadToken?: string;
 	};
 };
 
@@ -66,6 +69,7 @@ export const zoomWebhookMiddleware = createMiddleware<ZoomWebhookEnv>(
 		c.set("category", category);
 		c.set("event", event);
 		c.set("timestamp", body.event_ts);
+		c.set("downloadToken", body.download_token);
 
 		await next();
 	},

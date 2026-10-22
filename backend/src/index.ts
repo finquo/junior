@@ -12,7 +12,8 @@ import z from "zod";
 import { appRouter } from "@/api/routers";
 import { createContext } from "./api/context";
 import { auth } from "./services";
-import { zoomEvents, zoomWebhookMiddleware } from "./zoom/webhook";
+import { zoomEventHandler } from "./zoom/handler";
+import { zoomWebhookMiddleware } from "./zoom/webhook";
 
 const app = new Hono({ strict: false }).basePath("/api");
 
@@ -35,18 +36,7 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 	return auth.handler(c.req.raw);
 });
 
-app.post(
-	"/zoom/webhook",
-	zoomWebhookMiddleware,
-	zoomEvents(
-		{},
-		{
-			before: async (c) => {
-				console.log(c.var.category, c.var.event, ":", c.var.data);
-			},
-		},
-	),
-);
+app.post("/zoom/webhook", zoomWebhookMiddleware, zoomEventHandler);
 
 const handler = new RPCHandler(appRouter, {
 	allowMethods: ["GET", ...RPC_DEFAULT_ALLOW_METHODS],
