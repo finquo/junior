@@ -13,8 +13,73 @@ import {
 	getSlotCheckStatus,
 	getUnavailableIntervals,
 } from "@/utils/slot";
+import { generateZoomToken } from "@/zoom/jwt";
+
+const JOIN_WINDOW = 10 * 60 * 1000;
 
 export const slotRouter = {
+	join: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const slot = await tryAPI(
+				"db-core-join-slot",
+				db.query.slot.findFirst({
+					where: { id: input.id },
+					columns: {
+						id: true,
+						startTime: true,
+						expectedEndTime: true,
+						endTime: true,
+						studentId: true,
+						teacherId: true,
+						schedulerId: true,
+					},
+				}),
+			);
+
+			if (!slot) return { status: "not_found" } as const;
+
+			const authorized = MapRole(context.role, {
+				admin: true,
+				scheduler: slot.schedulerId === context.user.id,
+				teacher: slot.teacherId === context.user.id,
+				student: slot.studentId === context.user.id,
+			});
+
+			if (!authorized)
+				throw getError(
+					"FORBIDDEN",
+					"You are not authorized to join this meeting",
+				);
+
+			const startTime = slot.startTime;
+			const endTime = slot.endTime ?? slot.expectedEndTime;
+			const now = Date.now();
+
+			if (now < startTime.getTime() - JOIN_WINDOW)
+				return { status: "upcoming", startTime, endTime } as const;
+
+			if (now > endTime.getTime())
+				return { status: "ended", startTime, endTime } as const;
+
+			const role = MapRole(context.role, {
+				admin: 1,
+				scheduler: 1,
+				teacher: 1,
+				student: 0,
+			});
+
+			return {
+				status: "live",
+				startTime,
+				endTime,
+				token: await generateZoomToken(slot.id, role),
+			} as const;
+		}),
 	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
 		async ({ context }) => {
 			return await getAPI(
@@ -42,7 +107,7 @@ export const slotRouter = {
 			);
 		},
 	),
-	get: getRolesProcedure(["admin", "scheduler", "teacher"])
+	get: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
 		.input(
 			z.object({
 				id: z.string(),
@@ -63,6 +128,10 @@ export const slotRouter = {
 						teacher: {
 							id: input.id,
 							teacherId: context.user.id,
+						},
+						student: {
+							id: input.id,
+							studentId: context.user.id,
 						},
 					}),
 				}),

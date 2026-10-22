@@ -233,3 +233,19 @@ video-player {
 	height: auto;
 	aspect-ratio: 16 / 9;
 }
+
+/* Screen-share surfaces keep the shared content contained instead of forcing 16:9. */
+.call-screenshare canvas,
+.call-screenshare video {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.call-screenshare-remote video-player,
+.call-screenshare-remote video-player video {
+	width: 100%;
+	height: 100%;
+	aspect-ratio: auto;
+	object-fit: contain;
+}

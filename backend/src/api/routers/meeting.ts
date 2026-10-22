@@ -11,7 +11,7 @@ const DEMO_SESSION = "finquo-demo";
 export const meetingRouter = {
 	demo: publicProcedure.handler(async () => ({
 		session: DEMO_SESSION,
-		token: await generateZoomToken(DEMO_SESSION, 1),
+		token: await generateZoomToken(DEMO_SESSION, 0),
 	})),
 	join: publicProcedure
 		.input(z.object({ id: z.string() }))
@@ -45,7 +45,7 @@ export const meetingRouter = {
 				status: "live",
 				startTime,
 				endTime,
-				token: await generateZoomToken(slot.id),
+				token: await generateZoomToken(slot.id, 0),
 			} as const;
 		}),
 };
