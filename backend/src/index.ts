@@ -11,6 +11,7 @@ import { logger } from "hono/logger";
 import z from "zod";
 import { appRouter } from "@/api/routers";
 import { createContext } from "./api/context";
+import { bot } from "./chat/whatsapp";
 import { auth } from "./services";
 import { zoomEventHandler } from "./zoom/handler";
 import { zoomWebhookMiddleware } from "./zoom/webhook";
@@ -37,6 +38,10 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 });
 
 app.post("/zoom/webhook", zoomWebhookMiddleware, zoomEventHandler);
+
+app.on(["POST", "GET"], "/whatsapp/webhook", async (c) => {
+	return bot.webhooks.whatsapp(c.req.raw);
+});
 
 const handler = new RPCHandler(appRouter, {
 	allowMethods: ["GET", ...RPC_DEFAULT_ALLOW_METHODS],
