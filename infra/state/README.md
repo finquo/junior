@@ -4,11 +4,11 @@ The shared, stateful infrastructure for one AWS account: today the Postgres inst
 
 `development` and `production` live in **separate AWS accounts**, so this root is applied once per account with identical resource names — each account has its own bucket, state, database, and SSM parameter.
 
-App stacks never build the database URL themselves. `db.tf` publishes it to SSM SecureString `/finquo/db/url`, and each deployment reads it:
+App stacks never build the database URL themselves. `db.tf` publishes it to SSM SecureString `/finquo-junior/db/url`, and each deployment reads it:
 
 ```hcl
 data "aws_ssm_parameter" "database_url" {
-	name = "/finquo/db/url"
+	name = "/finquo-junior/db/url"
 }
 ```
 
@@ -27,19 +27,38 @@ if ($LASTEXITCODE -ne 0 -or -not $json.Trim().StartsWith("{")) { throw "varlock 
 
 ## Apply
 
+The state bucket is not in the backend block (S3 bucket names are global, so each environment needs its own), which means every init must name it:
+
 ```powershell
 cd infra/state
-tofu init
+tofu init -backend-config="bucket=finquo-junior-opentofu-development"
 tofu validate
 tofu plan -out=tfplan
 tofu apply tfplan
+```
+
+| Environment | State bucket | Media bucket |
+|---|---|---|
+| development | `finquo-junior-opentofu-development` | `finquo-junior-media-development` |
+| production | `finquo-junior-opentofu-production` | `finquo-junior-media-production` |
+
+Each environment's state bucket is created once, by hand, in that environment's account:
+
+```bash
+# development
+aws s3api create-bucket --bucket finquo-junior-opentofu-development --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
+aws s3api put-bucket-versioning --bucket finquo-junior-opentofu-development --versioning-configuration Status=Enabled
+
+# production
+aws s3api create-bucket --bucket finquo-junior-opentofu-production --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
+aws s3api put-bucket-versioning --bucket finquo-junior-opentofu-production --versioning-configuration Status=Enabled
 ```
 
 `aws_db_instance` takes 8-15 minutes. After it completes:
 
 ```powershell
 tofu output -raw database_url
-aws ssm get-parameter --name /finquo/db/url --with-decryption --query Parameter.Value --output text
+aws ssm get-parameter --name /finquo-junior/db/url --with-decryption --query Parameter.Value --output text
 ```
 
 ## Environment tag
@@ -59,10 +78,10 @@ CI passes it as `TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'pro
 
 | Resource | Notes |
 |---|---|
-| `aws_db_instance.db` | `postgres 17`, `db.t4g.micro`, gp3 20 GB autoscaling to 100 GB, 7-day backups, encrypted, publicly reachable, database `finquo`, master user `finquo_admin` |
+| `aws_db_instance.db` | `postgres 17`, `db.t4g.micro`, gp3 20 GB autoscaling to 100 GB, 7-day backups, encrypted, publicly reachable, database `junior`, master user `finquo` |
 | `aws_security_group.db` | 5432 open to `0.0.0.0/0` because Lambda and GitHub runner IPs are not stable. TLS + password are the gate |
 | `aws_db_subnet_group.db` | default VPC subnets in `ap-south-1a/b/c` |
-| `aws_ssm_parameter.database_url` | `/finquo/db/url`, the contract every deployment reads |
+| `aws_ssm_parameter.database_url` | `/finquo-junior/db/url`, the contract every deployment reads |
 
 Deliberately absent: RDS Proxy (no pooler), Multi-AZ, Performance Insights, log exports, enhanced monitoring. `max: 1` in the backend's postgres client is what keeps `db.t4g.micro` (~112 connections) from being exhausted by Lambda concurrency.
 
@@ -115,6 +134,7 @@ Do not point two roots at the same `key`. They would overwrite each other's stat
 ## Destroy
 
 ```powershell
+tofu init -backend-config="bucket=finquo-junior-opentofu-development"
 tofu plan -destroy   # review first
 tofu destroy
 ```

@@ -10,21 +10,22 @@ locals {
 			NODE_ENV		= "production"
 			DATABASE_URL		= data.aws_ssm_parameter.database_url.value
 			DATABASE_URL_DIRECT	= data.aws_ssm_parameter.database_url.value
+			MEDIA_BUCKET		= aws_s3_bucket.media.bucket
 		}
 	)
 }
 
 data "aws_ssm_parameter" "database_url" {
-	name	= "/finquo/db/url"
+	name	= "/finquo-junior/db/url"
 }
 
 resource "aws_cloudwatch_log_group" "next" {
-	name			= "/aws/lambda/finquo-next"
+	name			= "/aws/lambda/finquo-junior-next"
 	retention_in_days	= 14
 }
 
 resource "aws_iam_role" "next_lambda" {
-	name	= "finquo-next-lambda"
+	name	= "finquo-junior-next-lambda"
 
 	assume_role_policy	= jsonencode({
 		Version		= "2012-10-17"
@@ -41,7 +42,7 @@ resource "aws_iam_role" "next_lambda" {
 }
 
 resource "aws_iam_role_policy" "next_lambda_logs" {
-	name	= "finquo-next-lambda-logs"
+	name	= "finquo-junior-next-lambda-logs"
 	role	= aws_iam_role.next_lambda.id
 
 	policy	= jsonencode({
@@ -57,7 +58,7 @@ resource "aws_iam_role_policy" "next_lambda_logs" {
 }
 
 resource "aws_lambda_function" "next" {
-	function_name		= "finquo-next"
+	function_name		= "finquo-junior-next"
 	role			= aws_iam_role.next_lambda.arn
 
 	filename		= "../../build.zip"

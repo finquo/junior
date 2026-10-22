@@ -22,12 +22,12 @@ data "aws_subnets" "default" {
 }
 
 resource "aws_db_subnet_group" "db" {
-	name		= "finquo-db"
+	name		= "finquo-junior-db"
 	subnet_ids	= data.aws_subnets.default.ids
 }
 
 resource "aws_security_group" "db" {
-	name		= "finquo-db"
+	name		= "finquo-junior-db"
 	description	= "Postgres access for all finquo deployments"
 	vpc_id		= data.aws_vpc.default.id
 }
@@ -51,7 +51,7 @@ resource "aws_vpc_security_group_egress_rule" "db_all" {
 }
 
 resource "aws_db_instance" "db" {
-	identifier		= "finquo-db"
+	identifier		= "finquo-junior-db"
 	engine			= "postgres"
 	engine_version		= "17"
 	instance_class		= "db.t4g.micro"
@@ -61,8 +61,8 @@ resource "aws_db_instance" "db" {
 	storage_type		= "gp3"
 	storage_encrypted	= true
 
-	db_name			= "finquo"
-	username		= "finquo_admin"
+	db_name			= "junior"
+	username		= "finquo"
 	password		= local.db_password
 
 	db_subnet_group_name	= aws_db_subnet_group.db.name
@@ -76,7 +76,7 @@ resource "aws_db_instance" "db" {
 }
 
 resource "aws_ssm_parameter" "database_url" {
-	name	= "/finquo/db/url"
+	name	= "/finquo-junior/db/url"
 	type	= "SecureString"
 	value	= local.db_url
 }

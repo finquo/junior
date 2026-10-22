@@ -7,7 +7,6 @@ terraform {
  	}
 
 	backend "s3" {
-		bucket	= "finquo-app-opentofu"
 		key		= "app/terraform.tfstate"
 		region	= "ap-south-1"
 		use_lockfile = true

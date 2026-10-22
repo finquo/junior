@@ -78,5 +78,5 @@ jobs:
                   TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
               run: |
                   cd infra/app
-                  tofu init
+                  tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"
                   tofu apply -auto-approve
