@@ -17,8 +17,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				enrollment_advisor={null}
 				student={null}
 				qa_auditor={null}
+				isPending={<EmptySidebar />}
 			>
-				<EmptySidebar />
+				<></>
 			</RoleRender>
 			<SidebarInset>
 				<SideBarHeader />

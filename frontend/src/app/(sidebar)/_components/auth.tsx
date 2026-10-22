@@ -1,7 +1,9 @@
 "use client";
 
 import type { USER } from "backend/auth";
+import { sileo as toast } from "sileo";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardDescription,
@@ -9,11 +11,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/auth";
+import { authClient, useAuth } from "@/hooks/auth";
 
 export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 	function Layout({ children }: { children: React.ReactNode }) {
-		const { data, isPending } = useAuth();
+		const { data, isPending, impersonation } = useAuth();
 
 		if (isPending)
 			return (
@@ -57,7 +59,28 @@ export function GetAuthLayout(role: NonNullable<USER["role"]>) {
 								Please login as {role} to access this page.
 							</CardDescription>
 						</CardHeader>
-						<ErrorAuthCardFooter label={"My Profile"} link={"/me"} />
+						<ErrorAuthCardFooter label={"My Profile"} link={"/me"}>
+							{impersonation && (
+								<Button
+									variant={"destructive"}
+									onClick={async () =>
+										await authClient.admin.stopImpersonating(
+											{},
+											{
+												throw: true,
+												onSuccess: () => {
+													toast.success({
+														title: "You’re back to your role",
+													});
+												},
+											},
+										)
+									}
+								>
+									Stop Impersonating
+								</Button>
+							)}
+						</ErrorAuthCardFooter>
 					</Card>
 				</div>
 			);

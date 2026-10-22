@@ -1,158 +1,205 @@
-import { cn } from "cn";
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
-import { Badge } from "@/components/reui/badge";
-import { Frame, FrameHeader, FramePanel } from "@/components/reui/frame";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { langFlag, langName } from "language-emoji";
 import {
-	Timeline,
-	TimelineContent,
-	TimelineHeader,
-	TimelineIndicator,
-	TimelineItem,
-	TimelineSeparator,
-	TimelineTitle,
-} from "@/components/reui/timeline";
+	CalendarIcon,
+	GraduationCapIcon,
+	LanguagesIcon,
+	MapPinIcon,
+	UserRoundIcon,
+} from "lucide-react";
+import Link from "next/link";
+import Loader from "@/components/loader";
+import {
+	Frame,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Spinner } from "@/components/ui/spinner";
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemMedia,
+	ItemTitle,
+} from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/hooks/api";
+import { useAuth } from "@/hooks/auth";
+import { FetchUser } from "@/hooks/user";
+import { getInitials, snakeToTitleCase } from "@/lib/utils";
 
-const pipelineSteps = [
-	{
-		id: 1,
-		title: "Source Code Checkout",
-		duration: "12s",
-		status: "completed",
-		description: "Successfully fetched latest changes from the main branch.",
-		user: {
-			name: "Alex Johnson",
-			avatar:
-				"https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=96&h=96&dpr=2&q=80",
-		},
-	},
-	{
-		id: 2,
-		title: "Dependency Installation",
-		duration: "1m 45s",
-		status: "completed",
-		description: "All npm packages installed and cached for future builds.",
-		user: {
-			name: "Sarah Chen",
-			avatar:
-				"https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=96&h=96&dpr=2&q=80",
-		},
-	},
-	{
-		id: 3,
-		title: "Unit & Integration Tests",
-		duration: "Running",
-		status: "active",
-		description: "Running 142 test suites across the entire codebase...",
-		user: {
-			name: "Michael Rodriguez",
-			avatar:
-				"https://images.unsplash.com/photo-1584308972272-9e4e7685e80f?w=96&h=96&dpr=2&q=80",
-		},
-	},
-	{
-		id: 4,
-		title: "Production Build",
-		duration: "Pending",
-		status: "pending",
-		description: "Optimizing assets and generating static site pages.",
-		user: {
-			name: "Emma Wilson",
-			avatar:
-				"https://images.unsplash.com/photo-1485893086445-ed75865251e0?w=96&h=96&dpr=2&q=80",
-		},
-	},
-];
+export default function Page() {
+	const { data: user } = useAuth<true>();
+	const {
+		data: student,
+		isPending,
+		isError,
+	} = useQuery(api.core.self.student.queryOptions());
 
-function StatusIcon({ status }: { status: string }) {
-	if (status === "completed") return <CheckIcon className="size-3.5" />;
-	if (status === "active") return <Spinner className="size-3.5" />;
-	return <CircleIcon className="size-3.5" />;
-}
+	if (isPending || !user) return <Loader />;
 
-function StatusBadge({
-	status,
-	duration,
-}: {
-	status: string;
-	duration: string;
-}) {
-	const variant =
-		status === "completed"
-			? "success-light"
-			: status === "active"
-				? "info-light"
-				: "warning-light";
+	if (isError || !student) {
+		return (
+			<Alert variant="destructive">
+				<AlertTitle>Profile Unavailable</AlertTitle>
+				<AlertDescription>
+					Your student profile could not be loaded.
+				</AlertDescription>
+			</Alert>
+		);
+	}
+
+	const address = student.address;
+	const languages = student.languages ?? [];
 
 	return (
-		<Badge variant={variant} size="sm">
-			{duration}
-		</Badge>
-	);
-}
+		<Frame spacing="sm">
+			<FramePanel>
+				<Item>
+					<ItemMedia>
+						<Avatar size="lg">
+							<AvatarImage src={user.image} alt={user.name} />
+							<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+						</Avatar>
+					</ItemMedia>
+					<ItemContent>
+						<ItemTitle>
+							<span>{user.name}</span>
+							<Badge variant="secondary">{snakeToTitleCase(user.role)}</Badge>
+						</ItemTitle>
+						<ItemDescription>{user.email}</ItemDescription>
+					</ItemContent>
+					<ItemActions>
+						<Button asChild variant="outline" size="sm">
+							<Link href="/student/edit">Edit</Link>
+						</Button>
+					</ItemActions>
+				</Item>
+			</FramePanel>
 
-export default function () {
-	return (
-		<Timeline defaultValue={3}>
-			{pipelineSteps.map((step) => (
-				<TimelineItem key={step.id} step={step.id} className="ms-10 pb-10">
-					<TimelineHeader>
-						<TimelineSeparator className="group-data-[orientation=vertical]/timeline:-left-7 group-data-[orientation=vertical]/timeline:h-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=vertical]/timeline:translate-y-7" />
-						<div className="flex items-center gap-2">
-							<TimelineTitle className="font-semibold text-sm">
-								{step.title}
-							</TimelineTitle>
-							<StatusBadge status={step.status} duration={step.duration} />
-						</div>
-						<TimelineIndicator
-							className={cn(
-								"flex size-6 items-center justify-center border-none bg-muted text-muted-foreground group-data-[orientation=vertical]/timeline:-left-7 group-data-completed/timeline-item:bg-primary group-data-completed/timeline-item:text-primary-foreground",
-								step.status === "active" && "ring-2 ring-primary/20",
-							)}
-						>
-							<StatusIcon status={step.status} />
-						</TimelineIndicator>
-					</TimelineHeader>
-					<TimelineContent className="mt-2">
-						<Frame stacked dense spacing="sm">
-							<Collapsible defaultOpen className="group/collapsible">
-								<CollapsibleTrigger className="flex w-full">
-									<FrameHeader className="flex grow flex-row items-center justify-between gap-2">
-										<div className="flex items-center gap-2">
-											<Avatar className="size-5">
-												<AvatarImage
-													src={step.user.avatar}
-													alt={step.user.name}
-												/>
-												<AvatarFallback>
-													{step.user.name.charAt(0)}
-												</AvatarFallback>
-											</Avatar>
-											<span className="font-medium text-muted-foreground text-xs">
-												{step.user.name}
-											</span>
-										</div>
-										<ChevronRightIcon className="size-4 text-muted-foreground transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-									</FrameHeader>
-								</CollapsibleTrigger>
-								<CollapsibleContent>
-									<FramePanel>
-										<p className="text-muted-foreground text-sm leading-relaxed">
-											{step.description}
-										</p>
-									</FramePanel>
-								</CollapsibleContent>
-							</Collapsible>
-						</Frame>
-					</TimelineContent>
-				</TimelineItem>
-			))}
-		</Timeline>
+			<FramePanel>
+				<FrameHeader>
+					<FrameTitle>Details</FrameTitle>
+					<FrameDescription>What your student record holds</FrameDescription>
+				</FrameHeader>
+				<ItemGroup>
+					<Item variant="outline">
+						<ItemMedia variant="icon">
+							<UserRoundIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>Mentor</ItemTitle>
+							<FetchUser
+								id={student.mentorId}
+								isPending={<Skeleton className="h-4 w-24" />}
+								notFound={<ItemDescription>Not assigned</ItemDescription>}
+							>
+								{(mentor) => <ItemDescription>{mentor.name}</ItemDescription>}
+							</FetchUser>
+						</ItemContent>
+						<ItemActions>
+							<Button asChild variant="outline" size="sm">
+								<Link href="/student/mentor">View</Link>
+							</Button>
+						</ItemActions>
+					</Item>
+
+					<Item variant="outline">
+						<ItemMedia variant="icon">
+							<UserRoundIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>Supervisor</ItemTitle>
+							<FetchUser
+								id={student.supervisorId}
+								isPending={<Skeleton className="h-4 w-24" />}
+								notFound={<ItemDescription>Not assigned</ItemDescription>}
+							>
+								{(supervisor) => (
+									<ItemDescription>{supervisor.name}</ItemDescription>
+								)}
+							</FetchUser>
+						</ItemContent>
+					</Item>
+
+					{student.schooling && (
+						<Item variant="outline">
+							<ItemMedia variant="icon">
+								<GraduationCapIcon />
+							</ItemMedia>
+							<ItemContent>
+								<ItemTitle>Schooling</ItemTitle>
+								<ItemDescription>
+									{snakeToTitleCase(student.schooling)}
+								</ItemDescription>
+							</ItemContent>
+						</Item>
+					)}
+
+					{languages.length > 0 && (
+						<Item variant="outline">
+							<ItemMedia variant="icon">
+								<LanguagesIcon />
+							</ItemMedia>
+							<ItemContent>
+								<ItemTitle>Languages</ItemTitle>
+							</ItemContent>
+							<ItemActions>
+								{languages.map((language) => (
+									<Badge key={language} variant="secondary">
+										{langFlag(language)} {langName(language)}
+									</Badge>
+								))}
+							</ItemActions>
+						</Item>
+					)}
+
+					{address && (
+						<Item variant="outline">
+							<ItemMedia variant="icon">
+								<MapPinIcon />
+							</ItemMedia>
+							<ItemContent>
+								<ItemTitle>Address</ItemTitle>
+								<ItemDescription>
+									{[
+										address.line1,
+										address.line2,
+										address.city,
+										address.state,
+										address.postalCode,
+										address.country,
+									]
+										.filter(Boolean)
+										.join(", ")}
+								</ItemDescription>
+							</ItemContent>
+						</Item>
+					)}
+
+					<Item variant="outline">
+						<ItemMedia variant="icon">
+							<CalendarIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>Member Since</ItemTitle>
+							<ItemDescription>
+								{format(new Date(student.createdAt), "MMMM d, yyyy")}
+							</ItemDescription>
+						</ItemContent>
+					</Item>
+				</ItemGroup>
+			</FramePanel>
+		</Frame>
 	);
 }

@@ -8,11 +8,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { ErrorAuthCardFooter } from "../_components/login";
-import { SideBarHeader } from "../(sidebar)/_components/header";
-import { SidebarConfig } from "./_components/sidebar";
+import { StudentDock } from "./_components/dock";
+import "@/components/arc/foundation.css";
 
 export default function Layout({
 	children,
@@ -52,12 +51,9 @@ export default function Layout({
 		);
 
 	return (
-		<SidebarProvider>
-			<SidebarConfig />
-			<SidebarInset>
-				<SideBarHeader />
-				<div className="p-3">{children}</div>
-			</SidebarInset>
-		</SidebarProvider>
+		<>
+			<Container>{children}</Container>
+			<StudentDock />
+		</>
 	);
 }

@@ -13,6 +13,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
+import { Countdown } from "@/components/arc/countdown/countdown";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { ColorBadge } from "@/components/ui/badge";
@@ -45,6 +46,8 @@ import { useAuth } from "@/hooks/auth";
 import { getCallName, setCallName } from "../_components/call-name";
 import { CallNotice } from "../_components/call-notice";
 import { useJoinPreferences } from "../_components/call-preferences";
+
+const JOIN_WINDOW_MS = 10 * 60 * 1000;
 
 async function requestDevices(video: boolean, audio: boolean) {
 	if (!navigator.mediaDevices?.getUserMedia) {
@@ -151,6 +154,13 @@ function CallGate({ id }: { id: string }) {
 	const preflight = user ? memberPreflight : guestPreflight;
 
 	useEffect(() => {
+		if (preflight.data?.status !== "upcoming") return;
+
+		const interval = setInterval(() => void preflight.refetch(), 30_000);
+		return () => clearInterval(interval);
+	}, [preflight.data?.status, preflight.refetch]);
+
+	useEffect(() => {
 		const stored = getCallName(id);
 		if (stored) setGuestName(stored);
 	}, [id]);
@@ -175,7 +185,7 @@ function CallGate({ id }: { id: string }) {
 
 	const meeting = preflight.data;
 
-	if (meeting.status !== "live") {
+	if (meeting.status === "not_found" || meeting.status === "ended") {
 		return (
 			<Frame className="h-full min-h-0 rounded-none">
 				<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
@@ -184,6 +194,9 @@ function CallGate({ id }: { id: string }) {
 			</Frame>
 		);
 	}
+
+	const isLive = meeting.status === "live";
+	const joinOpensAt = new Date(meeting.startTime).getTime() - JOIN_WINDOW_MS;
 
 	const authName = user?.name?.trim();
 	const userName = authName || guestName.trim();
@@ -237,12 +250,18 @@ function CallGate({ id }: { id: string }) {
 			<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
 				<Card className="w-full max-w-md">
 					<CardHeader>
-						<CardTitle>Ready to join?</CardTitle>
+						<CardTitle>
+							{isLive ? "Ready to join?" : "Waiting for the meeting"}
+						</CardTitle>
 						<CardDescription>
-							We will ask for camera and microphone access when you join.
+							{isLive
+								? "We will ask for camera and microphone access when you join."
+								: "Join opens 10 minutes before the scheduled start."}
 						</CardDescription>
 						<CardAction>
-							<ColorBadge variant="success">Live</ColorBadge>
+							<ColorBadge variant={isLive ? "success" : "info"}>
+								{isLive ? "Live" : "Upcoming"}
+							</ColorBadge>
 						</CardAction>
 					</CardHeader>
 					<CardContent>
@@ -259,6 +278,20 @@ function CallGate({ id }: { id: string }) {
 									</ItemTitle>
 								</ItemContent>
 							</Item>
+
+							{!isLive && (
+								<Item variant="muted" size="sm">
+									<ItemContent>
+										<ItemDescription>Join opens in</ItemDescription>
+										<Countdown
+											target={joinOpensAt}
+											label="Time until you can join"
+											completeLabel="Join open"
+											onComplete={() => void preflight.refetch()}
+										/>
+									</ItemContent>
+								</Item>
+							)}
 
 							{needsName ? (
 								<Field>
@@ -322,11 +355,17 @@ function CallGate({ id }: { id: string }) {
 					</CardContent>
 					<CardFooter>
 						<Button
-							disabled={!userName || joining}
+							disabled={!userName || joining || !isLive}
 							onClick={() => void handleJoin()}
 						>
-							{joining ? <Spinner /> : <VideoIcon />}
-							Join session
+							{joining ? (
+								<Spinner />
+							) : isLive ? (
+								<VideoIcon />
+							) : (
+								<CalendarClockIcon />
+							)}
+							{isLive ? "Join session" : "Waiting for meeting"}
 						</Button>
 					</CardFooter>
 				</Card>

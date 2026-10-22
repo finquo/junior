@@ -107,7 +107,7 @@ export function SidebarConfig({
 						{
 							title: "Programs",
 							url: "/programs",
-							icon: <VideoIcon />,
+							icon: <ComponentIcon />,
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,

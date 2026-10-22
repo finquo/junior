@@ -3,6 +3,7 @@ import { schema } from "@/db";
 import { UpdateStudentSchema } from "@/db/zod";
 import { db } from "@/services";
 import { getAPI, studentProcedure, tryAPI } from "../procedure";
+import { orderLessons } from "./core/program";
 
 export const studentRouter = {
 	get: studentProcedure.handler(async ({ context }) => {
@@ -51,6 +52,44 @@ export const studentRouter = {
 				.from(schema.slot)
 				.where(eq(schema.slot.studentId, context.user.id)),
 			[],
+		);
+	}),
+	getProgram: studentProcedure.handler(async ({ context }) => {
+		if (!context?.data?.program) return null;
+
+		return await tryAPI(
+			"db-student-get-program-query",
+			db.query.program.findFirst({
+				where: { id: context.data.program },
+				columns: {
+					name: true,
+					description: true,
+				},
+			}),
+		);
+	}),
+	getLessons: studentProcedure.handler(async ({ context }) => {
+		if (!context?.data?.program) return [];
+
+		const program = await tryAPI(
+			"db-student-get-lessons-order-query",
+			db.query.program.findFirst({
+				where: { id: context.data.program },
+				columns: { lessons: true },
+				with: {
+					lessonList: true,
+				},
+			}),
+		);
+
+		const attended = new Set(context?.data?.attendedLessons ?? []);
+
+		return orderLessons(program?.lessonList ?? [], program?.lessons ?? []).map(
+			(lesson, index) => ({
+				...lesson,
+				position: index + 1,
+				attended: attended.has(lesson.id),
+			}),
 		);
 	}),
 	update: studentProcedure

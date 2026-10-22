@@ -5,13 +5,15 @@ import { useAuth } from "./auth";
 
 type SwitchType<T extends string | number> = {
 	children?: React.ReactNode;
+	isPending?: React.ReactNode;
 } & {
 	[k in T]: React.ReactNode;
 };
 
 export function RoleRender({ children, ...options }: SwitchType<Role>) {
-	const { data } = useAuth();
+	const { data, isPending } = useAuth();
 
+	if (isPending) return options.isPending ?? children;
 	if (!data?.role) return children;
 
 	return options[data?.role] ?? children;

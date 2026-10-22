@@ -1,10 +1,10 @@
 "use client";
 
 import {
-	BookOpenCheckIcon,
 	CalendarFoldIcon,
 	CalendarHeartIcon,
 	CalendarX2Icon,
+	ComponentIcon,
 	GraduationCapIcon,
 	UserPenIcon,
 	VideoIcon,
@@ -52,7 +52,7 @@ export function SidebarConfig({
 						{
 							title: "Programs",
 							url: "/programs",
-							icon: <BookOpenCheckIcon />,
+							icon: <ComponentIcon />,
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,

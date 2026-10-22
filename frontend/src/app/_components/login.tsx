@@ -5,7 +5,11 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 
-export function ErrorAuthCardFooter(props?: { link?: string; label?: string }) {
+export function ErrorAuthCardFooter(props?: {
+	link?: string;
+	label?: string;
+	children?: React.ReactNode;
+}) {
 	const pathname = usePathname();
 	return (
 		<CardFooter>
@@ -22,6 +26,7 @@ export function ErrorAuthCardFooter(props?: { link?: string; label?: string }) {
 					Go to {props?.label ?? "Login"}
 				</Link>
 			</Button>
+			{props?.children}
 		</CardFooter>
 	);
 }
