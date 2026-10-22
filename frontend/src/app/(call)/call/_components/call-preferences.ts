@@ -1,20 +1,26 @@
 "use client";
 
-import { parseAsBoolean, useQueryState } from "nuqs";
-
-const options = {
-	history: "replace",
-	clearOnDefault: true,
-} as const;
-
-const cameraParser = parseAsBoolean.withOptions(options).withDefault(true);
-const micParser = parseAsBoolean.withOptions(options).withDefault(true);
-const companionParser = parseAsBoolean.withOptions(options).withDefault(false);
+import { parseAsBoolean, useQueryStates } from "nuqs";
 
 export function useJoinPreferences() {
-	const [camera, setCamera] = useQueryState("camera", cameraParser);
-	const [mic, setMic] = useQueryState("mic", micParser);
-	const [companion, setCompanion] = useQueryState("companion", companionParser);
+	const [preferences, setPreferences] = useQueryStates(
+		{
+			camera: parseAsBoolean.withDefault(true),
+			mic: parseAsBoolean.withDefault(true),
+			companion: parseAsBoolean.withDefault(false),
+		},
+		{
+			history: "replace",
+			clearOnDefault: true,
+		},
+	);
 
-	return { camera, setCamera, mic, setMic, companion, setCompanion };
+	return {
+		camera: preferences.camera,
+		mic: preferences.mic,
+		companion: preferences.companion,
+		setCamera: (camera: boolean) => setPreferences({ camera }),
+		setMic: (mic: boolean) => setPreferences({ mic }),
+		setCompanion: (companion: boolean) => setPreferences({ companion }),
+	};
 }

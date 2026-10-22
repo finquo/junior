@@ -4,16 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
 	ClockIcon,
+	ExternalLinkIcon,
 	GraduationCapIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ColorBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Drawer,
+	DrawerClose,
 	DrawerContent,
 	DrawerDescription,
+	DrawerFooter,
 	DrawerHeader,
 	DrawerInner,
 	DrawerTitle,
@@ -25,6 +29,7 @@ import {
 	ItemDescription,
 	ItemGroup,
 	ItemMedia,
+	ItemSeparator,
 	ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -143,45 +148,47 @@ function DetailsContent({ data }: { data: SlotData }) {
 	return (
 		<>
 			<ItemGroup>
-				<FetchLesson
-					id={data.lessonId}
-					isPending={
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<GraduationCapIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>Loading lesson…</ItemTitle>
-								<Skeleton className="h-3 w-32" />
-							</ItemContent>
-						</Item>
-					}
-					notFound={
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<GraduationCapIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>Lesson not found</ItemTitle>
-							</ItemContent>
-						</Item>
-					}
-				>
-					{(lesson) => (
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<GraduationCapIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>{lesson.name}</ItemTitle>
-								<ItemDescription>{lesson.description}</ItemDescription>
-							</ItemContent>
-							<ColorBadge variant={statusVariant[data.status] ?? "secondary"}>
-								{snakeToTitleCase(data.status)}
-							</ColorBadge>
-						</Item>
-					)}
-				</FetchLesson>
+				<a href={`/lessons/${data.lessonId}`} target="_blank" rel="noreferrer">
+					<FetchLesson
+						id={data.lessonId}
+						isPending={
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<GraduationCapIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>Loading lesson…</ItemTitle>
+									<Skeleton className="h-3 w-32" />
+								</ItemContent>
+							</Item>
+						}
+						notFound={
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<GraduationCapIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>Lesson not found</ItemTitle>
+								</ItemContent>
+							</Item>
+						}
+					>
+						{(lesson) => (
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<GraduationCapIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>{lesson.name}</ItemTitle>
+									<ItemDescription>{lesson.description}</ItemDescription>
+								</ItemContent>
+								<ColorBadge variant={statusVariant[data.status] ?? "secondary"}>
+									{snakeToTitleCase(data.status)}
+								</ColorBadge>
+							</Item>
+						)}
+					</FetchLesson>
+				</a>
 
 				<DetailRow
 					icon={<CalendarClockIcon />}
@@ -204,7 +211,7 @@ function DetailsContent({ data }: { data: SlotData }) {
 					value={`${durationMinutes} minutes`}
 				/>
 			</ItemGroup>
-
+			<ItemSeparator />
 			<ItemGroup>
 				<ParticipantRow label="Student" userId={data.studentId} />
 				<ParticipantRow label="Teacher" userId={data.teacherId} />
@@ -288,6 +295,17 @@ export function MeetingDetails({
 				<DrawerInner>
 					<DetailsBody slotId={slotId} />
 				</DrawerInner>
+				<DrawerFooter>
+					<Button asChild>
+						<a href={`/slots/${slotId}`} target="_blank" rel="noreferrer">
+							<ExternalLinkIcon />
+							Open Session Details
+						</a>
+					</Button>
+					<DrawerClose asChild>
+						<Button variant="outline">Close</Button>
+					</DrawerClose>
+				</DrawerFooter>
 			</DrawerContent>
 		</Drawer>
 	);

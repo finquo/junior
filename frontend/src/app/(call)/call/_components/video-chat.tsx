@@ -155,45 +155,6 @@ function VideoTile({
 export function VideoChat({
 	session,
 	token,
-	slotId,
-	userName,
-	canViewDetails,
-	canEndMeeting,
-	disableVideo,
-	disableAudio,
-	onLeave,
-	onEnd,
-}: {
-	session: string;
-	token: string;
-	slotId?: string;
-	userName: string;
-	canViewDetails: boolean;
-	canEndMeeting: boolean;
-	disableVideo: boolean;
-	disableAudio: boolean;
-	onLeave: () => void;
-	onEnd?: () => void;
-}) {
-	return (
-		<Session
-			session={session}
-			token={token}
-			userName={userName}
-			slotId={slotId}
-			canViewDetails={canViewDetails}
-			canEndMeeting={canEndMeeting}
-			disableVideo={disableVideo}
-			disableAudio={disableAudio}
-			onLeave={onLeave}
-			onEnd={onEnd}
-		/>
-	);
-}
-
-function Session({
-	session,
-	token,
 	userName,
 	slotId,
 	canViewDetails,
@@ -327,7 +288,6 @@ function Session({
 					))}
 
 				<div className="absolute right-4 bottom-4 z-10 flex flex-col items-end gap-2">
-					{/* Kept mounted so the SDK always has a share surface to draw into. */}
 					<div
 						className={cn(
 							"call-screenshare aspect-video min-w-64 overflow-hidden rounded-lg shadow-lg",
@@ -350,7 +310,7 @@ function Session({
 					<Frame className="shadow-lg">
 						<ButtonGroup>
 							<Button
-								variant="outline"
+								variant="secondary"
 								size="icon-lg"
 								onClick={() => void toggleMicrophone()}
 								aria-label={isAudioMuted ? "Unmute" : "Mute"}
@@ -358,7 +318,7 @@ function Session({
 								{isAudioMuted ? <MicOffIcon /> : <MicIcon />}
 							</Button>
 							<Button
-								variant="outline"
+								variant="secondary"
 								size="icon-lg"
 								onClick={() => void toggleCamera()}
 								aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
@@ -366,7 +326,7 @@ function Session({
 								{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
 							</Button>
 							<Button
-								variant={isScreensharing ? "default" : "outline"}
+								variant={isScreensharing ? "default" : "secondary"}
 								size="icon-lg"
 								onClick={() => void toggleScreenshare()}
 								aria-label={
@@ -377,7 +337,7 @@ function Session({
 							</Button>
 							<ParticipantsDrawer participants={participants}>
 								<Button
-									variant="outline"
+									variant="secondary"
 									size="icon-lg"
 									aria-label="Show participants"
 								>
@@ -387,7 +347,7 @@ function Session({
 							{slotId && canViewDetails && (
 								<MeetingDetails slotId={slotId}>
 									<Button
-										variant="outline"
+										variant="secondary"
 										size="icon-lg"
 										aria-label="Show meeting details"
 									>

@@ -1,6 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
+	CalendarClockIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
@@ -13,10 +15,12 @@ import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
+import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
+	CardAction,
 	CardContent,
 	CardDescription,
 	CardFooter,
@@ -36,8 +40,10 @@ import {
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { api } from "@/hooks/api";
 import { useAuth } from "@/hooks/auth";
 import { getCallName, setCallName } from "../_components/call-name";
+import { CallNotice } from "../_components/call-notice";
 import { useJoinPreferences } from "../_components/call-preferences";
 
 async function requestDevices(video: boolean, audio: boolean) {
@@ -72,6 +78,13 @@ async function requestDevices(video: boolean, audio: boolean) {
 				"You can still join and allow access from the in-call controls.",
 		});
 	}
+}
+
+function formatDateTime(value: Date | string) {
+	return new Date(value).toLocaleString([], {
+		dateStyle: "medium",
+		timeStyle: "short",
+	});
 }
 
 function JoinPreference({
@@ -119,12 +132,58 @@ function CallGate({ id }: { id: string }) {
 	const [guestName, setGuestName] = useState("");
 	const [joining, setJoining] = useState(false);
 
+	const memberPreflight = useQuery(
+		api.core.slot.join.queryOptions({
+			input: { id },
+			enabled: Boolean(user),
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+		}),
+	);
+	const guestPreflight = useQuery(
+		api.meeting.join.queryOptions({
+			input: { id },
+			enabled: !isPending && !user,
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+		}),
+	);
+	const preflight = user ? memberPreflight : guestPreflight;
+
 	useEffect(() => {
 		const stored = getCallName(id);
 		if (stored) setGuestName(stored);
 	}, [id]);
 
 	if (isPending) return <Loader />;
+
+	if (preflight.isPending) return <Loader />;
+
+	if (preflight.isError || !preflight.data) {
+		return (
+			<Frame className="h-full min-h-0 rounded-none">
+				<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
+					<CallNotice
+						status="error"
+						error={preflight.error}
+						onRefresh={preflight.refetch}
+					/>
+				</FramePanel>
+			</Frame>
+		);
+	}
+
+	const meeting = preflight.data;
+
+	if (meeting.status !== "live") {
+		return (
+			<Frame className="h-full min-h-0 rounded-none">
+				<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
+					<CallNotice status={meeting.status} onRefresh={preflight.refetch} />
+				</FramePanel>
+			</Frame>
+		);
+	}
 
 	const authName = user?.name?.trim();
 	const userName = authName || guestName.trim();
@@ -159,6 +218,9 @@ function CallGate({ id }: { id: string }) {
 
 		setJoining(true);
 		try {
+			const latest = await preflight.refetch();
+			if (latest.data?.status !== "live") return;
+
 			setCallName(id, userName);
 			if (!companionActive) await requestDevices(camera, mic);
 
@@ -179,9 +241,25 @@ function CallGate({ id }: { id: string }) {
 						<CardDescription>
 							We will ask for camera and microphone access when you join.
 						</CardDescription>
+						<CardAction>
+							<ColorBadge variant="success">Live</ColorBadge>
+						</CardAction>
 					</CardHeader>
 					<CardContent>
 						<ItemGroup className="gap-2">
+							<Item variant="muted" size="sm">
+								<ItemMedia variant="icon">
+									<CalendarClockIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemDescription>Scheduled</ItemDescription>
+									<ItemTitle>
+										{formatDateTime(meeting.startTime)} –{" "}
+										{formatDateTime(meeting.endTime)}
+									</ItemTitle>
+								</ItemContent>
+							</Item>
+
 							{needsName ? (
 								<Field>
 									<FieldLabel htmlFor="guest-name">Your name</FieldLabel>

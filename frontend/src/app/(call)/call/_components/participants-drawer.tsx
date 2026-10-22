@@ -1,12 +1,11 @@
 "use client";
 
 import type { Participant } from "@zoom/videosdk";
-import { MicIcon, MicOffIcon, UserPlusIcon, XIcon } from "lucide-react";
+import { MicIcon, MicOffIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { sileo as toast } from "sileo";
-import { CopyButton } from "@/components/copy";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -37,6 +36,26 @@ function participantName(participant: Participant) {
 	return participant.displayName || "Guest";
 }
 
+const invite = async () => {
+	const url = window.location.href;
+
+	if (navigator.share) {
+		try {
+			await navigator.share({ title: "Join my meeting", url });
+			return;
+		} catch (error) {
+			if (error instanceof DOMException && error.name === "AbortError") return;
+		}
+	}
+
+	try {
+		await navigator.clipboard.writeText(url);
+		toast.success({ title: "Invite link copied" });
+	} catch {
+		toast.error({ title: "Could not copy the invite link" });
+	}
+};
+
 export function ParticipantsDrawer({
 	participants,
 	children,
@@ -44,48 +63,15 @@ export function ParticipantsDrawer({
 	participants: Participant[];
 	children: ReactNode;
 }) {
-	const invite = async () => {
-		const url = window.location.href;
-
-		if (navigator.share) {
-			try {
-				await navigator.share({ title: "Join my meeting", url });
-				return;
-			} catch (error) {
-				if (error instanceof DOMException && error.name === "AbortError")
-					return;
-			}
-		}
-
-		try {
-			await navigator.clipboard.writeText(url);
-			toast.success({ title: "Invite link copied" });
-		} catch {
-			toast.error({ title: "Could not copy the invite link" });
-		}
-	};
-
 	return (
 		<Drawer>
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
-					<Item size="xs">
-						<ItemContent>
-							<DrawerTitle>Participants ({participants.length})</DrawerTitle>
-							<DrawerDescription>
-								Everyone currently connected to this session.
-							</DrawerDescription>
-						</ItemContent>
-						<ItemActions>
-							<CopyButton
-								text={() => window.location.href}
-								label="meeting link"
-								variant="ghost"
-								size="icon"
-							/>
-						</ItemActions>
-					</Item>
+					<DrawerTitle>Participants</DrawerTitle>
+					<DrawerDescription>
+						Everyone currently connected to this session.
+					</DrawerDescription>
 				</DrawerHeader>
 				<DrawerInner>
 					<ItemGroup>
@@ -112,7 +98,7 @@ export function ParticipantsDrawer({
 										)}
 										{participant.isHost && <Badge>Host</Badge>}
 										{!participant.isHost && participant.isManager && (
-											<Badge variant="secondary">Manager</Badge>
+											<ColorBadge>Manager</ColorBadge>
 										)}
 									</ItemActions>
 								</Item>
@@ -121,16 +107,10 @@ export function ParticipantsDrawer({
 					</ItemGroup>
 				</DrawerInner>
 				<DrawerFooter>
+					<Button onClick={() => void invite()}>Invite</Button>
 					<DrawerClose asChild>
-						<Button variant="outline">
-							<XIcon />
-							Close
-						</Button>
+						<Button variant="outline">Close</Button>
 					</DrawerClose>
-					<Button onClick={() => void invite()}>
-						<UserPlusIcon />
-						Invite
-					</Button>
 				</DrawerFooter>
 			</DrawerContent>
 		</Drawer>

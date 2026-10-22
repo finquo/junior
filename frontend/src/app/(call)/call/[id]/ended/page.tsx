@@ -1,4 +1,11 @@
+"use client";
+
+import { CalendarClockIcon } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Container } from "@/components/container";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardDescription,
@@ -6,9 +13,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { useHasRole } from "@/hooks/role";
 import { CallAuthButton } from "../../_components/call-auth-button";
 
 export default function Page() {
+	const id = useParams<{ id: string }>()?.id;
+	const canViewSlot = useHasRole(["admin", "scheduler", "teacher"]);
+
 	return (
 		<Container>
 			<Card>
@@ -19,7 +30,17 @@ export default function Page() {
 					</CardDescription>
 				</CardHeader>
 				<CardFooter className="justify-end">
-					<CallAuthButton />
+					<ButtonGroup>
+						{canViewSlot && id && (
+							<Button asChild>
+								<Link href={`/slots/${id}` as "/"}>
+									<CalendarClockIcon />
+									View Session Details
+								</Link>
+							</Button>
+						)}
+						<CallAuthButton />
+					</ButtonGroup>
 				</CardFooter>
 			</Card>
 		</Container>

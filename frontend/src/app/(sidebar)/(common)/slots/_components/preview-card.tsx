@@ -10,6 +10,7 @@ import {
 	UserRoundIcon,
 	UsersIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { parseAsInteger, parseAsIsoDate, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { sileo as toast } from "sileo";
@@ -73,6 +74,7 @@ function NotSelected() {
 }
 
 export function PreviewCard() {
+	const router = useRouter();
 	const [studentId] = useQueryState("studentId");
 	const [teacherId] = useQueryState("teacherId");
 	const [schedulerId] = useQueryState("schedulerId");
@@ -266,11 +268,13 @@ export function PreviewCard() {
 					</DropdownMenu>
 					<MutationButton
 						api={api.core.slot.create.mutationOptions()}
-						onSuccess={() => {
+						onSuccess={(created) => {
 							refetchAPIs([api.core.slot.list.queryKey()]);
 							toast.success({
 								title: "Slot created successfully!",
 							});
+							const slot = created?.[0];
+							if (slot) router.push(`/slots/${slot.id}` as "/");
 						}}
 						isPending={
 							<Button disabled variant="outline">

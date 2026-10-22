@@ -195,6 +195,12 @@ export function SessionProfile({ data }: { data: SlotData }) {
 
 				<CardAction>
 					<ButtonGroup>
+						<Button size="sm" asChild>
+							<a href={`/call/${data.id}`} target="_blank" rel="noreferrer">
+								<VideoIcon />
+								Open Call
+							</a>
+						</Button>
 						{data.meetingLink && (
 							<Button variant="outline" size="sm" asChild>
 								<a href={data.meetingLink} target="_blank" rel="noreferrer">

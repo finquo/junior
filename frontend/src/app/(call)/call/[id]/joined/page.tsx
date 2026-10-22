@@ -2,37 +2,29 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { api } from "@/hooks/api";
 import { useAuth } from "@/hooks/auth";
+import { useHasRole } from "@/hooks/role";
 import { getCallName } from "../../_components/call-name";
 import { CallNotice } from "../../_components/call-notice";
 import { useJoinPreferences } from "../../_components/call-preferences";
-import { CallRoom } from "../../_components/call-room";
+import { VideoChat } from "../../_components/zoom";
 
 function Joined({ id }: { id: string }) {
 	const router = useRouter();
-	const { data: user, isPending: authPending } = useAuth();
+	const { data: user } = useAuth<true>();
 	const { camera, mic } = useJoinPreferences();
+	const canEndMeeting = useHasRole(["admin", "scheduler", "teacher"]);
 
-	const join = useQuery({
-		...api.core.slot.join.queryOptions({ input: { id } }),
-		enabled: Boolean(user),
-		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
-	});
-
-	useEffect(() => {
-		if (!authPending && !user) {
-			router.replace(`/call/${id}` as "/");
-		}
-	}, [authPending, user, router, id]);
-
-	if (authPending || !user) return <Loader />;
-
-	const { data, isPending, isError, error, refetch } = join;
+	const { data, isPending, isError, error, refetch } = useQuery(
+		api.core.slot.join.queryOptions({
+			input: { id },
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+		}),
+	);
 
 	if (isPending) return <Loader />;
 
@@ -53,10 +45,9 @@ function Joined({ id }: { id: string }) {
 	}
 
 	const userName = user.name?.trim() || getCallName(id) || "User";
-	const canEndMeeting = ["admin", "scheduler", "teacher"].includes(user.role);
 
 	return (
-		<CallRoom
+		<VideoChat
 			session={data.session}
 			token={data.token}
 			slotId={id}

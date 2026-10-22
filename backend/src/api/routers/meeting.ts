@@ -1,10 +1,10 @@
 import z from "zod";
 import { db } from "@/services";
-import { DEMO_ID, DEMO_SESSION } from "@/zoom/demo";
 import { generateZoomToken } from "@/zoom/jwt";
 import { publicProcedure, tryAPI } from "../procedure";
 
 const JOIN_WINDOW = 10 * 60 * 1000;
+const DEMO_ID = "demo";
 
 export const meetingRouter = {
 	join: publicProcedure
@@ -15,10 +15,10 @@ export const meetingRouter = {
 				const now = Date.now();
 				return {
 					status: "live",
-					session: DEMO_SESSION,
+					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_SESSION, 0),
+					token: await generateZoomToken(DEMO_ID, 0),
 				} as const;
 			}
 

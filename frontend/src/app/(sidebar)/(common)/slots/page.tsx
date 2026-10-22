@@ -8,6 +8,7 @@ import {
 	PenIcon,
 	PlusIcon,
 	UserIcon,
+	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
@@ -46,6 +47,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
 	Item,
 	ItemContent,
 	ItemDescription,
@@ -56,6 +62,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
+import { useHasRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -86,6 +93,10 @@ function UserCellSkeleton() {
 	);
 }
 
+function UserInlineSkeleton() {
+	return <Skeleton className="h-4 w-20" />;
+}
+
 function SlotActions({ slot }: { slot: SlotRecord }) {
 	return (
 		<Drawer>
@@ -102,6 +113,14 @@ function SlotActions({ slot }: { slot: SlotRecord }) {
 								<ExternalLinkIcon />
 								View Session
 							</Link>
+						</Button>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
+								<VideoIcon />
+								Open Call
+							</a>
 						</Button>
 					</DropdownMenuItem>
 					{slot.studentId && (
@@ -180,6 +199,12 @@ function SlotActions({ slot }: { slot: SlotRecord }) {
 						label="Session ID"
 						variant="outline"
 					/>
+					<Button variant="outline" asChild>
+						<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
+							<VideoIcon />
+							Open Call in New Window
+						</a>
+					</Button>
 					<Button asChild>
 						<Link href="/" as={`/slots/${slot.id}`}>
 							Open Session Page
@@ -306,6 +331,55 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				);
 			},
 		}),
+		columnHelper.display({
+			id: "scheduler",
+			header: "Scheduler",
+			cell: ({ row }) => {
+				const schedulerId = row.original.schedulerId;
+				if (!schedulerId) {
+					return <Badge variant="outline">Not Assigned</Badge>;
+				}
+				return (
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<Button variant="link" asChild>
+								<Link href={`/schedulers/${schedulerId}` as "/"}>
+									<FetchUser
+										id={schedulerId}
+										isPending={<UserInlineSkeleton />}
+									>
+										{(scheduler) => scheduler.name}
+									</FetchUser>
+								</Link>
+							</Button>
+						</HoverCardTrigger>
+						<HoverCardContent>
+							<FetchUser id={schedulerId} isPending={<UserCellSkeleton />}>
+								{(scheduler) => (
+									<Item>
+										<ItemMedia>
+											<Avatar size="sm">
+												<AvatarImage
+													src={scheduler.image ?? undefined}
+													alt={scheduler.name}
+												/>
+												<AvatarFallback>
+													{scheduler.name?.[0] ?? "S"}
+												</AvatarFallback>
+											</Avatar>
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>{scheduler.name}</ItemTitle>
+											<ItemDescription>{scheduler.email}</ItemDescription>
+										</ItemContent>
+									</Item>
+								)}
+							</FetchUser>
+						</HoverCardContent>
+					</HoverCard>
+				);
+			},
+		}),
 		columnHelper.accessor("status", {
 			id: "status",
 			header: ({ column }) => (
@@ -388,12 +462,15 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 		}),
 	]);
 
+const nonAdminColumns = columns.filter((column) => column.id !== "scheduler");
+
 export default function Page() {
 	const { data = [], isPending } = useQuery(api.core.slot.list.queryOptions());
+	const isAdmin = useHasRole("admin");
 
 	const { table } = useDataTable({
 		data,
-		columns,
+		columns: isAdmin ? columns : nonAdminColumns,
 		mode: "client",
 		initialState: {
 			sorting: [{ id: "startTime", desc: true }],

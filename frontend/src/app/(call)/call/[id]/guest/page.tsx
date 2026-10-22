@@ -8,19 +8,19 @@ import { api } from "@/hooks/api";
 import { getCallName } from "../../_components/call-name";
 import { CallNotice } from "../../_components/call-notice";
 import { useJoinPreferences } from "../../_components/call-preferences";
-import { CallRoom } from "../../_components/call-room";
+import { VideoChat } from "../../_components/zoom";
 
 function Guest({ id }: { id: string }) {
 	const router = useRouter();
 	const { camera, mic } = useJoinPreferences();
 
-	const join = useQuery({
-		...api.meeting.join.queryOptions({ input: { id } }),
-		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
-	});
-
-	const { data, isPending, isError, error, refetch } = join;
+	const { data, isPending, isError, error, refetch } = useQuery(
+		api.meeting.join.queryOptions({
+			input: { id },
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+		}),
+	);
 
 	if (isPending) return <Loader />;
 
@@ -43,7 +43,7 @@ function Guest({ id }: { id: string }) {
 	const userName = getCallName(id) || "Guest";
 
 	return (
-		<CallRoom
+		<VideoChat
 			session={data.session}
 			token={data.token}
 			userName={userName}

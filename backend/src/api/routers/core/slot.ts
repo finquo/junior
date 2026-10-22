@@ -18,7 +18,6 @@ import { generateZoomToken } from "@/zoom/jwt";
 const JOIN_WINDOW = 10 * 60 * 1000;
 
 const DEMO_ID = "demo";
-const DEMO_SESSION = "finquo-demo";
 
 export const slotRouter = {
 	join: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
@@ -40,10 +39,10 @@ export const slotRouter = {
 				const now = Date.now();
 				return {
 					status: "live",
-					session: DEMO_SESSION,
+					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_SESSION, role),
+					token: await generateZoomToken(DEMO_ID, role),
 				} as const;
 			}
 
