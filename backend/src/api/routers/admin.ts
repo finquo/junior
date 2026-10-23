@@ -154,7 +154,6 @@ export const adminRouter = {
 			SelectStudentSchema.pick({
 				id: true,
 				mentorId: true,
-				meetingLink: true,
 				supervisorId: true,
 			}),
 		)

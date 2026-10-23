@@ -7,7 +7,15 @@ import { UpdateStudentSchema } from "backend/db";
 import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
-import { type LanguageCodes, Languages, resolveDefaultAmount } from "utils";
+import {
+	Countries,
+	type CountryCodes,
+	Currencies,
+	type CurrencyCodes,
+	type LanguageCodes,
+	Languages,
+	resolveDefaultAmount,
+} from "utils";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -160,30 +168,115 @@ export function EditStudentDrawer({
 								)}
 							/>
 
-							<form.Field
-								name="meetingLink"
-								children={(field) => {
-									const isInvalid =
-										field.state.meta.isTouched && !field.state.meta.isValid;
-									return (
-										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>Meeting Link</FieldLabel>
+							<div className="grid grid-cols-2 gap-4">
+								<form.Field
+									name="age"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Age</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
+												type="number"
 												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												placeholder="https://meet.google.com/..."
+												onChange={(e) =>
+													field.handleChange(
+														e.target.value === ""
+															? null
+															: Number(e.target.value),
+													)
+												}
 												disabled={isPending}
 											/>
-											{isInvalid && (
-												<FieldError errors={field.state.meta.errors} />
-											)}
 										</Field>
-									);
-								}}
-							/>
+									)}
+								/>
+
+								<form.Field
+									name="grade"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Grade</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="number"
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) =>
+													field.handleChange(
+														e.target.value === ""
+															? null
+															: Number(e.target.value),
+													)
+												}
+												disabled={isPending}
+											/>
+										</Field>
+									)}
+								/>
+							</div>
+
+							<div className="grid grid-cols-2 gap-4">
+								<form.Field
+									name="country"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+											<Select
+												value={field.state.value ?? ""}
+												onValueChange={(val) =>
+													field.handleChange(val as CountryCodes)
+												}
+												disabled={isPending}
+											>
+												<SelectTrigger id={field.name}>
+													<SelectValue placeholder="Select country" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														{Object.entries(Countries).map(([code, name]) => (
+															<SelectItem key={code} value={code}>
+																{name}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+										</Field>
+									)}
+								/>
+
+								<form.Field
+									name="currency"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Currency</FieldLabel>
+											<Select
+												value={field.state.value ?? ""}
+												onValueChange={(val) =>
+													field.handleChange(val as CurrencyCodes)
+												}
+												disabled={isPending}
+											>
+												<SelectTrigger id={field.name}>
+													<SelectValue placeholder="Select currency" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														{Object.entries(Currencies).map(([code, name]) => (
+															<SelectItem key={code} value={code}>
+																{code} · {name}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+										</Field>
+									)}
+								/>
+							</div>
 
 							<form.Field
 								name="mentorId"

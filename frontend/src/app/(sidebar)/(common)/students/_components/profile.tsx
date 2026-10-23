@@ -2,8 +2,12 @@
 
 import { langFlag, langName } from "language-emoji";
 import {
+	BookMarkedIcon,
 	BookOpenIcon,
+	CakeIcon,
+	CoinsIcon,
 	ExternalLinkIcon,
+	GlobeIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
 	MapPinIcon,
@@ -15,6 +19,7 @@ import {
 	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { Countries } from "utils";
 import { ProgramLink } from "@/components/program";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -315,6 +320,50 @@ export function StudentProfile({
 									</Item>
 									<Item variant="muted">
 										<ItemMedia variant="icon">
+											<CakeIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Age</ItemTitle>
+											<ItemDescription>
+												{data.age ?? "Not specified"}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<BookMarkedIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Grade</ItemTitle>
+											<ItemDescription>
+												{data.grade ?? "Not specified"}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<GlobeIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Country</ItemTitle>
+											<ItemDescription>
+												{data.country
+													? Countries[data.country]
+													: "Not specified"}
+											</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
+											<CoinsIcon />
+										</ItemMedia>
+										<ItemContent>
+											<ItemTitle>Currency</ItemTitle>
+											<ItemDescription>{data.currency}</ItemDescription>
+										</ItemContent>
+									</Item>
+									<Item variant="muted">
+										<ItemMedia variant="icon">
 											<WalletIcon />
 										</ItemMedia>
 										<ItemContent>
@@ -386,29 +435,6 @@ export function StudentProfile({
 										</Item>
 									</ItemGroup>
 								</CardContent>
-							</Card>
-						)}
-
-						{data.meetingLink && (
-							<Card size="sm">
-								<CardHeader>
-									<CardTitle>Meeting Link</CardTitle>
-									<CardDescription>
-										Default link used for this student's sessions.
-									</CardDescription>
-									<CardAction>
-										<Button variant="outline" size="sm" asChild>
-											<a
-												href={data.meetingLink}
-												target="_blank"
-												rel="noreferrer"
-											>
-												<VideoIcon />
-												Join
-											</a>
-										</Button>
-									</CardAction>
-								</CardHeader>
 							</Card>
 						)}
 					</TabsContent>

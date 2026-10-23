@@ -1,9 +1,13 @@
+import z from "zod";
 import { type CurrencyCodes, getCurrencySymbol } from "./currency";
 
+/** ISO 3166-1 Alpha-2 */
 export const Countries = {
 	IN: "India",
 	US: "United States of America",
 };
+
+export const CountryZod = z.enum(Object.keys(Countries));
 
 export type CountryCodes = keyof typeof Countries;
 

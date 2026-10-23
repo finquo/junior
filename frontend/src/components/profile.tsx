@@ -5,6 +5,7 @@ import type {
 	TeacherType,
 	UserType,
 } from "backend/db";
+import { Countries } from "utils";
 import { ProgramLink } from "@/components/program";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -61,6 +62,24 @@ export function StudentProfile({ student }: { student?: StudentType | null }) {
 							<TableCell>{student.schooling ?? "None"}</TableCell>
 						</TableRow>
 						<TableRow>
+							<TableCell>Age</TableCell>
+							<TableCell>{student.age ?? "None"}</TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Grade</TableCell>
+							<TableCell>{student.grade ?? "None"}</TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Country</TableCell>
+							<TableCell>
+								{student.country ? Countries[student.country] : "None"}
+							</TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Currency</TableCell>
+							<TableCell>{student.currency}</TableCell>
+						</TableRow>
+						<TableRow>
 							<TableCell>Lessons Attended</TableCell>
 							<TableCell>{student.attendedLessons?.length ?? 0}</TableCell>
 						</TableRow>
@@ -90,12 +109,6 @@ export function StudentProfile({ student }: { student?: StudentType | null }) {
 							<TableCell>Remaining Balance</TableCell>
 							<TableCell>{student.remaining}</TableCell>
 						</TableRow>
-						{student.meetingLink && (
-							<TableRow>
-								<TableCell>Meeting Link</TableCell>
-								<TableCell>{student.meetingLink}</TableCell>
-							</TableRow>
-						)}
 						{student.mentorId && (
 							<TableRow>
 								<TableCell>Mentor ID</TableCell>

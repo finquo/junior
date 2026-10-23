@@ -1,3 +1,5 @@
+import z from "zod";
+
 export const Currencies = {
 	INR: "Rupees",
 	USD: "Dollar",
@@ -10,6 +12,8 @@ export const CurrencySymbols: Record<CurrencyCodes, string> = {
 	INR: "₹",
 	USD: "$",
 };
+
+export const CurrencyZod = z.enum(Object.keys(Currencies));
 
 /** Human-readable currency name for an ISO 4217 code. */
 export const getCurrencyName = (code: string) =>

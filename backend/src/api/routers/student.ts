@@ -94,18 +94,12 @@ export const studentRouter = {
 	}),
 	update: studentProcedure
 		.input(
-			UpdateStudentSchema.omit({
-				id: true,
-				mentorId: true,
-				supervisorId: true,
-				notes: true,
-				attendedLessons: true,
-				meetingLink: true,
-				paid: true,
-				amount: true,
-				remaining: true,
-				createdAt: true,
-				updatedAt: true,
+			UpdateStudentSchema.pick({
+				address: true,
+				age: true,
+				country: true,
+				grade: true,
+				schooling: true,
 			}),
 		)
 		.handler(async ({ context, input }) => {

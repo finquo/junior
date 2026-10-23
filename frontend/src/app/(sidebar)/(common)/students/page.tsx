@@ -10,7 +10,7 @@ import {
 	UserIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getLanguageName, getRelateTime } from "utils";
+import { Countries, getLanguageName, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -250,6 +250,45 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 			},
 			cell: ({ getValue }) => getValue() ?? null,
 		}),
+		columnHelper.accessor("age", {
+			id: "age",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Age" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: { label: "Age", variant: "number" },
+			cell: ({ getValue }) => getValue() ?? null,
+		}),
+		columnHelper.accessor("grade", {
+			id: "grade",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Grade" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: { label: "Grade", variant: "number" },
+			cell: ({ getValue }) => getValue() ?? null,
+		}),
+		columnHelper.accessor("country", {
+			id: "country",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Country" />
+			),
+			enableSorting: true,
+			cell: ({ getValue }) => {
+				const country = getValue();
+				return country ? Countries[country] : null;
+			},
+		}),
+		columnHelper.accessor("currency", {
+			id: "currency",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Currency" />
+			),
+			enableSorting: true,
+			cell: ({ getValue }) => getValue(),
+		}),
 		columnHelper.display({
 			id: "languages",
 			header: "Languages",
@@ -320,21 +359,6 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 							</FetchUser>
 						</HoverCardContent>
 					</HoverCard>
-				);
-			},
-		}),
-		columnHelper.accessor("meetingLink", {
-			id: "meetingLink",
-			header: "Meeting",
-			cell: ({ getValue }) => {
-				const link = getValue();
-				if (!link) return null;
-				return (
-					<Button variant="link" asChild>
-						<a href={link} target="_blank" rel="noreferrer">
-							Join
-						</a>
-					</Button>
 				);
 			},
 		}),

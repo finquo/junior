@@ -1,5 +1,10 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
-import { LanguageCodeZod } from "utils";
+import {
+	CountryCurrencies,
+	CountryZod,
+	CurrencyZod,
+	LanguageCodeZod,
+} from "utils";
 import z, { type ZodObject, type ZodRawShape, type ZodString } from "zod";
 import {
 	addressZod,
@@ -56,6 +61,8 @@ export const InsertStudentSchema = createInsertSchema(
 	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
+	country: CountryZod.nullable().optional(),
+	currency: CurrencyZod.nullable().optional(),
 });
 export const SelectStudentSchema = createSelectSchema(
 	schema.student,
@@ -65,6 +72,8 @@ export const SelectStudentSchema = createSelectSchema(
 	program: z.string().nullable(),
 	notes: noteZod.array(),
 	address: addressZod.nullable(),
+	country: CountryZod.nullable(),
+	currency: CurrencyZod.nullable(),
 });
 export const UpdateStudentSchema = createUpdateSchema(
 	schema.student,
@@ -74,6 +83,8 @@ export const UpdateStudentSchema = createUpdateSchema(
 	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
+	country: CountryZod.nullable().optional(),
+	currency: CurrencyZod.nullable().optional(),
 });
 
 // Program

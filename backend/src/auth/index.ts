@@ -1,6 +1,6 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
-import { admin as adminPlugin } from "better-auth/plugins";
+import { admin as adminPlugin, phoneNumber } from "better-auth/plugins";
 import type { Database } from "@/db";
 import * as schema from "@/db/schema/auth";
 import { ac, roles } from "./permissions";
@@ -52,6 +52,9 @@ export function createAuth(db: Database) {
 				defaultRole: "user",
 				ac,
 				roles,
+			}),
+			phoneNumber({
+				sendOTP: () => {},
 			}),
 		],
 	});
