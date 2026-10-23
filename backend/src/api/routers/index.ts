@@ -1,6 +1,7 @@
 import { openapi } from "@orpc/openapi";
 import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
+import { chatRouter as chat } from "./chat";
 import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
 import { programRouter as programCore } from "./core/program";
@@ -27,6 +28,7 @@ export const appRouter = {
 	scheduler,
 	teacher,
 	student,
+	chat,
 	common,
 	meeting,
 	media,

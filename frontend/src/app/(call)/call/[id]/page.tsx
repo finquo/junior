@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
 	CctvIcon,
-	CircleIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
@@ -30,13 +29,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Field,
-	FieldContent,
-	FieldDescription,
-	FieldLabel,
-	FieldTitle,
-} from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	Item,
@@ -176,6 +169,12 @@ function CallGate({ id }: { id: string }) {
 		}),
 	);
 	const preflight = user ? memberPreflight : guestPreflight;
+
+	useEffect(() => {
+		if (!preflight.data?.meetingLink) return;
+
+		router.replace(preflight.data.meetingLink as "/");
+	}, [preflight.data?.meetingLink, router]);
 
 	useEffect(() => {
 		if (preflight.data?.status !== "upcoming") return;

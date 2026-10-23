@@ -39,6 +39,7 @@ export const slotRouter = {
 				const now = Date.now();
 				return {
 					status: "live",
+					meetingLink: null,
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
@@ -52,6 +53,7 @@ export const slotRouter = {
 					where: { id: input.id },
 					columns: {
 						id: true,
+						meetingLink: true,
 						startTime: true,
 						expectedEndTime: true,
 						endTime: true,
@@ -62,7 +64,7 @@ export const slotRouter = {
 				}),
 			);
 
-			if (!slot) return { status: "not_found" } as const;
+			if (!slot) return { status: "not_found", meetingLink: null } as const;
 
 			const authorized = MapRole(context.role, {
 				admin: true,
@@ -82,13 +84,24 @@ export const slotRouter = {
 			const now = Date.now();
 
 			if (now < startTime.getTime() - JOIN_WINDOW)
-				return { status: "upcoming", startTime, endTime } as const;
+				return {
+					status: "upcoming",
+					meetingLink: slot.meetingLink,
+					startTime,
+					endTime,
+				} as const;
 
 			if (now > endTime.getTime())
-				return { status: "ended", startTime, endTime } as const;
+				return {
+					status: "ended",
+					meetingLink: slot.meetingLink,
+					startTime,
+					endTime,
+				} as const;
 
 			return {
 				status: "live",
+				meetingLink: slot.meetingLink,
 				session: slot.id,
 				startTime,
 				endTime,
