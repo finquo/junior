@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { api } from "@/hooks/api";
-import { useAuth } from "@/hooks/auth";
-import { useHasRole } from "@/hooks/role";
+import { useCallAuth } from "@/hooks/call";
 import { getCallName } from "../../_components/call-name";
 import { CallNotice } from "../../_components/call-notice";
 import { useJoinPreferences } from "../../_components/call-preferences";
@@ -14,9 +13,10 @@ import { VideoChat } from "../../_components/zoom";
 
 function Joined({ id }: { id: string }) {
 	const router = useRouter();
-	const { data: user } = useAuth<true>();
+	const { data: user, checked: canEndMeeting } = useCallAuth<true>((u) =>
+		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
+	);
 	const { camera, mic } = useJoinPreferences();
-	const canEndMeeting = useHasRole(["admin", "scheduler", "teacher"]);
 
 	const { data, isPending, isError, error, refetch } = useQuery(
 		api.core.slot.join.queryOptions({
