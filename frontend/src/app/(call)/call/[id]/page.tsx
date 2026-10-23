@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
+	CctvIcon,
+	CircleIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
@@ -28,7 +30,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+	Field,
+	FieldContent,
+	FieldDescription,
+	FieldLabel,
+	FieldTitle,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	Item,
@@ -108,30 +116,46 @@ function JoinPreference({
 	onCheckedChange: (checked: boolean) => void;
 }) {
 	return (
-		<Item variant="muted" size="sm">
-			<ItemMedia variant="icon">{icon}</ItemMedia>
-			<ItemContent>
-				<ItemTitle>{label}</ItemTitle>
-				<ItemDescription>{description}</ItemDescription>
-			</ItemContent>
-			<ItemActions>
-				<Switch
-					id={id}
-					aria-label={label}
-					checked={checked}
-					disabled={disabled}
-					onCheckedChange={onCheckedChange}
-				/>
-			</ItemActions>
-		</Item>
+		<FieldLabel htmlFor={id}>
+			<Field orientation="horizontal" className="items-start">
+				<ItemMedia variant="icon">{icon}</ItemMedia>
+				<ItemContent>
+					<ItemTitle>{label}</ItemTitle>
+					<ItemDescription>{description}</ItemDescription>
+				</ItemContent>
+				<ItemActions>
+					<Switch
+						id={id}
+						aria-label={label}
+						checked={checked}
+						disabled={disabled}
+						onCheckedChange={onCheckedChange}
+					/>
+				</ItemActions>
+			</Field>
+		</FieldLabel>
 	);
 }
 
 function CallGate({ id }: { id: string }) {
 	const router = useRouter();
-	const { data: user, isPending } = useAuth();
-	const { camera, setCamera, mic, setMic, companion, setCompanion } =
-		useJoinPreferences();
+	const {
+		data: user,
+		isPending,
+		checked: higherRole,
+	} = useAuth((u) =>
+		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
+	);
+	const {
+		camera,
+		setCamera,
+		mic,
+		setMic,
+		companion,
+		setCompanion,
+		record,
+		setRecord,
+	} = useJoinPreferences();
 	const [guestName, setGuestName] = useState("");
 	const [joining, setJoining] = useState(false);
 
@@ -201,8 +225,9 @@ function CallGate({ id }: { id: string }) {
 	const authName = user?.name?.trim();
 	const userName = authName || guestName.trim();
 	const needsName = !authName;
-	const canJoinAsCompanion = user?.role === "teacher";
-	const companionActive = canJoinAsCompanion && companion;
+	const canJoinAsCompanion = higherRole;
+	const companionActive = !!(canJoinAsCompanion && companion);
+	const canRecord = higherRole;
 
 	const handleCompanion = (checked: boolean) => {
 		setCompanion(checked);
@@ -319,6 +344,7 @@ function CallGate({ id }: { id: string }) {
 							<ButtonGroup className="w-full">
 								<Button
 									type="button"
+									size={"lg"}
 									variant={camera ? "default" : "outline"}
 									className="flex-1"
 									disabled={companionActive}
@@ -330,6 +356,7 @@ function CallGate({ id }: { id: string }) {
 								</Button>
 								<Button
 									type="button"
+									size={"lg"}
 									variant={mic ? "default" : "outline"}
 									className="flex-1"
 									disabled={companionActive}
@@ -349,6 +376,17 @@ function CallGate({ id }: { id: string }) {
 									description="Join without camera or microphone, then share your screen from this device."
 									checked={companion}
 									onCheckedChange={handleCompanion}
+								/>
+							)}
+
+							{canRecord && (
+								<JoinPreference
+									id="join-record"
+									icon={<CctvIcon />}
+									label="Instant recording"
+									description="Start cloud recording automatically after you join."
+									checked={record}
+									onCheckedChange={setRecord}
 								/>
 							)}
 						</ItemGroup>

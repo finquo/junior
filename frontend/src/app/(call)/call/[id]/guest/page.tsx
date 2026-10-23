@@ -49,6 +49,8 @@ function Guest({ id }: { id: string }) {
 			userName={userName}
 			canViewDetails={false}
 			canEndMeeting={false}
+			canRecord={false}
+			autoRecord={false}
 			disableVideo={!camera}
 			disableAudio={!mic}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}

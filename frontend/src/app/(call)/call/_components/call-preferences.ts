@@ -8,6 +8,7 @@ export function useJoinPreferences() {
 			camera: parseAsBoolean.withDefault(true),
 			mic: parseAsBoolean.withDefault(true),
 			companion: parseAsBoolean.withDefault(false),
+			record: parseAsBoolean.withDefault(false),
 		},
 		{
 			history: "replace",
@@ -19,8 +20,10 @@ export function useJoinPreferences() {
 		camera: preferences.camera,
 		mic: preferences.mic,
 		companion: preferences.companion,
+		record: preferences.record,
 		setCamera: (camera: boolean) => setPreferences({ camera }),
 		setMic: (mic: boolean) => setPreferences({ mic }),
 		setCompanion: (companion: boolean) => setPreferences({ companion }),
+		setRecord: (record: boolean) => setPreferences({ record }),
 	};
 }

@@ -27,7 +27,7 @@ const navItems = [
 	{
 		id: "program",
 		label: "Program",
-		url: "/students/program",
+		url: "/student/program",
 		icon: <GraduationCapIcon />,
 	},
 	{
