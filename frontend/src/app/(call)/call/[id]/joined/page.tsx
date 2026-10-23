@@ -53,7 +53,7 @@ function Joined({ id }: { id: string }) {
 			slotId={id}
 			userName={userName}
 			canViewDetails
-			canEndMeeting={canEndMeeting}
+			canEndMeeting={canEndMeeting ?? false}
 			disableVideo={!camera}
 			disableAudio={!mic}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}

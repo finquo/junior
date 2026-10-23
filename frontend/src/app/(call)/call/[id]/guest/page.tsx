@@ -52,6 +52,7 @@ function Guest({ id }: { id: string }) {
 			disableVideo={!camera}
 			disableAudio={!mic}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}
+			onEnd={() => router.push(`/call/${id}/ended` as "/")}
 		/>
 	);
 }

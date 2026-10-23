@@ -1,7 +1,7 @@
 "use client";
 
 import type { Participant } from "@zoom/videosdk";
-import ZoomVideo from "@zoom/videosdk";
+import ZoomVideo, { ConnectionState } from "@zoom/videosdk";
 import {
 	LocalScreenShareComponent,
 	ScreenShareContainerComponent,
@@ -31,6 +31,7 @@ import {
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { sileo as toast } from "sileo";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
 import { Container } from "@/components/container";
@@ -190,6 +191,34 @@ export function VideoChat({
 	const { ScreenshareRef, startScreenshare, stopScreenshare, isScreensharing } =
 		useScreenshare();
 	const screenShareUsers = useScreenShareUsers();
+
+	const onEndRef = useRef(onEnd);
+
+	useEffect(() => {
+		onEndRef.current = onEnd;
+	}, [onEnd]);
+
+	useEffect(() => {
+		const client = ZoomVideo.createClient();
+
+		function handleConnectionChange(payload: {
+			state: ConnectionState;
+			reason?: string;
+		}) {
+			if (
+				payload.state === ConnectionState.Closed &&
+				payload.reason === "ended by host"
+			) {
+				onEndRef.current?.();
+			}
+		}
+
+		client.on("connection-change", handleConnectionChange);
+
+		return () => {
+			client.off("connection-change", handleConnectionChange);
+		};
+	}, []);
 
 	// A participant list containing ourselves means the join is already live,
 	// even if startAudio/startVideo are still resolving.
