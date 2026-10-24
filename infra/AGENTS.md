@@ -34,7 +34,7 @@ tofu apply tfplan
 | State bucket | `finquo-junior-opentofu-development` | `finquo-junior-opentofu-production` |
 | Media bucket | `finquo-junior-media-development` | `finquo-junior-media-production` |
 
-`TF_VAR_environment` drives `default_tags.Environment` and the two bucket names; CI derives it from the branch (`main` → production), local runs default to `development`.
+`TF_VAR_environment` drives `default_tags.Environment` and the two bucket names; CI derives it from the branch (`main` → production), local runs default to `development`. The job's GitHub `environment:` uses the same expression, so environment-scoped secrets resolve per branch — not against a hard-coded name.
 
 ## Inputs from outside these roots
 

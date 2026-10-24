@@ -3,17 +3,29 @@ name: Test Environment Secrets & Variables
 on:
     workflow_dispatch:
     push:
-        branches: ["*"]
+        branches: [main, development]
         paths:
             - ".github/workflows/*.yml"
             - ".env.schema"
 
 jobs:
     test-env:
+        name: Test Env
         runs-on: ubuntu-latest
-        environment: development
+        environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+        env:
+            TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
         steps:
+            - name: Print basic info
+              run: |
+                  echo "CI=$CI"
+                  echo "RUNNER_OS=$RUNNER_OS"
+                  echo "github.ref=${{ github.ref }}"
+
+            - name: Print TF vars
+              run: echo "TF_VAR_environment=$TF_VAR_environment"
+
             - uses: oNaiPs/secrets-to-env-action@v1
               with:
                   secrets: ${{ toJSON(secrets) }}
@@ -35,10 +47,6 @@ jobs:
 
             - name: Print env and secrets info
               run: |
-                  echo "Basic env check"
-                  echo "CI=$CI"
-                  echo "RUNNER_OS=$RUNNER_OS"
-
                   echo "Vars loaded by Varlock"
                   echo "EXPORT=$EXPORT"
                   echo "DATABASE_URL (length): ${#DATABASE_URL}"
