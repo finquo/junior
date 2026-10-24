@@ -2,9 +2,8 @@ name: Building & Deploying
 
 on:
     workflow_dispatch:
-
     push:
-        branches: [main]
+        branches: [main, development]
         paths:
             - "infra/app/**/*"
             - ".env.schema"
@@ -21,8 +20,10 @@ concurrency:
 jobs:
     deploy:
         name: Building & Deploying
-        environment: development
+        environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         runs-on: ubuntu-latest
+        env:
+            TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
         steps:
             - uses: oNaiPs/secrets-to-env-action@v1
@@ -74,8 +75,6 @@ jobs:
               uses: opentofu/setup-opentofu@v1
 
             - name: OpenTofu Init & Apply (app)
-              env:
-                  TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
               run: |
                   cd infra/app
                   tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"

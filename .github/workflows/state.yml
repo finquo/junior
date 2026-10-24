@@ -2,9 +2,8 @@ name: Shared State
 
 on:
     workflow_dispatch:
-
     push:
-        branches: [main]
+        branches: [main, development]
         paths:
             - "infra/state/**/*"
             - "backend/migrations/**/*"
@@ -12,17 +11,17 @@ on:
             - ".env.schema"
             - ".github/workflows/state.yml"
 
-# Same group as deploy.yml: GitHub serializes workflows that share a group,
-# so a state apply never runs while an app deploy is in flight.
 concurrency:
     group: deploy-${{ github.ref }}
     cancel-in-progress: false
 
 jobs:
     state:
-        name: Apply State & Migrate
-        environment: development
+        name: Apply Statefull Infra & Database Migrate
+        environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         runs-on: ubuntu-latest
+        env:
+            TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
         steps:
             - uses: oNaiPs/secrets-to-env-action@v1
@@ -65,8 +64,6 @@ jobs:
               uses: opentofu/setup-opentofu@v1
 
             - name: OpenTofu Init & Apply (shared state)
-              env:
-                  TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
               run: |
                   cd infra/state
                   tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"

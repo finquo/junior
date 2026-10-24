@@ -45,9 +45,8 @@ jobs:
                   VARLOCK_JSON: ${{ steps.varlock_json.outputs.json-env }}
               run: printf '%s' "$VARLOCK_JSON" > env.json
 
-            - name: Print env and secrets info
+            - name: Print env loaded by varlock
               run: |
-                  echo "Vars loaded by Varlock"
                   echo "EXPORT=$EXPORT"
                   echo "DATABASE_URL (length): ${#DATABASE_URL}"
                   echo "BETTER_AUTH_URL=$BETTER_AUTH_URL"
