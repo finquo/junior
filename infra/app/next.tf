@@ -2,10 +2,16 @@ locals {
 	env_json	= jsondecode(file("../../env.json"))
 
 	next_env	= merge(
-		{
-			for k, v in local.env_json : k => tostring(v)
-			if try(tostring(v), null) != null
-		},
+	{
+		for k, v in local.env_json : k => tostring(v)
+		if (
+			try(tostring(v), null) != null
+			# Lambda reserves its credential env keys and injects the execution
+			# role's own credentials - setting these two fails CreateFunction.
+			&& k != "AWS_ACCESS_KEY_ID"
+			&& k != "AWS_SECRET_ACCESS_KEY"
+		)
+	},
 		{
 			NODE_ENV		= "production"
 			DATABASE_URL		= data.aws_ssm_parameter.database_url.value
