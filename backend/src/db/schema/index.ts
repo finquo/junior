@@ -1,6 +1,5 @@
 export * from "./auth";
 export * from "./lesson";
-export * from "./lesson";
 export * from "./material";
 export * from "./program";
 export * from "./scheduler";

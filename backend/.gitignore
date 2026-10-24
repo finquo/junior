@@ -58,5 +58,3 @@ next-env.d.ts
 /src/env.ts
 
 *.test.ts
-
-migrations/*
