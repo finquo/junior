@@ -133,7 +133,36 @@ function TimelineHeader({
 }: HTMLAttributes<HTMLDivElement> & { asChild?: boolean }) {
 	const Comp = asChild ? Slot.Root : "div";
 	return (
-		<Comp className={cn(className)} data-slot="timeline-header" {...props}>
+		<Comp
+			className={cn(
+				"grid auto-rows-min items-start has-data-[slot=timeline-action]:grid-cols-[1fr_auto]",
+				className,
+			)}
+			data-slot="timeline-header"
+			{...props}
+		>
+			{children}
+		</Comp>
+	);
+}
+
+// TimelineAction
+function TimelineAction({
+	className,
+	asChild = false,
+	children,
+	...props
+}: HTMLAttributes<HTMLDivElement> & { asChild?: boolean }) {
+	const Comp = asChild ? Slot.Root : "div";
+	return (
+		<Comp
+			className={cn(
+				"col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+				className,
+			)}
+			data-slot="timeline-action"
+			{...props}
+		>
 			{children}
 		</Comp>
 	);
@@ -242,6 +271,7 @@ function TimelineTitle({
 
 export {
 	Timeline,
+	TimelineAction,
 	TimelineContent,
 	TimelineDate,
 	TimelineHeader,

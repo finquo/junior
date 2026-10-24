@@ -15,6 +15,30 @@ type TranscriptSegment = {
 	endSecond: number;
 };
 
+async function getMediaArtifact(id: string, path: string) {
+	const meta = await mediaStorage.getMeta(`${id}/${path}`);
+	if (!meta) return null;
+
+	return {
+		path,
+		size: Number(meta.size ?? 0) || null,
+	};
+}
+
+const toMediaPath = (id: string, key: string) =>
+	key.replace(`${id}:`, "").replace(/:/g, "/");
+
+const STATIC_ASSET_PATHS = [
+	"video.mp4",
+	"audio.mp3",
+	"transcript/main.json",
+	"summary/main.json",
+	"summary/chunks.json",
+] as const;
+
+const isChunkAssetPath = (path: string) =>
+	/^(chunks\/.*_\d+\.[^.]+|transcript\/chunks\/\d+\.json)$/.test(path);
+
 export const mediaRouter = {
 	jobs: {
 		toAudio: getRolesProcedure(["admin", "scheduler"])
@@ -79,22 +103,92 @@ export const mediaRouter = {
 	meta: getRolesProcedure(["admin", "scheduler"])
 		.input(z.object({ id: z.string().min(1) }))
 		.handler(async ({ input }) => {
-			const chunkKeys = await getAPI(
-				"aws-s3-list-audio-chunks",
-				mediaStorage.getKeys(`${input.id}/chunks/`),
-				[],
-			);
+			const { id } = input;
 
-			const [video, audio, chunks] = await Promise.all([
-				mediaStorage.getMeta(`${input.id}/video.mp4`),
-				mediaStorage.getMeta(`${input.id}/audio.mp3`),
-				Promise.all(chunkKeys.map((key) => mediaStorage.getMeta(key))),
+			const [chunkKeys, transcriptChunkKeys] = await Promise.all([
+				getAPI(
+					"aws-s3-list-audio-chunks",
+					mediaStorage.getKeys(`${id}/chunks/`),
+					[],
+				),
+				getAPI(
+					"aws-s3-list-transcript-chunks",
+					mediaStorage.getKeys(`${id}/transcript/chunks/`),
+					[],
+				),
 			]);
 
+			const [video, audio, transcript, summary, chunkSummary] =
+				await Promise.all([
+					getMediaArtifact(id, "video.mp4"),
+					getMediaArtifact(id, "audio.mp3"),
+					getMediaArtifact(id, "transcript/main.json"),
+					getMediaArtifact(id, "summary/main.json"),
+					getMediaArtifact(id, "summary/chunks.json"),
+				]);
+
+			const chunkPaths = chunkKeys
+				.map((key) => toMediaPath(id, key))
+				.filter((path) => /_(\d+)\.[^.]+$/.test(path));
+
+			const transcriptChunkPaths = transcriptChunkKeys.map((key) =>
+				toMediaPath(id, key),
+			);
+
+			const chunks = await Promise.all(
+				chunkPaths.map(async (path) => {
+					const number = path.match(/_(\d+)\.[^.]+$/)?.[1] ?? null;
+					const transcriptPath = number
+						? `transcript/chunks/${number}.json`
+						: null;
+					if (
+						!transcriptPath ||
+						!transcriptChunkPaths.includes(transcriptPath)
+					) {
+						return { path, number, transcript: null };
+					}
+
+					return {
+						path,
+						number,
+						transcript: { path: transcriptPath },
+					};
+				}),
+			);
+
+			return { video, audio, transcript, summary, chunkSummary, chunks };
+		}),
+
+	download: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1), path: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			const allowed =
+				(STATIC_ASSET_PATHS as readonly string[]).includes(input.path) ||
+				isChunkAssetPath(input.path);
+			if (!allowed)
+				throw getError(
+					"INPUT_VALIDATION",
+					`Unknown media asset path for ${input.id}: ${input.path}`,
+				);
+
+			const key = `${input.id}/${input.path}`;
+			const meta = await mediaStorage.getMeta(key);
+			if (!meta)
+				throw getError("NOT_FOUND", `Media asset not found: ${input.path}`);
+
+			const url = await tryAPI(
+				"aws-s3-presign-download",
+				getMediaDownloadURL(key),
+			);
+			if (!url)
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					"Failed to presign download URL",
+				);
+
 			return {
-				video: video ?? null,
-				audio: audio ?? null,
-				chunks,
+				url,
+				name: key.split("/").pop() ?? input.path,
 			};
 		}),
 

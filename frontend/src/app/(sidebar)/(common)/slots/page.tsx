@@ -5,14 +5,12 @@ import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
-	PenIcon,
 	PlusIcon,
 	UserIcon,
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
-import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
@@ -60,7 +58,6 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
 import { useHasRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
@@ -99,123 +96,51 @@ function UserInlineSkeleton() {
 
 function SlotActions({ slot }: { slot: SlotRecord }) {
 	return (
-		<Drawer>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button variant="outline" size="icon-sm">
-						<MoreHorizontalIcon />
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<MoreHorizontalIcon />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuItem asChild>
+					<Button variant="link" asChild>
+						<Link href="/" as={`/slots/${slot.id}`}>
+							<ExternalLinkIcon />
+							View Session
+						</Link>
 					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
+				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<Button variant="link" asChild>
+						<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
+							<VideoIcon />
+							Open Call
+						</a>
+					</Button>
+				</DropdownMenuItem>
+				{slot.studentId && (
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
-							<Link href="/" as={`/slots/${slot.id}`}>
-								<ExternalLinkIcon />
-								View Session
+							<Link href="/" as={`/students/${slot.studentId}`}>
+								<UserIcon />
+								View Student
 							</Link>
 						</Button>
 					</DropdownMenuItem>
+				)}
+				{slot.teacherId && (
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
-							<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
-								<VideoIcon />
-								Open Call
-							</a>
+							<Link href="/" as={`/teachers/${slot.teacherId}`}>
+								<UserIcon />
+								View Teacher
+							</Link>
 						</Button>
 					</DropdownMenuItem>
-					{slot.studentId && (
-						<DropdownMenuItem asChild>
-							<Button variant="link" asChild>
-								<Link href="/" as={`/students/${slot.studentId}`}>
-									<UserIcon />
-									View Student
-								</Link>
-							</Button>
-						</DropdownMenuItem>
-					)}
-					{slot.teacherId && (
-						<DropdownMenuItem asChild>
-							<Button variant="link" asChild>
-								<Link href="/" as={`/teachers/${slot.teacherId}`}>
-									<UserIcon />
-									View Teacher
-								</Link>
-							</Button>
-						</DropdownMenuItem>
-					)}
-					<DrawerTrigger asChild>
-						<DropdownMenuItem>
-							<PenIcon />
-							Edit Session
-						</DropdownMenuItem>
-					</DrawerTrigger>
-				</DropdownMenuContent>
-			</DropdownMenu>
-
-			<DrawerContent>
-				<DrawerHeader>
-					<DrawerTitle>Edit Session</DrawerTitle>
-					<DrawerDescription>Session #{slot.id}</DrawerDescription>
-				</DrawerHeader>
-				<DrawerInner>
-					<Table>
-						<TableBody>
-							<TableRow>
-								<TableCell className="font-medium">Status</TableCell>
-								<TableCell>
-									<Badge variant="secondary">
-										{snakeToTitleCase(slot.status)}
-									</Badge>
-								</TableCell>
-							</TableRow>
-							<TableRow>
-								<TableCell className="font-medium">Date & Time</TableCell>
-								<TableCell>
-									{new Date(slot.startTime).toLocaleString()}
-								</TableCell>
-							</TableRow>
-							{slot.meetingLink && (
-								<TableRow>
-									<TableCell className="font-medium">Meeting</TableCell>
-									<TableCell>
-										<Button variant="link" asChild>
-											<a
-												href={slot.meetingLink}
-												target="_blank"
-												rel="noreferrer"
-											>
-												Join
-											</a>
-										</Button>
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</DrawerInner>
-				<DrawerFooter>
-					<CopyButton
-						text={() => slot.id}
-						label="Session ID"
-						variant="outline"
-					/>
-					<Button variant="outline" asChild>
-						<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
-							<VideoIcon />
-							Open Call in New Window
-						</a>
-					</Button>
-					<Button asChild>
-						<Link href="/" as={`/slots/${slot.id}`}>
-							Open Session Page
-						</Link>
-					</Button>
-					<DrawerClose asChild>
-						<Button variant="outline">Close</Button>
-					</DrawerClose>
-				</DrawerFooter>
-			</DrawerContent>
-		</Drawer>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 
