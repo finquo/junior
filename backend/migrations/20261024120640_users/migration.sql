@@ -23,6 +23,16 @@ CREATE TABLE "student" (
 	CONSTRAINT "grade_range_check" CHECK ("grade" >= 1 AND "grade" <= 12)
 );
 --> statement-breakpoint
+CREATE TABLE "program" (
+	"id" text PRIMARY KEY,
+	"name" text NOT NULL,
+	"description" text,
+	"price" jsonb DEFAULT '{}' NOT NULL,
+	"lessons" text[] DEFAULT '{}'::text[] NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "scheduler" (
 	"id" text PRIMARY KEY DEFAULT gen_random_uuid(),
 	"created_at" timestamp DEFAULT now() NOT NULL,

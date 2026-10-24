@@ -1,11 +1,36 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "b694e4f1-47a0-44bb-b539-702ce3020466",
+  "id": "1d28446e-e92b-4ddb-bf5a-65217e3b536c",
   "prevIds": [
-    "541c8620-ac93-4ab9-916f-a5adf274f468"
+    "6ef3b417-cdc6-44f7-82c3-6a042d221fe0"
   ],
   "ddl": [
+    {
+      "values": [
+        "pending",
+        "answered",
+        "correct",
+        "partially_correct",
+        "wrong",
+        "retake"
+      ],
+      "name": "answer_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "scheduled",
+        "request_reschedule",
+        "rescheduled",
+        "started",
+        "attended"
+      ],
+      "name": "slot_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
     {
       "isRlsEnabled": false,
       "name": "student",
@@ -38,7 +63,31 @@
     },
     {
       "isRlsEnabled": false,
+      "name": "answer",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "lesson",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "program",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
       "name": "scheduler",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "slot",
       "entityType": "tables",
       "schema": "public"
     },
@@ -826,6 +875,305 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "studentId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lessonId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "answer_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "answer",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "program",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "quiz",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "interval hour to minute",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "INTERVAL '1' HOUR",
+      "generated": null,
+      "identity": null,
+      "name": "period",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "price",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "lessons",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "program"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
       "table": "scheduler"
     },
     {
@@ -853,6 +1201,162 @@
       "entityType": "columns",
       "schema": "public",
       "table": "scheduler"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "meetingLink",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "studentId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teacherId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "schedulerId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lessonId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "startTime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expectedEndTime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "endTime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "slot_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'scheduled'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
     },
     {
       "type": "text",
@@ -1085,6 +1589,104 @@
       "table": "verification"
     },
     {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "\"name\" gin_trgm_ops",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "lesson_name_trigram_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "teacherId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "studentId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "lessonId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "slot_teacher_student_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "teacherId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "startTime",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "expectedEndTime",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "slot_teacher_status_time_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
       "nameExplicit": false,
       "columns": [
         "id"
@@ -1189,6 +1791,57 @@
     {
       "nameExplicit": false,
       "columns": [
+        "studentId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "student",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "answer_studentId_student_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "lessonId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "lesson",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "answer_lessonId_lesson_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "answer"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "program"
+      ],
+      "schemaTo": "public",
+      "tableTo": "program",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "lesson_program_program_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "lesson"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "id"
       ],
       "schemaTo": "public",
@@ -1202,6 +1855,74 @@
       "entityType": "fks",
       "schema": "public",
       "table": "scheduler"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "studentId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "student",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "slot_studentId_student_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "teacherId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "teacher",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "slot_teacherId_teacher_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "schedulerId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "scheduler",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "slot_schedulerId_scheduler_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "lessonId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "lesson",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "slot_lessonId_lesson_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "slot"
     },
     {
       "nameExplicit": false,
@@ -1292,9 +2013,49 @@
         "id"
       ],
       "nameExplicit": false,
+      "name": "answer_pkey",
+      "schema": "public",
+      "table": "answer",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "lesson_pkey",
+      "schema": "public",
+      "table": "lesson",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "program_pkey",
+      "schema": "public",
+      "table": "program",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
       "name": "scheduler_pkey",
       "schema": "public",
       "table": "scheduler",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "slot_pkey",
+      "schema": "public",
+      "table": "slot",
       "entityType": "pks"
     },
     {

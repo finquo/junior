@@ -22,16 +22,6 @@ CREATE TABLE "lesson" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "program" (
-	"id" text PRIMARY KEY,
-	"name" text NOT NULL,
-	"description" text,
-	"price" jsonb DEFAULT '{}' NOT NULL,
-	"lessons" text[] DEFAULT '{}'::text[] NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "slot" (
 	"id" text PRIMARY KEY DEFAULT gen_random_uuid(),
 	"meetingLink" text,

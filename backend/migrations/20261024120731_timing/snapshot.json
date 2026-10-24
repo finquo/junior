@@ -1,10 +1,10 @@
 {
+  "id": "eff94ccd-31ca-4b16-8561-09a009705077",
+  "prevIds": [
+    "1d28446e-e92b-4ddb-bf5a-65217e3b536c"
+  ],
   "version": "8",
   "dialect": "postgres",
-  "id": "edd1440c-d3e8-46d3-8d57-0f5c1da1140c",
-  "prevIds": [
-    "27a0db3b-a437-40ae-b268-45061540bf6d"
-  ],
   "ddl": [
     {
       "values": [
@@ -21,15 +21,6 @@
     },
     {
       "values": [
-        "delivered",
-        "packing"
-      ],
-      "name": "order_status",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": [
         "scheduled",
         "request_reschedule",
         "rescheduled",
@@ -38,6 +29,12 @@
       ],
       "name": "slot_status",
       "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "student",
+      "entityType": "tables",
       "schema": "public"
     },
     {
@@ -78,12 +75,6 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "material",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
       "name": "program",
       "entityType": "tables",
       "schema": "public"
@@ -102,21 +93,243 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "payment",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "student",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
       "name": "teacher",
       "entityType": "tables",
       "schema": "public"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mentorId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "supervisorId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "notes",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "age",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "grade",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "schooling",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "char(2)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "country",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 1,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "languages",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "program",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "attendedLessons",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "char(3)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "currency",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "paid",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "amount",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "remaining",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "student"
     },
     {
       "type": "text",
@@ -864,123 +1077,6 @@
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "studentId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "schedulerId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 1,
-      "default": "'{}'",
-      "generated": null,
-      "identity": null,
-      "name": "lessons",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "order_status",
-      "typeSchema": "public",
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'packing'",
-      "generated": null,
-      "identity": null,
-      "name": "order",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "shippingAddress",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
@@ -1261,344 +1357,6 @@
       "entityType": "columns",
       "schema": "public",
       "table": "slot"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "studentId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "program",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "transactionId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "amount",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "paidAt",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "char(3)",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "currency",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "mentorId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "supervisorId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'[]'",
-      "generated": null,
-      "identity": null,
-      "name": "notes",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "address",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "smallint",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "age",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "smallint",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "grade",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "schooling",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "char(2)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "country",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 1,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "languages",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "program",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 1,
-      "default": "'{}'",
-      "generated": null,
-      "identity": null,
-      "name": "attendedLessons",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "char(3)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "currency",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "paid",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "amount",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "remaining",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "student"
     },
     {
       "type": "text",
@@ -1931,6 +1689,74 @@
     {
       "nameExplicit": false,
       "columns": [
+        "id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "student_id_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "mentorId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "teacher",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "student_mentorId_teacher_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "supervisorId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "scheduler",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "student_supervisorId_scheduler_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "program"
+      ],
+      "schemaTo": "public",
+      "tableTo": "program",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "student_program_program_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "student"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "user_id"
       ],
       "schemaTo": "public",
@@ -2012,40 +1838,6 @@
       "entityType": "fks",
       "schema": "public",
       "table": "lesson"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "studentId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "student",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "material_studentId_student_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "material"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "schedulerId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "scheduler",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "material_schedulerId_scheduler_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "material"
     },
     {
       "nameExplicit": false,
@@ -2135,108 +1927,6 @@
     {
       "nameExplicit": false,
       "columns": [
-        "studentId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "student",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "NO ACTION",
-      "name": "payment_studentId_student_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "program"
-      ],
-      "schemaTo": "public",
-      "tableTo": "program",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "NO ACTION",
-      "name": "payment_program_program_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "payment"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "id"
-      ],
-      "schemaTo": "public",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "student_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "mentorId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "teacher",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "NO ACTION",
-      "name": "student_mentorId_teacher_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "supervisorId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "scheduler",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "NO ACTION",
-      "name": "student_supervisorId_scheduler_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "program"
-      ],
-      "schemaTo": "public",
-      "tableTo": "program",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "NO ACTION",
-      "name": "student_program_program_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "student"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
         "id"
       ],
       "schemaTo": "public",
@@ -2267,6 +1957,16 @@
       "entityType": "fks",
       "schema": "public",
       "table": "teacher"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "student_pkey",
+      "schema": "public",
+      "table": "student",
+      "entityType": "pks"
     },
     {
       "columns": [
@@ -2333,16 +2033,6 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "material_pkey",
-      "schema": "public",
-      "table": "material",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
       "name": "program_pkey",
       "schema": "public",
       "table": "program",
@@ -2366,26 +2056,6 @@
       "name": "slot_pkey",
       "schema": "public",
       "table": "slot",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "payment_pkey",
-      "schema": "public",
-      "table": "payment",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "student_pkey",
-      "schema": "public",
-      "table": "student",
       "entityType": "pks"
     },
     {
@@ -2430,13 +2100,6 @@
       "schema": "public",
       "table": "user",
       "entityType": "uniques"
-    },
-    {
-      "value": "\"amount\" > 0",
-      "name": "amount_positive",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "payment"
     },
     {
       "value": "\"amount\" >= 0",
