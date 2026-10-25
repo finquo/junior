@@ -13,6 +13,9 @@ export default defineConfig([
 		deps: {
 			alwaysBundle: ["utils"],
 		},
+		loader: {
+			".pem": "text",
+		},
 	},
 	{
 		entry: [
@@ -30,6 +33,9 @@ export default defineConfig([
 		sourcemap: false,
 		deps: {
 			alwaysBundle: ["utils"],
+		},
+		loader: {
+			".pem": "text",
 		},
 	},
 ]);

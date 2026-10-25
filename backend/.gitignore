@@ -46,6 +46,7 @@ lerna-debug.log*
 # misc
 .DS_Store
 *.pem
+!/src/db/aws-rds.pem
 
 # local db
 *.db*

@@ -1,1 +1,4 @@
 env = false
+
+[loader]
+".pem" = "text"
