@@ -7,7 +7,7 @@ locals {
 	# with the other value silently rotates the database password.
 	db_password	= local.env_json["DB_PASSWORD"]
 
-	db_url		= "postgresql://${aws_db_instance.db.username}:${local.db_password}@${aws_db_instance.db.address}:${aws_db_instance.db.port}/${aws_db_instance.db.db_name}?sslmode=require"
+	db_url		= "postgresql://${aws_db_instance.db.username}:${local.db_password}@${aws_db_instance.db.address}:${aws_db_instance.db.port}/${aws_db_instance.db.db_name}"
 }
 
 data "aws_vpc" "default" {

@@ -8,7 +8,7 @@
 		"compile": "opennextjs-cloudflare build --skipWranglerConfigCheck",
 		"build": "varlock codegen && next build",
 		"check": "tsc --noEmit",
-		"start": "next start --port 4000",
+		"start": "bun run --env-file=../.env .next/standalone/frontend/server.js",
 		"env:generate": "varlock codegen"
 	},
 	"varlock": {
