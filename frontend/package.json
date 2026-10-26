@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --port 4000",
-		"construct": "open-next build",
+		"construct": "open-next build --config-path open-next.aws.config.ts",
 		"compile": "opennextjs-cloudflare build --skipWranglerConfigCheck",
 		"build": "varlock codegen && next build",
 		"check": "tsc --noEmit",
