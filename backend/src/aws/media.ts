@@ -6,16 +6,15 @@ import {
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createStorage } from "unstorage";
-import s3Driver from "unstorage/drivers/s3";
 import { bucket } from "./bucket";
 import {
 	AWS_REGION,
-	BUCKET_ENDPOINT,
 	MEDIA_BUCKET,
 	MEDIA_CONVERT_ENDPOINT,
 	MEDIA_CONVERT_QUEUE_ARN,
 	MEDIA_CONVERT_ROLE_ARN,
 } from "./config";
+import { s3Driver } from "./s3-driver";
 
 const CHUNK_LENGTH_SECONDS = 120;
 
@@ -39,13 +38,7 @@ export const getMediaBucketURL = (key: string) => {
 };
 
 export const mediaStorage = createStorage({
-	driver: s3Driver({
-		accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-		endpoint: BUCKET_ENDPOINT,
-		bucket: MEDIA_BUCKET,
-		region: AWS_REGION,
-	}),
+	driver: s3Driver({ bucket: MEDIA_BUCKET }),
 });
 
 export function getMediaDownloadURL(key: string, expiresIn = 3600) {

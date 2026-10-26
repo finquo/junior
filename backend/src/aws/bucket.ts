@@ -5,8 +5,4 @@ export const bucket = new S3Client({
 	region: AWS_REGION,
 	endpoint: BUCKET_ENDPOINT,
 	forcePathStyle: true,
-	credentials: {
-		accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-	},
 });
