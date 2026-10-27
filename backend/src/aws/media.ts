@@ -14,37 +14,31 @@ import {
 	MEDIA_CONVERT_QUEUE_ARN,
 	MEDIA_CONVERT_ROLE_ARN,
 } from "./config";
-import { s3Driver } from "./s3-driver";
+import { s3Driver, toS3Path } from "./s3-driver";
 
 const CHUNK_LENGTH_SECONDS = 120;
 
 /**
-	Mirrors unstorage's key handling: normalizeKey turns "/" and "\" into ":"
-	then the S3 driver splits on ":" and joins the segments with "/"
+	Media lives under its own prefix so the bucket can also host the
+	CloudFront static assets (uploaded to `_assets/`) without key collisions.
 */
-const toS3Path = (key: string) =>
-	(key.split("?") as [string])[0]
-		.replace(/[/\\]/g, ":")
-		.replace(/:+/g, ":")
-		.replace(/^:|:$/g, "")
-		.split(":")
-		.filter(Boolean)
-		.join("/");
+const MEDIA_PREFIX = "media";
+
+const mediaPath = (key: string) => `${MEDIA_PREFIX}/${toS3Path(key)}`;
 
 export const getMediaBucketURL = (key: string) => {
 	const isPrefix = /[/\\:]$/.test(key);
-	const path = toS3Path(key);
-	return `s3://${MEDIA_BUCKET}/${path}${isPrefix ? "/" : ""}`;
+	return `s3://${MEDIA_BUCKET}/${mediaPath(key)}${isPrefix ? "/" : ""}`;
 };
 
 export const mediaStorage = createStorage({
-	driver: s3Driver({ bucket: MEDIA_BUCKET }),
+	driver: s3Driver({ bucket: MEDIA_BUCKET, prefix: MEDIA_PREFIX }),
 });
 
 export function getMediaDownloadURL(key: string, expiresIn = 3600) {
 	return getSignedUrl(
 		bucket,
-		new GetObjectCommand({ Bucket: MEDIA_BUCKET, Key: toS3Path(key) }),
+		new GetObjectCommand({ Bucket: MEDIA_BUCKET, Key: mediaPath(key) }),
 		{ expiresIn },
 	);
 }

@@ -79,3 +79,11 @@ jobs:
                   cd infra/app
                   tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"
                   tofu apply -auto-approve
+
+            - name: Upload static assets
+              run: |
+                  aws s3 sync frontend/.open-next/assets "s3://finquo-junior-media-${TF_VAR_environment}/_assets" --delete
+                  cd infra/app
+                  aws cloudfront create-invalidation \
+                      --distribution-id "$(tofu output -raw cloudfront_distribution_id)" \
+                      --paths "/*"
