@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
+import { varlockVitePlugin } from "@varlock/vite-integration";
 import { nitro } from "nitro/vite";
 import vinext from "vinext";
 import { defineConfig } from "vite";
@@ -7,6 +8,7 @@ import { patchCssModules } from "vite-css-modules";
 
 export default defineConfig({
 	plugins: [
+		varlockVitePlugin(),
 		patchCssModules({ exportMode: "default" }),
 		vinext(),
 		nitro({

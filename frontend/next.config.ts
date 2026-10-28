@@ -1,8 +1,5 @@
-import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
 import type { NextConfig } from "next";
 import { withPwa } from "./pwa.config";
-
-const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
 	trailingSlash: true,
@@ -14,5 +11,4 @@ const nextConfig: NextConfig = {
 	allowedDevOrigins: ["192.168.*.*"],
 };
 
-// export default nextConfig;
-export default withVarlock(withPwa(nextConfig));
+export default withPwa(nextConfig);

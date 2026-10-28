@@ -7,12 +7,12 @@ applications:
               preBuild:
                   commands:
                       - nvm use 24 && node --version
-                      - npm install -g bun
+                      - npm i -g bun
                       - bun --version
-                      - bun install --frozen-lockfile
+                      - bun i --frozen-lockfile
               build:
                   commands:
-                      - cd frontend && bun run build:vinext
+                      - cd frontend && bun run build
           artifacts:
               baseDirectory: frontend/.amplify-hosting
               files:

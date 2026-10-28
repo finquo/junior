@@ -3,14 +3,12 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --port 4000",
-		"build": "varlock codegen && next build",
+		"dev": "vite dev --port 4000",
+		"build": "varlock codegen && vite build",
+		"construct": "varlock codegen && vite build",
 		"check": "tsc --noEmit",
-		"start": "bun run --env-file=../.env .next/standalone/frontend/server.js",
 		"env:generate": "varlock codegen",
-		"dev:vinext": "varlock codegen && varlock run -- vite dev --port 4000",
-		"build:vinext": "varlock codegen && varlock run -- vite build",
-		"start:vinext": "varlock run -- vinext start"
+		"start": "vite preview --port 4000"
 	},
 	"varlock": {
 		"loadPath": [
@@ -35,7 +33,7 @@
 		"@tanstack/react-query": "^5.102.8",
 		"@tanstack/react-table": "^9.2.4",
 		"@uidotdev/usehooks": "^2.4.1",
-		"@varlock/nextjs-integration": "1.2.2",
+		"@varlock/vite-integration": "^1.5.4",
 		"@zoom/videosdk": "^2.6.0",
 		"@zoom/videosdk-react": "^0.0.3",
 		"@zoom/videosdk-ui-toolkit": "^2.5.0-1",
