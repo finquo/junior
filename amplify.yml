@@ -1,0 +1,22 @@
+version: 1
+applications:
+    - appRoot: frontend
+      frontend:
+          buildPath: /
+          phases:
+              preBuild:
+                  commands:
+                      - nvm use 24 && node --version
+                      - npm install -g bun
+                      - bun --version
+                      - bun install --frozen-lockfile
+              build:
+                  commands:
+                      - cd frontend && bun run build:vinext
+          artifacts:
+              baseDirectory: frontend/.amplify-hosting
+              files:
+                  - "**/*"
+          cache:
+              paths:
+                  - node_modules/**/*

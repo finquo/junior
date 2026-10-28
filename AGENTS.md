@@ -26,7 +26,7 @@ Run from the repo root unless noted.
 - `bun run frontend dev` / `bun run backend dev` - one workspace (`vp run --filter <workspace> <script>`)
 - `bun run check` - typecheck every workspace (`tsc --noEmit`). This is the typecheck; there is no `check-types` script.
 - `bun run biome` - Biome lint/format check (config `biome.json`: tabs, double quotes)
-- `bun run build` / `compile` / `construct` - build all workspaces. `construct` is the production build that CI deploys.
+- `bun run build` / `construct` - build all workspaces. `construct` is the production build that CI deploys.
 - `bun run env:generate` - regenerate Varlock `env.ts` after editing `.env.schema`
 - `bun run hooks:setup` - install git hooks (`vp config`; staged files run `vp check --fix`)
 - Backend only: `bun run backend auth:generate` (regenerates an auth file the developer owns). **DB CLI commands (`db:generate`, `db:migrate`) and everything under `backend/migrations/` are off-limits - see Ground rules.**
@@ -49,9 +49,8 @@ Run from the repo root unless noted.
 
 ## Architecture and deploy
 
-- Combined Worker: root `wrangler.json` runs `frontend/server.ts`, which forwards `/api/*` to `backend` and everything else to the OpenNext worker. In dev the two run as separate servers.
-- Standalone backend Worker: `backend/wrangler.json` (`src/index.ts`). Next can also embed the backend at `/api` via `frontend/src/app/api/[[...route]]/route.ts`.
-- CI: `deploy.yml` runs `bun install` -> `bun run construct` -> zip -> `env.json` -> `tofu apply` in `infra/app`; `state.yml` separately applies `infra/state` then runs `db:migrate`. Both share the `deploy-<ref>` concurrency group.
+- Frontend hosting: `frontend` builds with Vinext (`build:vinext`) and the Hono backend is bundled into the app at `/api` via `frontend/src/app/api/[[...route]]/route.ts`. AWS Amplify hosting is being wired in `infra/app`. In dev the two run as separate servers.
+- CI: `deploy.yml` writes `env.json` then runs `tofu apply` in `infra/app`; Amplify builds and deploys the frontend from GitHub. `state.yml` separately applies `infra/state` then runs `db:migrate`. Both share the `deploy-<ref>` concurrency group.
 
 ## Gotchas
 

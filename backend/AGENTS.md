@@ -2,7 +2,7 @@
 
 Scope: the `backend/` workspace only. Monorepo-level commands, env/Varlock rules, and deploy flow are in the root `AGENTS.md`. This file covers what an agent working in `backend/` would otherwise get wrong.
 
-Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better Auth 1.7.5** (admin plugin) + Drizzle adapter, **Drizzle ORM 1.0 RC** on `postgres-js`, **Zod v4**. Built with `tsdown`; runs as a Cloudflare Worker and (via `src/lambda.ts`) AWS Lambda. No test runner exists.
+Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better Auth 1.7.5** (admin plugin) + Drizzle adapter, **Drizzle ORM 1.0 RC** on `postgres-js`, **Zod v4**. Built with `tsdown`; runs on Node/Bun and (via `src/lambda.ts`) AWS Lambda. No test runner exists.
 
 ## Commands (run in `backend/`, or root `bun run backend <script>`)
 
@@ -15,7 +15,6 @@ Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better
 - `bun run construct` - `varlock codegen && tsdown` (`build`/`compile` are identical). Emits `out/` (worker entries `index`, `lambda`) and `dist/` (package exports). **Run this after any change the frontend imports.**
 - `bun run db:generate` / `db:migrate` - drizzle-kit. **Off-limits - the developer runs these.**
 - `bun run auth:generate` - regenerates `src/db/auth.test.ts` from `src/services.ts`. Never edit that file by hand.
-- `bun run cf:dev` - `wrangler dev`.
 - Seed: `bun script/seed.ts` (drizzle-seed has no npm script).
 
 Env: Bun auto-loading is disabled (`bunfig.toml`). `backend/.env.schema` imports the root schema (minus `NEXT_PUBLIC_*`) and generates the gitignored, `@ts-nocheck` `src/env.ts`. Run env-dependent one-offs from `backend/` or pass `--env-file=../.env`. Path alias `@/*` -> `backend/src/*` (declared only in `backend/tsconfig.json`).
@@ -63,5 +62,5 @@ The two groups are a deliberate split, not duplicates:
 ## Boundaries and gotchas
 
 - Only edit files under `backend/`. The frontend imports the built package (`backend/api`, `backend/config`, `backend/auth`, `backend/db` resolve to `dist/`, and `import ... from "backend"` to `out/`). Changes to exported types/schemas are invisible to the frontend until `bun run construct` rebuilds `dist/` - and the frontend reuses these schemas/types rather than duplicating them, so change them here.
-- Keep code compatible with Cloudflare Workers + Lambda: Node built-ins (`node:*`) are allowed because the Workers run with `nodejs_compat` (root and backend `wrangler.json`) and Lambda is native Node. Keep the `postgres-js` client settings (`prepare: false`, `max: 1`).
+- Keep code runtime-agnostic: Node built-ins (`node:*`) are allowed because Lambda is native Node and Nitro/Node runs on Node. Keep the `postgres-js` client settings (`prepare: false`, `max: 1`).
 - `src/env.ts` and `src/db/auth.test.ts` are generated - do not edit.

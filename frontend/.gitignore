@@ -25,7 +25,6 @@
 # Deployment
 .vercel
 .netlify
-.wrangler
 .alchemy
 
 # Environment & local files
@@ -54,12 +53,10 @@ next-env.d.ts
 # Other
 dev-dist
 
-.wrangler
-.dev.vars*
-
-.open-next
-
 !.env.schema
 /src/env.ts
 /src/api/
 /src/components/examples/
+
+.vinext/
+.amplify-hosting

@@ -10,8 +10,8 @@
 		"includes": [
 			"**",
 			"!**/.next",
-			"!**/.open-next",
-			"!**/.wrangler",
+			"!**/.nitro",
+			"!**/.amplify-hosting",
 			"!**/dist",
 			"!**/out",
 			"!**/.turbo",
@@ -19,7 +19,6 @@
 			"!**/.zed",
 			"!**/.vscode",
 			"!**/routeTree.gen.ts",
-			"!**/.wrangler",
 			"!**/.source",
 			"!infra",
 			"!.github"

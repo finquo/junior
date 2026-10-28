@@ -19,7 +19,6 @@
 			"next": "^16.3.4",
 			"typescript": "^6.0.3",
 			"varlock": "1.21.0",
-			"wrangler": "^4.139.0",
 			"zod": "^4.5.4"
 		}
 	},
@@ -28,7 +27,6 @@
 		"frontend": "vp run --filter frontend",
 		"backend": "vp run --filter backend",
 		"dev": "vp run -r --parallel dev",
-		"compile": "vp run -r compile",
 		"construct": "vp run -r construct",
 		"build": "vp run -r build",
 		"biome": "biome check",
@@ -43,17 +41,14 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.12",
 		"@types/node": "catalog:",
-		"@varlock/cloudflare-integration": "^1.6.0",
 		"rolldown": "1.2.7",
 		"skills": "^1.7.2",
-		"typeflare": "^0.0.5",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
 		"vite-plus": "0.3.1"
 	},
 	"overrides": {
-		"@next/env": "npm:@varlock/nextjs-integration@1.2.2",
-		"vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
+		"@next/env": "npm:@varlock/nextjs-integration@1.2.2"
 	},
 	"packageManager": "bun@1.4.1"
 }

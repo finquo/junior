@@ -100,10 +100,6 @@ app.use("/openapi/*", async (c, next) => {
 									url: c.req.url.replace("/openapi", ""),
 								},
 								{
-									name: "Cloudflare",
-									url: "https://junior.finquo.workers.dev/api",
-								},
-								{
 									name: "Vercel",
 									url: "https://finquo-junior.vercel.app/api",
 								},

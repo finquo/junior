@@ -1,4 +1,4 @@
-name: Building & Deploying
+name: App Infrastructure
 
 on:
     workflow_dispatch:
@@ -9,9 +9,7 @@ on:
             - ".env.schema"
             - ".github/workflows/deploy.yml"
             - "package.json"
-            - "packages/**/*"
-            - "backend/**/*"
-            - "frontend/**/*"
+            - "bun.lock"
 
 concurrency:
     group: deploy-${{ github.ref }}
@@ -19,7 +17,7 @@ concurrency:
 
 jobs:
     deploy:
-        name: Building & Deploying
+        name: Applying App Infrastructure
         environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         runs-on: ubuntu-latest
         env:
@@ -41,15 +39,6 @@ jobs:
 
             - name: Install dependencies
               run: bun i
-
-            - name: Build Frontend & Backend
-              run: bun run construct
-
-            - name: Package OpenNext server
-              run: |
-                  cd frontend/.open-next/server-functions/default
-                  zip -qr "$GITHUB_WORKSPACE/build.zip" .
-                  ls -lh "$GITHUB_WORKSPACE/build.zip"
 
             - name: Load environment variables as JSON
               id: varlock_json
@@ -79,11 +68,3 @@ jobs:
                   cd infra/app
                   tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"
                   tofu apply -auto-approve
-
-            - name: Upload static assets
-              run: |
-                  aws s3 sync frontend/.open-next/assets "s3://finquo-junior-media-${TF_VAR_environment}/_assets" --delete
-                  cd infra/app
-                  aws cloudfront create-invalidation \
-                      --distribution-id "$(tofu output -raw cloudfront_distribution_id)" \
-                      --paths "/*"

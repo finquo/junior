@@ -5,7 +5,6 @@ import { withPwa } from "./pwa.config";
 const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
-	output: "standalone",
 	trailingSlash: true,
 	skipTrailingSlashRedirect: true,
 	typedRoutes: true,

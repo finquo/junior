@@ -2,7 +2,7 @@
 
 Two independent OpenTofu roots. There is no `.tf` at this level, so always run `tofu` from inside a root.
 
-- `app/` — Next.js Lambda from the CI-built OpenNext zip, Function URL fronted by CloudFront, media S3 bucket (also holding the CloudFront static assets) + MediaConvert queue.
+- `app/` — media S3 bucket + MediaConvert queue. The frontend hosting (Amplify) will live here too.
 - `state/` — long-lived shared resources: RDS Postgres, its subnet group/SG, and the `/finquo-junior/db/url` SSM parameter. Put Redis/RabbitMQ here later.
 
 ## Commands
@@ -21,9 +21,9 @@ tofu apply tfplan
 ## State
 
 - One state bucket per environment (`finquo-junior-opentofu-development`, `finquo-junior-opentofu-production`), `use_lockfile = true`, fixed keys `app/terraform.tfstate` and `state/terraform.tfstate`. The bucket is deliberately **not** in the backend block — S3 names are global, so it is passed at init with `-backend-config="bucket=..."`. Never point two roots at the same key; locks are per key, so the roots can apply concurrently.
-- `state` must be applied before `app`. `app/next.tf` reads the DB URL from the `/finquo-junior/db/url` SSM parameter that `state/db.tf` writes — there is no `terraform_remote_state` between the roots.
+- `state` must be applied before `app`. The DB URL is written by `state/db.tf` to the `/finquo-junior/db/url` SSM parameter; `app` consumes it by name, never via `terraform_remote_state`.
 - `state` is shared by every deployment in the account: `skip_final_snapshot = true` and `deletion_protection = false` mean destroy is immediate and unrecoverable.
-- One deployment per AWS account. Only names in **global** namespaces carry the environment: the state bucket (via init) and `finquo-junior-media-${var.environment}`. Lambda, IAM, RDS, SSM, and the MediaConvert queue are account-scoped and stay identical in both accounts.
+- One deployment per AWS account. Only names in **global** namespaces carry the environment: the state bucket (via init) and `finquo-junior-media-${var.environment}`. IAM, RDS, SSM, and the MediaConvert queue are account-scoped and stay identical in both accounts.
 
 ## Environments
 
@@ -33,25 +33,22 @@ tofu apply tfplan
 | Trigger | local `tofu apply` (default tag) | push to `main` |
 | State bucket | `finquo-junior-opentofu-development` | `finquo-junior-opentofu-production` |
 | Media bucket | `finquo-junior-media-development` | `finquo-junior-media-production` |
-| Static assets | `finquo-junior-media-development/_assets/` | `finquo-junior-media-production/_assets/` |
 
 `TF_VAR_environment` drives `default_tags.Environment` and the two bucket names; CI derives it from the branch (`main` → production), local runs default to `development`. The job's GitHub `environment:` uses the same expression, so environment-scoped secrets resolve per branch — not against a hard-coded name.
 
 ## Inputs from outside these roots
 
 - Both roots read `../../env.json` (repo root, gitignored) produced from Varlock. Regenerate it after changing `.env.schema`.
-- `app/next.tf` uploads `../../build.zip` and hashes it with `source_code_hash`; Terraform never builds it. Missing file = plan error, so build it first: `bun run construct`, then zip `frontend/.open-next/server-functions/default` to the repo root.
 - `DB_PASSWORD` comes from `env.json`. RDS rejects `/`, `"`, `@`, and spaces, and the value must match between local `.env` and the GitHub secret — applying with a different value silently rotates the live DB password.
 - Tofu never loads `.env` — Varlock is wired to the app workspaces, not here. AWS credentials come from `AWS_*` env vars or the AWS profile.
-- `app/media.tf` creates `finquo-junior-media-${var.environment}` with `force_destroy = true` — a destroy wipes it. Its name is injected into the Lambda as `MEDIA_BUCKET`, and the backend falls back to `finquo-junior-media-development` when that variable is absent (local dev).
-- The bucket is shared by two features and every key stays inside a prefix: the backend writes media under `media/` (see `backend/src/aws/media.ts`), and `deploy.yml` uploads the OpenNext output to `_assets/`. `app/cloudfront.tf` adds the bucket policy for CloudFront (OAC) scoped to `_assets/*`, so the distribution can read assets but not media.
-- CloudFront is the public entrypoint: asset paths (`_next/*`, `sw.js`, `favicon*`, …) come from S3, everything else from the Lambda Function URL. The Function URL itself still works, but only for server-rendered paths — assets 404 there, by design.
+- `app/media.tf` creates `finquo-junior-media-${var.environment}` with `force_destroy = true` — a destroy wipes it. The backend reads its name from `MEDIA_BUCKET`, falling back to `finquo-junior-media-development` when that variable is absent (local dev).
+- Every media key stays inside the `media/` prefix (see `backend/src/aws/media.ts`).
 
 ## Deploy flows
 
 Two separate workflows, no cross-workflow `needs`:
 
-- `deploy.yml` (`infra/app/**`, `.env.schema`, app code) on `main`: `bun run construct` → zip → `env.json` → AWS creds → `tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"` → apply `infra/app` → `aws s3 sync frontend/.open-next/assets s3://finquo-junior-media-${TF_VAR_environment}/_assets --delete` → CloudFront invalidation. The upload runs after apply because the distribution and its bucket policy are created there.
+- `deploy.yml` (`infra/app/**`, `.env.schema`) on `main`: `env.json` → AWS creds → `tofu init -backend-config="bucket=finquo-junior-opentofu-${TF_VAR_environment}"` → apply `infra/app`. Amplify builds and deploys the frontend from GitHub on push, independently of this workflow.
 - `state.yml` (`infra/state/**`, `backend/migrations/**`, `backend/drizzle.config.ts`, `.env.schema`) on `main`: the same init → apply `infra/state` → `bun run db:migrate`.
 
 Both use the same `concurrency: deploy-<ref>` group, so the two environments deploy in parallel but never overlap within an environment. GitHub does not guarantee `state` finishes before `app` when one push touches both — keep migrations expand/contract for that window.
