@@ -3,6 +3,8 @@ import { writeFileSync } from "node:fs";
 const keyRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const content: string[] = [];
 
+console.log("secrets", process.env.secrets);
+
 if (!process.env.secrets)
 	throw new Error("AWS Amplify process.env.secrets is missing or empty.");
 
