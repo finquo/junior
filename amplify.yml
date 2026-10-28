@@ -10,9 +10,11 @@ applications:
                       - npm i -g bun
                       - bun --version
                       - bun i --frozen-lockfile
+                      - bun run script/env.ts
+                      - cat .env
               build:
                   commands:
-                      - cd frontend && bun run build
+                      - bun run construct
           artifacts:
               baseDirectory: frontend/.amplify-hosting
               files:

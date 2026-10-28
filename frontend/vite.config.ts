@@ -8,7 +8,9 @@ import { patchCssModules } from "vite-css-modules";
 
 export default defineConfig({
 	plugins: [
-		varlockVitePlugin(),
+		varlockVitePlugin({
+			ssrInjectMode: "auto-load",
+		}),
 		patchCssModules({ exportMode: "default" }),
 		vinext(),
 		nitro({
