@@ -3,7 +3,9 @@
 	"Statement": [
 		{
 			"Effect": "Allow",
-			"Principal": { "Service": "amplify.amazonaws.com" },
+			"Principal": {
+				"Service": "amplify.amazonaws.com"
+			},
 			"Action": "sts:AssumeRole"
 		}
 	]
