@@ -35,7 +35,6 @@
 		"env:generate": "vp run -r env:generate"
 	},
 	"dependencies": {
-		"next": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
