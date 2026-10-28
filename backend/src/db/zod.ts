@@ -133,6 +133,10 @@ export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
 		period: intervalHourZod.optional(),
 	});
 
+// Payment
+export const SelectPaymentSchema = createSelectSchema(schema.payment);
+export const InsertPaymentSchema = createInsertSchema(schema.payment);
+
 const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
 	schema: T,
 ) =>

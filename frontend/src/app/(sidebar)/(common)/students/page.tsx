@@ -8,6 +8,7 @@ import {
 	PenIcon,
 	PlusIcon,
 	UserIcon,
+	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { Countries, getLanguageName, getRelateTime } from "utils";
@@ -111,13 +112,23 @@ function StudentActions({ student }: { student: StudentRecord }) {
 						</Link>
 					</Button>
 				</DropdownMenuItem>
+				<RenderWhenRole>
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link href={`/students/${student.id}/payments` as "/"}>
+								<WalletIcon />
+								Payments
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+				</RenderWhenRole>
 				<EditStudentDrawer student={student}>
 					<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
 						<PenIcon />
 						Edit Student
 					</DropdownMenuItem>
 				</EditStudentDrawer>
-				<RenderWhenRole role="admin">
+				<RenderWhenRole>
 					<UserEditDrawer userId={student.id}>
 						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
 							<PenIcon />

@@ -103,7 +103,7 @@ export default function CalendarPage() {
 			<FramePanel>
 				<EventCalendar<SlotRecord>
 					events={calendarEvents}
-					defaultView="week"
+					defaultView="agenda"
 					className="h-[calc(100vh-12rem)] min-h-[600px]"
 					interactions={{
 						drag: false,

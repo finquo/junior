@@ -19,7 +19,6 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import type { api } from "@/hooks/api";
-import { Button } from "./ui/button";
 
 export type NavMainType = {
 	title: string;
@@ -42,54 +41,69 @@ export function NavMain({ title, items }: NavMainType) {
 		<SidebarGroup>
 			<SidebarGroupLabel>{title}</SidebarGroupLabel>
 			<SidebarMenu>
-				{items.map((item) => (
-					<Collapsible
-						key={item.title}
-						defaultOpen={item.isActive}
-						className="group/collapsible"
-						asChild
-					>
-						<SidebarMenuItem>
-							<CollapsibleTrigger asChild>
-								<SidebarMenuButton tooltip={item.title}>
-									<Link href={item.url as "/"}>{item.icon}</Link>
-									<span>{item.title}</span>
-									<Button
-										disabled={
-											(!item.subItems || item.subItems.length === 0) &&
-											!item.fetchItems
-										}
-										className={"ml-auto"}
-										variant={"outline"}
-										size={"icon-xs"}
-										asChild
-									>
-										<div>
-											<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-										</div>
-									</Button>
-								</SidebarMenuButton>
-							</CollapsibleTrigger>
-							<CollapsibleContent>
-								<SidebarMenuSub>
-									{item.subItems?.map((subItem) => (
-										<SidebarMenuSubItem key={subItem.title}>
-											<SidebarMenuSubButton asChild>
-												<a href={subItem.url}>
-													{subItem.icon}
-													<span>{subItem.title}</span>
-												</a>
-											</SidebarMenuSubButton>
-										</SidebarMenuSubItem>
-									))}
-									{item.fetchItems && (
-										<FetchSideBarItems {...item.fetchItems} />
-									)}
-								</SidebarMenuSub>
-							</CollapsibleContent>
-						</SidebarMenuItem>
-					</Collapsible>
-				))}
+				{items.map((item) => {
+					const expandable =
+						Boolean(item.subItems?.length) || Boolean(item.fetchItems);
+
+					const label = (
+						<>
+							{item.icon}
+							<span>{item.title}</span>
+						</>
+					);
+
+					return (
+						<Collapsible
+							key={item.title}
+							defaultOpen={item.isActive}
+							className="group/collapsible"
+							asChild
+						>
+							<SidebarMenuItem>
+								<CollapsibleTrigger asChild>
+									<SidebarMenuButton tooltip={item.title}>
+										{expandable ? (
+											label
+										) : (
+											<Link
+												href={item.url as "/"}
+												className="flex items-center"
+											>
+												{label}
+											</Link>
+										)}
+										{expandable && (
+											<Link
+												href={item.url as "/"}
+												className="ml-auto rounded-md hover:bg-sidebar-accent focus-visible:outline-hidden"
+												onClick={(e) => e.stopPropagation()}
+											>
+												<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+											</Link>
+										)}
+									</SidebarMenuButton>
+								</CollapsibleTrigger>
+								<CollapsibleContent>
+									<SidebarMenuSub>
+										{item.subItems?.map((subItem) => (
+											<SidebarMenuSubItem key={subItem.title}>
+												<SidebarMenuSubButton asChild>
+													<Link href={subItem.url as "/"}>
+														{subItem.icon}
+														<span>{subItem.title}</span>
+													</Link>
+												</SidebarMenuSubButton>
+											</SidebarMenuSubItem>
+										))}
+										{item.fetchItems && (
+											<FetchSideBarItems {...item.fetchItems} />
+										)}
+									</SidebarMenuSub>
+								</CollapsibleContent>
+							</SidebarMenuItem>
+						</Collapsible>
+					);
+				})}
 			</SidebarMenu>
 		</SidebarGroup>
 	);

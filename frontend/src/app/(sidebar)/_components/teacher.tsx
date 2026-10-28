@@ -62,6 +62,10 @@ export function SidebarConfig({
 							title: "Slots",
 							url: "/slots",
 							icon: <VideoIcon />,
+							fetchItems: {
+								api: api.sidebar.slots.queryOptions(),
+								getLink: (id) => `/slots/${id}`,
+							},
 						},
 					]}
 				/>

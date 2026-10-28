@@ -10,11 +10,8 @@ import { sileo as toast } from "sileo";
 import {
 	Countries,
 	type CountryCodes,
-	Currencies,
-	type CurrencyCodes,
 	type LanguageCodes,
 	Languages,
-	resolveDefaultAmount,
 } from "utils";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -31,7 +28,6 @@ import {
 } from "@/components/ui/drawer";
 import {
 	Field,
-	FieldError,
 	FieldGroup,
 	FieldLabel,
 	FieldLegend,
@@ -103,7 +99,7 @@ export function EditStudentDrawer({
 				<DrawerHeader>
 					<DrawerTitle>Edit Student</DrawerTitle>
 					<DrawerDescription>
-						Update student details, program, fees, and address.
+						Update student details, program, and address.
 					</DrawerDescription>
 				</DrawerHeader>
 
@@ -126,14 +122,6 @@ export function EditStudentDrawer({
 										onValueChange={(val) =>
 											field.handleChange(val || undefined)
 										}
-										onSelect={(program) => {
-											const amount = resolveDefaultAmount(
-												program.price,
-												form.state.values.address?.country,
-											);
-											form.setFieldValue("amount", amount);
-											form.setFieldValue("remaining", amount);
-										}}
 										disabled={isPending}
 									/>
 								)}
@@ -247,35 +235,6 @@ export function EditStudentDrawer({
 										</Field>
 									)}
 								/>
-
-								<form.Field
-									name="currency"
-									children={(field) => (
-										<Field>
-											<FieldLabel htmlFor={field.name}>Currency</FieldLabel>
-											<Select
-												value={field.state.value ?? ""}
-												onValueChange={(val) =>
-													field.handleChange(val as CurrencyCodes)
-												}
-												disabled={isPending}
-											>
-												<SelectTrigger id={field.name}>
-													<SelectValue placeholder="Select currency" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectGroup>
-														{Object.entries(Currencies).map(([code, name]) => (
-															<SelectItem key={code} value={code}>
-																{code} · {name}
-															</SelectItem>
-														))}
-													</SelectGroup>
-												</SelectContent>
-											</Select>
-										</Field>
-									)}
-								/>
 							</div>
 
 							<form.Field
@@ -361,83 +320,6 @@ export function EditStudentDrawer({
 									))}
 								</FieldGroup>
 							</FieldSet>
-
-							<form.Field
-								name="paid"
-								children={(field) => (
-									<Field orientation="horizontal">
-										<Checkbox
-											id={field.name}
-											checked={field.state.value}
-											onCheckedChange={(checked) =>
-												field.handleChange(Boolean(checked))
-											}
-											disabled={isPending}
-										/>
-										<FieldLabel htmlFor={field.name}>Fee Paid</FieldLabel>
-									</Field>
-								)}
-							/>
-
-							<div className="grid grid-cols-2 gap-4">
-								<form.Field
-									name="amount"
-									children={(field) => {
-										const isInvalid =
-											field.state.meta.isTouched && !field.state.meta.isValid;
-										return (
-											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor={field.name}>
-													Total Amount (₹)
-												</FieldLabel>
-												<Input
-													id={field.name}
-													name={field.name}
-													type="number"
-													value={field.state.value}
-													onBlur={field.handleBlur}
-													onChange={(e) =>
-														field.handleChange(Number(e.target.value))
-													}
-													disabled={isPending}
-												/>
-												{isInvalid && (
-													<FieldError errors={field.state.meta.errors} />
-												)}
-											</Field>
-										);
-									}}
-								/>
-
-								<form.Field
-									name="remaining"
-									children={(field) => {
-										const isInvalid =
-											field.state.meta.isTouched && !field.state.meta.isValid;
-										return (
-											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor={field.name}>
-													Remaining (₹)
-												</FieldLabel>
-												<Input
-													id={field.name}
-													name={field.name}
-													type="number"
-													value={field.state.value}
-													onBlur={field.handleBlur}
-													onChange={(e) =>
-														field.handleChange(Number(e.target.value))
-													}
-													disabled={isPending}
-												/>
-												{isInvalid && (
-													<FieldError errors={field.state.meta.errors} />
-												)}
-											</Field>
-										);
-									}}
-								/>
-							</div>
 
 							<FieldSet>
 								<FieldLegend>Address</FieldLegend>

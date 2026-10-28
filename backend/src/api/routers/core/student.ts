@@ -1,9 +1,12 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import { resolveDefaultAmount } from "utils";
+import { resolveDefaultAmount, CurrencyZod } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
+import { Increment } from "@/db/utils";
 import {
+	InsertPaymentSchema,
+	SelectPaymentSchema,
 	SelectStudentSchema,
 	SelectUserSchema,
 	UpdateStudentSchema,
@@ -316,6 +319,170 @@ export const studentRouter = {
 						}),
 					)
 					.returning(),
+			);
+		}),
+	getPayments: getRolesProcedure(["admin", "scheduler", "teacher"])
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const student = await tryAPI(
+				"db-core-get-student-payments-student",
+				db.query.student.findFirst({
+					where: MapRole(context.role, {
+						admin: {
+							id: input.id,
+						},
+						teacher: {
+							id: input.id,
+							mentorId: context.user.id,
+						},
+						scheduler: {
+							id: input.id,
+							supervisorId: context.user.id,
+						},
+					}),
+					columns: {
+						id: true,
+					},
+				}),
+			);
+
+			if (!student) return [];
+
+			return await getAPI(
+				"db-core-get-student-payments-query",
+				db.query.payment.findMany({
+					where: {
+						studentId: student.id,
+					},
+					orderBy: { createdAt: "desc" },
+				}),
+				[],
+			);
+		}),
+	addPayment: getRolesProcedure(["admin"])
+		.input(
+			InsertPaymentSchema.pick({
+				amount: true,
+				paidAt: true,
+				transactionId: true,
+			}).extend({
+				id: z.string(),
+				currency: CurrencyZod.optional(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const student = await tryAPI(
+				"db-core-add-payment-get-student",
+				db.query.student.findFirst({
+					where: { id: input.id },
+					columns: {
+						id: true,
+						program: true,
+						currency: true,
+						remaining: true,
+					},
+				}),
+			);
+
+			if (!student) throw getError("NOT_FOUND", "Student not found");
+
+			const program = student.program;
+
+			if (!program)
+				throw getError(
+					"NOT_FOUND",
+					"Assign a program to the student before recording payments",
+				);
+
+			if (input.amount > student.remaining)
+				throw getError(
+					"INPUT_VALIDATION_FAILED",
+					`Payment amount cannot exceed the remaining amount`,
+				);
+
+			const remaining = student.remaining - input.amount;
+
+			const currency = input.currency ?? student.currency ?? "INR";
+
+			return await tryAPI(
+				"db-core-add-payment-query",
+				db.transaction(async (tx) => {
+					const payments = await tx
+						.insert(schema.payment)
+						.values({
+							studentId: student.id,
+							program,
+							amount: input.amount,
+							paidAt: input.paidAt ?? new Date(),
+							currency,
+							transactionId: input.transactionId ?? null,
+						})
+						.returning();
+
+					const students = await tx
+						.update(schema.student)
+						.set({
+							remaining,
+							paid: remaining <= 0,
+						})
+						.where(eq(schema.student.id, student.id))
+						.returning({
+							remaining: schema.student.remaining,
+							paid: schema.student.paid,
+						});
+
+					return {
+						payment: payments[0],
+						student: students[0],
+					};
+				}),
+			);
+		}),
+	deletePayment: getRolesProcedure(["admin"])
+		.input(
+			SelectPaymentSchema.pick({
+				id: true,
+			}),
+		)
+		.handler(async ({ input }) => {
+			const payment = await tryAPI(
+				"db-core-delete-payment-get-payment",
+				db.query.payment.findFirst({
+					where: { id: input.id },
+				}),
+			);
+
+			if (!payment) throw getError("NOT_FOUND", "Payment not found");
+
+			return await tryAPI(
+				"db-core-delete-payment-query",
+				db.transaction(async (tx) => {
+					const payments = await tx
+						.delete(schema.payment)
+						.where(eq(schema.payment.id, payment.id))
+						.returning();
+
+					const students = await tx
+						.update(schema.student)
+						.set({
+							remaining: Increment(schema.student.remaining, payment.amount),
+							paid: false,
+						})
+						.where(eq(schema.student.id, payment.studentId))
+						.returning({
+							remaining: schema.student.remaining,
+							paid: schema.student.paid,
+						});
+
+					return {
+						payment: payments[0],
+						student: students[0],
+					};
+				}),
 			);
 		}),
 	assignProgram: getRolesProcedure(["admin"])

@@ -91,6 +91,10 @@ export function SidebarConfig({
 									url: "/slots/new",
 								},
 							],
+							fetchItems: {
+								api: api.sidebar.slots.queryOptions(),
+								getLink: (id) => `/slots/${id}`,
+							},
 						},
 					]}
 				/>
