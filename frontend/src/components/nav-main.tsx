@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
+import { create } from "zustand";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -36,7 +37,20 @@ export type NavMainType = {
 	}[];
 };
 
+type SidebarAccordionState = {
+	/** URL of the only expanded item; null = nothing expanded by the user yet */
+	openItem: string | null;
+	setOpenItem: (openItem: string | null) => void;
+};
+
+const useSidebarAccordion = create<SidebarAccordionState>((set) => ({
+	openItem: null,
+	setOpenItem: (openItem) => set({ openItem }),
+}));
+
 export function NavMain({ title, items }: NavMainType) {
+	const sidebarAccordion = useSidebarAccordion();
+
 	return (
 		<SidebarGroup>
 			<SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -52,10 +66,20 @@ export function NavMain({ title, items }: NavMainType) {
 						</>
 					);
 
+					const isOpen =
+						sidebarAccordion.openItem === null
+							? Boolean(item.isActive)
+							: sidebarAccordion.openItem === item.url;
+
 					return (
 						<Collapsible
 							key={item.title}
-							defaultOpen={item.isActive}
+							open={expandable ? isOpen : undefined}
+							onOpenChange={
+								expandable
+									? (open) => sidebarAccordion.setOpenItem(open ? item.url : "")
+									: undefined
+							}
 							className="group/collapsible"
 							asChild
 						>

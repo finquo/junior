@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { NewPaymentForm } from "../_components/payment-form";
 
-function RecordPayment() {
+export default function Page() {
 	return (
 		<Frame>
 			<FrameHeader>
@@ -35,8 +35,4 @@ function RecordPayment() {
 			</FramePanel>
 		</Frame>
 	);
-}
-
-export default function Page() {
-	return <RecordPayment />;
 }
