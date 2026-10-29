@@ -1,9 +1,9 @@
 import { desc, eq, sql } from "drizzle-orm";
 import z from "zod";
-import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
-import { SelectUserSchema } from "@/db/zod";
-import { db } from "@/services";
+import { InsertUserSchema, SelectUserSchema } from "@/db/zod";
+import { auth, db } from "@/services";
 import { MapRole } from "@/utils/role";
 
 export const schedulerRouter = {
@@ -84,5 +84,47 @@ export const schedulerRouter = {
 					),
 				[],
 			);
+		}),
+	create: getRolesProcedure(["admin"])
+		.input(
+			z.object({
+				user: InsertUserSchema.pick({
+					name: true,
+					email: true,
+				}),
+				password: z
+					.string()
+					.min(6, "Password must be at least 6 characters")
+					.default("1234567890"),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const { user, password } = input;
+
+			const createdUser = await tryAPI(
+				"db-core-create-scheduler-account",
+				auth.api.createUser({
+					body: {
+						name: user.name,
+						email: user.email,
+						password,
+						role: "scheduler",
+					},
+				}),
+			);
+
+			if (!createdUser?.user) {
+				throw getError("INTERNAL_SERVER_ERROR", "Failed to create scheduler account");
+			}
+
+			await tryAPI(
+				"db-core-create-scheduler",
+				db
+					.insert(schema.scheduler)
+					.values({ id: createdUser.user.id })
+					.onConflictDoNothing(),
+			);
+
+			return createdUser.user;
 		}),
 };

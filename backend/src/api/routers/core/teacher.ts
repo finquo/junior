@@ -6,11 +6,13 @@ import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { AppendLeave, leaveItemZod } from "@/db/column/leave-range";
 import {
+	InsertTeacherSchema,
+	InsertUserSchema,
 	SelectTeacherSchema,
 	SelectUserSchema,
 	UpdateTeacherSchema,
 } from "@/db/zod";
-import { db } from "@/services";
+import { auth, db } from "@/services";
 import { checkAgainstLeaves } from "@/utils/leave";
 import { MapRole } from "@/utils/role";
 
@@ -293,5 +295,55 @@ export const teacherRouter = {
 					)
 					.returning(),
 			);
+		}),
+	create: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				user: InsertUserSchema.pick({
+					name: true,
+					email: true,
+				}),
+				teacher: InsertTeacherSchema.pick({
+					supervisorId: true,
+					languages: true,
+					experiences: true,
+				}),
+				password: z
+					.string()
+					.min(6, "Password must be at least 6 characters")
+					.default("1234567890"),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const { user, teacher, password } = input;
+
+			const createdUser = await tryAPI(
+				"db-core-create-teacher-account",
+				auth.api.createUser({
+					body: {
+						name: user.name,
+						email: user.email,
+						password,
+						role: "teacher",
+					},
+				}),
+			);
+
+			if (!createdUser?.user) {
+				throw getError("INTERNAL_SERVER_ERROR", "Failed to create teacher account");
+			}
+
+			await tryAPI(
+				"db-core-create-teacher",
+				db
+					.insert(schema.teacher)
+					.values({
+						id: createdUser.user.id,
+						...teacher,
+					})
+					.onConflictDoNothing(),
+			);
+
+			return createdUser.user;
 		}),
 };

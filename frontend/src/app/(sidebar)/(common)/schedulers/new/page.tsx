@@ -1,15 +1,217 @@
 "use client";
 
-import { CreateUserForm } from "@/app/(sidebar)/admin/users/new/_components/create-user-form";
+import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
+import { UserPlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { sileo as toast } from "sileo";
+import { z } from "zod";
+import {
+	Frame,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { api, refetchAPIs } from "@/hooks/api";
+import type { GetFormZod } from "@/lib/utils";
+
+const createSchedulerSchema = z.object({
+	name: z.string().trim().min(1, "Name is required"),
+	email: z.string().trim().email("Please enter a valid email address"),
+	password: z
+		.string()
+		.min(6, "Password must be at least 6 characters")
+		.default("1234567890"),
+});
+
+type CreateSchedulerValues = z.infer<typeof createSchedulerSchema>;
 
 export default function Page() {
+	const router = useRouter();
+
+	const { mutateAsync, isPending } = useMutation(
+		api.core.scheduler.create.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([api.core.scheduler.list.queryKey()]);
+				toast.success({ title: "Scheduler created successfully" });
+				router.push("/schedulers");
+			},
+			onError: (err: { message?: string }) => {
+				toast.error({ title: err.message || "Failed to create scheduler" });
+			},
+		}),
+	);
+
+	const form = useForm({
+		defaultValues: {
+			name: "",
+			email: "",
+			password: "1234567890",
+		} as CreateSchedulerValues,
+		validators: {
+			onSubmit: createSchedulerSchema as GetFormZod<
+				typeof createSchedulerSchema
+			>,
+		},
+		onSubmit: async ({ value }) => {
+			await mutateAsync({
+				user: {
+					name: value.name.trim(),
+					email: value.email.trim().toLowerCase(),
+				},
+				password: value.password,
+			});
+		},
+	});
+
 	return (
-		<CreateUserForm
-			title="Create New Scheduler"
-			description="Add a scheduler who will manage teachers and students."
-			cancelHref="/schedulers"
-			defaultRole="scheduler"
-			lockRole
-		/>
+		<Frame>
+			<FrameHeader>
+				<FrameTitle>Create New Scheduler</FrameTitle>
+				<FrameDescription>
+					Add a scheduler account who will manage teachers and students.
+				</FrameDescription>
+			</FrameHeader>
+			<FramePanel>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
+					<FieldGroup>
+						<form.Field
+							name="name"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Full Name</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											placeholder="John Doe"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+											aria-invalid={isInvalid}
+											disabled={isPending}
+										/>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Field
+							name="email"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Email Address</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="email"
+											placeholder="user@example.com"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) =>
+												field.handleChange(e.target.value.toLowerCase())
+											}
+											aria-invalid={isInvalid}
+											disabled={isPending}
+										/>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Field
+							name="password"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="text"
+											placeholder="1234567890"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+											aria-invalid={isInvalid}
+											disabled={isPending}
+										/>
+										<FieldDescription>
+											Default password is 1234567890. User can change it after
+											logging in.
+										</FieldDescription>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isDirty]}
+							children={([canSubmit, isDirty]) => (
+								<ButtonGroup>
+									<Button variant="outline" asChild disabled={isPending}>
+										<Link href="/schedulers">Cancel</Link>
+									</Button>
+									<Button
+										type="submit"
+										disabled={!canSubmit || !isDirty || isPending}
+									>
+										{isPending ? <Spinner /> : <UserPlusIcon />}
+										Create Scheduler
+									</Button>
+								</ButtonGroup>
+							)}
+						/>
+					</FieldGroup>
+				</form>
+			</FramePanel>
+		</Frame>
 	);
 }

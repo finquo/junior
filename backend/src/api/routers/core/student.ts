@@ -3,8 +3,13 @@ import { resolveDefaultAmount } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
-import { SelectStudentSchema, UpdateStudentSchema } from "@/db/zod";
-import { db } from "@/services";
+import {
+	InsertStudentSchema,
+	InsertUserSchema,
+	SelectStudentSchema,
+	UpdateStudentSchema,
+} from "@/db/zod";
+import { auth, db } from "@/services";
 import { MapRole } from "@/utils/role";
 import { orderLessons } from "./program";
 
@@ -361,5 +366,65 @@ export const studentRouter = {
 					.where(eq(schema.student.id, input.id))
 					.returning(),
 			);
+		}),
+	create: getRolesProcedure(["admin"])
+		.input(
+			z.object({
+				user: InsertUserSchema.pick({
+					name: true,
+					email: true,
+				}),
+				student: InsertStudentSchema.pick({
+					program: true,
+					mentorId: true,
+					supervisorId: true,
+					schooling: true,
+					age: true,
+					grade: true,
+					country: true,
+					currency: true,
+					languages: true,
+					address: true,
+					amount: true,
+					remaining: true,
+				}),
+				password: z
+					.string()
+					.min(6, "Password must be at least 6 characters")
+					.default("1234567890"),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const { user, student, password } = input;
+
+			const createdUser = await tryAPI(
+				"db-core-create-student-account",
+				auth.api.createUser({
+					body: {
+						name: user.name,
+						email: user.email,
+						password,
+						role: "student",
+					},
+				}),
+			);
+
+			if (!createdUser?.user) {
+				throw getError("INTERNAL_SERVER_ERROR", "Failed to create student account");
+			}
+
+			await tryAPI(
+				"db-core-create-student",
+				db
+					.insert(schema.student)
+					.values({
+						id: createdUser.user.id,
+						paid: false,
+						...student,
+					})
+					.onConflictDoNothing(),
+			);
+
+			return createdUser.user;
 		}),
 };
