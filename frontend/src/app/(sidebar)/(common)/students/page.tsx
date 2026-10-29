@@ -112,7 +112,7 @@ function StudentActions({ student }: { student: StudentRecord }) {
 						</Link>
 					</Button>
 				</DropdownMenuItem>
-				<RenderWhenRole>
+				<RenderWhenRole role="admin">
 					<DropdownMenuItem asChild>
 						<Button variant="link" asChild>
 							<Link href={`/students/${student.id}/payments` as "/"}>
@@ -128,7 +128,7 @@ function StudentActions({ student }: { student: StudentRecord }) {
 						Edit Student
 					</DropdownMenuItem>
 				</EditStudentDrawer>
-				<RenderWhenRole>
+				<RenderWhenRole role={["admin", "scheduler"]}>
 					<UserEditDrawer userId={student.id}>
 						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
 							<PenIcon />

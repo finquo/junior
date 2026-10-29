@@ -6,6 +6,7 @@ import {
 	CalendarHeartIcon,
 	ComponentIcon,
 	GraduationCapIcon,
+	ListIcon,
 	PlusIcon,
 	UserPenIcon,
 	VideoIcon,
@@ -40,6 +41,13 @@ export function SidebarConfig({
 							title: "Teachers",
 							url: "/teachers",
 							icon: <BriefcaseBusinessIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/teachers",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
 								getLink: (id) => `/teachers/${id}`,
@@ -49,6 +57,13 @@ export function SidebarConfig({
 							title: "Students",
 							url: "/students",
 							icon: <GraduationCapIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/students",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
 								getLink: (id) => `/students/${id}`,
@@ -63,6 +78,13 @@ export function SidebarConfig({
 							title: "Programs",
 							url: "/programs",
 							icon: <ComponentIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/programs",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,
@@ -78,6 +100,11 @@ export function SidebarConfig({
 									title: "Create New Lesson",
 									url: "/lessons/new",
 								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/lessons",
+								},
 							],
 						},
 						{
@@ -89,6 +116,11 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New Slot",
 									url: "/slots/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/slots",
 								},
 							],
 							fetchItems: {

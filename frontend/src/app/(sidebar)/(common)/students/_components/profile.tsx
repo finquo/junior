@@ -183,7 +183,7 @@ export function StudentProfile({
 								Manage Lessons
 							</Link>
 						</Button>
-						<RenderWhenRole>
+						<RenderWhenRole role="admin">
 							<Button variant="outline" size="sm" asChild>
 								<Link href={`/students/${data.id}/payments` as "/"}>
 									<WalletIcon />

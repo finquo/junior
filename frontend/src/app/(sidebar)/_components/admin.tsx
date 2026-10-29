@@ -6,6 +6,7 @@ import {
 	CalendarHeartIcon,
 	ComponentIcon,
 	GraduationCapIcon,
+	ListIcon,
 	PlusIcon,
 	ScanEyeIcon,
 	UserPenIcon,
@@ -49,6 +50,11 @@ export function SidebarConfig({
 									title: "Create User",
 									url: "/admin/users/new",
 								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/admin/users",
+								},
 							],
 						},
 						{
@@ -60,6 +66,11 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/schedulers/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/schedulers",
 								},
 							],
 							fetchItems: {
@@ -77,6 +88,11 @@ export function SidebarConfig({
 									title: "Create New",
 									url: "/teachers/new",
 								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/teachers",
+								},
 							],
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
@@ -92,6 +108,11 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/students/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/students",
 								},
 							],
 							fetchItems: {
@@ -118,6 +139,11 @@ export function SidebarConfig({
 									title: "Create New",
 									url: "/programs/new",
 								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/programs",
+								},
 							],
 						},
 						{
@@ -130,6 +156,11 @@ export function SidebarConfig({
 									title: "Create New",
 									url: "/lessons/new",
 								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/lessons",
+								},
 							],
 						},
 						{
@@ -141,6 +172,11 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/slots/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/slots",
 								},
 							],
 							fetchItems: {

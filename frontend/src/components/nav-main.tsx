@@ -73,13 +73,9 @@ export function NavMain({ title, items }: NavMainType) {
 											</Link>
 										)}
 										{expandable && (
-											<Link
-												href={item.url as "/"}
-												className="ml-auto rounded-md hover:bg-sidebar-accent focus-visible:outline-hidden"
-												onClick={(e) => e.stopPropagation()}
-											>
+											<span className="ml-auto">
 												<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-											</Link>
+											</span>
 										)}
 									</SidebarMenuButton>
 								</CollapsibleTrigger>

@@ -6,6 +6,7 @@ import {
 	CalendarX2Icon,
 	ComponentIcon,
 	GraduationCapIcon,
+	ListIcon,
 	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -39,6 +40,13 @@ export function SidebarConfig({
 							title: "Students",
 							url: "/students",
 							icon: <GraduationCapIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/students",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
 								getLink: (id) => `/students/${id}`,
@@ -53,6 +61,13 @@ export function SidebarConfig({
 							title: "Programs",
 							url: "/programs",
 							icon: <ComponentIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/programs",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,
@@ -62,6 +77,13 @@ export function SidebarConfig({
 							title: "Slots",
 							url: "/slots",
 							icon: <VideoIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/slots",
+								},
+							],
 							fetchItems: {
 								api: api.sidebar.slots.queryOptions(),
 								getLink: (id) => `/slots/${id}`,
