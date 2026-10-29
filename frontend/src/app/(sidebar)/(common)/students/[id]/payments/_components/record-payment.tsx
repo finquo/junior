@@ -4,7 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { HandCoinsIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { CurrencyZod, getCurrencySymbol } from "utils";
+import { Currencies, CurrencyZod, getCurrencySymbol } from "utils";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,11 +46,11 @@ export function RecordPayment({
 	currency: string;
 }) {
 	const { mutateAsync, isPending } = useMutation(
-		api.core.student.addPayment.mutationOptions({
+		api.core.payment.create.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
 					api.core.student.get.queryKey({ input: { id } }),
-					api.core.student.getPayments.queryKey({ input: { id } }),
+					api.core.payment.list.queryKey({ input: { studentId: id } }),
 				]);
 				toast.success({ title: "Payment recorded" });
 			},
@@ -84,7 +84,7 @@ export function RecordPayment({
 			}
 
 			await mutateAsync({
-				id,
+				studentId: id,
 				amount,
 				currency: value.currency,
 				paidAt: value.paidAt ? new Date(value.paidAt) : undefined,
@@ -148,7 +148,7 @@ export function RecordPayment({
 							<Field>
 								<FieldLabel htmlFor={field.name}>Currency</FieldLabel>
 								<Select
-									items={{ INR: "Rupees", USD: "Dollar" }}
+									items={Currencies}
 									value={field.state.value}
 									onValueChange={(value) => field.handleChange(value as never)}
 									disabled={isPending}
@@ -161,13 +161,11 @@ export function RecordPayment({
 									</SelectTrigger>
 									<SelectContent>
 										<SelectGroup>
-											{Object.entries({ INR: "Rupees", USD: "Dollar" }).map(
-												([code, name]) => (
-													<SelectItem key={code} value={code}>
-														{name}
-													</SelectItem>
-												),
-											)}
+											{Object.entries(Currencies).map(([code, name]) => (
+												<SelectItem key={code} value={code}>
+													{name}
+												</SelectItem>
+											))}
 										</SelectGroup>
 									</SelectContent>
 								</Select>

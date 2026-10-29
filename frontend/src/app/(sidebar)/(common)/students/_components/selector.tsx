@@ -34,6 +34,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
 import type { API_Returns } from "@/lib/api";
@@ -257,7 +258,9 @@ export function ProgramSelector({
 	onSelect?: (program: ProgramItemData) => void;
 	disabled?: boolean;
 }) {
-	const { data = [] } = useQuery(api.core.program.list.queryOptions());
+	const { data = [], isPending } = useQuery(
+		api.core.program.list.queryOptions(),
+	);
 
 	return (
 		<Field>
@@ -272,15 +275,20 @@ export function ProgramSelector({
 					if (program) onSelect?.(program);
 				}}
 			>
-				<SelectTrigger id={id} className="w-full">
-					<SelectValue
-						placeholder={`Select a ${label.toLowerCase()}`}
-						children={(programId: string) => (
-							<span>
-								{data.find((p) => p.id === programId)?.name ?? programId}
-							</span>
-						)}
-					/>
+				<SelectTrigger id={id} className="w-full min-w-[200px]">
+					{isPending ? (
+						<Skeleton className="h-4 w-full max-w-40" />
+					) : (
+						<SelectValue
+							placeholder={`Select a ${label.toLowerCase()}`}
+							children={(programId: string) => (
+								<span>
+									{data.find((p) => p.id === programId)?.name ??
+										`Unknown program (${programId})`}
+								</span>
+							)}
+						/>
+					)}
 				</SelectTrigger>
 				<SelectContent alignItemWithTrigger={false}>
 					<SelectGroup>

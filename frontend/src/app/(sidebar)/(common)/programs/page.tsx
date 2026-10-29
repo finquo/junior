@@ -6,6 +6,7 @@ import {
 	BookOpenIcon,
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
+	PenIcon,
 	PlusIcon,
 	ScanEyeIcon,
 } from "lucide-react";
@@ -129,6 +130,14 @@ function ProgramActions({ program }: { program: ProgramRecord }) {
 							<Link href={`/programs/${program.id}` as "/"}>
 								<ExternalLinkIcon />
 								View Program Page
+							</Link>
+						</Button>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Button variant="link" asChild>
+							<Link href={`/programs/${program.id}/edit` as "/"}>
+								<PenIcon />
+								Edit Program
 							</Link>
 						</Button>
 					</DropdownMenuItem>

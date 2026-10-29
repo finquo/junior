@@ -132,7 +132,7 @@ export function StudentProfile({
 	curriculum?: CurriculumData;
 }) {
 	const notes = data.notes ?? [];
-	const languages = data.languages ?? [];
+	const languages = Array.isArray(data.languages) ? data.languages : [];
 
 	const total = data.amount ?? 0;
 	const remaining = data.remaining ?? 0;

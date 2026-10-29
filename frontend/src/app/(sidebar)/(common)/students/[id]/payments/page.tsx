@@ -6,6 +6,7 @@ import {
 	BanknoteIcon,
 	CircleAlertIcon,
 	CircleCheckIcon,
+	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -35,6 +36,7 @@ import {
 import { api } from "@/hooks/api";
 import { useHasRole } from "@/hooks/role";
 import { PaymentLog } from "./_components/payment-log";
+import { PaymentsDrawer } from "./_components/payments-drawer";
 import { RecordPayment } from "./_components/record-payment";
 
 function Payments({ studentId }: { studentId: string }) {
@@ -44,7 +46,7 @@ function Payments({ studentId }: { studentId: string }) {
 		isError,
 	} = useQuery(api.core.student.get.queryOptions({ input: { id: studentId } }));
 	const { data: payments = [] } = useQuery(
-		api.core.student.getPayments.queryOptions({ input: { id: studentId } }),
+		api.core.payment.list.queryOptions({ input: { studentId: studentId } }),
 	);
 
 	const isAdmin = useHasRole("admin");
@@ -94,6 +96,16 @@ function Payments({ studentId }: { studentId: string }) {
 					<FrameDescription>
 						The current state of the program fees
 					</FrameDescription>
+					<FrameActions>
+						{isAdmin && (
+							<PaymentsDrawer student={student}>
+								<Button variant="outline" size="sm">
+									<WalletIcon />
+									Edit Fees
+								</Button>
+							</PaymentsDrawer>
+						)}
+					</FrameActions>
 				</FrameHeader>
 				<ItemGroup>
 					<Item variant="outline">
@@ -170,7 +182,7 @@ function Payments({ studentId }: { studentId: string }) {
 						Offline payments recorded for this student
 					</FrameDescription>
 				</FrameHeader>
-				<PaymentLog id={studentId} payments={payments} />
+				<PaymentLog payments={payments} />
 			</FramePanel>
 		</Frame>
 	);

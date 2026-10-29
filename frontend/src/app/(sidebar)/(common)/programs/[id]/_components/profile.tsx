@@ -8,6 +8,7 @@ import {
 	HashIcon,
 	LayersIcon,
 	ListChecksIcon,
+	PenIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -146,6 +147,12 @@ export function ProgramProfile({
 							variant="outline"
 							size="sm"
 						/>
+						<Button asChild variant="outline" size="sm">
+							<Link href={`/programs/${data.id}/edit` as "/"}>
+								<PenIcon />
+								Edit
+							</Link>
+						</Button>
 						<Button asChild size="sm">
 							<Link
 								href={{

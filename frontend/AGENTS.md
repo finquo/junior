@@ -23,6 +23,7 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 - `src/components/ui/` is reserved for official shadcn primitives, installed with `bun shadcn add <component>`. Never create custom components there, and never overwrite an existing component to add a variant unless explicitly told to.
 - Put feature-specific and route-private components in the nearest `_components/` folder. Put only components reused across multiple routes in `src/components/` (`ui/`, `reui/`, `loader.tsx`, `mode-toggle.tsx`, etc.).
 - Reuse backend Zod schemas, types, and lookup dictionaries from `backend/config`; never redefine enums that already exist there.
+- Never hardcode inline lookup dictionaries in pages/components (for example `currencyItems = { INR: "Rupees", USD: "Dollar" } as const`). Shared code/data lives in `packages/utils` — import it (`Currencies`, `Countries`, `CurrencyZod`, ...), or export a new variable from `utils` if it does not exist yet. One source of truth means UI and API updates are single-file edits, not page-by-page hunts.
 
 ## Routes and layouts
 
@@ -32,6 +33,22 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 - `(sidebar)/(common)/` - pages shared across roles: `students` (+ `[id]`, `[id]/lessons`), `teachers` (+ `[id]`, `[id]/students`), `schedulers` (+ `[id]`, `new`), `lessons` (+ `new`), `slots` (+ `new`, `[id]`), `calender`.
 - `(student)/student` - student area. `me/` - current user profile.
 - Root dashboard layout: `src/app/(sidebar)/layout.tsx`; sidebar components live in `src/app/(sidebar)/_components/`.
+
+### Page-level role restrictions
+
+- `<RenderWhenRole>` is only for hiding small buttons/features inside pages shared across roles.
+- When an **entire route** is role-restricted, do not wrap the page in `<RenderWhenRole>`; create a route-local `layout.tsx` instead:
+
+```tsx
+// app/(sidebar)/(common)/things/new/layout.tsx
+"use client";
+
+import { GetAuthLayout } from "@/sidebar/auth";
+
+export default GetAuthLayout("admin");
+```
+
+- Use `GetAuthsLayout(["admin", "scheduler"])` (multi-role, from `@/sidebar/auth`) when several roles may pass. Existing examples: `lessons/layout.tsx`, `teachers/layout.tsx`, `slots/layout.tsx`.
 
 ## API and data fetching
 

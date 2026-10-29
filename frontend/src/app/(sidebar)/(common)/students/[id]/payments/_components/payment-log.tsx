@@ -27,21 +27,17 @@ import {
 import { api, refetchAPIs } from "@/hooks/api";
 import type { API_Returns } from "@/lib/api";
 
-type PaymentRecord = API_Returns["core"]["student"]["getPayments"][number];
+type PaymentRecord = API_Returns["core"]["payment"]["list"][number];
 
-function PaymentLogItem({
-	id,
-	payment,
-}: {
-	id: string;
-	payment: PaymentRecord;
-}) {
+function PaymentLogItem({ payment }: { payment: PaymentRecord }) {
 	const { mutate, isPending } = useMutation(
-		api.core.student.deletePayment.mutationOptions({
-			onSuccess: () => {
+		api.core.payment.remove.mutationOptions({
+			onSuccess: (_data, input) => {
 				refetchAPIs([
-					api.core.student.get.queryKey({ input: { id } }),
-					api.core.student.getPayments.queryKey({ input: { id } }),
+					api.core.student.get.queryKey({ input: { id: input.id } }),
+					api.core.payment.list.queryKey({
+						input: { studentId: input.id },
+					}),
 				]);
 				toast.success({
 					title: "Payment removed and remaining amount restored",
@@ -91,13 +87,7 @@ function PaymentLogItem({
 	);
 }
 
-export function PaymentLog({
-	id,
-	payments,
-}: {
-	id: string;
-	payments: PaymentRecord[];
-}) {
+export function PaymentLog({ payments }: { payments: PaymentRecord[] }) {
 	if (payments.length === 0) {
 		return (
 			<Empty>
@@ -117,7 +107,7 @@ export function PaymentLog({
 	return (
 		<ItemGroup>
 			{payments.map((payment) => (
-				<PaymentLogItem key={payment.id} id={id} payment={payment} />
+				<PaymentLogItem key={payment.id} payment={payment} />
 			))}
 		</ItemGroup>
 	);

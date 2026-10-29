@@ -13,6 +13,7 @@ import {
 	UserRoundCogIcon,
 	UserRoundGroupIcon,
 	VideoIcon,
+	WalletIcon,
 } from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
@@ -179,10 +180,27 @@ export function SidebarConfig({
 									url: "/slots",
 								},
 							],
-							fetchItems: {
-								api: api.sidebar.slots.queryOptions(),
-								getLink: (id) => `/slots/${id}`,
-							},
+							// fetchItems: {
+							// 	api: api.sidebar.slots.queryOptions(),
+							// 	getLink: (id) => `/slots/${id}`,
+							// },
+						},
+						{
+							title: "Payments",
+							url: "/payments",
+							icon: <WalletIcon />,
+							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Record Payment",
+									url: "/payments/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/payments",
+								},
+							],
 						},
 					]}
 				/>

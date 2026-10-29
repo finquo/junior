@@ -4,6 +4,7 @@ import { adminRouter as admin } from "./admin";
 import { chatRouter as chat } from "./chat";
 import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
+import { paymentRouter as paymentCore } from "./core/payment";
 import { programRouter as programCore } from "./core/program";
 import { schedulerRouter as schedulerCore } from "./core/scheduler";
 import { selfRouter as selfCore } from "./core/self";
@@ -34,6 +35,7 @@ export const appRouter = {
 	media,
 	core: {
 		lesson: lessonCore,
+		payment: paymentCore,
 		program: programCore,
 		scheduler: schedulerCore,
 		self: selfCore,
