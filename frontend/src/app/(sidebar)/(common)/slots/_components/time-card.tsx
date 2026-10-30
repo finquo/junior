@@ -19,6 +19,7 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -190,7 +191,6 @@ export function TimeCard({
 							</DialogHeader>
 							<DaySlider
 								step={hour ? 60 : 15}
-								className="w-6xl"
 								lowerLimit={lowerLimit}
 								upperLimit={upperLimit}
 								fixedLength={duration}
@@ -199,6 +199,16 @@ export function TimeCard({
 								blockedTimes={blockedTimes}
 								onChange={(v) => setSelectedTime(v)}
 							/>
+							<DialogFooter>
+								<Field orientation="horizontal" data-disabled className="w-fit">
+									<FieldLabel htmlFor="switch">Hourly Based</FieldLabel>
+									<Switch
+										id="switch"
+										checked={hour}
+										onCheckedChange={setHour}
+									/>
+								</Field>
+							</DialogFooter>
 						</DialogContent>
 					</Dialog>
 					<Button variant="outline" size="sm" disabled>

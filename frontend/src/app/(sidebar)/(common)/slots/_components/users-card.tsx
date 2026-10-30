@@ -49,7 +49,7 @@ export function UsersCard() {
 			<CardHeader>
 				<CardTitle>Select Users & Lessons</CardTitle>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="space-y-4">
 				<UserSelector
 					name="studentId"
 					label="Student"

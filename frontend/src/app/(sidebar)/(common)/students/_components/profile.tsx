@@ -15,6 +15,7 @@ import {
 	PenIcon,
 	SchoolIcon,
 	UserRoundIcon,
+	VenetianMaskIcon,
 	VideoIcon,
 	WalletIcon,
 } from "lucide-react";
@@ -203,7 +204,7 @@ export function StudentProfile({
 						<RenderWhenRole role="admin">
 							<ImpersonateButton userId={data.id} asChild>
 								<Button variant="outline" size="sm">
-									<ExternalLinkIcon />
+									<VenetianMaskIcon />
 									Impersonate
 								</Button>
 							</ImpersonateButton>

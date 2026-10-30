@@ -40,8 +40,8 @@ export const MutationButton = <
 	onSuccess?: (data: TData) => Promise<void> | void;
 }) => {
 	const { isError, isPending, isSuccess, mutate } = useMutation({
-		...api,
 		onSuccess,
+		...api,
 	});
 
 	if ((success || isSuccess) && props.isSuccess) return props.isSuccess;

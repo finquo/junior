@@ -4,13 +4,13 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
-	ExternalLinkIcon,
 	MoreHorizontalIcon,
 	PenIcon,
 	TrashIcon,
 	UserIcon,
 	UserPlusIcon,
 	UserXIcon,
+	VenetianMaskIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { sileo as toast } from "sileo";
@@ -198,7 +198,7 @@ function UserActions({ user }: { user: UserRecord }) {
 					<DropdownMenuItem asChild>
 						<ImpersonateButton userId={user.id} asChild>
 							<Button variant="outline" size="sm">
-								<ExternalLinkIcon />
+								<VenetianMaskIcon />
 								Impersonate
 							</Button>
 						</ImpersonateButton>

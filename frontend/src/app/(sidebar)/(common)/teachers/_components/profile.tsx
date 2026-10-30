@@ -11,6 +11,7 @@ import {
 	PenIcon,
 	PlaneIcon,
 	UserRoundIcon,
+	VenetianMaskIcon,
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -127,7 +128,7 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 						<RenderWhenRole role="admin">
 							<ImpersonateButton userId={data.id} asChild>
 								<Button variant="outline" size="sm">
-									<ExternalLinkIcon />
+									<VenetianMaskIcon />
 									Impersonate
 								</Button>
 							</ImpersonateButton>
