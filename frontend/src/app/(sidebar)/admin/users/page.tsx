@@ -72,8 +72,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ImpersonateButton } from "@/hooks/admin";
 import { api, queryClient } from "@/hooks/api";
-import { authClient } from "@/hooks/auth";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
@@ -177,31 +177,6 @@ function EditRoleDrawerContent({ user }: { user: UserRecord }) {
 }
 
 function UserActions({ user }: { user: UserRecord }) {
-	const { mutateAsync: impersonate, isPending: isImpersonating } = useMutation({
-		mutationKey: ["impersonating-user", user.id],
-		mutationFn: async () => {
-			return await authClient.admin.impersonateUser(
-				{
-					userId: user.id,
-				},
-				{
-					throw: true,
-				},
-			);
-		},
-		onSuccess: (data) => {
-			toast.success({
-				title: `You're viewing as a ${data?.user.role ?? user.role}!`,
-				description: "Any actions you take will be performed as this user.",
-			});
-		},
-		onError: (err) => {
-			toast.error({
-				title: err.message || "Failed to impersonate user",
-			});
-		},
-	});
-
 	const roleProfilePath =
 		user.role === "teacher"
 			? `/teachers/${user.id}`
@@ -215,14 +190,18 @@ function UserActions({ user }: { user: UserRecord }) {
 		<Drawer>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
-					<Button variant="outline" size="icon-sm" disabled={isImpersonating}>
-						{isImpersonating ? <Spinner /> : <MoreHorizontalIcon />}
+					<Button variant="outline" size="icon-sm">
+						<MoreHorizontalIcon />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					<DropdownMenuItem onClick={() => impersonate()}>
-						<ExternalLinkIcon />
-						Impersonate
+					<DropdownMenuItem asChild>
+						<ImpersonateButton userId={user.id} asChild>
+							<Button variant="outline" size="sm">
+								<ExternalLinkIcon />
+								Impersonate
+							</Button>
+						</ImpersonateButton>
 					</DropdownMenuItem>
 					<DrawerTrigger asChild>
 						<DropdownMenuItem>

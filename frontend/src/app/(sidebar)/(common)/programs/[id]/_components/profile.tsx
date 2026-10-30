@@ -18,13 +18,20 @@ import {
 	getCountryName,
 } from "utils";
 import { CopyButton } from "@/components/copy";
+import {
+	Frame,
+	FrameActions,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -127,19 +134,11 @@ export function ProgramProfile({
 	lessonsPending: boolean;
 }) {
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>{data.name}</CardTitle>
-				<CardDescription>{data.description}</CardDescription>
-				<ColorBadge variant="info">Program</ColorBadge>
-				<Badge variant="outline">{data.lessonCount} Lessons</Badge>
-				{!studentsPending && (
-					<Badge variant="outline">{students.length} Students</Badge>
-				)}
-				{!lessonsPending && (
-					<Badge variant="outline">{lessons.length} Published</Badge>
-				)}
-				<CardAction>
+		<Frame>
+			<FrameHeader>
+				<FrameTitle>{data.name}</FrameTitle>
+				<FrameDescription>{data.description}</FrameDescription>
+				<FrameActions>
 					<ButtonGroup>
 						<CopyButton
 							text={() => data.id}
@@ -165,10 +164,19 @@ export function ProgramProfile({
 							</Link>
 						</Button>
 					</ButtonGroup>
-				</CardAction>
-			</CardHeader>
-
-			<CardContent>
+				</FrameActions>
+			</FrameHeader>
+			<FramePanel>
+				<ColorBadge variant="info">Program</ColorBadge>
+				<Badge variant="outline">{data.lessonCount} Lessons</Badge>
+				{!studentsPending && (
+					<Badge variant="outline">{students.length} Students</Badge>
+				)}
+				{!lessonsPending && (
+					<Badge variant="outline">{lessons.length} Published</Badge>
+				)}
+			</FramePanel>
+			<FramePanel>
 				<Tabs defaultValue="overview">
 					<TabsList>
 						<TabsTrigger value="overview">
@@ -322,7 +330,7 @@ export function ProgramProfile({
 						)}
 					</TabsContent>
 				</Tabs>
-			</CardContent>
-		</Card>
+			</FramePanel>
+		</Frame>
 	);
 }

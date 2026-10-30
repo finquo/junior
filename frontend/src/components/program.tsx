@@ -1,10 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCapIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
@@ -26,14 +24,8 @@ function ProgramLinkContent({
 	}
 
 	return (
-		<Button variant="ghost" size="sm" asChild>
-			<Link href={`/programs/${id}`}>
-				<GraduationCapIcon />
-				{name ?? data?.name ?? id}
-				<Badge variant="secondary" className="font-mono text-xs">
-					{id}
-				</Badge>
-			</Link>
+		<Button variant="outline" size="sm" asChild>
+			<Link href={`/programs/${id}`}>{name ?? data?.name ?? id}</Link>
 		</Button>
 	);
 }

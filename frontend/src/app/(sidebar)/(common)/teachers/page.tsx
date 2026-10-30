@@ -1,12 +1,14 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import type { Availability } from "backend/config";
 import {
 	CalendarIcon,
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
 	PenIcon,
+	PlaneIcon,
 	PlusIcon,
 	UserIcon,
 } from "lucide-react";
@@ -72,7 +74,9 @@ import { useDataTable } from "@/hooks/use-data-table";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
+import { AvailabilityView } from "./_components/availability-view";
 import { EditTeacherDrawer } from "./_components/edit-drawer";
+import { LeaveView } from "./_components/leave-view";
 
 type TeacherRecord = API_Returns["core"]["teacher"]["list"][number];
 
@@ -104,7 +108,7 @@ function TeacherActions({ teacher }: { teacher: TeacherRecord }) {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
+					<Button asChild>
 						<Link href={`/teachers/${teacher.id}` as "/"}>
 							<ExternalLinkIcon />
 							View Profile
@@ -325,29 +329,73 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 					</TooltipContent>
 				</Tooltip>
 			),
-			cell: ({ row }) => (
-				<Drawer>
-					<DrawerTrigger asChild>
-						<Button variant="outline" size="icon-sm">
-							<CalendarIcon />
-						</Button>
-					</DrawerTrigger>
-					<DrawerContent>
-						<DrawerHeader>
-							<DrawerTitle>Teacher Availability</DrawerTitle>
-							<DrawerDescription>
-								Availability schedule for {row.original.user?.name ?? "Teacher"}
-							</DrawerDescription>
-						</DrawerHeader>
-						<DrawerInner />
-						<DrawerFooter>
-							<DrawerClose asChild>
-								<Button variant="outline">Close</Button>
-							</DrawerClose>
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
+			cell: ({ row }) => {
+				const availability: Availability | null =
+					row.original.availability ?? null;
+				return (
+					<Drawer>
+						<DrawerTrigger asChild>
+							<Button variant="outline" size="icon-sm">
+								<CalendarIcon />
+							</Button>
+						</DrawerTrigger>
+						<DrawerContent>
+							<DrawerHeader>
+								<DrawerTitle>Teacher Availability</DrawerTitle>
+								<DrawerDescription>
+									Availability schedule for{" "}
+									{row.original.user?.name ?? "Teacher"}
+								</DrawerDescription>
+							</DrawerHeader>
+							<DrawerInner>
+								<AvailabilityView availability={availability} />
+							</DrawerInner>
+							<DrawerFooter>
+								<DrawerClose asChild>
+									<Button variant="outline">Close</Button>
+								</DrawerClose>
+							</DrawerFooter>
+						</DrawerContent>
+					</Drawer>
+				);
+			},
+		}),
+		columnHelper.display({
+			id: "leave",
+			header: () => (
+				<Tooltip>
+					<TooltipTrigger className="cursor-help">Leaves</TooltipTrigger>
+					<TooltipContent>Teacher's recorded leaves</TooltipContent>
+				</Tooltip>
 			),
+			cell: ({ row }) => {
+				const leaves = row.original.leaves ?? [];
+				return (
+					<Drawer>
+						<DrawerTrigger asChild>
+							<Button variant="outline" size="icon-sm">
+								<PlaneIcon />
+							</Button>
+						</DrawerTrigger>
+						<DrawerContent>
+							<DrawerHeader>
+								<DrawerTitle>Teacher Leaves</DrawerTitle>
+								<DrawerDescription>
+									Recorded leaves for {row.original.user?.name ?? "Teacher"}
+								</DrawerDescription>
+							</DrawerHeader>
+							<DrawerInner>
+								<LeaveView leaves={leaves} />
+							</DrawerInner>
+							<DrawerFooter>
+								<DrawerClose asChild>
+									<Button variant="outline">Close</Button>
+								</DrawerClose>
+							</DrawerFooter>
+						</DrawerContent>
+					</Drawer>
+				);
+			},
 		}),
 		columnHelper.accessor("createdAt", {
 			id: "createdAt",

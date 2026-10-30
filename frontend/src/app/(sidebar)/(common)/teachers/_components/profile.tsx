@@ -51,19 +51,16 @@ import {
 } from "@/components/ui/item";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
-import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
+import { formatDate, getInitials } from "@/lib/utils";
+import { AvailabilityView } from "./availability-view";
 import { EditTeacherDrawer } from "./edit-drawer";
+import { LeaveView } from "./leave-view";
 
 type TeacherData = NonNullable<API_Returns["core"]["teacher"]["get"]>;
-
-const leaveVariant: Record<string, "info" | "warning" | "destructive"> = {
-	full: "destructive",
-	partial: "warning",
-	multiple: "info",
-};
 
 export function TeacherProfile({ data }: { data: TeacherData }) {
 	const experiences = data.experiences ?? [];
@@ -126,6 +123,14 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 									Edit
 								</Button>
 							</EditTeacherDrawer>
+						</RenderWhenRole>
+						<RenderWhenRole role="admin">
+							<ImpersonateButton userId={data.id} asChild>
+								<Button variant="outline" size="sm">
+									<ExternalLinkIcon />
+									Impersonate
+								</Button>
+							</ImpersonateButton>
 						</RenderWhenRole>
 					</ButtonGroup>
 				</CardAction>
@@ -253,50 +258,7 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
-								{!availability ? (
-									<Empty>
-										<EmptyHeader>
-											<EmptyMedia variant="icon">
-												<CalendarDaysIcon />
-											</EmptyMedia>
-											<EmptyTitle>No availability set</EmptyTitle>
-											<EmptyDescription>
-												Availability has not been configured for this teacher.
-											</EmptyDescription>
-										</EmptyHeader>
-									</Empty>
-								) : (
-									<ItemGroup>
-										{dayKeys.map((day) => {
-											const config = availability[day];
-											const ranges = config?.ranges ?? [];
-											return (
-												<Item key={day} variant="outline">
-													<ItemMedia variant="icon">
-														<CalendarDaysIcon />
-													</ItemMedia>
-													<ItemContent>
-														<ItemTitle className="capitalize">{day}</ItemTitle>
-													</ItemContent>
-													<ItemActions>
-														{config?.enabled && ranges.length > 0 ? (
-															ranges.map((range) => (
-																<Badge
-																	key={`${range.start}-${range.end}`}
-																	variant="success"
-																>
-																	{range.start} – {range.end}
-																</Badge>
-															))
-														) : (
-															<Badge variant="outline">Off</Badge>
-														)}
-													</ItemActions>
-												</Item>
-											);
-										})}
-									</ItemGroup>
-								)}
+								<AvailabilityView availability={availability} />
 							</CardContent>
 						</Card>
 					</TabsContent>
@@ -310,46 +272,7 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
-								{leaves.length === 0 ? (
-									<Empty>
-										<EmptyHeader>
-											<EmptyMedia variant="icon">
-												<PlaneIcon />
-											</EmptyMedia>
-											<EmptyTitle>No leaves recorded</EmptyTitle>
-											<EmptyDescription>
-												This teacher has no leave on record.
-											</EmptyDescription>
-										</EmptyHeader>
-									</Empty>
-								) : (
-									<ItemGroup>
-										{leaves.map((leave, idx) => (
-											<Item key={idx as number} variant="outline">
-												<ItemMedia variant="icon">
-													<PlaneIcon />
-												</ItemMedia>
-												<ItemContent>
-													<ItemTitle>
-														{formatDate(leave.start)} → {formatDate(leave.end)}
-													</ItemTitle>
-													<ItemDescription>
-														{leave.type === "partial"
-															? "Partial day leave"
-															: "Full day leave"}
-													</ItemDescription>
-												</ItemContent>
-												<ItemActions>
-													<ColorBadge
-														variant={leaveVariant[leave.type] ?? "secondary"}
-													>
-														{snakeToTitleCase(leave.type)}
-													</ColorBadge>
-												</ItemActions>
-											</Item>
-										))}
-									</ItemGroup>
-								)}
+								<LeaveView leaves={leaves} />
 							</CardContent>
 						</Card>
 					</TabsContent>

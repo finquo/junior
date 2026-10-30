@@ -2,6 +2,7 @@
 
 import {
 	CalendarIcon,
+	ExternalLinkIcon,
 	MailIcon,
 	PenIcon,
 	ShieldCheckIcon,
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserEditDrawer } from "@/components/user-edit-drawer";
+import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
@@ -90,6 +92,14 @@ export function SchedulerProfile({ data }: { data: SchedulerData }) {
 									Edit User
 								</Button>
 							</UserEditDrawer>
+						</RenderWhenRole>
+						<RenderWhenRole role="admin">
+							<ImpersonateButton userId={data.id} asChild>
+								<Button variant="outline" size="sm">
+									<ExternalLinkIcon />
+									Impersonate
+								</Button>
+							</ImpersonateButton>
 						</RenderWhenRole>
 					</ButtonGroup>
 				</CardAction>

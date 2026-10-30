@@ -53,6 +53,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -198,6 +199,14 @@ export function StudentProfile({
 									Edit
 								</Button>
 							</EditStudentDrawer>
+						</RenderWhenRole>
+						<RenderWhenRole role="admin">
+							<ImpersonateButton userId={data.id} asChild>
+								<Button variant="outline" size="sm">
+									<ExternalLinkIcon />
+									Impersonate
+								</Button>
+							</ImpersonateButton>
 						</RenderWhenRole>
 					</ButtonGroup>
 				</CardAction>

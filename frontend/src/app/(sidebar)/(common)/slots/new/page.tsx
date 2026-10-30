@@ -2,17 +2,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { parseAsIsoDate, useQueryState } from "nuqs";
-import { api } from "@/hooks/api";
-import { CalenderPicker } from "../_components/calender";
-import { PreviewCard } from "../_components/preview-card";
-import { TimeCard } from "../_components/time-card";
-import { UsersCard } from "../_components/users-card";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/hooks/api";
+import { CalenderPicker } from "../_components/calender";
+import { PreviewCard } from "../_components/preview-card";
+import { TimeCard } from "../_components/time-card";
+import { UsersCard } from "../_components/users-card";
 
 export default function Pattern() {
 	const [teacherId] = useQueryState("teacherId");
