@@ -5,6 +5,7 @@ import {
 	CircleAlertIcon,
 	DownloadIcon,
 	FileAudioIcon,
+	FileTextIcon,
 	GitForkIcon,
 	RefreshCwIcon,
 } from "lucide-react";
@@ -381,6 +382,7 @@ export function MediaPipeline({
 								defaultValue={getActiveStep([
 									!!media.transcript,
 									!!media.summary,
+									!!media.summary,
 								])}
 							>
 								<PipelineStep
@@ -446,6 +448,30 @@ export function MediaPipeline({
 												)}
 											/>
 										</>
+									}
+								/>
+
+								<PipelineStep
+									step={3}
+									title="Summary PDF"
+									description={
+										media.summary
+											? "Render the summary as a shareable PDF."
+											: "The PDF export becomes available once the summary is ready."
+									}
+									actions={
+										media.summary ? (
+											<Button asChild variant="outline" size="sm">
+												<a
+													href={`/slots/${id}/media/pdf`}
+													target="_blank"
+													rel="noreferrer"
+												>
+													<FileTextIcon />
+													Open PDF
+												</a>
+											</Button>
+										) : undefined
 									}
 								/>
 							</Timeline>

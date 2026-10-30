@@ -3,7 +3,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import {
-	BellIcon,
 	CalendarClockIcon,
 	CheckCheckIcon,
 	MoreHorizontalIcon,
@@ -56,7 +55,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
-import { MutationButton } from "@/hooks/button";
 import { RenderWhenRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 import type { GetFormZod } from "@/lib/utils";
@@ -243,7 +241,7 @@ export function SlotActions({ slot }: { slot: SlotData }) {
 							{isBusy ? <Spinner /> : <MoreHorizontalIcon />}
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent className="min-w-48" align="end">
+					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Session Status</DropdownMenuLabel>
 						<DropdownMenuItem
 							disabled={slot.status === "started" || slot.status === "attended"}
@@ -271,81 +269,6 @@ export function SlotActions({ slot }: { slot: SlotData }) {
 							<CalendarClockIcon />
 							Reschedule
 						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuLabel>Alerts</DropdownMenuLabel>
-						<MutationButton
-							api={api.chat.alertStudent.mutationOptions({
-								onSuccess: () => {
-									toast.success({ title: "Student alerted" });
-								},
-								onError: (err) => {
-									toast.error({
-										title: err.message || "Failed to alert student",
-									});
-								},
-							})}
-							isPending={
-								<DropdownMenuItem disabled>
-									<Spinner />
-									Alerting Student...
-								</DropdownMenuItem>
-							}
-							mutate={(mutate) => (
-								<DropdownMenuItem onSelect={() => mutate({ id: slot.id })}>
-									<BellIcon />
-									Alert Student
-								</DropdownMenuItem>
-							)}
-						/>
-						<MutationButton
-							api={api.chat.alertTeacher.mutationOptions({
-								onSuccess: () => {
-									toast.success({ title: "Teacher alerted" });
-								},
-								onError: (err) => {
-									toast.error({
-										title: err.message || "Failed to alert teacher",
-									});
-								},
-							})}
-							isPending={
-								<DropdownMenuItem disabled>
-									<Spinner />
-									Alerting Teacher...
-								</DropdownMenuItem>
-							}
-							mutate={(mutate) => (
-								<DropdownMenuItem onSelect={() => mutate({ id: slot.id })}>
-									<BellIcon />
-									Alert Teacher
-								</DropdownMenuItem>
-							)}
-						/>
-						<MutationButton
-							api={api.chat.alertScheduler.mutationOptions({
-								onSuccess: () => {
-									toast.success({ title: "Scheduler alerted" });
-								},
-								onError: (err) => {
-									toast.error({
-										title: err.message || "Failed to alert scheduler",
-									});
-								},
-							})}
-							isPending={
-								<DropdownMenuItem disabled>
-									<Spinner />
-									Alerting Scheduler...
-								</DropdownMenuItem>
-							}
-							mutate={(mutate) => (
-								<DropdownMenuItem onSelect={() => mutate({ id: slot.id })}>
-									<BellIcon />
-									Alert Scheduler
-								</DropdownMenuItem>
-							)}
-						/>
-						<DropdownMenuSeparator />
 						<AlertDialogTrigger asChild>
 							<DropdownMenuItem variant="destructive">
 								<TrashIcon />
