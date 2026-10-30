@@ -16,8 +16,14 @@ export function TeamSwitcher() {
 					className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
 				>
 					<Avatar>
-						<AvatarImage src={`${socials.github}.png`} alt={socials.name} />
-						<AvatarFallback>{getInitials(socials.name)}</AvatarFallback>
+						<AvatarImage
+							className="rounded-sm"
+							src={"/logo.jpg"}
+							alt={socials.name}
+						/>
+						<AvatarFallback className="rounded-sm">
+							{getInitials(socials.name)}
+						</AvatarFallback>
 					</Avatar>
 					<div className="grid flex-1 text-left text-sm leading-tight">
 						<span className="truncate font-medium">{socials.name}</span>

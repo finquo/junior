@@ -6,7 +6,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="empty"
 			className={cn(
-				"flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 text-balance rounded-xl border-dashed p-6 text-center",
+				"flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-3xl border-dashed p-12 text-center text-balance",
 				className,
 			)}
 			{...props}
@@ -30,7 +30,7 @@ const emptyMediaVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-transparent",
-				icon: "flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4",
+				icon: "flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground [&_svg:not([class*='size-'])]:size-5",
 			},
 		},
 		defaultVariants: {
@@ -59,7 +59,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="empty-title"
 			className={cn(
-				"font-heading font-medium text-sm tracking-tight",
+				"font-heading text-lg font-medium tracking-tight",
 				className,
 			)}
 			{...props}
@@ -72,7 +72,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
 		<div
 			data-slot="empty-description"
 			className={cn(
-				"text-muted-foreground text-sm/relaxed [&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
+				"text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
 				className,
 			)}
 			{...props}
@@ -85,7 +85,7 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="empty-content"
 			className={cn(
-				"flex w-full min-w-0 max-w-sm flex-col items-center gap-2.5 text-balance text-sm",
+				"flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
 				className,
 			)}
 			{...props}
@@ -95,9 +95,9 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
 	Empty,
-	EmptyContent,
-	EmptyDescription,
 	EmptyHeader,
-	EmptyMedia,
 	EmptyTitle,
+	EmptyDescription,
+	EmptyContent,
+	EmptyMedia,
 };

@@ -1,8 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { cn } from "cn";
 import { HoverCard as HoverCardPrimitive } from "radix-ui";
-import type * as React from "react";
 
 function HoverCard({
 	...props
@@ -21,9 +21,7 @@ function HoverCardTrigger({
 function HoverCardContent({
 	className,
 	align = "center",
-	side = "bottom",
 	sideOffset = 4,
-	alignOffset = 4,
 	...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
 	return (
@@ -31,11 +29,9 @@ function HoverCardContent({
 			<HoverCardPrimitive.Content
 				data-slot="hover-card-content"
 				align={align}
-				side={side}
 				sideOffset={sideOffset}
-				alignOffset={alignOffset}
 				className={cn(
-					"data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 z-50 w-64 origin-(--radix-hover-card-content-transform-origin) rounded-lg bg-popover p-2.5 text-popover-foreground text-sm shadow-md outline-hidden ring-1 ring-foreground/10 duration-100 data-closed:animate-out data-open:animate-in",
+					"z-50 w-72 origin-(--radix-hover-card-content-transform-origin) rounded-3xl bg-popover p-4 text-sm text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
 					className,
 				)}
 				{...props}
@@ -44,4 +40,4 @@ function HoverCardContent({
 	);
 }
 
-export { HoverCard, HoverCardContent, HoverCardTrigger };
+export { HoverCard, HoverCardTrigger, HoverCardContent };

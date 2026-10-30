@@ -2,11 +2,16 @@ import Providers from "@/components/providers";
 import PwaRegistration from "@/components/pwa-registration";
 import "@/index.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Outfit } from "next/font/google";
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const outfitHeading = Outfit({
+	subsets: ["latin"],
+	variable: "--font-heading",
+});
+
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
 	title: "app",
@@ -24,7 +29,7 @@ export default function RootLayout({
 			data-accent="violet"
 			lang="en"
 			suppressHydrationWarning
-			className={cn("font-sans", inter.variable)}
+			className={cn("font-sans", dmSans.variable, outfitHeading.variable)}
 		>
 			<body>
 				<PwaRegistration />

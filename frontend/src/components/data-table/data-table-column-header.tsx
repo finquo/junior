@@ -103,7 +103,6 @@ function DataTableColumnHeaderMenu<TData extends RowData, TValue>({
 					))}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
-				dir={dir}
 				align="start"
 				className="w-28 data-closed:fill-mode-forwards"
 			>

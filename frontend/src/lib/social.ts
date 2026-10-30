@@ -1,6 +1,8 @@
 export const socials = {
-	name: "finquo.ai",
-	domain: "https://finquo.ai",
+	name: "Finquo Junior",
+	company: "Finquo Versity",
+	domain: "finquo.ai",
+	website: "https://finquo.ai",
 	instagram: "https://instagram.com/finquo.jr",
 	youtube: "https://youtube.com/@finquojr",
 	github: "https://github.com/finquo",

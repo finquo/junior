@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, LoaderIcon } from "lucide-react";
 import Link from "next/link";
 import { create } from "zustand";
 import {
@@ -18,6 +18,7 @@ import {
 	SidebarMenuSub,
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
+	SidebarSeparator,
 } from "@/components/ui/sidebar";
 import type { api } from "@/hooks/api";
 
@@ -115,6 +116,9 @@ export function NavMain({ title, items }: NavMainType) {
 												</SidebarMenuSubButton>
 											</SidebarMenuSubItem>
 										))}
+										{item.subItems?.length && item.fetchItems && (
+											<SidebarSeparator />
+										)}
 										{item.fetchItems && (
 											<FetchSideBarItems {...item.fetchItems} />
 										)}
@@ -141,6 +145,7 @@ const FetchSideBarItems = ({ api, getLink }: FetchItemsType) => {
 		return (
 			<SidebarMenuSubItem>
 				<SidebarMenuSubButton className="animate-pulse">
+					<LoaderIcon className="animate-spin" />
 					<span>Loading...</span>
 				</SidebarMenuSubButton>
 			</SidebarMenuSubItem>

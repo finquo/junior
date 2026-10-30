@@ -16,7 +16,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			disableTransitionOnChange
 		>
 			<QueryClientProvider client={queryClient}>
-				<TooltipProvider delay={400}>
+				<TooltipProvider delayDuration={400}>
 					<NuqsAdapter>{children}</NuqsAdapter>
 				</TooltipProvider>
 			</QueryClientProvider>

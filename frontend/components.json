@@ -1,12 +1,12 @@
 {
 	"$schema": "https://ui.shadcn.com/schema.json",
-	"style": "radix-nova",
+	"style": "radix-rhea",
 	"rsc": true,
 	"tsx": true,
 	"tailwind": {
 		"config": "",
 		"css": "./src/index.css",
-		"baseColor": "neutral",
+		"baseColor": "mist",
 		"cssVariables": true,
 		"prefix": ""
 	},
@@ -19,7 +19,7 @@
 		"hooks": "@/hooks"
 	},
 	"menuColor": "default",
-	"menuAccent": "subtle",
+	"menuAccent": "bold",
 	"rtl": false,
 	"registries": {
 		"@reui": "https://reui.io/r/{style}/{name}.json",
