@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
+import { PhoneNumberZod } from "utils";
 import { z } from "zod";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { authClient, useAuth } from "@/hooks/auth";
 
 const profileFormSchema = z.object({
 	name: z.string().trim().min(1, "Name cannot be empty"),
+	phoneNumber: PhoneNumberZod.optional(),
 	avatar: z.string().nullable(),
 });
 
@@ -40,16 +42,20 @@ export default function ProfileEditPage() {
 		mutationFn: async ({
 			name,
 			image,
+			phoneNumber,
 		}: {
 			name: string;
 			image?: string | null;
+			phoneNumber?: string;
 		}) => {
 			const { data: resData, error } = await authClient.updateUser({
 				name: name.trim(),
 				image: image === null ? null : image || undefined,
+				phoneNumber: phoneNumber?.trim() || null,
 			});
 
 			if (error) throw error;
+
 			return resData;
 		},
 		onSuccess: () => {
@@ -67,8 +73,9 @@ export default function ProfileEditPage() {
 	const form = useForm({
 		defaultValues: {
 			name: data?.name ?? "",
+			phoneNumber: data?.phoneNumber ?? undefined,
 			avatar: (data?.image ?? null) as string | null,
-		},
+		} as z.infer<typeof profileFormSchema>,
 		validators: {
 			onSubmit: profileFormSchema,
 			onChange: profileFormSchema,
@@ -76,6 +83,7 @@ export default function ProfileEditPage() {
 		onSubmit: async ({ value }) => {
 			updateProfile({
 				name: value.name,
+				phoneNumber: value.phoneNumber,
 				image: value.avatar,
 			});
 		},
@@ -85,6 +93,7 @@ export default function ProfileEditPage() {
 		if (data) {
 			form.reset({
 				name: data.name ?? "",
+				phoneNumber: data.phoneNumber ?? undefined,
 				avatar: data.image ?? null,
 			});
 		}
@@ -166,6 +175,42 @@ export default function ProfileEditPage() {
 								Email cannot be edited directly
 							</FieldDescription>
 						</Field>
+
+						<form.Field
+							name="phoneNumber"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="tel"
+											placeholder="+919876543210"
+											value={field.state.value ?? ""}
+											onBlur={field.handleBlur}
+											onChange={(e) =>
+												field.handleChange(e.target.value || undefined)
+											}
+											aria-invalid={isInvalid}
+											disabled={isSaving}
+										/>
+										<FieldDescription>
+											International format, e.g. +919876543210.
+										</FieldDescription>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
 					</FieldGroup>
 				</CardContent>
 

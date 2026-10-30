@@ -34,7 +34,7 @@ import {
 import { SwitchNode } from "@/components/utils";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 
-export { UserEditDrawer, type UserEditDrawerProps } from "./user-edit-drawer";
+export { UserEditDrawer } from "./user-edit-drawer";
 
 export function StudentProfile({ student }: { student?: StudentType | null }) {
 	if (!student) return null;

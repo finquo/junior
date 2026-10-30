@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sileo as toast } from "sileo";
 import type { LanguageCodes } from "utils";
-import { Languages } from "utils";
+import { Languages, PhoneNumberZod } from "utils";
 import { z } from "zod";
 import {
 	Frame,
@@ -37,6 +37,7 @@ import type { GetFormZod } from "@/lib/utils";
 const createTeacherSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
 	email: z.string().trim().email("Please enter a valid email address"),
+	phoneNumber: PhoneNumberZod.optional(),
 	password: z
 		.string()
 		.min(6, "Password must be at least 6 characters")
@@ -79,6 +80,7 @@ export default function Page() {
 		defaultValues: {
 			name: "",
 			email: "",
+			phoneNumber: undefined,
 			password: "1234567890",
 			supervisorId: "",
 			languages: [],
@@ -92,6 +94,7 @@ export default function Page() {
 				user: {
 					name: value.name.trim(),
 					email: value.email.trim().toLowerCase(),
+					phoneNumber: value.phoneNumber?.trim() || undefined,
 				},
 				teacher: {
 					supervisorId: value.supervisorId || undefined,
@@ -172,6 +175,40 @@ export default function Page() {
 											aria-invalid={isInvalid}
 											disabled={isPending}
 										/>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Field
+							name="phoneNumber"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="tel"
+											placeholder="+919876543210"
+											value={field.state.value ?? ""}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value || undefined)}
+											aria-invalid={isInvalid}
+											disabled={isPending}
+										/>
+										<FieldDescription>
+											International format, e.g. +919876543210.
+										</FieldDescription>
 										{isInvalid && (
 											<FieldError
 												errors={field.state.meta.errors.map((err) =>

@@ -9,7 +9,6 @@ import {
 	InsertTeacherSchema,
 	InsertUserSchema,
 	SelectTeacherSchema,
-	SelectUserSchema,
 	UpdateTeacherSchema,
 } from "@/db/zod";
 import { auth, db } from "@/services";
@@ -302,6 +301,7 @@ export const teacherRouter = {
 				user: InsertUserSchema.pick({
 					name: true,
 					email: true,
+					phoneNumber: true,
 				}),
 				teacher: InsertTeacherSchema.pick({
 					supervisorId: true,
@@ -325,12 +325,19 @@ export const teacherRouter = {
 						email: user.email,
 						password,
 						role: "teacher",
+						data: {
+							phoneNumber: user.phoneNumber,
+							phoneNumberVerified: false,
+						},
 					},
 				}),
 			);
 
 			if (!createdUser?.user) {
-				throw getError("INTERNAL_SERVER_ERROR", "Failed to create teacher account");
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					"Failed to create teacher account",
+				);
 			}
 
 			await tryAPI(

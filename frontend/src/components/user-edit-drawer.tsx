@@ -7,6 +7,7 @@ import { PenIcon } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
+import { PhoneNumberZod } from "utils";
 import { z } from "zod";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { Button } from "@/components/ui/button";
@@ -49,11 +50,12 @@ const editUserSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
 	username: z.string().optional(),
 	email: z.string().trim().email("Please enter a valid email address"),
+	phoneNumber: PhoneNumberZod.optional(),
 	role: roleEnumZod.optional(),
 	image: z.string().nullable().optional(),
 });
 
-export type EditUserFormValues = z.infer<typeof editUserSchema>;
+type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 const toUsername = (str: string) => {
 	return str
@@ -63,11 +65,12 @@ const toUsername = (str: string) => {
 		.replace(/[^a-z0-9.]/g, "");
 };
 
-export interface UserEditDrawerProps {
+interface UserEditDrawerProps {
 	userId: string;
 	userData?: {
 		name?: string | null;
 		email?: string | null;
+		phoneNumber?: string | null;
 		role?: Role | string | null;
 		image?: string | null;
 	} | null;
@@ -93,6 +96,7 @@ export function UserEditDrawer({
 
 	const initialName = user?.name ?? "";
 	const initialEmail = user?.email ?? "";
+	const initialPhone = user?.phoneNumber ?? undefined;
 	const initialRole = (user?.role as Role) ?? "user";
 	const initialImage = user?.image ?? null;
 
@@ -108,6 +112,7 @@ export function UserEditDrawer({
 				data: {
 					name: values.name.trim(),
 					email: values.email.trim().toLowerCase(),
+					phoneNumber: values.phoneNumber?.trim() || null,
 					role: values.role as Role,
 					image: values.image === null ? null : values.image || undefined,
 				},
@@ -134,6 +139,7 @@ export function UserEditDrawer({
 				? initialEmail.split("@")[0]
 				: toUsername(initialName),
 			email: initialEmail,
+			phoneNumber: initialPhone,
 			role: initialRole,
 			image: initialImage,
 		} as EditUserFormValues,
@@ -156,11 +162,20 @@ export function UserEditDrawer({
 					? initialEmail.split("@")[0]
 					: toUsername(initialName),
 				email: initialEmail,
+				phoneNumber: initialPhone,
 				role: initialRole,
 				image: initialImage,
 			});
 		}
-	}, [open, initialName, initialEmail, initialRole, initialImage, form]);
+	}, [
+		open,
+		initialName,
+		initialEmail,
+		initialPhone,
+		initialRole,
+		initialImage,
+		form,
+	]);
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
@@ -169,7 +184,7 @@ export function UserEditDrawer({
 				<DrawerHeader>
 					<DrawerTitle>Edit User Profile</DrawerTitle>
 					<DrawerDescription>
-						Update name, email, role, and avatar for this user.
+						Update name, email, phone, role, and avatar for this user.
 					</DrawerDescription>
 				</DrawerHeader>
 
@@ -346,6 +361,42 @@ export function UserEditDrawer({
 									)
 								</FieldLabel>
 							</Field>
+
+							<form.Field
+								name="phoneNumber"
+								children={(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="tel"
+												placeholder="+919876543210"
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) =>
+													field.handleChange(e.target.value || undefined)
+												}
+												aria-invalid={isInvalid}
+												disabled={isPending}
+											/>
+											<FieldDescription>
+												International format, e.g. +919876543210.
+											</FieldDescription>
+											{isInvalid && (
+												<FieldError
+													errors={field.state.meta.errors.map((err) =>
+														typeof err === "string" ? { message: err } : err,
+													)}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
 
 							<form.Field
 								name="role"

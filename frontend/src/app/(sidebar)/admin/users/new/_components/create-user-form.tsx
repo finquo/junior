@@ -2,12 +2,12 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { roleEnumZod } from "backend/auth";
 import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
+import { PhoneNumberZod } from "utils";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,29 +27,19 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { api, queryClient } from "@/hooks/api";
-import type { Role } from "@/lib/auth";
-import { rolesObject } from "@/lib/role";
 import type { GetFormZod } from "@/lib/utils";
 
 const createUserSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
 	username: z.string().optional(),
 	email: z.string().trim().email("Please enter a valid email address"),
+	phoneNumber: PhoneNumberZod.optional(),
 	password: z
 		.string()
 		.min(6, "Password must be at least 6 characters")
 		.default("1234567890"),
-	role: roleEnumZod.optional(),
 });
 
 const toUsername = (str: string) => {
@@ -62,16 +52,12 @@ const toUsername = (str: string) => {
 
 export function CreateUserForm({
 	title = "Create New User",
-	description = "Add a new user to the system and assign their role.",
+	description = "Add a new user to the system.",
 	cancelHref = "/admin/users",
-	defaultRole,
-	lockRole = false,
 }: {
 	title?: string;
 	description?: string;
 	cancelHref?: string;
-	defaultRole?: Role;
-	lockRole?: boolean;
 }) {
 	const router = useRouter();
 	const [useFinquoEmail, setUseFinquoEmail] = useState(false);
@@ -95,8 +81,8 @@ export function CreateUserForm({
 			name: "",
 			email: "",
 			username: "",
+			phoneNumber: undefined,
 			password: "1234567890",
-			role: defaultRole ?? "user",
 		} as z.infer<typeof createUserSchema>,
 		validators: {
 			onSubmit: createUserSchema as GetFormZod<typeof createUserSchema>,
@@ -105,8 +91,8 @@ export function CreateUserForm({
 			await mutateAsync({
 				name: value.name.trim(),
 				email: value.email.trim().toLowerCase(),
+				phoneNumber: value.phoneNumber?.trim() || undefined,
 				password: value.password,
-				role: (lockRole ? defaultRole : value.role) as Role,
 			});
 		},
 	});
@@ -280,6 +266,40 @@ export function CreateUserForm({
 							</Field>
 
 							<form.Field
+								name="phoneNumber"
+								children={(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="tel"
+												placeholder="+919876543210"
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value || undefined)}
+												aria-invalid={isInvalid}
+												disabled={isPending}
+											/>
+											<FieldDescription>
+												International format, e.g. +919876543210.
+											</FieldDescription>
+											{isInvalid && (
+												<FieldError
+													errors={field.state.meta.errors.map((err) =>
+														typeof err === "string" ? { message: err } : err,
+													)}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+
+							<form.Field
 								name="password"
 								children={(field) => {
 									const isInvalid =
@@ -314,51 +334,6 @@ export function CreateUserForm({
 								}}
 							/>
 
-							{!lockRole && (
-								<form.Field
-									name="role"
-									children={(field) => {
-										const isInvalid =
-											field.state.meta.isTouched && !field.state.meta.isValid;
-										return (
-											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor={field.name}>Role</FieldLabel>
-												<Select
-													items={rolesObject}
-													value={field.state.value}
-													disabled={isPending}
-													onValueChange={(val) => {
-														if (val) field.handleChange(val as Role);
-													}}
-												>
-													<SelectTrigger id={field.name}>
-														<SelectValue placeholder="Select a role" />
-													</SelectTrigger>
-													<SelectContent>
-														<SelectGroup>
-															{rolesObject.map((item) => (
-																<SelectItem key={item.value} value={item.value}>
-																	{item.label}
-																</SelectItem>
-															))}
-														</SelectGroup>
-													</SelectContent>
-												</Select>
-												<FieldDescription>
-													Determines the user permissions and access rights.
-												</FieldDescription>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors.map((err) =>
-															typeof err === "string" ? { message: err } : err,
-														)}
-													/>
-												)}
-											</Field>
-										);
-									}}
-								/>
-							)}
 						</FieldGroup>
 					</CardContent>
 					<CardFooter className="flex justify-end gap-3 pt-6">

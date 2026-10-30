@@ -2,7 +2,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { schema } from "@/db";
-import { InsertUserSchema, SelectUserSchema } from "@/db/zod";
+import { InsertUserSchema } from "@/db/zod";
 import { auth, db } from "@/services";
 import { MapRole } from "@/utils/role";
 
@@ -91,6 +91,7 @@ export const schedulerRouter = {
 				user: InsertUserSchema.pick({
 					name: true,
 					email: true,
+					phoneNumber: true,
 				}),
 				password: z
 					.string()
@@ -109,12 +110,19 @@ export const schedulerRouter = {
 						email: user.email,
 						password,
 						role: "scheduler",
+						data: {
+							phoneNumber: user.phoneNumber,
+							phoneNumberVerified: false,
+						},
 					},
 				}),
 			);
 
 			if (!createdUser?.user) {
-				throw getError("INTERNAL_SERVER_ERROR", "Failed to create scheduler account");
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					"Failed to create scheduler account",
+				);
 			}
 
 			await tryAPI(

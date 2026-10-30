@@ -1,5 +1,12 @@
 import { defineRelationsPart, sql } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	check,
+	index,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 import type { Role } from "@/auth";
 
 export const user = pgTable(
@@ -31,6 +38,10 @@ export const user = pgTable(
 		index("user_email_trigram_idx").using(
 			"gin",
 			sql`${table.email} gin_trgm_ops`,
+		),
+		check(
+			"phone_number_e164_check",
+			sql`${table.phoneNumber} IS NULL OR ${table.phoneNumber} ~ '^\\+[1-9]\\d{6,14}$'`,
 		),
 	],
 );

@@ -1,11 +1,12 @@
 import { createSchemaFactory } from "drizzle-orm/zod";
 import {
-	CountryCurrencies,
 	CountryZod,
 	CurrencyZod,
 	LanguageCodeZod,
+	PhoneNumberZod,
 } from "utils";
 import z, { type ZodObject, type ZodRawShape, type ZodString } from "zod";
+import { roleEnumZod } from "@/auth";
 import {
 	addressZod,
 	availabilityZod,
@@ -26,8 +27,14 @@ const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 
 // User
 export const SelectUserSchema = createSelectSchema(schema.user);
-export const InsertUserSchema = createInsertSchema(schema.user);
-export const UpdateUserSchema = createUpdateSchema(schema.user);
+export const InsertUserSchema = createInsertSchema(schema.user).safeExtend({
+	role: roleEnumZod,
+	phoneNumber: PhoneNumberZod.nullable().optional(),
+});
+export const UpdateUserSchema = createUpdateSchema(schema.user).safeExtend({
+	role: roleEnumZod.optional(),
+	phoneNumber: PhoneNumberZod.optional(),
+});
 
 // Teacher
 export const InsertTeacherSchema = createInsertSchema(

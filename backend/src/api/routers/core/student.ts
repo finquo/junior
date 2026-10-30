@@ -373,6 +373,7 @@ export const studentRouter = {
 				user: InsertUserSchema.pick({
 					name: true,
 					email: true,
+					phoneNumber: true,
 				}),
 				student: InsertStudentSchema.pick({
 					program: true,
@@ -405,12 +406,19 @@ export const studentRouter = {
 						email: user.email,
 						password,
 						role: "student",
+						data: {
+							phoneNumber: user.phoneNumber,
+							phoneNumberVerified: false,
+						},
 					},
 				}),
 			);
 
 			if (!createdUser?.user) {
-				throw getError("INTERNAL_SERVER_ERROR", "Failed to create student account");
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					"Failed to create student account",
+				);
 			}
 
 			await tryAPI(

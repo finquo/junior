@@ -1,8 +1,8 @@
 import { or, sql } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
-import { roleEnumZod } from "@/auth";
 import { schema } from "@/db";
+import { InsertUserSchema } from "@/db/zod";
 import { auth, db } from "@/services";
 
 export const userRouter = {
@@ -53,18 +53,24 @@ export const userRouter = {
 		}),
 	createAccount: getRolesProcedure(["admin", "enrollment_advisor"])
 		.input(
-			z.object({
-				name: z.string(),
-				email: z.email(),
+			InsertUserSchema.pick({
+				name: true,
+				email: true,
+				phoneNumber: true,
+			}).extend({
 				password: z.string().default("1234567890"),
-				role: roleEnumZod.default("user"),
 			}),
 		)
 		.handler(async ({ input }) => {
+			const { phoneNumber, ...body } = input;
+
 			return await tryAPI(
 				"db-core-create-account",
 				auth.api.createUser({
-					body: input,
+					body: {
+						...body,
+						data: { phoneNumber },
+					},
 				}),
 			);
 		}),
