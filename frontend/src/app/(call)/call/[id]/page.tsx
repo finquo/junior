@@ -226,7 +226,7 @@ function CallGate({ id }: { id: string }) {
 	const needsName = !authName;
 	const canJoinAsCompanion = higherRole;
 	const companionActive = !!(canJoinAsCompanion && companion);
-	const canRecord = higherRole;
+	const canConfigureRecording = user?.role === "admin";
 
 	const handleCompanion = (checked: boolean) => {
 		setCompanion(checked);
@@ -378,7 +378,7 @@ function CallGate({ id }: { id: string }) {
 								/>
 							)}
 
-							{canRecord && (
+							{canConfigureRecording && (
 								<JoinPreference
 									id="join-record"
 									icon={<CctvIcon />}

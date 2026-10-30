@@ -1,63 +1,102 @@
 import type { PdfcnTheme } from "@/types/pdf-themes";
 
-import { defaultPrimitives } from "./primitives";
-
-/**
- * Professional theme preset.
- *
- * Character: Serif headings (Times-Roman), refined zinc/slate palette,
- * generous margins, formal document feel. shadcn-inspired minimal aesthetic.
- * Ideal for business documents, reports, and official correspondence.
- */
 export const professionalTheme: PdfcnTheme = {
 	colors: {
-		accent: "#3b82f6",
+		accent: "#6366f1",
 		background: "#ffffff",
-		border: "#e4e4e7",
-		destructive: "#dc2626",
-		foreground: "#18181b",
-		info: "#0ea5e9",
-		muted: "#f4f4f5",
-		mutedForeground: "#71717a",
-		primary: "#18181b",
+		border: "#e2e8f0",
+		destructive: "#ef4444",
+		foreground: "#0f172a",
+		info: "#3b82f6",
+		muted: "#f1f5f9",
+		mutedForeground: "#64748b",
+		primary: "#334155",
 		primaryForeground: "#ffffff",
-		success: "#16a34a",
-		warning: "#d97706",
+		success: "#22c55e",
+		warning: "#f59e0b",
 	},
-	name: "professional",
+	name: "modern",
 	page: {
 		orientation: "portrait",
 		size: "A4",
 	},
-	primitives: defaultPrimitives,
+	primitives: {
+		borderRadius: {
+			full: 9999,
+			lg: 8,
+			md: 4,
+			none: 0,
+			sm: 2,
+		},
+		fontWeights: {
+			bold: 700,
+			medium: 500,
+			regular: 400,
+			semibold: 600,
+		},
+		letterSpacing: {
+			normal: 0,
+			tight: -0.025,
+			wide: 0.025,
+			wider: 0.05,
+		},
+		lineHeights: {
+			normal: 1.4,
+			relaxed: 1.6,
+			tight: 1.2,
+		},
+		spacing: {
+			"0": 0,
+			"1": 4,
+			"2": 8,
+			"3": 12,
+			"4": 16,
+			"5": 20,
+			"6": 24,
+			"8": 32,
+			"10": 40,
+			"12": 48,
+			"16": 64,
+			"0.5": 2,
+		},
+		typography: {
+			"2xl": 28,
+			"3xl": 36,
+			base: 15,
+			lg: 18,
+			sm: 12,
+			xl: 22,
+			xs: 10,
+		},
+	},
 	spacing: {
-		componentGap: 14,
+		componentGap: 12,
 		page: {
-			marginBottom: 56,
-			marginLeft: 48,
-			marginRight: 48,
-			marginTop: 56,
+			marginBottom: 40,
+			marginLeft: 40,
+			marginRight: 40,
+			marginTop: 40,
 		},
 		paragraphGap: 10,
-		sectionGap: 28,
+		sectionGap: 24,
 	},
 	typography: {
 		body: {
-			fontFamily: "Helvetica",
+			fontFamily: "Inter",
 			fontSize: 11,
 			lineHeight: 1.6,
 		},
 		heading: {
-			fontFamily: "Times-Roman",
+			fontFamily: "Inter",
 			fontSize: {
-				h1: 32,
-				h2: 24,
-				h3: 20,
+				h1: 28,
+				h2: 22,
+				h3: 18,
 				h4: 16,
 				h5: 14,
 				h6: 12,
 			},
-			fontWeight: 700,
+			fontWeight: 600,
 			lineHeight: 1.25,
 		},
 	},

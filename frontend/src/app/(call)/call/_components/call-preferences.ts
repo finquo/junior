@@ -8,7 +8,7 @@ export function useJoinPreferences() {
 			camera: parseAsBoolean.withDefault(true),
 			mic: parseAsBoolean.withDefault(true),
 			companion: parseAsBoolean.withDefault(false),
-			record: parseAsBoolean.withDefault(false),
+			record: parseAsBoolean.withDefault(true),
 		},
 		{
 			history: "replace",
