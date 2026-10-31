@@ -20,13 +20,10 @@ import { truncateText } from "@/lib/utils";
 
 export function SideBarHeader() {
 	return (
-		<header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+		<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 			<div className="flex items-center gap-2">
 				<SidebarTrigger />
-				<Separator
-					orientation="vertical"
-					className="data-vertical:h-4 data-vertical:self-auto"
-				/>
+				<Separator orientation="vertical" />
 				<Suspense>
 					<Bread />
 				</Suspense>
@@ -66,14 +63,11 @@ const Bread = () => {
 						</React.Fragment>
 					);
 				})}
-				<Separator
-					orientation="vertical"
-					className="mx-2 hidden data-vertical:h-4 data-vertical:self-auto md:block"
-				/>
+				<Separator orientation="vertical" className="mx-2 hidden md:block" />
 				<CopyButton
-					size={"icon-xs"}
-					variant={"ghost"}
-					className="hidden md:block"
+					size={"icon-sm"}
+					variant={"secondary"}
+					className="hidden md:flex"
 					text={() => getClientBaseUrl(pathname)}
 					label="Link"
 				/>

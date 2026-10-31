@@ -21,7 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			>
 				<></>
 			</RoleRender>
-			<SidebarInset>
+			<SidebarInset className="w-(--sidebar-width)">
 				<SideBarHeader />
 				<div className="relative min-h-svh p-3">{children}</div>
 			</SidebarInset>
