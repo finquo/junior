@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Countries } from "utils";
+import { PhoneNumberBadge } from "@/components/phone-badge";
 import { ProgramLink } from "@/components/program";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
@@ -157,6 +159,9 @@ export function StudentProfile({
 							<ColorBadge variant="info" className="col-span-full">
 								Student
 							</ColorBadge>
+							{user.phoneNumber && (
+								<PhoneNumberBadge phoneNumber={user.phoneNumber} />
+							)}
 							{user.banned && (
 								<ColorBadge variant="destructive" className="col-span-full">
 									Banned
@@ -168,6 +173,7 @@ export function StudentProfile({
 
 				<CardAction>
 					<ButtonGroup>
+						<UserContactDropdown user={data.user} />
 						<Button variant="outline" size="sm" asChild>
 							<Link
 								href={{

@@ -6,6 +6,7 @@ import type {
 	UserType,
 } from "backend/db";
 import { Countries } from "utils";
+import { PhoneNumberBadge } from "@/components/phone-badge";
 import { ProgramLink } from "@/components/program";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -17,6 +18,7 @@ import {
 import { ColorBadge } from "@/components/ui/badge";
 import {
 	Card,
+	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -31,6 +33,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { SwitchNode } from "@/components/utils";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 
@@ -318,7 +321,13 @@ export function ProfileCard({
 				<ColorBadge variant={user.emailVerified ? "success" : "warning"}>
 					{user.emailVerified ? "Verified" : "Unverified"}
 				</ColorBadge>
+				{user.phoneNumber && (
+					<PhoneNumberBadge phoneNumber={user.phoneNumber} />
+				)}
 				{user.banned && <ColorBadge variant="destructive">Banned</ColorBadge>}
+				<CardAction>
+					<UserContactDropdown user={user} />
+				</CardAction>
 			</CardHeader>
 
 			<CardContent>
@@ -339,6 +348,10 @@ export function ProfileCard({
 						<TableRow>
 							<TableCell>User ID</TableCell>
 							<TableCell>{user.id}</TableCell>
+						</TableRow>
+						<TableRow>
+							<TableCell>Phone Number</TableCell>
+							<TableCell>{user.phoneNumber ?? "None"}</TableCell>
 						</TableRow>
 						<TableRow>
 							<TableCell>Created At</TableCell>

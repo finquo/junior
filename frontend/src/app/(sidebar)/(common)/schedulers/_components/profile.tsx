@@ -4,12 +4,14 @@ import {
 	CalendarIcon,
 	MailIcon,
 	PenIcon,
+	PhoneIcon,
 	ShieldCheckIcon,
 	UserRoundIcon,
 	VenetianMaskIcon,
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { PhoneNumberBadge } from "@/components/phone-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -32,6 +34,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
@@ -55,6 +58,9 @@ export function SchedulerProfile({ data }: { data: SchedulerData }) {
 				<ColorBadge variant="info" className="col-span-full">
 					Scheduler
 				</ColorBadge>
+				{user?.phoneNumber && (
+					<PhoneNumberBadge phoneNumber={user.phoneNumber} />
+				)}
 				{user?.role && (
 					<ColorBadge variant="secondary" className="col-span-full">
 						{snakeToTitleCase(user.role)}
@@ -68,6 +74,7 @@ export function SchedulerProfile({ data }: { data: SchedulerData }) {
 
 				<CardAction>
 					<ButtonGroup>
+						<UserContactDropdown user={user} />
 						<Button variant="outline" size="sm" asChild>
 							<Link
 								href={{
@@ -162,6 +169,19 @@ export function SchedulerProfile({ data }: { data: SchedulerData }) {
 											</ItemDescription>
 										</ItemContent>
 									</Item>
+									{user?.phoneNumber && (
+										<Item variant="muted">
+											<ItemMedia variant="icon">
+												<PhoneIcon />
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>Phone Number</ItemTitle>
+												<ItemDescription>
+													{user.phoneNumber}
+												</ItemDescription>
+											</ItemContent>
+										</Item>
+									)}
 									<Item variant="muted">
 										<ItemMedia variant="icon">
 											<CalendarIcon />

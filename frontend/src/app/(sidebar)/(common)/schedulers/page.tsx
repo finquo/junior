@@ -104,6 +104,9 @@ function SchedulerActions({ scheduler }: { scheduler: SchedulerRecord }) {
 					{scheduler.user?.email && (
 						<DrawerDescription>{scheduler.user.email}</DrawerDescription>
 					)}
+					{scheduler.user?.phoneNumber && (
+						<DrawerDescription>{scheduler.user.phoneNumber}</DrawerDescription>
+					)}
 				</DrawerHeader>
 				<DrawerInner>
 					{scheduler.user && <ProfileCard user={scheduler.user} />}
@@ -165,6 +168,9 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 									{user?.email && (
 										<ItemDescription>{user.email}</ItemDescription>
 									)}
+									{user?.phoneNumber && (
+										<ItemDescription>{user.phoneNumber}</ItemDescription>
+									)}
 								</ItemContent>
 							</Item>
 						</DrawerTrigger>
@@ -173,6 +179,9 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 								<DrawerTitle>{user?.name ?? "Scheduler Profile"}</DrawerTitle>
 								{user?.email && (
 									<DrawerDescription>{user.email}</DrawerDescription>
+								)}
+								{user?.phoneNumber && (
+									<DrawerDescription>{user.phoneNumber}</DrawerDescription>
 								)}
 							</DrawerHeader>
 							<DrawerInner>{user && <ProfileCard user={user} />}</DrawerInner>

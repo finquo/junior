@@ -180,6 +180,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 									{user?.email && (
 										<ItemDescription>{user.email}</ItemDescription>
 									)}
+									{user?.phoneNumber && (
+										<ItemDescription>{user.phoneNumber}</ItemDescription>
+									)}
 								</ItemContent>
 							</Item>
 						</DrawerTrigger>
@@ -188,6 +191,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 								<DrawerTitle>{user?.name ?? "Teacher"}</DrawerTitle>
 								{user?.email && (
 									<DrawerDescription>{user.email}</DrawerDescription>
+								)}
+								{user?.phoneNumber && (
+									<DrawerDescription>{user.phoneNumber}</DrawerDescription>
 								)}
 							</DrawerHeader>
 							<DrawerInner>
@@ -310,6 +316,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 										<ItemContent>
 											<ItemTitle>{supervisor.name}</ItemTitle>
 											<ItemDescription>{supervisor.email}</ItemDescription>
+											{supervisor.phoneNumber && (
+												<ItemDescription>{supervisor.phoneNumber}</ItemDescription>
+											)}
 										</ItemContent>
 									</Item>
 								)}

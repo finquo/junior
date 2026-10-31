@@ -176,6 +176,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 									<ItemContent>
 										<ItemTitle>{user.name}</ItemTitle>
 										<ItemDescription>{user.email}</ItemDescription>
+										{user.phoneNumber && (
+											<ItemDescription>{user.phoneNumber}</ItemDescription>
+										)}
 									</ItemContent>
 								</Item>
 							</DrawerTrigger>
@@ -183,6 +186,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 								<DrawerHeader>
 									<DrawerTitle>{user.name}</DrawerTitle>
 									<DrawerDescription>{user.email}</DrawerDescription>
+									{user.phoneNumber && (
+										<DrawerDescription>{user.phoneNumber}</DrawerDescription>
+									)}
 								</DrawerHeader>
 								<DrawerInner>
 									<ProfileCard user={user} />
@@ -364,6 +370,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 										<ItemContent>
 											<ItemTitle>{supervisor.name}</ItemTitle>
 											<ItemDescription>{supervisor.email}</ItemDescription>
+											{supervisor.phoneNumber && (
+												<ItemDescription>{supervisor.phoneNumber}</ItemDescription>
+											)}
 										</ItemContent>
 									</Item>
 								)}

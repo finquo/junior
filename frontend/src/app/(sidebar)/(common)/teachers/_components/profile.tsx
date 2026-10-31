@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { LanguageCodes } from "utils";
+import { PhoneNumberBadge } from "@/components/phone-badge";
 import {
 	Accordion,
 	AccordionContent,
@@ -52,6 +53,7 @@ import {
 } from "@/components/ui/item";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
@@ -89,6 +91,9 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 							<ColorBadge variant="info" className="col-span-full">
 								Teacher
 							</ColorBadge>
+							{user.phoneNumber && (
+								<PhoneNumberBadge phoneNumber={user.phoneNumber} />
+							)}
 							{user.banned && (
 								<ColorBadge variant="destructive" className="col-span-full">
 									Banned
@@ -100,6 +105,7 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 
 				<CardAction>
 					<ButtonGroup>
+						<UserContactDropdown user={data.user} />
 						<Button variant="outline" size="sm" asChild>
 							<Link
 								href={{

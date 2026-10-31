@@ -295,6 +295,9 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 									{member.email && (
 										<ItemDescription>{member.email}</ItemDescription>
 									)}
+									{member.phoneNumber && (
+										<ItemDescription>{member.phoneNumber}</ItemDescription>
+									)}
 								</ItemContent>
 							</Item>
 						</DrawerTrigger>
@@ -303,6 +306,9 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								<DrawerTitle>{member.name}</DrawerTitle>
 								{member.email && (
 									<DrawerDescription>{member.email}</DrawerDescription>
+								)}
+								{member.phoneNumber && (
+									<DrawerDescription>{member.phoneNumber}</DrawerDescription>
 								)}
 							</DrawerHeader>
 							<DrawerInner>
