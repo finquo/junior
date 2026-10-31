@@ -1,5 +1,6 @@
 import { SidebarConfig as AdminSidebar } from "@/app/(sidebar)/_components/admin";
 import { SidebarConfig as EmptySidebar } from "@/app/(sidebar)/_components/empty";
+import { SidebarConfig as EnrollmentAdvisorSidebar } from "@/app/(sidebar)/_components/enrollment_advisor";
 import { SidebarConfig as SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { SidebarConfig as TeacherSidebar } from "@/app/(sidebar)/_components/teacher";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -14,7 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				admin={<AdminSidebar />}
 				scheduler={<SchedulerSidebar />}
 				teacher={<TeacherSidebar />}
-				enrollment_advisor={null}
+				enrollment_advisor={<EnrollmentAdvisorSidebar />}
 				student={null}
 				qa_auditor={null}
 				isPending={<EmptySidebar />}

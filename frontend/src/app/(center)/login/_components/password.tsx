@@ -61,8 +61,40 @@ export const PasswordLogin = () => {
 				</>
 			)}
 			isPending={<Button disabled>Signing In...</Button>}
-			isError={<Button variant="destructive">Error! Try Again</Button>}
 			isSuccess={<Button variant="outline">Redirecting...</Button>}
+			reTry={(mutate) => (
+				<>
+					<FieldGroup>
+						<Field>
+							<FieldLabel htmlFor="email">Email</FieldLabel>
+							<Input
+								id="email"
+								type="email"
+								placeholder="name@example.com"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+							/>
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="password">Password</FieldLabel>
+							<Input
+								id="password"
+								type="text"
+								placeholder="super-secret"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+							/>
+						</Field>
+					</FieldGroup>
+					<Button
+						variant="destructive"
+						onClick={() => mutate()}
+						disabled={!email || !password}
+					>
+						Error! Try Again
+					</Button>
+				</>
+			)}
 		/>
 	);
 };

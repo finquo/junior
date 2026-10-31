@@ -43,18 +43,18 @@ export function SidebarConfig({
 					items={[
 						{
 							title: "Users",
-							url: "/admin/users",
+							url: "/users",
 							icon: <UserRoundGroupIcon />,
 							subItems: [
 								{
 									icon: <PlusIcon />,
 									title: "Create User",
-									url: "/admin/users/new",
+									url: "/users/new",
 								},
 								{
 									icon: <ListIcon />,
 									title: "Show List",
-									url: "/admin/users",
+									url: "/users",
 								},
 							],
 						},

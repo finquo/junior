@@ -14,30 +14,39 @@ import { MapRole } from "@/utils/role";
 import { orderLessons } from "./program";
 
 export const studentRouter = {
-	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
-		async ({ context }) => {
-			return await getAPI(
-				"db-core-list-students-query",
-				db.query.student.findMany({
-					where: MapRole(context.role, {
-						admin: {},
-						scheduler: {
-							supervisorId: context.user.id,
-						},
-						teacher: {
-							mentorId: context.user.id,
-						},
-					}),
-					orderBy: { createdAt: "desc" },
-					with: {
-						user: true,
+	list: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	]).handler(async ({ context }) => {
+		return await getAPI(
+			"db-core-list-students-query",
+			db.query.student.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+					enrollment_advisor: {},
+					scheduler: {
+						supervisorId: context.user.id,
+					},
+					teacher: {
+						mentorId: context.user.id,
 					},
 				}),
-				[],
-			);
-		},
-	),
-	get: getRolesProcedure(["admin", "teacher", "scheduler"])
+				orderBy: { createdAt: "desc" },
+				with: {
+					user: true,
+				},
+			}),
+			[],
+		);
+	}),
+	get: getRolesProcedure([
+		"admin",
+		"teacher",
+		"scheduler",
+		"enrollment_advisor",
+	])
 		.input(
 			z.object({
 				id: z.string(),
@@ -49,6 +58,9 @@ export const studentRouter = {
 				db.query.student.findFirst({
 					where: MapRole(context.role, {
 						admin: {
+							id: input.id,
+						},
+						enrollment_advisor: {
 							id: input.id,
 						},
 						teacher: {
@@ -367,7 +379,7 @@ export const studentRouter = {
 					.returning(),
 			);
 		}),
-	create: getRolesProcedure(["admin"])
+	create: getRolesProcedure(["admin", "enrollment_advisor"])
 		.input(
 			z.object({
 				user: InsertUserSchema.pick({

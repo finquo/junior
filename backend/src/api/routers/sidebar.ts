@@ -56,35 +56,38 @@ export const sidebarRouter = {
 			}));
 		},
 	),
-	students: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
-		async ({ context }) => {
-			const data = await getAPI(
-				"db-sidebar-get-students-query",
-				db.query.student.findMany({
-					where: MapRole(context.role, {
-						admin: {},
-						scheduler: {
-							supervisorId: context.user.id,
-						},
-						teacher: {
-							mentorId: context.user.id,
-						},
-					}),
-					orderBy: { createdAt: "desc" },
-					limit: 5,
-					with: {
-						user: true,
+	students: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	]).handler(async ({ context }) => {
+		const data = await getAPI(
+			"db-sidebar-get-students-query",
+			db.query.student.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+					scheduler: {
+						supervisorId: context.user.id,
+					},
+					teacher: {
+						mentorId: context.user.id,
 					},
 				}),
-				[],
-			);
+				orderBy: { createdAt: "desc" },
+				limit: 5,
+				with: {
+					user: true,
+				},
+			}),
+			[],
+		);
 
-			return data.map((item) => ({
-				id: item.id,
-				title: item.user?.name ?? item.id,
-			}));
-		},
-	),
+		return data.map((item) => ({
+			id: item.id,
+			title: item.user?.name ?? item.id,
+		}));
+	}),
 	slots: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
 		async ({ context }) => {
 			const data = await getAPI(
@@ -120,20 +123,23 @@ export const sidebarRouter = {
 			}));
 		},
 	),
-	programs: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
-		async () => {
-			const data = await getAPI(
-				"db-sidebar-get-programs-query",
-				db.query.program.findMany({
-					orderBy: { name: "asc" },
-				}),
-				[],
-			);
+	programs: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	]).handler(async () => {
+		const data = await getAPI(
+			"db-sidebar-get-programs-query",
+			db.query.program.findMany({
+				orderBy: { name: "asc" },
+			}),
+			[],
+		);
 
-			return data.map((program) => ({
-				id: program.id,
-				title: program.name,
-			}));
-		},
-	),
+		return data.map((program) => ({
+			id: program.id,
+			title: program.name,
+		}));
+	}),
 };

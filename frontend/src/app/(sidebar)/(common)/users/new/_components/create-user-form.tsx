@@ -53,7 +53,7 @@ const toUsername = (str: string) => {
 export function CreateUserForm({
 	title = "Create New User",
 	description = "Add a new user to the system.",
-	cancelHref = "/admin/users",
+	cancelHref = "/users",
 }: {
 	title?: string;
 	description?: string;
@@ -68,7 +68,7 @@ export function CreateUserForm({
 			onSuccess: () => {
 				queryClient.invalidateQueries();
 				toast.success({ title: "User created successfully" });
-				router.push("/admin/users");
+				router.push("/users");
 			},
 			onError: (err) => {
 				toast.error({ title: err.message || "Failed to create user" });
@@ -280,7 +280,9 @@ export function CreateUserForm({
 												placeholder="+919876543210"
 												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value || undefined)}
+												onChange={(e) =>
+													field.handleChange(e.target.value || undefined)
+												}
 												aria-invalid={isInvalid}
 												disabled={isPending}
 											/>
@@ -333,7 +335,6 @@ export function CreateUserForm({
 									);
 								}}
 							/>
-
 						</FieldGroup>
 					</CardContent>
 					<CardFooter className="flex justify-end gap-3 pt-6">
