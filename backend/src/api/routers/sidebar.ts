@@ -67,6 +67,7 @@ export const sidebarRouter = {
 			db.query.student.findMany({
 				where: MapRole(context.role, {
 					admin: {},
+					enrollment_advisor: {},
 					scheduler: {
 						supervisorId: context.user.id,
 					},

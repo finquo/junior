@@ -27,39 +27,47 @@ export const orderLessons = <T extends { id: string }>(
 };
 
 export const programRouter = {
-	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
-		async () => {
-			const programs = await getAPI(
-				"db-core-list-programs",
-				db.query.program.findMany({
-					orderBy: { name: "asc" },
-				}),
-				[],
-			);
+	list: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	]).handler(async () => {
+		const programs = await getAPI(
+			"db-core-list-programs",
+			db.query.program.findMany({
+				orderBy: { name: "asc" },
+			}),
+			[],
+		);
 
-			const counts = await getAPI(
-				"db-core-list-program-lesson-counts",
-				db
-					.select({
-						program: schema.lesson.program,
-						count: count(),
-					})
-					.from(schema.lesson)
-					.groupBy(schema.lesson.program),
-				[],
-			);
+		const counts = await getAPI(
+			"db-core-list-program-lesson-counts",
+			db
+				.select({
+					program: schema.lesson.program,
+					count: count(),
+				})
+				.from(schema.lesson)
+				.groupBy(schema.lesson.program),
+			[],
+		);
 
-			const countByProgram = new Map(
-				counts.map((row) => [row.program, row.count]),
-			);
+		const countByProgram = new Map(
+			counts.map((row) => [row.program, row.count]),
+		);
 
-			return programs.map((program) => ({
-				...program,
-				lessonCount: countByProgram.get(program.id) ?? 0,
-			}));
-		},
-	),
-	get: getRolesProcedure(["admin", "scheduler", "teacher"])
+		return programs.map((program) => ({
+			...program,
+			lessonCount: countByProgram.get(program.id) ?? 0,
+		}));
+	}),
+	get: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	])
 		.input(
 			z.object({
 				id: z.string(),
@@ -129,7 +137,12 @@ export const programRouter = {
 				db.delete(schema.program).where(eq(schema.program.id, input.id)),
 			);
 		}),
-	students: getRolesProcedure(["admin", "scheduler", "teacher"])
+	students: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+	])
 		.input(
 			z.object({
 				id: z.string(),
@@ -141,6 +154,9 @@ export const programRouter = {
 				db.query.student.findMany({
 					where: MapRole(context.role, {
 						admin: {
+							program: input.id,
+						},
+						enrollment_advisor: {
 							program: input.id,
 						},
 						scheduler: {

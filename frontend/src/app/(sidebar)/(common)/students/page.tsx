@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Drawer,
+	DrawerAction,
 	DrawerClose,
 	DrawerContent,
 	DrawerDescription,
@@ -189,17 +190,19 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 									{user.phoneNumber && (
 										<DrawerDescription>{user.phoneNumber}</DrawerDescription>
 									)}
+									<DrawerAction>
+										<CopyButton
+											text={() => row.original.id}
+											label="Student ID"
+											variant="outline"
+										/>
+									</DrawerAction>
 								</DrawerHeader>
 								<DrawerInner>
 									<ProfileCard user={user} />
 									<StudentProfile student={row.original} />
 								</DrawerInner>
 								<DrawerFooter>
-									<CopyButton
-										text={() => row.original.id}
-										label="Student ID"
-										variant="outline"
-									/>
 									<Button asChild>
 										<Link href={`/students/${row.original.id}` as "/"}>
 											View Full Profile
@@ -371,7 +374,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 											<ItemTitle>{supervisor.name}</ItemTitle>
 											<ItemDescription>{supervisor.email}</ItemDescription>
 											{supervisor.phoneNumber && (
-												<ItemDescription>{supervisor.phoneNumber}</ItemDescription>
+												<ItemDescription>
+													{supervisor.phoneNumber}
+												</ItemDescription>
 											)}
 										</ItemContent>
 									</Item>

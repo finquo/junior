@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { sileo as toast } from "sileo";
 import { PhoneNumberZod } from "utils";
 import { z } from "zod";
@@ -17,6 +18,7 @@ import {
 } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Field,
 	FieldDescription,
@@ -31,6 +33,7 @@ import type { GetFormZod } from "@/lib/utils";
 
 const createSchedulerSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
+	username: z.string().optional(),
 	email: z.string().trim().email("Please enter a valid email address"),
 	phoneNumber: PhoneNumberZod.optional(),
 	password: z
@@ -39,10 +42,20 @@ const createSchedulerSchema = z.object({
 		.default("1234567890"),
 });
 
+const toUsername = (str: string) => {
+	return str
+		.toLowerCase()
+		.trim()
+		.replace(/\s+/g, ".")
+		.replace(/[^a-z0-9.]/g, "");
+};
+
 type CreateSchedulerValues = z.infer<typeof createSchedulerSchema>;
 
 export default function Page() {
 	const router = useRouter();
+	const [useFinquoEmail, setUseFinquoEmail] = useState(false);
+	const [isUsernameCustom, setIsUsernameCustom] = useState(false);
 
 	const { mutateAsync, isPending } = useMutation(
 		api.core.scheduler.create.mutationOptions({
@@ -59,9 +72,6 @@ export default function Page() {
 
 	const form = useForm({
 		defaultValues: {
-			name: "",
-			email: "",
-			phoneNumber: undefined,
 			password: "1234567890",
 		} as CreateSchedulerValues,
 		validators: {
@@ -112,10 +122,69 @@ export default function Page() {
 											placeholder="John Doe"
 											value={field.state.value}
 											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
+											onChange={(e) => {
+												const newName = e.target.value;
+												field.handleChange(newName);
+												if (!isUsernameCustom) {
+													const derived = toUsername(newName);
+													form.setFieldValue("username", derived);
+													if (useFinquoEmail) {
+														form.setFieldValue(
+															"email",
+															derived ? `${derived}@finquo.ai` : "",
+														);
+													}
+												}
+											}}
 											aria-invalid={isInvalid}
 											disabled={isPending}
 										/>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((err) =>
+													typeof err === "string" ? { message: err } : err,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Field
+							name="username"
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Username</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											placeholder="john.doe"
+											value={field.state.value ?? ""}
+											onBlur={field.handleBlur}
+											onChange={(e) => {
+												setIsUsernameCustom(true);
+												const newUsername = e.target.value
+													.toLowerCase()
+													.replace(/\s+/g, ".")
+													.replace(/[^a-z0-9.]/g, "");
+												field.handleChange(newUsername);
+												if (useFinquoEmail) {
+													form.setFieldValue(
+														"email",
+														newUsername ? `${newUsername}@finquo.ai` : "",
+													);
+												}
+											}}
+											aria-invalid={isInvalid}
+											disabled={isPending}
+										/>
+										<FieldDescription>
+											Derived automatically from name, but can be customized.
+										</FieldDescription>
 										{isInvalid && (
 											<FieldError
 												errors={field.state.meta.errors.map((err) =>
@@ -147,7 +216,7 @@ export default function Page() {
 												field.handleChange(e.target.value.toLowerCase())
 											}
 											aria-invalid={isInvalid}
-											disabled={isPending}
+											disabled={isPending || useFinquoEmail}
 										/>
 										{isInvalid && (
 											<FieldError
@@ -160,6 +229,32 @@ export default function Page() {
 								);
 							}}
 						/>
+
+						<Field orientation="horizontal">
+							<Checkbox
+								id="use-finquo-email-scheduler"
+								checked={useFinquoEmail}
+								onCheckedChange={(checked) => {
+									const isChecked = Boolean(checked);
+									setUseFinquoEmail(isChecked);
+									if (isChecked) {
+										const uName = form.getFieldValue("username")?.toLowerCase();
+										form.setFieldValue(
+											"email",
+											uName ? `${uName}@finquo.ai` : "",
+										);
+									}
+								}}
+								disabled={isPending}
+							/>
+							<FieldLabel htmlFor="use-finquo-email-scheduler">
+								Use @finquo.ai email (
+								{form.state.values.username
+									? `${form.state.values.username.toLowerCase()}@finquo.ai`
+									: "...@finquo.ai"}
+								)
+							</FieldLabel>
+						</Field>
 
 						<form.Field
 							name="phoneNumber"
@@ -176,7 +271,9 @@ export default function Page() {
 											placeholder="+919876543210"
 											value={field.state.value ?? ""}
 											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value || undefined)}
+											onChange={(e) =>
+												field.handleChange(e.target.value || undefined)
+											}
 											aria-invalid={isInvalid}
 											disabled={isPending}
 										/>
