@@ -189,7 +189,7 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-							<Link href="/admin/users/new">
+							<Link href="/users/new">
 								<PlusIcon />
 								Create User
 							</Link>
@@ -208,7 +208,7 @@ export default function Page() {
 						icon={<UserRoundGroupIcon />}
 						label="Users"
 						count={data.length}
-						href="/admin/users"
+						href="/users"
 						isPending={isPending}
 					/>
 					<UserCountItem
@@ -277,7 +277,7 @@ export default function Page() {
 					</FrameDescription>
 					<FrameActions>
 						<Button asChild variant="outline" size="sm">
-							<Link href="/admin/users">
+							<Link href="/users">
 								<ExternalLinkIcon />
 								All Users
 							</Link>
@@ -355,7 +355,7 @@ export default function Page() {
 						</ItemContent>
 						<ItemActions>
 							<Button asChild variant="outline" size="sm">
-								<Link href="/admin/users">
+								<Link href="/users">
 									Open
 									<ArrowRightIcon />
 								</Link>

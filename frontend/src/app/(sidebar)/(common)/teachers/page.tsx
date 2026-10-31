@@ -317,7 +317,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 											<ItemTitle>{supervisor.name}</ItemTitle>
 											<ItemDescription>{supervisor.email}</ItemDescription>
 											{supervisor.phoneNumber && (
-												<ItemDescription>{supervisor.phoneNumber}</ItemDescription>
+												<ItemDescription>
+													{supervisor.phoneNumber}
+												</ItemDescription>
 											)}
 										</ItemContent>
 									</Item>
@@ -457,7 +459,7 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-							<Link href="/admin/users/new">
+							<Link href="/users/new">
 								<PlusIcon />
 								Add Teacher
 							</Link>

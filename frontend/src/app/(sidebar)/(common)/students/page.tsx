@@ -438,7 +438,7 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-							<Link href="/admin/users/new">
+							<Link href="/users/new">
 								<PlusIcon />
 								Add Student
 							</Link>

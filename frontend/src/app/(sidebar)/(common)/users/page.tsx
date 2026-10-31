@@ -499,7 +499,7 @@ export default function Page() {
 							</Button>
 						)}
 						<Button asChild>
-							<Link href="/admin/users/new">
+							<Link href="/users/new">
 								<UserPlusIcon />
 								Create User
 							</Link>
