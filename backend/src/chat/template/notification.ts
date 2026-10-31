@@ -11,7 +11,7 @@ export const NotificationTemplate = async (
 	await whatsappAdapter.sendTemplate(threadId, {
 		name: "finquo_notification",
 		language: "en",
-		components: [bodyComponent([title, message])],
+		components: [bodyComponent([`${title}: ${message}`])],
 	});
 };
 

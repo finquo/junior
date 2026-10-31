@@ -9,7 +9,7 @@ const isAWS = process.env.DATABASE_URL.includes(".rds.amazonaws.com");
 export function createDb() {
 	const client = postgres(process.env.DATABASE_URL, {
 		prepare: false,
-		max: 1,
+		max: process.env.NODE_ENV === "production" ? 1 : undefined,
 		ssl: {
 			ca: isAWS ? (awsRdsPem as string) : undefined,
 			rejectUnauthorized: isAWS,

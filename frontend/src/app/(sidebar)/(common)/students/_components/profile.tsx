@@ -56,6 +56,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserContactDropdown } from "@/components/user-contact-dropdown";
+import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { ImpersonateButton } from "@/hooks/admin";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
@@ -206,6 +207,14 @@ export function StudentProfile({
 									Edit
 								</Button>
 							</EditStudentDrawer>
+						</RenderWhenRole>
+						<RenderWhenRole role={["admin", "scheduler"]}>
+							<UserEditDrawer userId={data.id} userData={data.user}>
+								<Button variant="outline" size="sm">
+									<PenIcon />
+									Edit User
+								</Button>
+							</UserEditDrawer>
 						</RenderWhenRole>
 						<RenderWhenRole role="admin">
 							<ImpersonateButton userId={data.id} asChild>
