@@ -31,7 +31,7 @@ export function SidebarConfig({
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher />
+				<TeamSwitcher href="/scheduler" />
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain

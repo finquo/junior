@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	SidebarMenu,
@@ -7,28 +9,31 @@ import {
 import { socials } from "@/lib/social";
 import { getInitials } from "@/lib/utils";
 
-export function TeamSwitcher() {
+export function TeamSwitcher({ href = "/me" }: { href?: Route }) {
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
 				<SidebarMenuButton
 					size="lg"
 					className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
+					asChild
 				>
-					<Avatar>
-						<AvatarImage
-							className="rounded-sm"
-							src={"/logo.jpg"}
-							alt={socials.name}
-						/>
-						<AvatarFallback className="rounded-sm">
-							{getInitials(socials.name)}
-						</AvatarFallback>
-					</Avatar>
-					<div className="grid flex-1 text-left text-sm leading-tight">
-						<span className="truncate font-medium">{socials.name}</span>
-						<span className="truncate text-xs">{socials.domain}</span>
-					</div>
+					<Link href={href}>
+						<Avatar>
+							<AvatarImage
+								className="rounded-sm"
+								src={"/logo.jpg"}
+								alt={socials.name}
+							/>
+							<AvatarFallback className="rounded-sm">
+								{getInitials(socials.name)}
+							</AvatarFallback>
+						</Avatar>
+						<div className="grid flex-1 text-left text-sm leading-tight">
+							<span className="truncate font-medium">{socials.name}</span>
+							<span className="truncate text-xs">{socials.domain}</span>
+						</div>
+					</Link>
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 		</SidebarMenu>
