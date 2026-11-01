@@ -18,7 +18,12 @@ import { CallAuthButton } from "../../_components/call-auth-button";
 
 export default function Page() {
 	const id = useParams<{ id: string }>()?.id;
-	const canViewSlot = useHasRole(["admin", "scheduler", "teacher"]);
+	const canViewSlot = useHasRole([
+		"admin",
+		"scheduler",
+		"teacher",
+		"qa_auditor",
+	]);
 
 	return (
 		<Container>

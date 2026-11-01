@@ -19,12 +19,14 @@ export const studentRouter = {
 		"scheduler",
 		"teacher",
 		"enrollment_advisor",
+		"qa_auditor",
 	]).handler(async ({ context }) => {
 		return await getAPI(
 			"db-core-list-students-query",
 			db.query.student.findMany({
 				where: MapRole(context.role, {
 					admin: {},
+					qa_auditor: {},
 					enrollment_advisor: {},
 					scheduler: {
 						supervisorId: context.user.id,
@@ -46,6 +48,7 @@ export const studentRouter = {
 		"teacher",
 		"scheduler",
 		"enrollment_advisor",
+		"qa_auditor",
 	])
 		.input(
 			z.object({
@@ -58,6 +61,9 @@ export const studentRouter = {
 				db.query.student.findFirst({
 					where: MapRole(context.role, {
 						admin: {
+							id: input.id,
+						},
+						qa_auditor: {
 							id: input.id,
 						},
 						enrollment_advisor: {

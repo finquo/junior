@@ -32,6 +32,7 @@ export const programRouter = {
 		"scheduler",
 		"teacher",
 		"enrollment_advisor",
+		"qa_auditor",
 	]).handler(async () => {
 		const programs = await getAPI(
 			"db-core-list-programs",
@@ -67,6 +68,7 @@ export const programRouter = {
 		"scheduler",
 		"teacher",
 		"enrollment_advisor",
+		"qa_auditor",
 	])
 		.input(
 			z.object({

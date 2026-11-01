@@ -2,4 +2,4 @@
 
 import { GetAuthsLayout } from "@/sidebar/auth";
 
-export default GetAuthsLayout(["admin"]);
+export default GetAuthsLayout(["admin", "qa_auditor"]);

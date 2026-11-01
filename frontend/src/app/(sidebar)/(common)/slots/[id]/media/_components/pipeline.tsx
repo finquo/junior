@@ -46,6 +46,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
 import { MutationButton } from "@/hooks/button";
+import { RenderWhenRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
@@ -130,27 +131,29 @@ function RetryAction<TData, TError, TVariables>({
 	onSuccess: () => void;
 }) {
 	return (
-		<MutationButton
-			api={mutationApi}
-			onSuccess={onSuccess}
-			isPending={
-				<Button variant="outline" size="sm" disabled>
-					<Spinner />
-					Retry
-				</Button>
-			}
-			mutate={(mutate) => (
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={disabled}
-					onClick={() => mutate(input)}
-				>
-					<RefreshCwIcon />
-					Retry
-				</Button>
-			)}
-		/>
+		<RenderWhenRole role={["admin", "scheduler"]}>
+			<MutationButton
+				api={mutationApi}
+				onSuccess={onSuccess}
+				isPending={
+					<Button variant="outline" size="sm" disabled>
+						<Spinner />
+						Retry
+					</Button>
+				}
+				mutate={(mutate) => (
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={disabled}
+						onClick={() => mutate(input)}
+					>
+						<RefreshCwIcon />
+						Retry
+					</Button>
+				)}
+			/>
+		</RenderWhenRole>
 	);
 }
 

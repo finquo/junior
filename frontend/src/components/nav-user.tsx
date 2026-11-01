@@ -1,6 +1,13 @@
 "use client";
 
-import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
+import {
+	CircleUserRoundIcon,
+	EllipsisVerticalIcon,
+	LayoutDashboardIcon,
+	LogOutIcon,
+	UserPenIcon,
+} from "lucide-react";
+import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -69,7 +76,27 @@ export function NavUser() {
 							</DropdownMenuLabel>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
+						<DropdownMenuItem asChild>
+							<Link href={"/me"}>
+								<LayoutDashboardIcon />
+								Dashboard
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href={"/user/self"}>
+								<CircleUserRoundIcon />
+								Profile
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href={"/user/edit"}>
+								<UserPenIcon />
+								Edit
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
 						<DropdownMenuItem
+							variant="destructive"
 							onClick={async () =>
 								impersonation
 									? await authClient.admin.stopImpersonating(

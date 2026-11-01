@@ -60,7 +60,7 @@ export const mediaRouter = {
 			),
 	},
 
-	video: getRolesProcedure(["admin", "scheduler"])
+	video: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 		.input(z.object({ id: z.string().min(1) }))
 		.handler(async ({ input }) => {
 			const key = `${input.id}/video.mp4`;
@@ -73,7 +73,7 @@ export const mediaRouter = {
 			};
 		}),
 
-	audio: getRolesProcedure(["admin", "scheduler"])
+	audio: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 		.input(z.object({ id: z.string().min(1) }))
 		.handler(async ({ input }) => {
 			const key = `${input.id}/audio.mp3`;
@@ -87,7 +87,7 @@ export const mediaRouter = {
 		}),
 
 	chunks: {
-		list: getRolesProcedure(["admin", "scheduler"])
+		list: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 			.input(z.object({ id: z.string().min(1) }))
 			.handler(async ({ input }) => {
 				const keys = await getAPI(
@@ -100,7 +100,7 @@ export const mediaRouter = {
 			}),
 	},
 
-	meta: getRolesProcedure(["admin", "scheduler"])
+	meta: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 		.input(z.object({ id: z.string().min(1) }))
 		.handler(async ({ input }) => {
 			const { id } = input;
@@ -159,7 +159,7 @@ export const mediaRouter = {
 			return { video, audio, transcript, summary, chunkSummary, chunks };
 		}),
 
-	download: getRolesProcedure(["admin", "scheduler"])
+	download: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 		.input(z.object({ id: z.string().min(1), path: z.string().min(1) }))
 		.handler(async ({ input }) => {
 			const allowed =

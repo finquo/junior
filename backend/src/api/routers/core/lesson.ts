@@ -10,7 +10,12 @@ import {
 import { db } from "@/services";
 
 export const lessonRouter = {
-	list: getRolesProcedure(["admin", "teacher", "scheduler"]).handler(() =>
+	list: getRolesProcedure([
+		"admin",
+		"teacher",
+		"scheduler",
+		"qa_auditor",
+	]).handler(() =>
 		getAPI(
 			"db-core-get-lessons-query",
 			db.query.lesson.findMany({
@@ -21,7 +26,13 @@ export const lessonRouter = {
 			[],
 		),
 	),
-	get: getRolesProcedure(["admin", "teacher", "scheduler", "student"])
+	get: getRolesProcedure([
+		"admin",
+		"teacher",
+		"scheduler",
+		"student",
+		"qa_auditor",
+	])
 		.input(SelectLessonSchema.pick({ id: true }))
 		.handler(async ({ input }) => {
 			return await tryAPI(

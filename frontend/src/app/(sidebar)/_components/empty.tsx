@@ -3,6 +3,7 @@
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
+import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
 	Sidebar,
@@ -25,7 +26,9 @@ export function SidebarConfig({
 				<NavMain title="Platform" items={[]} />
 				<NavProjects title="Profile" link={[]} />
 			</SidebarContent>
-			<SidebarFooter>{/*<NavUser />*/}</SidebarFooter>
+			<SidebarFooter>
+				<NavUser />
+			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
 	);

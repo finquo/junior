@@ -108,34 +108,44 @@ export const slotRouter = {
 				token: await generateZoomToken(slot.id, role, context.role),
 			} as const;
 		}),
-	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(
-		async ({ context }) => {
-			return await getAPI(
-				"db-core-get-slots-query",
-				db.query.slot.findMany({
-					where: MapRole(context.role, {
-						admin: {},
-						scheduler: {
-							schedulerId: context.user.id,
-						},
-						teacher: {
-							teacherId: context.user.id,
-						},
-					}),
-					orderBy: {
-						startTime: "desc",
+	list: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"qa_auditor",
+	]).handler(async ({ context }) => {
+		return await getAPI(
+			"db-core-get-slots-query",
+			db.query.slot.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+					qa_auditor: {},
+					scheduler: {
+						schedulerId: context.user.id,
 					},
-					with: {
-						teacher: { with: { user: true } },
-						student: { with: { user: true } },
-						lesson: true,
+					teacher: {
+						teacherId: context.user.id,
 					},
 				}),
-				[],
-			);
-		},
-	),
-	get: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
+				orderBy: {
+					startTime: "desc",
+				},
+				with: {
+					teacher: { with: { user: true } },
+					student: { with: { user: true } },
+					lesson: true,
+				},
+			}),
+			[],
+		);
+	}),
+	get: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"student",
+		"qa_auditor",
+	])
 		.input(
 			z.object({
 				id: z.string(),
@@ -168,6 +178,9 @@ export const slotRouter = {
 				db.query.slot.findFirst({
 					where: MapRole(context.role, {
 						admin: {
+							id: input.id,
+						},
+						qa_auditor: {
 							id: input.id,
 						},
 						scheduler: {

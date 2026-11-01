@@ -7,13 +7,10 @@ import { auth, db } from "@/services";
 import { MapRole } from "@/utils/role";
 
 export const schedulerRouter = {
-	list: getRolesProcedure(["admin"]).handler(async ({ context }) => {
+	list: getRolesProcedure(["admin", "qa_auditor"]).handler(async () => {
 		return await getAPI(
 			"db-core-get-schedulers-query",
 			db.query.scheduler.findMany({
-				where: MapRole(context.role, {
-					admin: {},
-				}),
 				orderBy: { createdAt: "desc" },
 				with: {
 					user: true,
@@ -22,21 +19,19 @@ export const schedulerRouter = {
 			[],
 		);
 	}),
-	get: getRolesProcedure(["admin"])
+	get: getRolesProcedure(["admin", "qa_auditor"])
 		.input(
 			z.object({
 				id: z.string(),
 			}),
 		)
-		.handler(async ({ input, context }) => {
+		.handler(async ({ input }) => {
 			return await tryAPI(
 				"db-core-get-scheduler",
 				db.query.scheduler.findFirst({
-					where: MapRole(context.role, {
-						admin: {
-							id: input.id,
-						},
-					}),
+					where: {
+						id: input.id,
+					},
 					with: {
 						user: true,
 					},

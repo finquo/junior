@@ -219,7 +219,7 @@ export function SessionProfile({
 							</Button>
 						)}
 						{data.status === "attended" && (
-							<RenderWhenRole role={["admin", "scheduler"]}>
+							<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
 								<Button variant="outline" size="sm" asChild>
 									<Link href={`/slots/${data.id}/media` as "/"}>
 										<AudioLinesIcon />
