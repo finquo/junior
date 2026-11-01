@@ -20,7 +20,13 @@ const JOIN_WINDOW = 10 * 60 * 1000;
 const DEMO_ID = "demo";
 
 export const slotRouter = {
-	join: getRolesProcedure(["admin", "scheduler", "teacher", "student"])
+	join: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"student",
+		"qa_auditor",
+	])
 		.input(
 			z.object({
 				id: z.string(),
@@ -32,6 +38,7 @@ export const slotRouter = {
 				scheduler: 1,
 				teacher: 1,
 				student: 0,
+				qa_auditor: 0,
 			} as const);
 
 			// Authenticated demo sandbox. Remove this branch before deploying.
@@ -71,6 +78,7 @@ export const slotRouter = {
 				scheduler: slot.schedulerId === context.user.id,
 				teacher: slot.teacherId === context.user.id,
 				student: slot.studentId === context.user.id,
+				qa_auditor: true,
 			});
 
 			if (!authorized)
@@ -113,6 +121,7 @@ export const slotRouter = {
 		"scheduler",
 		"teacher",
 		"qa_auditor",
+		"financier",
 	]).handler(async ({ context }) => {
 		return await getAPI(
 			"db-core-get-slots-query",
@@ -120,6 +129,7 @@ export const slotRouter = {
 				where: MapRole(context.role, {
 					admin: {},
 					qa_auditor: {},
+					financier: {},
 					scheduler: {
 						schedulerId: context.user.id,
 					},
@@ -145,6 +155,7 @@ export const slotRouter = {
 		"teacher",
 		"student",
 		"qa_auditor",
+		"financier",
 	])
 		.input(
 			z.object({
@@ -181,6 +192,9 @@ export const slotRouter = {
 							id: input.id,
 						},
 						qa_auditor: {
+							id: input.id,
+						},
+						financier: {
 							id: input.id,
 						},
 						scheduler: {

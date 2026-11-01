@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import type { GetFormZod } from "@/lib/utils";
 import { ProgramSelector } from "../../../_components/selector";
 
@@ -136,52 +137,54 @@ export function PaymentsDrawer({
 				>
 					<div className="flex-1 space-y-4 overflow-y-auto p-4">
 						<FieldGroup>
-							<form.Field
-								name="program"
-								children={(field) => (
-									<ProgramSelector
-										id={field.name}
-										value={field.state.value}
-										onValueChange={(val) =>
-											field.handleChange(val || undefined)
-										}
-										disabled={isPending}
-									/>
-								)}
-							/>
-
-							<form.Field
-								name="currency"
-								children={(field) => (
-									<Field>
-										<FieldLabel htmlFor={field.name}>Currency</FieldLabel>
-										<Select
-											items={Currencies}
+							<RenderWhenRole role="admin">
+								<form.Field
+									name="program"
+									children={(field) => (
+										<ProgramSelector
+											id={field.name}
 											value={field.state.value}
 											onValueChange={(val) =>
-												field.handleChange(val as FeesFormValues["currency"])
+												field.handleChange(val || undefined)
 											}
 											disabled={isPending}
-										>
-											<SelectTrigger
-												id={field.name}
-												className="w-full min-w-[200px]"
+										/>
+									)}
+								/>
+
+								<form.Field
+									name="currency"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Currency</FieldLabel>
+											<Select
+												items={Currencies}
+												value={field.state.value}
+												onValueChange={(val) =>
+													field.handleChange(val as FeesFormValues["currency"])
+												}
+												disabled={isPending}
 											>
-												<SelectValue placeholder="Select currency" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectGroup>
-													{Object.entries(Currencies).map(([code, name]) => (
-														<SelectItem key={code} value={code}>
-															{name}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-									</Field>
-								)}
-							/>
+												<SelectTrigger
+													id={field.name}
+													className="w-full min-w-[200px]"
+												>
+													<SelectValue placeholder="Select currency" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														{Object.entries(Currencies).map(([code, name]) => (
+															<SelectItem key={code} value={code}>
+																{name}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+										</Field>
+									)}
+								/>
+							</RenderWhenRole>
 
 							<div className="grid grid-cols-2 gap-4">
 								<form.Field

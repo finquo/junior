@@ -226,7 +226,7 @@ export default function Page() {
 								<Spinner />
 							</Button>
 						)}
-						<RenderWhenRole role="admin">
+						<RenderWhenRole role={["admin", "financier"]}>
 							<Button asChild>
 								<Link href="/payments/new">
 									<PlusIcon />

@@ -49,7 +49,7 @@ function Payments({ studentId }: { studentId: string }) {
 		api.core.payment.list.queryOptions({ input: { studentId: studentId } }),
 	);
 
-	const isAdmin = useHasRole("admin");
+	const canManagePayments = useHasRole(["admin", "financier"]);
 
 	if (isPending) {
 		return <Loader />;
@@ -97,7 +97,7 @@ function Payments({ studentId }: { studentId: string }) {
 						The current state of the program fees
 					</FrameDescription>
 					<FrameActions>
-						{isAdmin && (
+						{canManagePayments && (
 							<PaymentsDrawer student={student}>
 								<Button variant="outline" size="sm">
 									<WalletIcon />
@@ -159,7 +159,7 @@ function Payments({ studentId }: { studentId: string }) {
 				</ItemGroup>
 			</FramePanel>
 
-			{isAdmin && (
+			{canManagePayments && (
 				<FramePanel>
 					<FrameHeader>
 						<FrameTitle>Record a Payment</FrameTitle>

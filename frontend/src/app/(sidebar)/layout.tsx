@@ -1,6 +1,7 @@
 import { SidebarConfig as AdminSidebar } from "@/app/(sidebar)/_components/admin";
 import { SidebarConfig as EmptySidebar } from "@/app/(sidebar)/_components/empty";
 import { SidebarConfig as EnrollmentAdvisorSidebar } from "@/app/(sidebar)/_components/enrollment_advisor";
+import { SidebarConfig as FinancierSidebar } from "@/app/(sidebar)/_components/financier";
 import { SidebarConfig as QaAuditorSidebar } from "@/app/(sidebar)/_components/qa_auditor";
 import { SidebarConfig as SchedulerSidebar } from "@/app/(sidebar)/_components/scheduler";
 import { SidebarConfig as TeacherSidebar } from "@/app/(sidebar)/_components/teacher";
@@ -19,6 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				enrollment_advisor={<EnrollmentAdvisorSidebar />}
 				student={null}
 				qa_auditor={<QaAuditorSidebar />}
+				financier={<FinancierSidebar />}
 				isPending={<EmptySidebar />}
 			>
 				<EmptySidebar />

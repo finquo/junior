@@ -20,6 +20,7 @@ export const studentRouter = {
 		"teacher",
 		"enrollment_advisor",
 		"qa_auditor",
+		"financier",
 	]).handler(async ({ context }) => {
 		return await getAPI(
 			"db-core-list-students-query",
@@ -27,6 +28,7 @@ export const studentRouter = {
 				where: MapRole(context.role, {
 					admin: {},
 					qa_auditor: {},
+					financier: {},
 					enrollment_advisor: {},
 					scheduler: {
 						supervisorId: context.user.id,
@@ -49,6 +51,7 @@ export const studentRouter = {
 		"scheduler",
 		"enrollment_advisor",
 		"qa_auditor",
+		"financier",
 	])
 		.input(
 			z.object({
@@ -64,6 +67,9 @@ export const studentRouter = {
 							id: input.id,
 						},
 						qa_auditor: {
+							id: input.id,
+						},
+						financier: {
 							id: input.id,
 						},
 						enrollment_advisor: {
@@ -281,7 +287,7 @@ export const studentRouter = {
 				),
 			};
 		}),
-	update: getRolesProcedure(["admin", "scheduler"])
+	update: getRolesProcedure(["admin", "scheduler", "financier"])
 		.input(
 			UpdateStudentSchema.omit({
 				createdAt: true,
@@ -297,10 +303,21 @@ export const studentRouter = {
 				"db-core-update-student",
 				db
 					.update(schema.student)
-					.set(data)
+					.set(
+						MapRole(context.role, {
+							admin: data,
+							scheduler: data,
+							financier: {
+								amount: data.amount,
+								remaining: data.remaining,
+								paid: data.paid,
+							},
+						}),
+					)
 					.where(
 						MapRole(context.role, {
 							admin: eq(schema.student.id, id),
+							financier: eq(schema.student.id, id),
 							scheduler: and(
 								eq(schema.student.id, id),
 								eq(schema.student.supervisorId, context.user.id),

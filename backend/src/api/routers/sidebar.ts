@@ -33,39 +33,44 @@ export const sidebarRouter = {
 			}));
 		},
 	),
-	teachers: getRolesProcedure(["admin", "scheduler", "qa_auditor"]).handler(
-		async ({ context }) => {
-			const data = await getAPI(
-				"db-sidebar-get-teachers-query",
-				db.query.teacher.findMany({
-					where: MapRole(context.role, {
-						admin: {},
-						qa_auditor: {},
-						scheduler: {
-							supervisorId: context.user.id,
-						},
-					}),
-					orderBy: { createdAt: "desc" },
-					limit: 5,
-					with: {
-						user: true,
+	teachers: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"qa_auditor",
+		"financier",
+	]).handler(async ({ context }) => {
+		const data = await getAPI(
+			"db-sidebar-get-teachers-query",
+			db.query.teacher.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+					qa_auditor: {},
+					financier: {},
+					scheduler: {
+						supervisorId: context.user.id,
 					},
 				}),
-				[],
-			);
+				orderBy: { createdAt: "desc" },
+				limit: 5,
+				with: {
+					user: true,
+				},
+			}),
+			[],
+		);
 
-			return data.map((item) => ({
-				id: item.id,
-				title: item.user?.name ?? item.id,
-			}));
-		},
-	),
+		return data.map((item) => ({
+			id: item.id,
+			title: item.user?.name ?? item.id,
+		}));
+	}),
 	students: getRolesProcedure([
 		"admin",
 		"scheduler",
 		"teacher",
 		"enrollment_advisor",
 		"qa_auditor",
+		"financier",
 	]).handler(async ({ context }) => {
 		const data = await getAPI(
 			"db-sidebar-get-students-query",
@@ -73,6 +78,7 @@ export const sidebarRouter = {
 				where: MapRole(context.role, {
 					admin: {},
 					qa_auditor: {},
+					financier: {},
 					enrollment_advisor: {},
 					scheduler: {
 						supervisorId: context.user.id,
@@ -100,6 +106,7 @@ export const sidebarRouter = {
 		"scheduler",
 		"teacher",
 		"qa_auditor",
+		"financier",
 	]).handler(async ({ context }) => {
 		const data = await getAPI(
 			"db-sidebar-get-slots-query",
@@ -107,6 +114,7 @@ export const sidebarRouter = {
 				where: MapRole(context.role, {
 					admin: {},
 					qa_auditor: {},
+					financier: {},
 					scheduler: {
 						schedulerId: context.user.id,
 					},
@@ -140,6 +148,7 @@ export const sidebarRouter = {
 		"teacher",
 		"enrollment_advisor",
 		"qa_auditor",
+		"financier",
 	]).handler(async () => {
 		const data = await getAPI(
 			"db-sidebar-get-programs-query",

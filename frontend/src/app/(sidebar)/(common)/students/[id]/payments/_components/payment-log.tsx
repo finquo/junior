@@ -25,6 +25,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { api, refetchAPIs } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 
 type PaymentRecord = API_Returns["core"]["payment"]["list"][number];
@@ -74,14 +75,16 @@ function PaymentLogItem({ payment }: { payment: PaymentRecord }) {
 						/>
 					</ButtonGroup>
 				)}
-				<Button
-					variant="destructive"
-					size="icon-sm"
-					onClick={() => mutate({ id: payment.id })}
-					disabled={isPending}
-				>
-					<Trash2Icon />
-				</Button>
+				<RenderWhenRole role="admin">
+					<Button
+						variant="destructive"
+						size="icon-sm"
+						onClick={() => mutate({ id: payment.id })}
+						disabled={isPending}
+					>
+						<Trash2Icon />
+					</Button>
+				</RenderWhenRole>
 			</ItemActions>
 		</Item>
 	);

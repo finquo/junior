@@ -9,7 +9,7 @@ import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 
 export const paymentRouter = {
-	list: getRolesProcedure(["admin", "scheduler"])
+	list: getRolesProcedure(["admin", "scheduler", "financier"])
 		.input(
 			z.object({
 				studentId: z.string().optional(),
@@ -32,6 +32,7 @@ export const paymentRouter = {
 								: undefined,
 							MapRole(context.role, {
 								admin: undefined,
+								financier: undefined,
 								scheduler: eq(schema.student.supervisorId, context.user.id),
 							}),
 						),
@@ -41,7 +42,7 @@ export const paymentRouter = {
 				[],
 			);
 		}),
-	get: getRolesProcedure(["admin", "scheduler"])
+	get: getRolesProcedure(["admin", "scheduler", "financier"])
 		.input(
 			SelectPaymentSchema.pick({
 				id: true,
@@ -62,6 +63,7 @@ export const paymentRouter = {
 							eq(schema.payment.id, input.id),
 							MapRole(context.role, {
 								admin: undefined,
+								financier: undefined,
 								scheduler: eq(schema.student.supervisorId, context.user.id),
 							}),
 						),
@@ -71,7 +73,7 @@ export const paymentRouter = {
 
 			return rows?.[0]?.payment ?? null;
 		}),
-	create: getRolesProcedure(["admin"])
+	create: getRolesProcedure(["admin", "financier"])
 		.input(
 			InsertPaymentSchema.pick({
 				amount: true,

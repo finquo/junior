@@ -256,6 +256,7 @@ export function EditStudentDrawer({
 							<RoleRender
 								admin={undefined}
 								enrollment_advisor={undefined}
+								financier={undefined}
 								qa_auditor={undefined}
 								scheduler={false}
 								student={undefined}

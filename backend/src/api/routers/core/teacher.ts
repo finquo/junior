@@ -16,28 +16,32 @@ import { checkAgainstLeaves } from "@/utils/leave";
 import { MapRole } from "@/utils/role";
 
 export const teacherRouter = {
-	list: getRolesProcedure(["admin", "scheduler", "qa_auditor"]).handler(
-		async ({ context }) => {
-			return await getAPI(
-				"db-core-get-teachers-query",
-				db.query.teacher.findMany({
-					where: MapRole(context.role, {
-						admin: {},
-						qa_auditor: {},
-						scheduler: {
-							supervisorId: context.user.id,
-						},
-					}),
-					orderBy: { createdAt: "desc" },
-					with: {
-						user: true,
+	list: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"qa_auditor",
+		"financier",
+	]).handler(async ({ context }) => {
+		return await getAPI(
+			"db-core-get-teachers-query",
+			db.query.teacher.findMany({
+				where: MapRole(context.role, {
+					admin: {},
+					qa_auditor: {},
+					financier: {},
+					scheduler: {
+						supervisorId: context.user.id,
 					},
 				}),
-				[],
-			);
-		},
-	),
-	get: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
+				orderBy: { createdAt: "desc" },
+				with: {
+					user: true,
+				},
+			}),
+			[],
+		);
+	}),
+	get: getRolesProcedure(["admin", "scheduler", "qa_auditor", "financier"])
 		.input(
 			z.object({
 				id: z.string(),
@@ -52,6 +56,9 @@ export const teacherRouter = {
 							id: input.id,
 						},
 						qa_auditor: {
+							id: input.id,
+						},
+						financier: {
 							id: input.id,
 						},
 						scheduler: {

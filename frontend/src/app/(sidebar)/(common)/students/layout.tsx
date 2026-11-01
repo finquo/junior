@@ -8,4 +8,5 @@ export default GetAuthsLayout([
 	"teacher",
 	"enrollment_advisor",
 	"qa_auditor",
+	"financier",
 ]);

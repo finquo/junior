@@ -47,6 +47,12 @@ const enrollment_advisor = ac.newRole({
 	enrollment_advisor: ["update"],
 });
 
+const financier = ac.newRole({
+	student: ["get", "list", "update"],
+	teacher: ["get", "list"],
+	slot: ["get", "list"],
+});
+
 const student = ac.newRole({
 	student: ["update"],
 	slot: ["get", "list", "update"],
@@ -64,6 +70,7 @@ export const roles = {
 	scheduler,
 	teacher,
 	enrollment_advisor,
+	financier,
 	student,
 	qa_auditor,
 };

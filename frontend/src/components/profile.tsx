@@ -372,6 +372,7 @@ export function ProfileCard({
 					scheduler={<SchedulerProfile scheduler={scheduler} />}
 					admin={null}
 					enrollment_advisor={null}
+					financier={null}
 					qa_auditor={null}
 					user={null}
 				/>
