@@ -50,8 +50,9 @@ export interface ExpandingButtonGroupProps {
 	/** Accessible name of the toolbar, such as "Message actions". */
 	label: string;
 	size?: ExpandingButtonGroupSize;
-	/** Id of the action whose label shows at rest, usually the primary one. Defaults to the first enabled action: one action is always
-	 *  expanded. Pointing at or focusing another moves the expansion there, and it returns here when the pointer and focus leave. */
+	/** Id of the action whose label shows at rest, usually the primary one. Defaults to the first enabled action. Pass null to keep
+	 *  every action collapsed until the pointer or focus reaches it. Pointing at or focusing another moves the expansion there, and
+	 *  it returns to this action when the pointer and focus leave. */
 	defaultExpanded?: string | null;
 	/** Called with the item id whenever an action runs, before its own onSelect. */
 	onAction?: (id: string) => void;
@@ -161,6 +162,7 @@ function DrawnCheck({ reduced }: { reduced: boolean }) {
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
+			aria-hidden="true"
 			strokeWidth={2}
 			strokeLinecap="round"
 			strokeLinejoin="round"
@@ -322,15 +324,16 @@ function Item({
 }
 
 /**
- * A compact pill of icon buttons for actions. One action always shows its label; the one you point at or focus takes over the
- * label while its neighbours slide aside, and an action can confirm in place: the icon draws a check and the label becomes a past tense word.
- * On touch, the first tap reveals the label and a second tap runs the action.
+ * A compact pill of icon buttons for actions. By default one action shows its label; the one you point at or focus takes over the
+ * label while its neighbours slide aside. Pass `defaultExpanded={null}` to keep every label collapsed until the pointer or focus
+ * reaches it. An action can confirm in place: the icon draws a check and the label becomes a past tense word. On touch, the first
+ * tap reveals the label and a second tap runs the action.
  */
 export function ExpandingButtonGroup({
 	items,
 	label,
 	size = "md",
-	defaultExpanded = null,
+	defaultExpanded,
 	onAction,
 	confirmDuration = 1400,
 	className,
@@ -369,12 +372,18 @@ export function ExpandingButtonGroup({
 
 	const has = (id: string | null) =>
 		!!id && items.some((item) => item.id === id);
-	// One action is always expanded: the resting one is defaultExpanded, else the first enabled action.
+	// At rest the group shows defaultExpanded, falls back to the first enabled action when the prop is omitted, and stays fully
+	// collapsed when defaultExpanded is explicitly null.
 	const firstEnabled =
 		items.find((item) => !item.disabled)?.id ?? items[0]?.id ?? null;
-	const restId = has(defaultExpanded) ? defaultExpanded : firstEnabled;
+	const restId =
+		defaultExpanded === undefined
+			? firstEnabled
+			: has(defaultExpanded)
+				? defaultExpanded
+				: null;
 	const expandedId = has(intent) ? intent : restId;
-	const tabStop = has(focused) ? focused : restId;
+	const tabStop = has(focused) ? focused : (restId ?? firstEnabled);
 
 	// A tap outside closes a label opened by a first tap.
 	useEffect(() => {

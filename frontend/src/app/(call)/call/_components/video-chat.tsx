@@ -19,7 +19,6 @@ import {
 import {
 	CctvIcon,
 	CctvOffIcon,
-	CircleIcon,
 	EllipsisIcon,
 	InfoIcon,
 	LogOutIcon,
@@ -29,15 +28,20 @@ import {
 	PinIcon,
 	ScreenShareIcon,
 	ScreenShareOffIcon,
-	SquareIcon,
+	UserIcon,
 	UsersIcon,
 	UserXIcon,
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
+import {
+	ExpandingButtonGroup,
+	type ExpandingButtonGroupItem,
+} from "@/components/arc/expanding-button-group/expanding-button-group";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -50,11 +54,10 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardDescription,
@@ -88,6 +91,16 @@ type SessionUser = ReturnType<typeof useSessionUsers>[number];
 
 function participantName(participant: Participant) {
 	return participant.displayName || "Guest";
+}
+
+function participantRole(participant: Participant) {
+	return participant.userIdentity || participant.userKey;
+}
+
+function roleLabel(role: string) {
+	const label = role.replaceAll("_", " ");
+
+	return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function isVoiceOn(participant: Participant) {
@@ -150,23 +163,62 @@ function VideoTile({
 	user,
 	className,
 	voiceOn,
+	videoOn,
+	role: roleProp,
+	avatar,
+	backgroundImage,
 	menu = false,
 }: {
 	user: SessionUser;
 	className?: string;
 	voiceOn?: boolean;
+	videoOn?: boolean;
+	role?: string;
+	avatar?: string;
+	backgroundImage?: string;
 	menu?: boolean;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
+	const video = videoOn ?? user.bVideoOn;
+	const role = roleProp ?? participantRole(user) ?? "guest";
+	const roleName = roleLabel(role);
+	const isTeacher = role === "teacher";
+	const name = participantName(user);
 
 	return (
 		<Frame className={cn("overflow-hidden p-0", className)}>
 			<VideoPlayerContainerComponent style={videoTileStyle}>
 				<VideoPlayerComponent user={user} />
 			</VideoPlayerContainerComponent>
+			{!video && isTeacher && backgroundImage && (
+				<Image
+					src={backgroundImage}
+					alt=""
+					fill
+					sizes="(max-width: 640px) 100vw, 33vw"
+					className="select-none object-cover"
+					draggable={false}
+				/>
+			)}
+			{!video && (
+				<div className="absolute inset-0">
+					<div className="flex size-full flex-row items-center justify-center gap-3">
+						<Avatar size="lg">
+							<AvatarImage src={avatar} alt={name} />
+							<AvatarFallback>
+								<UserIcon />
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex flex-col items-start gap-1">
+							<span className="font-medium text-sm">{name}</span>
+							<span className="text-muted-foreground text-xs">{roleName}</span>
+						</div>
+					</div>
+				</div>
+			)}
 			<Badge variant="secondary" className="absolute bottom-2 left-2 gap-1.5">
 				{voice ? <MicIcon /> : <MicOffIcon />}
-				{participantName(user)}
+				{video && name}
 			</Badge>
 			{menu && <RemoteUserMenu user={user} />}
 		</Frame>
@@ -182,6 +234,9 @@ export function VideoChat({
 	canEndMeeting,
 	canRecord,
 	autoRecord,
+	role,
+	avatar,
+	backgroundImage,
 	disableVideo,
 	disableAudio,
 	onLeave,
@@ -195,6 +250,9 @@ export function VideoChat({
 	canEndMeeting: boolean;
 	canRecord: boolean;
 	autoRecord: boolean;
+	role: string;
+	avatar?: string;
+	backgroundImage?: string;
 	disableVideo: boolean;
 	disableAudio: boolean;
 	onLeave: () => void;
@@ -222,6 +280,9 @@ export function VideoChat({
 	);
 	const [recordingPending, setRecordingPending] = useState(false);
 	const [audioPending, setAudioPending] = useState(false);
+	const [overlay, setOverlay] = useState<
+		"participants" | "details" | "end" | "leave" | null
+	>(null);
 	const autoRecordAttempted = useRef(false);
 	const onEndRef = useRef(onEnd);
 
@@ -442,11 +503,90 @@ export function VideoChat({
 		else await startRecording();
 	};
 
+	const callActions: ExpandingButtonGroupItem[] = [
+		{
+			id: "microphone",
+			label: isAudioOn ? "Mute" : "Unmute",
+			icon: audioPending ? (
+				<Spinner />
+			) : isAudioOn ? (
+				<MicIcon />
+			) : (
+				<MicOffIcon />
+			),
+			disabled: audioPending,
+			onSelect: toggleMicrophone,
+		},
+		{
+			id: "camera",
+			label: isVideoOn ? "Camera off" : "Camera on",
+			icon: isVideoOn ? <VideoIcon /> : <VideoOffIcon />,
+			onSelect: toggleCamera,
+		},
+		{
+			id: "screenshare",
+			label: isScreensharing ? "Stop sharing" : "Share screen",
+			icon: isScreensharing ? <ScreenShareOffIcon /> : <ScreenShareIcon />,
+			onSelect: toggleScreenshare,
+		},
+	];
+
+	if (canRecord) {
+		callActions.push({
+			id: "recording",
+			label: isRecording ? "Stop recording" : "Start recording",
+			icon: recordingPending ? (
+				<Spinner />
+			) : isRecording ? (
+				<CctvIcon />
+			) : (
+				<CctvOffIcon />
+			),
+			tone: isRecording ? "danger" : "neutral",
+			disabled: recordingPending,
+			onSelect: toggleRecording,
+		});
+	}
+
+	callActions.push({
+		id: "participants",
+		label: "Participants",
+		icon: <UsersIcon />,
+		onSelect: () => setOverlay("participants"),
+	});
+
+	if (slotId && canViewDetails) {
+		callActions.push({
+			id: "details",
+			label: "Meeting details",
+			icon: <InfoIcon />,
+			onSelect: () => setOverlay("details"),
+		});
+	}
+
+	if (canEndMeeting) {
+		callActions.push({
+			id: "end",
+			label: "End for all",
+			icon: <PhoneOffIcon />,
+			tone: "danger",
+			onSelect: () => setOverlay("end"),
+		});
+	}
+
+	callActions.push({
+		id: "leave",
+		label: "Leave",
+		icon: <LogOutIcon />,
+		tone: "danger",
+		onSelect: () => setOverlay("leave"),
+	});
+
 	return (
-		<Frame className="h-full min-h-0 rounded-none p-2">
+		<div className="h-full min-h-64 p-2">
 			<FramePanel
 				className={cn(
-					"relative grid h-full min-h-0 content-center gap-2 overflow-hidden",
+					"relative grid h-full min-h-0 content-center gap-2 overflow-hidden border-none",
 					isRemoteSharing
 						? "grid-cols-1"
 						: others.length > 1
@@ -455,7 +595,7 @@ export function VideoChat({
 				)}
 			>
 				{isRemoteSharing && (
-					<Frame className="col-span-full h-full min-h-0 overflow-hidden">
+					<Frame className="absolute inset-0 overflow-hidden p-0">
 						<ScreenShareContainerComponent className="call-screenshare-remote h-full w-full">
 							{remoteScreenShareUsers.map((userId) => (
 								<ScreenSharePlayerComponent key={userId} userId={userId} />
@@ -466,7 +606,13 @@ export function VideoChat({
 
 				{!isRemoteSharing &&
 					others.map((participant) => (
-						<VideoTile key={participant.userId} user={participant} menu />
+						<VideoTile
+							key={participant.userId}
+							user={participant}
+							avatar={participant.avatar}
+							backgroundImage={backgroundImage}
+							menu
+						/>
 					))}
 
 				<div className="absolute right-4 bottom-4 z-10 flex flex-col gap-2">
@@ -483,148 +629,84 @@ export function VideoChat({
 						<VideoTile
 							user={myself}
 							voiceOn={isAudioOn}
+							videoOn={isVideoOn}
+							role={role}
+							avatar={avatar}
+							backgroundImage={backgroundImage}
 							className="aspect-video min-w-64 shadow-lg"
 						/>
 					)}
 				</div>
 
 				<div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
-					<Frame className="shadow-lg">
-						<ButtonGroup>
-							<Button
-								variant="secondary"
-								size="icon-lg"
-								onClick={() => void toggleMicrophone()}
-								disabled={audioPending}
-								aria-label={
-									isAudioOn ? "Mute microphone" : "Turn on microphone"
-								}
-							>
-								{audioPending ? (
-									<Spinner />
-								) : isAudioOn ? (
-									<MicIcon />
-								) : (
-									<MicOffIcon />
-								)}
-							</Button>
-							<Button
-								variant="secondary"
-								size="icon-lg"
-								onClick={() => void toggleCamera()}
-								aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
-							>
-								{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-							</Button>
-							<Button
-								variant={isScreensharing ? "default" : "secondary"}
-								size="icon-lg"
-								onClick={() => void toggleScreenshare()}
-								aria-label={
-									isScreensharing ? "Stop sharing screen" : "Share screen"
-								}
-							>
-								{isScreensharing ? <ScreenShareOffIcon /> : <ScreenShareIcon />}
-							</Button>
-							{canRecord && (
-								<Button
-									variant={isRecording ? "destructive" : "secondary"}
-									size="icon-lg"
-									onClick={() => void toggleRecording()}
-									disabled={recordingPending}
-									aria-label={
-										isRecording ? "Stop recording" : "Start recording"
-									}
-								>
-									{recordingPending ? (
-										<Spinner />
-									) : isRecording ? (
-										<CctvIcon />
-									) : (
-										<CctvOffIcon />
-									)}
-								</Button>
-							)}
-							<ParticipantsDrawer participants={participants}>
-								<Button
-									variant="secondary"
-									size="icon-lg"
-									aria-label="Show participants"
-								>
-									<UsersIcon />
-								</Button>
-							</ParticipantsDrawer>
-							{slotId && canViewDetails && (
-								<MeetingDetails slotId={slotId}>
-									<Button
-										variant="secondary"
-										size="icon-lg"
-										aria-label="Show meeting details"
-									>
-										<InfoIcon />
-									</Button>
-								</MeetingDetails>
-							)}
-							{canEndMeeting && (
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<Button
-											variant="destructive"
-											size="icon-lg"
-											aria-label="End meeting for all"
-										>
-											<PhoneOffIcon />
-										</Button>
-									</AlertDialogTrigger>
-									<AlertDialogContent>
-										<AlertDialogHeader>
-											<AlertDialogTitle>End meeting for all?</AlertDialogTitle>
-											<AlertDialogDescription>
-												Everyone will be disconnected immediately. This cannot
-												be undone.
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel>Cancel</AlertDialogCancel>
-											<AlertDialogAction
-												variant="destructive"
-												onClick={() => void endMeeting()}
-											>
-												End meeting
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
-							)}
-							<AlertDialog>
-								<AlertDialogTrigger asChild>
-									<Button
-										variant="destructive"
-										size="icon-lg"
-										aria-label="Leave session"
-									>
-										<LogOutIcon />
-									</Button>
-								</AlertDialogTrigger>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>Leave the meeting?</AlertDialogTitle>
-										<AlertDialogDescription>
-											You can rejoin while the meeting is still live.
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Stay</AlertDialogCancel>
-										<AlertDialogAction variant="destructive" onClick={onLeave}>
-											Leave
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
-						</ButtonGroup>
-					</Frame>
+					<ExpandingButtonGroup
+						label="Call actions"
+						defaultExpanded={null}
+						items={callActions}
+						className="shadow-lg"
+					/>
 				</div>
+
+				<ParticipantsDrawer
+					participants={participants}
+					open={overlay === "participants"}
+					onOpenChange={(open) => setOverlay(open ? "participants" : null)}
+				/>
+
+				{slotId && canViewDetails && (
+					<MeetingDetails
+						slotId={slotId}
+						open={overlay === "details"}
+						onOpenChange={(open) => setOverlay(open ? "details" : null)}
+					/>
+				)}
+
+				{canEndMeeting && (
+					<AlertDialog
+						open={overlay === "end"}
+						onOpenChange={(open) => setOverlay(open ? "end" : null)}
+					>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>End meeting for all?</AlertDialogTitle>
+								<AlertDialogDescription>
+									Everyone will be disconnected immediately. This cannot be
+									undone.
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									variant="destructive"
+									onClick={() => void endMeeting()}
+								>
+									End meeting
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+				)}
+
+				<AlertDialog
+					open={overlay === "leave"}
+					onOpenChange={(open) => setOverlay(open ? "leave" : null)}
+				>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Leave the meeting?</AlertDialogTitle>
+							<AlertDialogDescription>
+								You can rejoin while the meeting is still live.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Stay</AlertDialogCancel>
+							<AlertDialogAction variant="destructive" onClick={onLeave}>
+								Leave
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
 			</FramePanel>
-		</Frame>
+		</div>
 	);
 }

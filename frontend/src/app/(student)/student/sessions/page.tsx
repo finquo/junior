@@ -8,6 +8,7 @@ import {
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
+import Link from "next/link";
 import Loader from "@/components/loader";
 import {
 	Frame,
@@ -20,6 +21,7 @@ import {
 import { getSlotStatusBadgeVariant } from "@/components/slot-details";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Empty,
 	EmptyDescription,
@@ -181,11 +183,17 @@ export default function Page() {
 								<VideoIcon />
 							</ItemMedia>
 							<ItemContent>
-								<ItemTitle>Meeting Link</ItemTitle>
+								<ItemTitle>Open Call</ItemTitle>
 								<ItemDescription>
-									{next.meetingLink ?? "Not shared yet"}
+									Joins the in-built call, or redirects to the external tool the
+									session uses.
 								</ItemDescription>
 							</ItemContent>
+							<ItemActions>
+								<Button asChild>
+									<Link href={`/call/${next.id}` as "/"}>Open Call</Link>
+								</Button>
+							</ItemActions>
 						</Item>
 					</ItemGroup>
 				) : (

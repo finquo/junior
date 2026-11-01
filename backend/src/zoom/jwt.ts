@@ -15,7 +15,11 @@ export function timingSafeEqual(a: string, b: string) {
 	return nodeTimingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
-export async function generateZoomToken(sessionName: string, role: 1 | 0 = 0) {
+export async function generateZoomToken(
+	sessionName: string,
+	role: 1 | 0 = 0,
+	identity = "guest",
+) {
 	const iat = Math.round(Date.now() / 1000) - 30;
 	const exp = iat + 60 * 60 * 2;
 
@@ -24,6 +28,7 @@ export async function generateZoomToken(sessionName: string, role: 1 | 0 = 0) {
 			app_key: process.env.ZOOM_SDK_KEY,
 			tpc: sessionName,
 			role_type: role,
+			user_identity: identity,
 			version: 1,
 			iat,
 			exp,

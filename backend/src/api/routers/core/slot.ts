@@ -43,7 +43,7 @@ export const slotRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_ID, role),
+					token: await generateZoomToken(DEMO_ID, role, context.role),
 				} as const;
 			}
 
@@ -105,7 +105,7 @@ export const slotRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(slot.id, role),
+				token: await generateZoomToken(slot.id, role, context.role),
 			} as const;
 		}),
 	list: getRolesProcedure(["admin", "scheduler", "teacher"]).handler(

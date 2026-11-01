@@ -19,7 +19,7 @@ export const meetingRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_ID, 0),
+					token: await generateZoomToken(DEMO_ID, 0, "guest"),
 				} as const;
 			}
 
@@ -65,7 +65,7 @@ export const meetingRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(slot.id, 0),
+				token: await generateZoomToken(slot.id, 0, "guest"),
 			} as const;
 		}),
 };

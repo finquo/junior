@@ -278,13 +278,17 @@ function DetailsBody({ slotId }: { slotId: string }) {
 export function MeetingDetails({
 	slotId,
 	children,
+	open,
+	onOpenChange,
 }: {
 	slotId: string;
-	children: ReactNode;
+	children?: ReactNode;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 }) {
 	return (
-		<Drawer>
-			<DrawerTrigger asChild>{children}</DrawerTrigger>
+		<Drawer open={open} onOpenChange={onOpenChange}>
+			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>Meeting details</DrawerTitle>

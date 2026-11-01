@@ -59,13 +59,17 @@ const invite = async () => {
 export function ParticipantsDrawer({
 	participants,
 	children,
+	open,
+	onOpenChange,
 }: {
 	participants: Participant[];
-	children: ReactNode;
+	children?: ReactNode;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 }) {
 	return (
-		<Drawer>
-			<DrawerTrigger asChild>{children}</DrawerTrigger>
+		<Drawer open={open} onOpenChange={onOpenChange}>
+			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>Participants</DrawerTitle>

@@ -56,6 +56,9 @@ function Joined({ id }: { id: string }) {
 			canEndMeeting={canEndMeeting ?? false}
 			canRecord={canEndMeeting ?? false}
 			autoRecord={Boolean(canEndMeeting && record)}
+			role={user.role ?? "student"}
+			avatar={user.image ?? undefined}
+			backgroundImage="/banner.jpg"
 			disableVideo={!camera}
 			disableAudio={!mic}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}
