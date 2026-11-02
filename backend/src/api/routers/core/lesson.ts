@@ -1,6 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { quizZod } from "@/config/quiz";
 import { schema } from "@/db";
 import {
 	InsertLessonSchema,
@@ -95,6 +96,97 @@ export const lessonRouter = {
 				db
 					.update(schema.lesson)
 					.set(input)
+					.where(eq(schema.lesson.id, input.id))
+					.returning(),
+			);
+		}),
+	appendQuiz: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				id: z.string(),
+				quiz: quizZod,
+			}),
+		)
+		.handler(async ({ input }) => {
+			const lesson = await tryAPI(
+				"db-core-get-lesson-quiz",
+				db.query.lesson.findFirst({
+					where: { id: input.id },
+					columns: { quiz: true },
+				}),
+			);
+
+			if (!lesson) return null;
+
+			return await tryAPI(
+				"db-core-append-lesson-quiz",
+				db
+					.update(schema.lesson)
+					.set({
+						quiz: [...(lesson.quiz ?? []), input.quiz],
+					})
+					.where(eq(schema.lesson.id, input.id))
+					.returning(),
+			);
+		}),
+	updateQuiz: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				id: z.string(),
+				quiz: quizZod,
+			}),
+		)
+		.handler(async ({ input }) => {
+			const lesson = await tryAPI(
+				"db-core-get-lesson-quiz",
+				db.query.lesson.findFirst({
+					where: { id: input.id },
+					columns: { quiz: true },
+				}),
+			);
+
+			if (!lesson) return null;
+
+			return await tryAPI(
+				"db-core-update-lesson-quiz",
+				db
+					.update(schema.lesson)
+					.set({
+						quiz: (lesson.quiz ?? []).map((question) =>
+							question.id === input.quiz.id ? input.quiz : question,
+						),
+					})
+					.where(eq(schema.lesson.id, input.id))
+					.returning(),
+			);
+		}),
+	deleteQuiz: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				id: z.string(),
+				quizId: z.string(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const lesson = await tryAPI(
+				"db-core-get-lesson-quiz",
+				db.query.lesson.findFirst({
+					where: { id: input.id },
+					columns: { quiz: true },
+				}),
+			);
+
+			if (!lesson) return null;
+
+			return await tryAPI(
+				"db-core-delete-lesson-quiz",
+				db
+					.update(schema.lesson)
+					.set({
+						quiz: (lesson.quiz ?? []).filter(
+							(question) => question.id !== input.quizId,
+						),
+					})
 					.where(eq(schema.lesson.id, input.id))
 					.returning(),
 			);

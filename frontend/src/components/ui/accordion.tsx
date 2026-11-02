@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "cn";
-import { Accordion as AccordionPrimitive } from "radix-ui";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Accordion as AccordionPrimitive } from "radix-ui";
+import type * as React from "react";
 
 function Accordion({
 	className,
@@ -44,7 +44,7 @@ function AccordionTrigger({
 			<AccordionPrimitive.Trigger
 				data-slot="accordion-trigger"
 				className={cn(
-					"group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left text-sm font-medium transition-all outline-none hover:underline disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+					"group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left font-medium text-sm outline-none transition-all hover:underline disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
 					className,
 				)}
 				{...props}
@@ -71,7 +71,7 @@ function AccordionContent({
 	return (
 		<AccordionPrimitive.Content
 			data-slot="accordion-content"
-			className="overflow-hidden px-4 text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+			className="overflow-hidden px-4 text-sm data-closed:animate-accordion-up data-open:animate-accordion-down"
 			{...props}
 		>
 			<div
@@ -86,4 +86,4 @@ function AccordionContent({
 	);
 }
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };

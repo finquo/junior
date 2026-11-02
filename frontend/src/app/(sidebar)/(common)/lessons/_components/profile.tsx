@@ -4,21 +4,16 @@ import { langFlag, langName } from "language-emoji";
 import {
 	BookOpenIcon,
 	CalendarIcon,
-	CheckIcon,
 	ClockIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
 	ListChecksIcon,
 	PenIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { getDurationFromInterval } from "utils";
 import { CopyButton } from "@/components/copy";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
+import { QuizList } from "@/components/custom/quiz";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -30,13 +25,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
 import {
 	Item,
 	ItemContent,
@@ -52,20 +40,6 @@ import { formatDate } from "@/lib/utils";
 import { EditLessonDrawer } from "./edit-drawer";
 
 type LessonData = NonNullable<API_Returns["core"]["lesson"]["get"]>;
-
-function AnswerRow({ label, correct }: { label: string; correct: boolean }) {
-	return (
-		<Item variant={correct ? "muted" : "outline"}>
-			<ItemMedia variant="icon">
-				{correct ? <CheckIcon /> : <ListChecksIcon />}
-			</ItemMedia>
-			<ItemContent>
-				<ItemTitle>{label}</ItemTitle>
-			</ItemContent>
-			{correct && <ColorBadge variant="success">Correct</ColorBadge>}
-		</Item>
-	);
-}
 
 export function LessonProfile({ data }: { data: LessonData }) {
 	const quiz = data.quiz ?? [];
@@ -207,69 +181,27 @@ export function LessonProfile({ data }: { data: LessonData }) {
 										? `${quiz.length} question${quiz.length === 1 ? "" : "s"} attached to this lesson.`
 										: "No quiz questions attached to this lesson."}
 								</CardDescription>
+								<CardAction>
+									<Button variant="outline" asChild>
+										<Link href={`/lessons/${data.id}/quiz` as "/"}>
+											<RenderWhenRole
+												role={["admin", "scheduler"]}
+												fallback={
+													<>
+														<ListChecksIcon />
+														"Open Quiz"
+													</>
+												}
+											>
+												<PenIcon />
+												Edit Quiz
+											</RenderWhenRole>
+										</Link>
+									</Button>
+								</CardAction>
 							</CardHeader>
 							<CardContent>
-								{quiz.length === 0 ? (
-									<Empty>
-										<EmptyHeader>
-											<EmptyMedia variant="icon">
-												<ListChecksIcon />
-											</EmptyMedia>
-											<EmptyTitle>No quiz yet</EmptyTitle>
-											<EmptyDescription>
-												Add questions to assess student understanding.
-											</EmptyDescription>
-										</EmptyHeader>
-									</Empty>
-								) : (
-									<Accordion type="multiple">
-										{quiz.map((question, idx) => (
-											<AccordionItem
-												key={idx as number}
-												value={`question-${idx}`}
-											>
-												<AccordionTrigger>
-													{idx + 1}. {question.question}
-												</AccordionTrigger>
-												<AccordionContent className="flex flex-col gap-2">
-													<Badge variant="outline" className="capitalize">
-														{question.type}
-													</Badge>
-
-													{question.type === "choices" && (
-														<ItemGroup>
-															{question.choices.map((choice) => (
-																<AnswerRow
-																	key={choice}
-																	label={choice}
-																	correct={question.anwser.includes(choice)}
-																/>
-															))}
-														</ItemGroup>
-													)}
-
-													{question.type === "options" && (
-														<ItemGroup>
-															{question.options.map((option) => (
-																<AnswerRow
-																	key={option}
-																	label={option}
-																	correct={question.anwser === option}
-																/>
-															))}
-														</ItemGroup>
-													)}
-
-													{question.type === "text" && (
-														<ItemGroup>
-															<AnswerRow label={question.anwser} correct />
-														</ItemGroup>
-													)}
-												</AccordionContent>
-											</AccordionItem>
-										))}
-									</Accordion>
-								)}
+								<QuizList quiz={quiz} lessonId={data.id} />
 							</CardContent>
 						</Card>
 					</TabsContent>
