@@ -74,6 +74,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useJoinPreferences } from "./call-preferences";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
 
@@ -233,7 +234,6 @@ export function VideoChat({
 	canViewDetails,
 	canEndMeeting,
 	canRecord,
-	autoRecord,
 	role,
 	avatar,
 	backgroundImage,
@@ -249,7 +249,6 @@ export function VideoChat({
 	canViewDetails: boolean;
 	canEndMeeting: boolean;
 	canRecord: boolean;
-	autoRecord: boolean;
 	role: string;
 	avatar?: string;
 	backgroundImage?: string;
@@ -258,14 +257,16 @@ export function VideoChat({
 	onLeave: () => void;
 	onEnd?: () => void;
 }) {
+	const [joinOptions] = useState(() => ({ disableVideo, disableAudio }));
 	const { isError, isInSession, error } = useSession(
 		session,
 		token,
 		userName,
 		undefined,
 		undefined,
-		{ disableVideo, disableAudio },
+		joinOptions,
 	);
+	const { setCamera, setMic } = useJoinPreferences();
 	const participants = useSessionUsers();
 	const myself = useMyself();
 	const { isVideoOn, toggleVideo } = useVideoState();
@@ -283,7 +284,6 @@ export function VideoChat({
 	const [overlay, setOverlay] = useState<
 		"participants" | "details" | "end" | "leave" | null
 	>(null);
-	const autoRecordAttempted = useRef(false);
 	const onEndRef = useRef(onEnd);
 
 	// A participant list containing ourselves means the join is already live,
@@ -400,14 +400,6 @@ export function VideoChat({
 		}
 	}, [connected]);
 
-	useEffect(() => {
-		if (!isInSession || !canRecord || !autoRecord) return;
-		if (autoRecordAttempted.current) return;
-
-		autoRecordAttempted.current = true;
-		void startRecording();
-	}, [autoRecord, canRecord, isInSession, startRecording]);
-
 	if (isError) {
 		return (
 			<Container>
@@ -452,17 +444,20 @@ export function VideoChat({
 		try {
 			if (!isCapturingAudio) {
 				await setCapture(true, { mute: false });
+				void setMic(true);
 				toast.success({ title: "Microphone on" });
 				return;
 			}
 
 			if (isAudioMuted) {
 				await setMute(false);
+				void setMic(true);
 				toast.success({ title: "Microphone on" });
 				return;
 			}
 
 			await setMute(true);
+			void setMic(false);
 			toast.info({ title: "Microphone off" });
 		} catch (error) {
 			toast.error({
@@ -477,6 +472,7 @@ export function VideoChat({
 	const toggleCamera = async () => {
 		const next = !isVideoOn;
 		await toggleVideo();
+		void setCamera(next);
 		if (next) toast.success({ title: "Camera on" });
 		else toast.info({ title: "Camera off" });
 	};

@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
-	CctvIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
@@ -139,16 +138,8 @@ function CallGate({ id }: { id: string }) {
 	} = useAuth((u) =>
 		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
 	);
-	const {
-		camera,
-		setCamera,
-		mic,
-		setMic,
-		companion,
-		setCompanion,
-		record,
-		setRecord,
-	} = useJoinPreferences();
+	const { camera, setCamera, mic, setMic, companion, setCompanion } =
+		useJoinPreferences();
 	const [guestName, setGuestName] = useState("");
 	const [joining, setJoining] = useState(false);
 
@@ -226,7 +217,6 @@ function CallGate({ id }: { id: string }) {
 	const needsName = !authName;
 	const canJoinAsCompanion = higherRole;
 	const companionActive = !!(canJoinAsCompanion && companion);
-	const canConfigureRecording = user?.role === "admin";
 
 	const handleCompanion = (checked: boolean) => {
 		setCompanion(checked);
@@ -378,16 +368,6 @@ function CallGate({ id }: { id: string }) {
 								/>
 							)}
 
-							{canConfigureRecording && (
-								<JoinPreference
-									id="join-record"
-									icon={<CctvIcon />}
-									label="Instant recording"
-									description="Start cloud recording automatically after you join."
-									checked={record}
-									onCheckedChange={setRecord}
-								/>
-							)}
 						</ItemGroup>
 					</CardContent>
 					<CardFooter>

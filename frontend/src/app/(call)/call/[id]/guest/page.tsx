@@ -50,7 +50,6 @@ function Guest({ id }: { id: string }) {
 			canViewDetails={false}
 			canEndMeeting={false}
 			canRecord={false}
-			autoRecord={false}
 			role="guest"
 			backgroundImage="/banner.jpg"
 			disableVideo={!camera}

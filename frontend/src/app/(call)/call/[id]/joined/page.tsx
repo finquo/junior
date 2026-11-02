@@ -16,7 +16,7 @@ function Joined({ id }: { id: string }) {
 	const { data: user, checked: canEndMeeting } = useCallAuth<true>((u) =>
 		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
 	);
-	const { camera, mic, record } = useJoinPreferences();
+	const { camera, mic } = useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
 		api.core.slot.join.queryOptions({
@@ -55,7 +55,6 @@ function Joined({ id }: { id: string }) {
 			canViewDetails
 			canEndMeeting={canEndMeeting ?? false}
 			canRecord={canEndMeeting ?? false}
-			autoRecord={Boolean(canEndMeeting && record)}
 			role={user.role ?? "student"}
 			avatar={user.image ?? undefined}
 			backgroundImage="/banner.jpg"
