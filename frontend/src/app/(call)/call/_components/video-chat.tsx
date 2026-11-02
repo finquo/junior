@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import type { Participant } from "@zoom/videosdk";
 import ZoomVideo, { ConnectionState, RecordingStatus } from "@zoom/videosdk";
 import {
@@ -24,10 +25,10 @@ import {
 	LogOutIcon,
 	MicIcon,
 	MicOffIcon,
+	MonitorDot,
+	MonitorOff,
 	PhoneOffIcon,
 	PinIcon,
-	ScreenShareIcon,
-	ScreenShareOffIcon,
 	UserIcon,
 	UsersIcon,
 	UserXIcon,
@@ -73,6 +74,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { api } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { useJoinPreferences } from "./call-preferences";
 import { MeetingDetails } from "./meeting-details";
@@ -267,6 +269,7 @@ export function VideoChat({
 		joinOptions,
 	);
 	const { setCamera, setMic } = useJoinPreferences();
+	const endSlot = useMutation(api.core.slot.end.mutationOptions());
 	const participants = useSessionUsers();
 	const myself = useMyself();
 	const { isVideoOn, toggleVideo } = useVideoState();
@@ -431,6 +434,16 @@ export function VideoChat({
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
 
 	const endMeeting = async () => {
+		try {
+			if (slotId) await endSlot.mutateAsync({ id: slotId });
+		} catch (error) {
+			toast.error({
+				title: "Could not end meeting",
+				description: sdkErrorDescription(error),
+			});
+			return;
+		}
+
 		await ZoomVideo.createClient().leave(true);
 		if (onEnd) onEnd();
 		else onLeave();
@@ -522,7 +535,7 @@ export function VideoChat({
 		{
 			id: "screenshare",
 			label: isScreensharing ? "Stop sharing" : "Share screen",
-			icon: isScreensharing ? <ScreenShareOffIcon /> : <ScreenShareIcon />,
+			icon: isScreensharing ? <MonitorOff /> : <MonitorDot />,
 			onSelect: toggleScreenshare,
 		},
 	];

@@ -13,9 +13,7 @@ import { VideoChat } from "../../_components/zoom";
 
 function Joined({ id }: { id: string }) {
 	const router = useRouter();
-	const { data: user, checked: canEndMeeting } = useCallAuth<true>((u) =>
-		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
-	);
+	const { data: user } = useCallAuth<true>();
 	const { camera, mic } = useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
@@ -45,6 +43,8 @@ function Joined({ id }: { id: string }) {
 	}
 
 	const userName = user.name?.trim() || getCallName(id) || "User";
+	const canRecord = ["admin", "scheduler"].includes(user.role);
+	const canEndMeeting = ["admin", "scheduler"].includes(user.role);
 
 	return (
 		<VideoChat
@@ -53,8 +53,8 @@ function Joined({ id }: { id: string }) {
 			slotId={id}
 			userName={userName}
 			canViewDetails
-			canEndMeeting={canEndMeeting ?? false}
-			canRecord={canEndMeeting ?? false}
+			canEndMeeting={canEndMeeting}
+			canRecord={canRecord}
 			role={user.role ?? "student"}
 			avatar={user.image ?? undefined}
 			backgroundImage="/banner.jpg"

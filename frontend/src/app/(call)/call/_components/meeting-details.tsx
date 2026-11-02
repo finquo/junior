@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
+	CctvIcon,
 	ClockIcon,
 	ExternalLinkIcon,
 	GraduationCapIcon,
@@ -297,6 +298,13 @@ export function MeetingDetails({
 					</DrawerDescription>
 				</DrawerHeader>
 				<DrawerInner>
+					<Alert>
+						<CctvIcon />
+						<AlertTitle>Recording</AlertTitle>
+						<AlertDescription>
+							This session is automatically recorded
+						</AlertDescription>
+					</Alert>
 					<DetailsBody slotId={slotId} />
 				</DrawerInner>
 				<DrawerFooter>
