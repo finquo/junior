@@ -13,7 +13,10 @@ import {
 	getSlotCheckStatus,
 	getUnavailableIntervals,
 } from "@/utils/slot";
+import { zoomAPI } from "@/zoom/api";
 import { generateZoomToken } from "@/zoom/jwt";
+
+const endRecordingBeforeStopping = true;
 
 const JOIN_WINDOW = 10 * 60 * 1000;
 
@@ -115,6 +118,81 @@ export const slotRouter = {
 				endTime,
 				token: await generateZoomToken(slot.id, role, context.role),
 			} as const;
+		}),
+	end: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
+			const slot = await tryAPI(
+				"db-core-end-slot-find",
+				db.query.slot.findFirst({
+					where: MapRole(context.role, {
+						admin: { id: input.id },
+						scheduler: { id: input.id, schedulerId: context.user.id },
+					}),
+					columns: { id: true },
+				}),
+			);
+			if (!slot) throw getError("NOT_FOUND", "Slot not found");
+
+			if (endRecordingBeforeStopping) {
+				const { error } = await zoomAPI("/sessions/:sessionId/events", {
+					params: { sessionId: slot.id },
+					body: { method: "recording.stop" },
+				});
+
+				if (error)
+					throw getError(
+						"INTERNAL_SERVER_ERROR",
+						`Zoom stop recording failed (${error.status})`,
+						error,
+					);
+			}
+
+			const { error } = await zoomAPI("/sessions/:sessionId/status", {
+				params: { sessionId: slot.id },
+				body: { action: "end" },
+			});
+
+			if (error)
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					`Zoom end session failed (${error.status})`,
+					error,
+				);
+
+			return { ended: true } as const;
+		}),
+	log: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
+			const slot = await tryAPI(
+				"db-core-log-slot-find",
+				db.query.slot.findFirst({
+					where: MapRole(context.role, {
+						admin: { id: input.id },
+						qa_auditor: { id: input.id },
+						scheduler: { id: input.id, schedulerId: context.user.id },
+					}),
+					columns: { id: true },
+				}),
+			);
+			if (!slot) throw getError("NOT_FOUND", "Slot not found");
+
+			const logs = await getAPI(
+				"db-core-slot-logs",
+				db.query.slotLog.findMany({
+					where: { slotId: slot.id },
+					orderBy: { createdAt: "desc" },
+				}),
+				[],
+			);
+
+			return logs.map((log) => ({
+				id: log.id,
+				createdAt: log.createdAt,
+				event: (log.data as { event?: string }).event ?? "unknown",
+				data: log.data,
+			}));
 		}),
 	list: getRolesProcedure([
 		"admin",

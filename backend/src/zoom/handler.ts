@@ -76,6 +76,28 @@ export const zoomEventHandler = zoomEvents(
 	{
 		before: async (c) => {
 			console.log(c.var.category, c.var.event, ":", c.var.data);
+
+			const sessionName = c.var.data?.object?.session_name;
+			if (typeof sessionName !== "string") return;
+
+			const slot = await tryAPI(
+				"zoom-call-log-find-slot",
+				db.query.slot.findFirst({
+					where: { id: sessionName },
+					columns: { id: true },
+				}),
+			);
+			if (!slot) return;
+
+			await tryAPI(
+				"zoom-call-log-insert",
+				db.insert(schema.slotLog).values({
+					slotId: slot.id,
+					category: c.var.category,
+					event: c.var.event,
+					data: c.var.data ?? {},
+				}),
+			);
 		},
 	},
 );

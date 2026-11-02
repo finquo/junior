@@ -10,6 +10,7 @@ import {
 	GraduationCapIcon,
 	LanguagesIcon,
 	PlayIcon,
+	ScrollTextIcon,
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -55,6 +56,7 @@ import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { getInitials, snakeToTitleCase } from "@/lib/utils";
 import { SlotActions } from "./actions";
+import { EndMeeting } from "./end-meeting";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
@@ -228,6 +230,17 @@ export function SessionProfile({
 								</Button>
 							</RenderWhenRole>
 						)}
+						<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
+							<Button variant="outline" size="sm" asChild>
+								<Link href={`/slots/${data.id}/log` as "/"}>
+									<ScrollTextIcon />
+									Log
+								</Link>
+							</Button>
+						</RenderWhenRole>
+						<RenderWhenRole role={["admin", "scheduler"]}>
+							<EndMeeting slotId={data.id} />
+						</RenderWhenRole>
 						<SlotActions slot={data} />
 					</ButtonGroup>
 				</CardAction>

@@ -1,5 +1,12 @@
 import { sql } from "drizzle-orm";
-import { index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	index,
+	jsonb,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 import type { Database } from "..";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { lesson } from "./lesson";
@@ -70,16 +77,15 @@ export const slot = pgTable(
 	],
 );
 
-// No overlapping active sessions for the same tutor
-export async function enableConstraint(db: Database) {
-	await db.execute(sql`CREATE EXTENSION IF NOT EXISTS btree_gist;`);
-
-	await db.execute(sql`
-	ALTER TABLE "slot" ADD CONSTRAINT slot_no_overlap_teacher_active
-		EXCLUDE USING GIST (
-			"teacherId" WITH =,
-			tstzrange("startTime", "expectedEndTime", '[)') WITH &&
-		)
-		WHERE (status IN ('scheduled', 'rescheduled', 'started'));
-	`);
-}
+export const slotLog = pgTable(
+	"slot_log",
+	{
+		id: generateId().primaryKey(),
+		slotId: getId().references(() => slot.id, { onDelete: "cascade" }),
+		category: text().notNull(),
+		event: text().notNull(),
+		data: jsonb().notNull(),
+		createdAt: createdAt(),
+	},
+	(table) => [index("slot_log_idx").on(table.slotId, table.createdAt)],
+);

@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { BookOpenIcon } from "lucide-react";
+import { BookOpenIcon, RotateCcwIcon } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { useEffect } from "react";
@@ -84,15 +84,26 @@ export function CreateLessonForm() {
 		},
 	});
 
+	const defaultProgram = programId
+		? programs.find((program) => program.id === programId)
+		: programs[0];
+
 	useEffect(() => {
 		if (form.state.values.program) return;
-		const initial = programId
-			? programs.find((program) => program.id === programId)
-			: programs[0];
-		if (initial) {
-			form.setFieldValue("program", initial.id);
+		if (defaultProgram) {
+			form.setFieldValue("program", defaultProgram.id);
 		}
-	}, [programs, form, programId]);
+	}, [defaultProgram, form]);
+
+	const resetForm = () => {
+		form.reset({
+			name: "",
+			description: "",
+			language: "en-IN" as LanguageCodes,
+			program: defaultProgram?.id ?? "",
+			period: 60,
+		});
+	};
 
 	return (
 		<form
@@ -300,6 +311,15 @@ export function CreateLessonForm() {
 				<ButtonGroup>
 					<Button variant="outline" asChild disabled={isPending}>
 						<Link href="/lessons">Cancel</Link>
+					</Button>
+					<Button
+						type="button"
+						variant="outline"
+						onClick={resetForm}
+						disabled={isPending}
+					>
+						<RotateCcwIcon />
+						Reset
 					</Button>
 					<Button type="submit" disabled={isPending}>
 						{isPending ? <Spinner /> : <BookOpenIcon />}
