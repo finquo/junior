@@ -12,6 +12,7 @@ on:
             - "packages/**/*"
             - "backend/**/*"
             - "frontend/**/*"
+            - "!**/*.md"
 
 concurrency:
     group: deploy-${{ github.ref }}

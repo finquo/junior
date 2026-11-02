@@ -1,6 +1,6 @@
 # Backend Agent Guide (Finquo)
 
-Scope: the `backend/` workspace only. Monorepo-level commands, env/Varlock rules, and deploy flow are in the root `AGENTS.md`. This file covers what an agent working in `backend/` would otherwise get wrong.
+Scope: the `backend/` workspace only. Monorepo-level commands, env/Varlock rules, and deploy flow are in the root `AGENTS.md`; the shared `utils` package is documented in `packages/AGENTS.md`. This file covers what an agent working in `backend/` would otherwise get wrong.
 
 Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better Auth 1.7.5** (admin plugin) + Drizzle adapter, **Drizzle ORM 1.0 RC** on `postgres-js`, **Zod v4**. Built with `tsdown`; runs as a Cloudflare Worker and (via `src/lambda.ts`) AWS Lambda. No test runner exists.
 
@@ -55,10 +55,8 @@ The two groups are a deliberate split, not duplicates:
 
 ## Shared `utils` workspace package
 
-- The internal package `utils` (`packages/utils`) has `main: src/index.ts` - it ships **raw TypeScript with no build step**. `tsdown` bundles it into backend output via `alwaysBundle: ["utils"]`, so edits are picked up on the next backend build; there is nothing to compile separately.
-- Import from `"utils"`. It is shared with the frontend/browser, so keep anything you add runtime-agnostic (Workers-compatible, no Node-only APIs).
-- Exports (`src/index.ts`): result helpers in `try.ts` (`trys`, `triedAsync`, `tryAsync`), time formatting in `time.ts` (`getRelateTime`, `getRangeTime`, `formatTimeString`, `mergeDateWithTimeString`, `getDurationFromInterval`, built on the `ms` canary package), and `SwitchFunc` in `switch.ts`.
-- `triedAsync(promise, tag?)` returns `{ data, error, isSuccess }` and logs failures under the optional `tag`; `tryAsync` returns a `[error, data]` tuple. The backend's `tryAPI` / `getAPI` (`src/api/procedure.ts`) are built on `triedAsync`, so prefer those inside procedures rather than calling `triedAsync` directly.
+- The `utils` package is documented in `packages/AGENTS.md`. Import from `"utils"`; `tsdown` bundles it into backend output via `alwaysBundle: ["utils"]`, so edits are picked up on the next backend build.
+- The backend's `tryAPI` / `getAPI` (`src/api/procedure.ts`) are built on `triedAsync`, so prefer those inside procedures rather than calling `triedAsync` directly.
 
 ## Boundaries and gotchas
 

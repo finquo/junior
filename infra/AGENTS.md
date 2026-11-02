@@ -1,5 +1,7 @@
 # infra
 
+Scope: the `infra/` workspace only. Monorepo-level commands, env/Varlock rules, and deploy flow are in the root `AGENTS.md`; DB/migration rules live in `backend/AGENTS.md`. This file covers what an agent working in `infra/` would otherwise get wrong.
+
 Two independent OpenTofu roots. There is no `.tf` at this level, so always run `tofu` from inside a root.
 
 - `app/` — Next.js Lambda from the CI-built OpenNext zip, Function URL fronted by CloudFront, media S3 bucket (also holding the CloudFront static assets) + MediaConvert queue.
@@ -77,5 +79,4 @@ resource "aws_s3_bucket" "media" {
 - One feature per file, including its `output` blocks — e.g. `media.tf` holds the bucket, MediaConvert queue, its IAM role/policy and the outputs. Don't split into `iam.tf` / `outputs.tf`.
 - No `variable` blocks and no extra `data` sources unless asked; literals live in the `.tf` files. `environment` is the deliberate exception (it feeds `default_tags`).
 - `main.tf` is developer-owned: don't reformat or rewrite it, add new resources in their own file.
-- Migrations belong to CI. Never run `db:generate`/`db:migrate` yourself and never edit `backend/migrations/`.
-- `docs/` is a git submodule; don't edit docs from this repo.
+- Migrations belong to CI. Never run `db:generate`/`db:migrate` yourself and never edit `backend/migrations/` (see `backend/AGENTS.md`).

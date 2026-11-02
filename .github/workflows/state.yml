@@ -10,6 +10,7 @@ on:
             - "backend/drizzle.config.ts"
             - ".env.schema"
             - ".github/workflows/state.yml"
+            - "!**/*.md"
 
 concurrency:
     group: deploy-${{ github.ref }}
