@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
+import { roleEnumZod } from "backend/auth";
 import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,9 +28,25 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { api, queryClient } from "@/hooks/api";
+import type { Role } from "@/lib/auth";
+import { rolesObject } from "@/lib/role";
 import type { GetFormZod } from "@/lib/utils";
+
+// Roles created on their own dedicated pages (teacher, scheduler, student flows).
+const EXCLUDED_ROLE_KEYS = ["teacher", "scheduler", "student"];
+const selectableRoles = rolesObject.filter(
+	(item) => !EXCLUDED_ROLE_KEYS.includes(item.value),
+);
 
 const createUserSchema = z.object({
 	name: z.string().trim().min(1, "Name is required"),
@@ -40,6 +57,7 @@ const createUserSchema = z.object({
 		.string()
 		.min(6, "Password must be at least 6 characters")
 		.default("1234567890"),
+	role: roleEnumZod.default("user"),
 });
 
 const toUsername = (str: string) => {
@@ -83,6 +101,7 @@ export function CreateUserForm({
 			username: "",
 			phoneNumber: undefined,
 			password: "1234567890",
+			role: "user" as Role,
 		} as z.infer<typeof createUserSchema>,
 		validators: {
 			onSubmit: createUserSchema as GetFormZod<typeof createUserSchema>,
@@ -93,6 +112,7 @@ export function CreateUserForm({
 				email: value.email.trim().toLowerCase(),
 				phoneNumber: value.phoneNumber?.trim() || undefined,
 				password: value.password,
+				role: value.role,
 			});
 		},
 	});
@@ -288,6 +308,52 @@ export function CreateUserForm({
 											/>
 											<FieldDescription>
 												International format, e.g. +919876543210.
+											</FieldDescription>
+											{isInvalid && (
+												<FieldError
+													errors={field.state.meta.errors.map((err) =>
+														typeof err === "string" ? { message: err } : err,
+													)}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+
+							<form.Field
+								name="role"
+								children={(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel htmlFor={field.name}>Role</FieldLabel>
+											<Select
+												items={selectableRoles}
+												value={field.state.value}
+												disabled={isPending}
+												onValueChange={(val) => {
+													if (val) field.handleChange(val as Role);
+												}}
+											>
+												<SelectTrigger id={field.name}>
+													<SelectValue placeholder="Select a role" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														{selectableRoles.map((item) => (
+															<SelectItem key={item.value} value={item.value}>
+																{item.label}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+											<FieldDescription>
+												Determines user permissions and access rights. Teacher,
+												scheduler, and student accounts come from their own
+												pages.
 											</FieldDescription>
 											{isInvalid && (
 												<FieldError
