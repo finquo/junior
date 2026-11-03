@@ -6,6 +6,7 @@ import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
 import { paymentRouter as paymentCore } from "./core/payment";
 import { programRouter as programCore } from "./core/program";
+import { quizRouter as quizCore } from "./core/quiz";
 import { schedulerRouter as schedulerCore } from "./core/scheduler";
 import { selfRouter as selfCore } from "./core/self";
 import { slotRouter as slotCore } from "./core/slot";
@@ -37,6 +38,7 @@ export const appRouter = {
 		lesson: lessonCore,
 		payment: paymentCore,
 		program: programCore,
+		quiz: quizCore,
 		scheduler: schedulerCore,
 		self: selfCore,
 		slot: slotCore,

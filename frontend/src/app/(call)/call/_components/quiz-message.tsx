@@ -37,7 +37,7 @@ export function parseQuizMessage(text: string): QuizMessage | null {
 
 export function QuizMessageCard({ message }: { message: QuizMessage }) {
 	const { data: questions, isPending } = useQuery(
-		api.core.lesson.quiz.queryOptions({
+		api.core.quiz.get.queryOptions({
 			input: { lessonId: message.lessonId, quizIds: message.quizIds },
 		}),
 	);
@@ -87,7 +87,7 @@ function QuizAnswer({
 	questions: QuizQuestion[];
 }) {
 	const submit = useMutation(
-		api.core.lesson.submit.mutationOptions({
+		api.core.quiz.submit.mutationOptions({
 			onSuccess: () => toast.success({ title: "Answers submitted" }),
 			onError: (error) =>
 				toast.error({ title: "Could not submit", description: error.message }),

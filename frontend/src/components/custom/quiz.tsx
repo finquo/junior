@@ -60,7 +60,7 @@ function DeleteQuizButton({
 	quizId: string;
 }) {
 	const { mutate, isPending } = useMutation(
-		api.core.lesson.deleteQuiz.mutationOptions({
+		api.core.quiz.delete.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
 					api.core.lesson.get.queryKey({ input: { id: lessonId } }),

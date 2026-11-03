@@ -55,7 +55,7 @@ export function AddQuizDialog({
 	const [open, setOpen] = useState(false);
 
 	const append = useMutation(
-		api.core.lesson.appendQuiz.mutationOptions({
+		api.core.quiz.create.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
 					api.core.lesson.get.queryKey({ input: { id: lessonId } }),

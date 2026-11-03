@@ -57,7 +57,7 @@ export function EditQuizDialog({
 	const [open, setOpen] = useState(false);
 
 	const update = useMutation(
-		api.core.lesson.updateQuiz.mutationOptions({
+		api.core.quiz.update.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
 					api.core.lesson.get.queryKey({ input: { id: lessonId } }),

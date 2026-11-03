@@ -44,7 +44,7 @@ function Joined({ id }: { id: string }) {
 
 	const userName = user.name?.trim() || getCallName(id) || "User";
 	const canRecord = ["admin", "scheduler"].includes(user.role);
-	const canEndMeeting = ["admin", "scheduler"].includes(user.role);
+	const canEndMeeting = ["admin", "scheduler", "teacher"].includes(user.role);
 
 	return (
 		<VideoChat
