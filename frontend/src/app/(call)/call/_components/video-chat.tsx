@@ -625,6 +625,7 @@ export function VideoChat({
 			<ChatDrawer
 				messages={chatMessages}
 				myUserId={myself?.userId.toString()}
+				slotId={slotId}
 				onSend={sendChat}
 			>
 				{button}

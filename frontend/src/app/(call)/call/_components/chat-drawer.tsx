@@ -1,9 +1,10 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { MessageCircleDashedIcon, SendIcon } from "lucide-react";
+import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import {
 	Drawer,
@@ -36,7 +37,10 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
-import type { GetFormZod } from "@/lib/utils";
+import { RenderWhenRole } from "@/hooks/role";
+import { type GetFormZod, getInitials } from "@/lib/utils";
+import { parseQuizMessage, QuizMessageCard } from "./quiz-message";
+import { QuizPicker } from "./quiz-picker";
 
 export type ChatMessage = {
 	id: string;
@@ -53,23 +57,27 @@ export function ChatDrawer({
 	children,
 	messages,
 	myUserId,
+	slotId,
 	onSend,
 }: {
 	children: React.ReactElement;
 	messages: ChatMessage[];
 	myUserId?: string;
+	slotId?: string;
 	onSend: (text: string) => void;
 }) {
 	const formRef = useRef<HTMLFormElement>(null);
 
 	const form = useForm({
-		defaultValues: { text: "" },
+		defaultValues: {} as z.infer<typeof chatSchema>,
 		validators: {
 			onSubmit: chatSchema as GetFormZod<typeof chatSchema>,
 		},
 		onSubmit: async ({ value }) => {
-			onSend(value.text);
-			form.reset();
+			if (value?.text?.length) {
+				onSend(value.text);
+				form.reset();
+			}
 		},
 	});
 
@@ -103,9 +111,23 @@ export function ChatDrawer({
 										const isMine = message.senderId === myUserId;
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
-										const text = isMine
-											? message.text
-											: `${message.senderName}: ${message.text}`;
+										const quiz = parseQuizMessage(message.text);
+										const avatar = (
+											<Avatar size="sm">
+												<AvatarFallback>
+													{getInitials(message.senderName)}
+												</AvatarFallback>
+											</Avatar>
+										);
+										const bubble = quiz ? (
+											<QuizMessageCard message={quiz} />
+										) : (
+											<Bubble align={align} variant={variant}>
+												<BubbleContent>{message.text}</BubbleContent>
+											</Bubble>
+										);
+										const first = isMine ? bubble : avatar;
+										const second = isMine ? avatar : bubble;
 
 										return (
 											<MessageScrollerItem
@@ -114,9 +136,8 @@ export function ChatDrawer({
 											>
 												<Message align={align}>
 													<MessageContent>
-														<Bubble align={align} variant={variant}>
-															<BubbleContent>{text}</BubbleContent>
-														</Bubble>
+														{first}
+														{second}
 													</MessageContent>
 												</Message>
 											</MessageScrollerItem>
@@ -142,7 +163,7 @@ export function ChatDrawer({
 								<InputGroupTextarea
 									id={field.name}
 									name={field.name}
-									value={field.state.value}
+									value={field.state.value ?? ""}
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									placeholder="Type a message..."
@@ -155,6 +176,20 @@ export function ChatDrawer({
 									}}
 								/>
 								<InputGroupAddon align="block-end">
+									{slotId && (
+										<RenderWhenRole role={["teacher", "scheduler", "admin"]}>
+											<QuizPicker slotId={slotId} onSend={onSend}>
+												<InputGroupButton
+													type="button"
+													variant="outline"
+													size="icon-sm"
+													aria-label="Add"
+												>
+													<PlusIcon />
+												</InputGroupButton>
+											</QuizPicker>
+										</RenderWhenRole>
+									)}
 									<InputGroupButton
 										type="submit"
 										variant="default"

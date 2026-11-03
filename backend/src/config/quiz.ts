@@ -47,3 +47,19 @@ export const anwserZod = z.discriminatedUnion("type", [
 ]);
 
 export type Anwser = z.infer<typeof anwserZod>;
+
+export const quizMessageZod = z.object({
+	type: z.literal("quiz"),
+	slotId: z.string(),
+	lessonId: z.string(),
+	quizIds: z.array(z.string()).min(1),
+});
+
+export type QuizMessage = z.infer<typeof quizMessageZod>;
+
+export const quizSubmitZod = z.array(
+	z.object({
+		questionId: z.string(),
+		anwser: z.union([z.string(), z.array(z.string())]),
+	}),
+);
