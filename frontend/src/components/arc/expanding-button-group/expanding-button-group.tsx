@@ -43,6 +43,8 @@ export interface ExpandingButtonGroupItem {
 	tone?: ExpandingButtonGroupTone;
 	/** Dimmed and inert. Stays focusable and still reveals its label, so people can learn what it would do. */
 	disabled?: boolean;
+	/** Wraps the action's button, such as a drawer or dialog trigger with asChild. Return the element to render in its place. */
+	wrap?: (button: React.ReactElement) => React.ReactElement;
 }
 
 export interface ExpandingButtonGroupProps {
@@ -258,7 +260,7 @@ function Item({
 	}, [target, measured, reduced, width]);
 
 	const word = showDone ? item.doneLabel! : item.label;
-	return (
+	const button = (
 		<motion.button
 			type="button"
 			className={styles.item}
@@ -321,6 +323,8 @@ function Item({
 			</motion.span>
 		</motion.button>
 	);
+
+	return item.wrap ? item.wrap(button) : button;
 }
 
 /**

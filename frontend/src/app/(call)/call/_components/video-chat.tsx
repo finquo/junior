@@ -23,6 +23,7 @@ import {
 	EllipsisIcon,
 	InfoIcon,
 	LogOutIcon,
+	MessageSquareIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorDot,
@@ -77,6 +78,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { useJoinPreferences } from "./call-preferences";
+import { ChatDrawer, type ChatMessage } from "./chat-drawer";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
 
@@ -287,6 +289,8 @@ export function VideoChat({
 	const [overlay, setOverlay] = useState<
 		"participants" | "details" | "end" | "leave" | null
 	>(null);
+	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
 
 	// A participant list containing ourselves means the join is already live,
@@ -357,6 +361,49 @@ export function VideoChat({
 	useEffect(() => {
 		onEndRef.current = onEnd;
 	}, [onEnd]);
+
+	useEffect(() => {
+		myUserIdRef.current = myself?.userId.toString();
+	}, [myself?.userId]);
+
+	useEffect(() => {
+		if (!connected) return;
+
+		const client = ZoomVideo.createClient();
+		const chat = client.getChatClient();
+
+		function handleChatMessage(payload: {
+			message: string;
+			sender: { userId: number; name: string };
+		}) {
+			const senderId = payload.sender.userId.toString();
+			if (senderId === myUserIdRef.current) return;
+
+			setChatMessages((previous) => [
+				...previous,
+				{
+					id: crypto.randomUUID(),
+					senderId,
+					senderName: payload.sender.name,
+					text: payload.message,
+				},
+			]);
+		}
+
+		client.on("chat-on-message", handleChatMessage);
+		setChatMessages(
+			chat.getHistory().map((item) => ({
+				id: crypto.randomUUID(),
+				senderId: item.sender.userId.toString(),
+				senderName: item.sender.name,
+				text: item.message ?? "",
+			})),
+		);
+
+		return () => {
+			client.off("chat-on-message", handleChatMessage);
+		};
+	}, [connected]);
 
 	useEffect(() => {
 		const client = ZoomVideo.createClient();
@@ -432,6 +479,19 @@ export function VideoChat({
 		(userId) => userId !== myself?.userId,
 	);
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
+
+	const sendChat = (text: string) => {
+		void ZoomVideo.createClient().getChatClient().sendToAll(text);
+		setChatMessages((previous) => [
+			...previous,
+			{
+				id: crypto.randomUUID(),
+				senderId: myself?.userId.toString() ?? "",
+				senderName: myself?.displayName ?? userName,
+				text,
+			},
+		]);
+	};
 
 	const endMeeting = async () => {
 		try {
@@ -535,7 +595,7 @@ export function VideoChat({
 		{
 			id: "screenshare",
 			label: isScreensharing ? "Stop sharing" : "Share screen",
-			icon: isScreensharing ? <MonitorOff /> : <MonitorDot />,
+			icon: isScreensharing ? <MonitorDot /> : <MonitorOff />,
 			onSelect: toggleScreenshare,
 		},
 	];
@@ -556,6 +616,21 @@ export function VideoChat({
 			onSelect: toggleRecording,
 		});
 	}
+
+	callActions.push({
+		id: "chat",
+		label: "Chat",
+		icon: <MessageSquareIcon />,
+		wrap: (button) => (
+			<ChatDrawer
+				messages={chatMessages}
+				myUserId={myself?.userId.toString()}
+				onSend={sendChat}
+			>
+				{button}
+			</ChatDrawer>
+		),
+	});
 
 	callActions.push({
 		id: "participants",

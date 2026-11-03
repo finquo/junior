@@ -212,7 +212,6 @@ function DetailsContent({ data }: { data: SlotData }) {
 					value={`${durationMinutes} minutes`}
 				/>
 			</ItemGroup>
-			<ItemSeparator />
 			<ItemGroup>
 				<ParticipantRow label="Student" userId={data.studentId} />
 				<ParticipantRow label="Teacher" userId={data.teacherId} />
@@ -297,7 +296,7 @@ export function MeetingDetails({
 						Session schedule, lesson, and participants.
 					</DrawerDescription>
 				</DrawerHeader>
-				<DrawerInner>
+				<DrawerInner className="space-y-2">
 					<Alert>
 						<CctvIcon />
 						<AlertTitle>Recording</AlertTitle>
