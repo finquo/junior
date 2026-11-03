@@ -5,6 +5,7 @@ import {
 	BriefcaseBusinessIcon,
 	CalendarClockIcon,
 	GraduationCapIcon,
+	HomeIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -13,9 +14,15 @@ import { StudentNavUser } from "./nav-user";
 
 const navItems = [
 	{
+		id: "Home",
+		label: "Home",
+		url: "/student",
+		icon: <HomeIcon />,
+	},
+	{
 		id: "profile",
 		label: "Profile",
-		url: "/student",
+		url: "/student/profile",
 		icon: <UserRoundIcon />,
 	},
 	{
