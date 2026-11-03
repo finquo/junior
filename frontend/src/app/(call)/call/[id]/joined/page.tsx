@@ -14,7 +14,7 @@ import { VideoChat } from "../../_components/zoom";
 function Joined({ id }: { id: string }) {
 	const router = useRouter();
 	const { data: user } = useCallAuth<true>();
-	const { camera, mic } = useJoinPreferences();
+	const { camera, mic, virtualBackground } = useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
 		api.core.slot.join.queryOptions({
@@ -59,6 +59,7 @@ function Joined({ id }: { id: string }) {
 			avatar={user.image ?? undefined}
 			disableVideo={!camera}
 			disableAudio={!mic}
+			virtualBackground={virtualBackground}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}
 			onEnd={() => router.push(`/call/${id}/ended` as "/")}
 		/>

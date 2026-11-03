@@ -3,17 +3,21 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
+	ImageIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
+	PenIcon,
 	UserRoundIcon,
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sileo as toast } from "sileo";
 import { Countdown } from "@/components/arc/countdown/countdown";
+import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { ColorBadge } from "@/components/ui/badge";
@@ -101,7 +105,7 @@ function JoinPreference({
 }: {
 	icon: React.ReactNode;
 	label: string;
-	description: string;
+	description?: string;
 	id: string;
 	checked: boolean;
 	disabled?: boolean;
@@ -113,7 +117,7 @@ function JoinPreference({
 				<ItemMedia variant="icon">{icon}</ItemMedia>
 				<ItemContent>
 					<ItemTitle>{label}</ItemTitle>
-					<ItemDescription>{description}</ItemDescription>
+					{description && <ItemDescription>{description}</ItemDescription>}
 				</ItemContent>
 				<ItemActions>
 					<Switch
@@ -138,8 +142,16 @@ function CallGate({ id }: { id: string }) {
 	} = useAuth((u) =>
 		u?.role ? ["admin", "scheduler", "teacher"].includes(u.role) : false,
 	);
-	const { camera, setCamera, mic, setMic, companion, setCompanion } =
-		useJoinPreferences();
+	const {
+		camera,
+		setCamera,
+		mic,
+		setMic,
+		companion,
+		setCompanion,
+		virtualBackground,
+		setVirtualBackground,
+	} = useJoinPreferences();
 	const [guestName, setGuestName] = useState("");
 	const [joining, setJoining] = useState(false);
 
@@ -223,6 +235,7 @@ function CallGate({ id }: { id: string }) {
 		if (checked) {
 			setCamera(false);
 			setMic(false);
+			setVirtualBackground(false);
 		}
 	};
 
@@ -260,134 +273,140 @@ function CallGate({ id }: { id: string }) {
 	};
 
 	return (
-		<Frame className="h-full min-h-0 rounded-none">
-			<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
-				<Card className="w-full max-w-md">
-					<CardHeader>
-						<CardTitle>
-							{isLive ? "Ready to join?" : "Waiting for the meeting"}
-						</CardTitle>
-						<CardDescription>
-							{isLive
-								? "We will ask for camera and microphone access when you join."
-								: "Join opens 10 minutes before the scheduled start."}
-						</CardDescription>
-						<CardAction>
-							<ColorBadge variant={isLive ? "success" : "info"}>
-								{isLive ? "Live" : "Upcoming"}
-							</ColorBadge>
-						</CardAction>
-					</CardHeader>
-					<CardContent>
-						<ItemGroup className="gap-2">
-							<Item variant="muted" size="sm">
-								<ItemMedia variant="icon">
-									<CalendarClockIcon />
-								</ItemMedia>
-								<ItemContent>
-									<ItemDescription>Scheduled</ItemDescription>
-									<ItemTitle>
-										{formatDateTime(meeting.startTime)} –{" "}
-										{formatDateTime(meeting.endTime)}
-									</ItemTitle>
-								</ItemContent>
-							</Item>
+		<Card>
+			<CardHeader>
+				<CardTitle>
+					{isLive ? "Ready to join?" : "Waiting for the meeting"}
+				</CardTitle>
+				<CardDescription>
+					{isLive
+						? "We will ask for camera and microphone access when you join."
+						: "Join opens 10 minutes before the scheduled start."}
+				</CardDescription>
+				<CardAction>
+					<ColorBadge variant={isLive ? "success" : "info"}>
+						{isLive ? "Live" : "Upcoming"}
+					</ColorBadge>
+				</CardAction>
+			</CardHeader>
+			<CardContent>
+				<ItemGroup className="gap-2">
+					<Item variant="muted" size="sm">
+						<ItemMedia variant="icon">
+							<CalendarClockIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemDescription>Scheduled</ItemDescription>
+							<ItemTitle>
+								{formatDateTime(meeting.startTime)} –{" "}
+								{formatDateTime(meeting.endTime)}
+							</ItemTitle>
+						</ItemContent>
+					</Item>
 
-							{!isLive && (
-								<Item variant="muted" size="sm">
-									<ItemContent>
-										<ItemDescription>Join opens in</ItemDescription>
-										<Countdown
-											target={joinOpensAt}
-											label="Time until you can join"
-											completeLabel="Join open"
-											onComplete={() => void preflight.refetch()}
-										/>
-									</ItemContent>
-								</Item>
-							)}
-
-							{needsName ? (
-								<Field>
-									<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
-									<Input
-										id="guest-name"
-										value={guestName}
-										onChange={(event) => setGuestName(event.target.value)}
-										placeholder="Enter your name"
-										autoComplete="name"
-									/>
-								</Field>
-							) : (
-								<Item variant="muted">
-									<ItemMedia variant="icon">
-										<UserRoundIcon />
-									</ItemMedia>
-									<ItemContent>
-										<ItemDescription>Joining as</ItemDescription>
-										<ItemTitle>{authName}</ItemTitle>
-									</ItemContent>
-								</Item>
-							)}
-
-							<ButtonGroup className="w-full">
-								<Button
-									type="button"
-									size={"lg"}
-									variant={camera ? "default" : "outline"}
-									className="flex-1"
-									disabled={companionActive}
-									aria-pressed={camera}
-									onClick={toggleCamera}
-								>
-									{camera ? <VideoIcon /> : <VideoOffIcon />}
-									Camera
-								</Button>
-								<Button
-									type="button"
-									size={"lg"}
-									variant={mic ? "default" : "outline"}
-									className="flex-1"
-									disabled={companionActive}
-									aria-pressed={mic}
-									onClick={toggleMic}
-								>
-									{mic ? <MicIcon /> : <MicOffIcon />}
-									Microphone
-								</Button>
-							</ButtonGroup>
-
-							{canJoinAsCompanion && (
-								<JoinPreference
-									id="join-companion"
-									icon={<MonitorSmartphoneIcon />}
-									label="Join as companion"
-									description="Join without camera or microphone, then share your screen from this device."
-									checked={companion}
-									onCheckedChange={handleCompanion}
+					{!isLive && (
+						<Item variant="muted" size="sm">
+							<ItemContent>
+								<ItemDescription>Join opens in</ItemDescription>
+								<Countdown
+									target={joinOpensAt}
+									label="Time until you can join"
+									completeLabel="Join open"
+									onComplete={() => void preflight.refetch()}
 								/>
-							)}
+							</ItemContent>
+						</Item>
+					)}
 
-						</ItemGroup>
-					</CardContent>
-					<CardFooter>
-						<Button
-							disabled={!userName || joining || !isLive}
-							onClick={() => void handleJoin()}
-						>
-							{joining ? (
-								<Spinner />
-							) : isLive ? (
-								<VideoIcon />
-							) : (
-								<CalendarClockIcon />
-							)}
-							{isLive ? "Join session" : "Waiting for meeting"}
-						</Button>
-					</CardFooter>
-				</Card>
-			</FramePanel>
-		</Frame>
+					{needsName ? (
+						<Field>
+							<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
+							<Input
+								id="guest-name"
+								value={guestName}
+								onChange={(event) => setGuestName(event.target.value)}
+								placeholder="Enter your name"
+								autoComplete="name"
+							/>
+						</Field>
+					) : (
+						<Item variant="muted">
+							<ItemMedia variant="icon">
+								<UserRoundIcon />
+							</ItemMedia>
+							<ItemContent>
+								<ItemDescription>Joining as</ItemDescription>
+								<ItemTitle>{authName}</ItemTitle>
+							</ItemContent>
+							<ItemActions>
+								<Button variant={"outline"} size={"sm"} asChild>
+									<Link href={"/user/edit"}>
+										<PenIcon />
+										Edit
+									</Link>
+								</Button>
+							</ItemActions>
+						</Item>
+					)}
+
+					{canJoinAsCompanion && (
+						<JoinPreference
+							id="join-companion"
+							icon={<MonitorSmartphoneIcon />}
+							label="Join as companion"
+							description="Join without camera or microphone, then share your screen from this device."
+							checked={companion}
+							onCheckedChange={handleCompanion}
+						/>
+					)}
+
+					<div className="flex gap-2">
+						<JoinPreference
+							id="join-video"
+							icon={camera ? <VideoIcon /> : <VideoOffIcon />}
+							label="Camera"
+							checked={camera}
+							disabled={companionActive}
+							onCheckedChange={toggleCamera}
+						/>
+						{canJoinAsCompanion && (
+							<JoinPreference
+								id="join-background"
+								icon={<ImageIcon />}
+								label="Virtual background"
+								checked={virtualBackground}
+								disabled={!camera || companionActive}
+								onCheckedChange={setVirtualBackground}
+							/>
+						)}
+					</div>
+
+					<JoinPreference
+						id="join-audio"
+						icon={mic ? <MicIcon /> : <MicOffIcon />}
+						label="Microphone"
+						checked={mic}
+						disabled={companionActive}
+						onCheckedChange={toggleMic}
+					/>
+				</ItemGroup>
+			</CardContent>
+			<CardFooter>
+				<Button
+					disabled={!userName || joining || !isLive}
+					onClick={() => void handleJoin()}
+				>
+					{joining ? (
+						<Spinner />
+					) : isLive ? (
+						<VideoIcon />
+					) : (
+						<CalendarClockIcon />
+					)}
+					{isLive ? "Join session" : "Waiting for meeting"}
+				</Button>
+			</CardFooter>
+		</Card>
 	);
 }
 
@@ -397,5 +416,9 @@ export default function Page() {
 
 	if (!id) return <Loader />;
 
-	return <CallGate id={id} />;
+	return (
+		<Container>
+			<CallGate id={id} />
+		</Container>
+	);
 }

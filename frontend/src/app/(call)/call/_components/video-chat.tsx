@@ -254,6 +254,7 @@ export function VideoChat({
 	avatar,
 	disableVideo,
 	disableAudio,
+	virtualBackground = false,
 	onLeave,
 	onEnd,
 }: {
@@ -268,10 +269,15 @@ export function VideoChat({
 	avatar?: string;
 	disableVideo: boolean;
 	disableAudio: boolean;
+	virtualBackground?: boolean;
 	onLeave: () => void;
 	onEnd?: () => void;
 }) {
-	const [joinOptions] = useState(() => ({ disableVideo, disableAudio }));
+	const [joinOptions] = useState(() => ({
+		disableVideo,
+		disableAudio,
+		virtualBackground,
+	}));
 	const { isError, isInSession, error } = useSession(
 		session,
 		token,
@@ -298,7 +304,8 @@ export function VideoChat({
 	const [overlay, setOverlay] = useState<
 		"participants" | "details" | "camera" | "end" | "leave" | null
 	>(null);
-	const [virtualBackground, setVirtualBackground] = useState(false);
+	const [virtualBackgroundEnabled, setVirtualBackgroundEnabled] =
+		useState(virtualBackground);
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
@@ -423,6 +430,20 @@ export function VideoChat({
 			client.off("chat-on-message", handleChatMessage);
 		};
 	}, [connected]);
+
+	useEffect(() => {
+		if (!connected || !isVideoOn || !virtualBackgroundEnabled) return;
+
+		ZoomVideo.createClient()
+			.getMediaStream()
+			.updateVirtualBackgroundImage(VIRTUAL_BACKGROUND)
+			.catch((error: unknown) =>
+				toast.error({
+					title: "Could not apply virtual background",
+					description: sdkErrorDescription(error),
+				}),
+			);
+	}, [connected, isVideoOn, virtualBackgroundEnabled]);
 
 	useEffect(() => {
 		const client = ZoomVideo.createClient();
@@ -562,7 +583,7 @@ export function VideoChat({
 		try {
 			if (next) {
 				await stream.startVideo(
-					virtualBackground
+					virtualBackgroundEnabled
 						? { virtualBackground: { imageUrl: VIRTUAL_BACKGROUND } }
 						: undefined,
 				);
@@ -597,7 +618,7 @@ export function VideoChat({
 			return;
 		}
 
-		setVirtualBackground(next);
+		setVirtualBackgroundEnabled(next);
 	};
 
 	const cameraStatus = isVideoOn ? "On" : "Off";
@@ -858,7 +879,11 @@ export function VideoChat({
 							<FieldLabel htmlFor="virtual-background-switch">
 								<Field orientation="horizontal" className="items-start">
 									<ItemMedia variant="icon">
-										{virtualBackground ? <ImageIcon /> : <ImageOffIcon />}
+										{virtualBackgroundEnabled ? (
+											<ImageIcon />
+										) : (
+											<ImageOffIcon />
+										)}
 									</ItemMedia>
 									<ItemContent>
 										<ItemTitle>Virtual background</ItemTitle>
@@ -870,7 +895,7 @@ export function VideoChat({
 										<Switch
 											id="virtual-background-switch"
 											aria-label="Virtual background"
-											checked={virtualBackground}
+											checked={virtualBackgroundEnabled}
 											disabled={!isVideoOn || !virtualBackgroundSupported}
 											onCheckedChange={(checked) =>
 												void setVirtualBackgroundOn(checked)
