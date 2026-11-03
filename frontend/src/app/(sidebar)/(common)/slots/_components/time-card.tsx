@@ -47,7 +47,10 @@ export function TimeCard({
 	const lowerLimit = "09:00";
 
 	const [hour, setHour] = useState(true);
+	const [unlimited, setUnlimited] = useState(false);
 	const TIME_PERIOD_GROUPS = useTimePeriodGroups(lowerLimit, upperLimit, hour);
+	const sliderLowerLimit = unlimited ? undefined : lowerLimit;
+	const sliderUpperLimit = unlimited ? undefined : upperLimit;
 
 	const timeToMinutes = (time: string) => {
 		const [hours = 0, minutes = 0] = time.split(":").map(Number);
@@ -191,15 +194,26 @@ export function TimeCard({
 							</DialogHeader>
 							<DaySlider
 								step={hour ? 60 : 15}
-								lowerLimit={lowerLimit}
-								upperLimit={upperLimit}
+								lowerLimit={sliderLowerLimit}
+								upperLimit={sliderUpperLimit}
 								fixedLength={duration}
 								value={selectedTime}
 								disabled={isDayDisabled}
 								blockedTimes={blockedTimes}
 								onChange={(v) => setSelectedTime(v)}
 							/>
-							<DialogFooter>
+							<DialogFooter className="justify-between">
+								<Field orientation="horizontal" data-disabled className="w-fit">
+									<FieldLabel htmlFor="unlimited-switch">
+										Remove default time limits
+									</FieldLabel>
+									<Switch
+										id="unlimited-switch"
+										checked={unlimited}
+										onCheckedChange={setUnlimited}
+									/>
+								</Field>
+								<div className="flex-1" />
 								<Field orientation="horizontal" data-disabled className="w-fit">
 									<FieldLabel htmlFor="switch">Hourly Based</FieldLabel>
 									<Switch

@@ -1,21 +1,12 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import {
-	MoreHorizontalIcon,
-	PenIcon,
-	TrashIcon,
-	UserIcon,
-	UserPlusIcon,
-	UserXIcon,
-	VenetianMaskIcon,
-} from "lucide-react";
+import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
-import { sileo as toast } from "sileo";
 import { getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
+import { UserActions } from "@/components/custom/user-actions";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
@@ -43,14 +34,7 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { FieldGroup } from "@/components/ui/field";
 import {
 	Item,
 	ItemContent,
@@ -58,22 +42,13 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ImpersonateButton } from "@/hooks/admin";
-import { api, queryClient } from "@/hooks/api";
+import { api } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
@@ -91,164 +66,6 @@ const statusFilterOptions = [
 	{ label: "Active", value: "active" },
 	{ label: "Banned", value: "banned" },
 ];
-
-function EditRoleDrawerContent({ user }: { user: UserRecord }) {
-	const { mutateAsync, isPending } = useMutation(
-		api.admin.promote.mutationOptions({
-			onSuccess: () => {
-				queryClient.invalidateQueries();
-				toast.success({ title: "Role updated successfully" });
-			},
-		}),
-	);
-
-	const form = useForm({
-		defaultValues: {
-			role: user.role ?? "user",
-		},
-		onSubmit: async ({ value }) => {
-			await mutateAsync({
-				id: user.id,
-				role: value.role,
-			});
-		},
-	});
-
-	return (
-		<DrawerContent>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
-			>
-				<DrawerHeader>
-					<DrawerTitle>Edit User Role</DrawerTitle>
-					<DrawerDescription>
-						Promote or reassign role for {user.name} ({user.email})
-					</DrawerDescription>
-				</DrawerHeader>
-				<DrawerInner>
-					<FieldGroup>
-						<form.Field
-							name="role"
-							children={(field) => (
-								<Field>
-									<FieldLabel>Role</FieldLabel>
-									<Select
-										items={rolesObject}
-										value={field.state.value}
-										disabled={isPending}
-										onValueChange={(r) => {
-											if (r) field.handleChange(r);
-										}}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select role" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectGroup>
-												{rolesObject.map((item) => (
-													<SelectItem key={item.value} value={item.value}>
-														{item.label}
-													</SelectItem>
-												))}
-											</SelectGroup>
-										</SelectContent>
-									</Select>
-								</Field>
-							)}
-						/>
-					</FieldGroup>
-				</DrawerInner>
-				<DrawerFooter>
-					<Button type="submit" disabled={isPending}>
-						{isPending && <Spinner />}
-						Submit
-					</Button>
-					<DrawerClose asChild>
-						<Button variant="outline">Close</Button>
-					</DrawerClose>
-				</DrawerFooter>
-			</form>
-		</DrawerContent>
-	);
-}
-
-function UserActions({ user }: { user: UserRecord }) {
-	const roleProfilePath =
-		user.role === "teacher"
-			? `/teachers/${user.id}`
-			: user.role === "student"
-				? `/students/${user.id}`
-				: user.role === "scheduler"
-					? `/schedulers/${user.id}`
-					: null;
-
-	return (
-		<Drawer>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button variant="outline" size="icon-sm">
-						<MoreHorizontalIcon />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem asChild>
-						<ImpersonateButton userId={user.id} asChild>
-							<Button variant="outline" size="sm">
-								<VenetianMaskIcon />
-								Impersonate
-							</Button>
-						</ImpersonateButton>
-					</DropdownMenuItem>
-					<DrawerTrigger asChild>
-						<DropdownMenuItem>
-							<PenIcon />
-							Edit Role
-						</DropdownMenuItem>
-					</DrawerTrigger>
-					{roleProfilePath && (
-						<DropdownMenuItem asChild>
-							<Button variant="link" asChild>
-								<Link href={roleProfilePath as "/"}>
-									<UserIcon />
-									View {snakeToTitleCase(user.role)} Profile
-								</Link>
-							</Button>
-						</DropdownMenuItem>
-					)}
-					<DropdownMenuItem
-						onClick={() => {
-							toast.info({
-								title: `Revoked active sessions for ${user.name}`,
-							});
-						}}
-					>
-						<UserXIcon />
-						Revoke Sessions
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
-						variant="destructive"
-						onClick={() => {
-							toast.error({
-								title: `Delete action requested for ${user.name}`,
-								description: "This is a placeholder action.",
-							});
-						}}
-					>
-						<TrashIcon />
-						Delete User
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-
-			<EditRoleDrawerContent user={user} />
-		</Drawer>
-	);
-}
 
 const columnHelper = createColumnHelper<DataTableFeatures, UserRecord>();
 

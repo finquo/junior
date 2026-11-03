@@ -18,11 +18,17 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Badge } from "./ui/badge";
 
 // ---------------------------------------------------------------------------
 // Strict Types & Interfaces
@@ -698,20 +704,19 @@ export function DaySlider({
 
 				<div className="flex items-center gap-2">
 					{hasAvailableSpace ? (
-						<div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs">
-							<span className="font-semibold text-foreground tabular-nums">
-								{minutesToTimeString(currentStart)} –{" "}
+						<>
+							<Badge>
+								{minutesToTimeString(currentStart)}
+								<span> - </span>
 								{minutesToTimeString(currentEnd)}
-							</span>
-							<span className="text-muted-foreground">
-								({formatDuration(durationMin)})
-							</span>
-						</div>
+							</Badge>
+							<Badge variant={"secondary"}>{formatDuration(durationMin)}</Badge>
+						</>
 					) : (
-						<div className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-destructive text-xs">
+						<Badge variant={"destructive"}>
 							<AlertCircle className="size-3.5" />
 							<span>No available space for this duration</span>
-						</div>
+						</Badge>
 					)}
 
 					{/* Quick jump step buttons */}
@@ -721,7 +726,7 @@ export function DaySlider({
 								<Button
 									type="button"
 									variant="outline"
-									size="icon-xs"
+									size="icon-sm"
 									disabled={disabled || !hasAvailableSpace}
 									onClick={jumpToPrevSlot}
 									aria-label="Previous slot"
@@ -737,7 +742,7 @@ export function DaySlider({
 								<Button
 									type="button"
 									variant="outline"
-									size="icon-xs"
+									size="icon-sm"
 									disabled={disabled || !hasAvailableSpace}
 									onClick={jumpToNextSlot}
 									aria-label="Next slot"
@@ -850,31 +855,25 @@ export function DaySlider({
 								width: toWidthPercent(durationMin),
 							}}
 							className={cn(
-								"absolute inset-y-0 z-20 flex cursor-grab items-center justify-between rounded-lg border-2 border-primary bg-primary text-primary-foreground shadow-md transition-[box-shadow,border-color]",
+								"absolute inset-y-0 z-20 flex cursor-grab items-center justify-center rounded-sm border-2 border-primary bg-primary text-primary-foreground shadow-md transition-[box-shadow,border-color]",
 								"focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
 								isDragging &&
 									"cursor-grabbing shadow-lg ring-2 ring-primary/40",
 							)}
 						>
-							{/* Left handle grip */}
-							<div className="flex h-full items-center px-0.5 opacity-70">
-								<GripVertical className="size-3.5" />
-							</div>
-
-							{/* Center Label (Start - End) */}
-							<div className="flex min-w-0 flex-1 flex-col items-center justify-center px-1 text-center">
-								<span className="truncate font-semibold text-[11px] tabular-nums leading-tight sm:text-xs">
-									{minutesToTimeString(currentStart)}
-								</span>
-								<span className="truncate text-[9px] opacity-80 sm:text-[10px]">
-									to {minutesToTimeString(currentEnd)}
-								</span>
-							</div>
-
-							{/* Right handle grip */}
-							<div className="flex h-full items-center px-0.5 opacity-70">
-								<GripVertical className="size-3.5" />
-							</div>
+							<HoverCard>
+								<HoverCardTrigger>
+									<GripVertical />
+								</HoverCardTrigger>
+								<HoverCardContent>
+									<span className="truncate font-semibold text-sm">
+										{minutesToTimeString(currentStart)}
+									</span>
+									<span className="truncate text-xs">
+										to {minutesToTimeString(currentEnd)}
+									</span>
+								</HoverCardContent>
+							</HoverCard>
 						</div>
 					)}
 				</div>
