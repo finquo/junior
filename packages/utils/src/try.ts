@@ -46,3 +46,23 @@ export const tryAsync = async <D, E = Error>(
 
 	return [error, data] as [E, undefined] | [undefined, D];
 };
+
+export const tryAPI = async <D, Def = D>(
+	tag: string,
+	promise: Promise<D>,
+	def?: Def,
+) => {
+	const { error, data } = await triedAsync(promise, tag);
+	if (error) console.error(tag, error);
+	return data ?? def;
+};
+
+export const tryFunc = async <D, Def = D>(
+	tag: string,
+	func: () => Promise<D>,
+	def?: Def,
+) => {
+	const { error, data } = await triedAsync(func(), tag);
+	if (error) console.error(tag, error);
+	return data ?? def;
+};

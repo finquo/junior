@@ -1,9 +1,25 @@
 import { eq } from "drizzle-orm";
+import { tryAPI, tryFunc } from "utils";
 import { mediaStorage } from "@/aws/media";
 import { schema } from "@/db";
-import { db } from "../services";
-import { tryAPI } from "./jwt";
+import { db } from "@/services";
 import { zoomEvents } from "./webhook";
+
+const VIDEO_FILE = /^video(?:_(\d+))?\.mp4$/;
+
+function nextVideoIndex(keys: string[], sessionName: string) {
+	const prefix = `${sessionName}/`;
+
+	const indexes = keys
+		.map((key) => key.replace(/:/g, "/"))
+		.filter((key) => key.startsWith(prefix))
+		.flatMap((key) => {
+			const match = VIDEO_FILE.exec(key.slice(prefix.length));
+			return match ? [Number(match[1] ?? 0)] : [];
+		});
+
+	return indexes.length === 0 ? 0 : Math.max(...indexes) + 1;
+}
 
 export const zoomEventHandler = zoomEvents(
 	{
@@ -38,38 +54,53 @@ export const zoomEventHandler = zoomEvents(
 					return extension?.toUpperCase() === "MP4";
 				});
 
-				await Promise.all(
-					videos.map((file, index) => {
-						const downloadUrl = file.download_url;
-
-						if (!downloadUrl) return Promise.resolve();
-
-						const key =
-							index === 0
-								? `${sessionName}/video.mp4`
-								: `${sessionName}/video_${index}.mp4`;
-
-						return tryAPI(
-							`zoom-recording-upload-${index}`,
-							(async () => {
-								const response = await fetch(downloadUrl, {
-									headers: {
-										authorization: `Bearer ${downloadToken}`,
-									},
-								});
-
-								if (!response.ok) {
-									throw new Error(
-										`Zoom recording download failed (${response.status}): ${downloadUrl}`,
-									);
-								}
-
-								const bytes = new Uint8Array(await response.arrayBuffer());
-								await mediaStorage.setItemRaw(key, bytes);
-							})(),
-						);
-					}),
+				const downloadUrls = videos.flatMap((file) =>
+					file.download_url ? [file.download_url] : [],
 				);
+
+				const existingKeys = await tryAPI(
+					"zoom-recording-list-existing-keys",
+					mediaStorage.getKeys(sessionName),
+				);
+				if (!existingKeys) return;
+
+				const start = nextVideoIndex(existingKeys, sessionName);
+
+				for (const [offset, downloadUrl] of downloadUrls.entries()) {
+					const index = start + offset;
+
+					const key =
+						index === 0
+							? `${sessionName}/video.mp4`
+							: `${sessionName}/video_${index}.mp4`;
+
+					console.log({ offset, downloadUrl, index, key });
+
+					const data = await tryFunc(
+						`zoom-recording-download-${index}`,
+						async () => {
+							const response = await fetch(downloadUrl, {
+								headers: {
+									authorization: `Bearer ${downloadToken}`,
+								},
+							});
+
+							if (!response.ok)
+								throw new Error(
+									`Zoom recording download failed (${response.status}): ${downloadUrl}`,
+								);
+
+							return await response.arrayBuffer();
+						},
+					);
+
+					if (!data) continue;
+
+					await tryAPI(
+						`zoom-recording-upload-${index}`,
+						mediaStorage.setItemRaw(key, new Uint8Array(data)),
+					);
+				}
 			},
 		},
 	},

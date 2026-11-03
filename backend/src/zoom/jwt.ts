@@ -3,7 +3,6 @@ import {
 	timingSafeEqual as nodeTimingSafeEqual,
 } from "node:crypto";
 import { sign } from "hono/jwt";
-import { triedAsync } from "utils";
 
 export function hmacSha256Hex(secret: string, message: string) {
 	return createHmac("sha256", secret).update(message).digest("hex");
@@ -36,13 +35,3 @@ export async function generateZoomToken(
 		process.env.ZOOM_SDK_SECRET,
 	);
 }
-
-export const tryAPI = async <D, Def = D>(
-	tag: string,
-	promise: Promise<D>,
-	def?: Def,
-) => {
-	const { error, data } = await triedAsync(promise, tag);
-	if (error) console.error(tag, error);
-	return data ?? def;
-};

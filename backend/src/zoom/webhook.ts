@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
-import { trys } from "utils";
+import { tryAPI, trys } from "utils";
 import type { ZoomSessionKeys, ZoomSessions } from "./event";
-import { hmacSha256Hex, timingSafeEqual, tryAPI } from "./jwt";
+import { hmacSha256Hex, timingSafeEqual } from "./jwt";
 
 type Payload<
 	D extends { [key: string]: unknown } = {
