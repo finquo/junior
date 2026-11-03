@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { QuizMessage } from "backend/config";
-import { quizMessageZod } from "backend/config";
+import type { QuizAnswerMessage, QuizMessage } from "backend/config";
+import { quizAnswerMessageZod, quizMessageZod } from "backend/config";
+import { CheckIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import {
 	Item,
@@ -35,7 +36,22 @@ export function parseQuizMessage(text: string): QuizMessage | null {
 	}
 }
 
-export function QuizMessageCard({ message }: { message: QuizMessage }) {
+export function parseQuizAnswerMessage(text: string): QuizAnswerMessage | null {
+	try {
+		const parsed = quizAnswerMessageZod.safeParse(JSON.parse(text));
+		return parsed.success ? parsed.data : null;
+	} catch {
+		return null;
+	}
+}
+
+export function QuizMessageCard({
+	message,
+	onSend,
+}: {
+	message: QuizMessage;
+	onSend?: (text: string) => void;
+}) {
 	const { data: questions, isPending } = useQuery(
 		api.core.quiz.get.queryOptions({
 			input: { lessonId: message.lessonId, quizIds: message.quizIds },
@@ -49,42 +65,76 @@ export function QuizMessageCard({ message }: { message: QuizMessage }) {
 			role="student"
 			fallback={<QuizReadonly questions={questions ?? []} />}
 		>
-			<QuizAnswer message={message} questions={questions ?? []} />
+			<QuizAnswer
+				message={message}
+				questions={questions ?? []}
+				onSend={onSend}
+			/>
 		</RenderWhenRole>
 	);
 }
 
-function QuizReadonly({
-	questions,
-}: {
-	questions: { id: string; question: string }[];
-}) {
+type QuizQuestion = {
+	id: string;
+	question: string;
+} & (
+	| {
+			type: "choices";
+			choices: string[];
+	  }
+	| {
+			type: "options";
+			options: string[];
+	  }
+	| {
+			type: "text";
+	  }
+);
+
+function QuizReadonly({ questions }: { questions: QuizQuestion[] }) {
 	return (
-		<ItemGroup>
-			{questions.map((question) => (
-				<Item key={question.id} variant="outline" size="sm">
-					<ItemContent>
-						<ItemTitle>{question.question}</ItemTitle>
-						<ItemDescription>Only the student can answer.</ItemDescription>
-					</ItemContent>
-				</Item>
-			))}
-		</ItemGroup>
+		<Questionnaire items={questions.map((question) => ({ name: question.id }))}>
+			{questions.map((question) => {
+				const choices =
+					question.type === "choices"
+						? question.choices
+						: question.type === "options"
+							? question.options
+							: [];
+				const isText = question.type === "text";
+
+				return (
+					<QuestionnaireItem key={question.id} name={question.id} disabled>
+						<QuestionnaireTitle>{question.question}</QuestionnaireTitle>
+						<QuestionnaireChoices>
+							{choices.map((choice) => (
+								<QuestionnaireChoice key={choice} value={choice} disabled>
+									{choice}
+								</QuestionnaireChoice>
+							))}
+							{isText && (
+								<QuestionnaireInput
+									aria-label={question.question}
+									disabled
+									placeholder="Type the answer"
+								/>
+							)}
+						</QuestionnaireChoices>
+					</QuestionnaireItem>
+				);
+			})}
+		</Questionnaire>
 	);
 }
-
-type QuizQuestion = Parameters<typeof QuizReadonly>[0]["questions"][number] & {
-	type: "choices" | "options" | "text";
-	choices?: string[];
-	options?: string[];
-};
 
 function QuizAnswer({
 	message,
 	questions,
+	onSend,
 }: {
 	message: QuizMessage;
 	questions: QuizQuestion[];
+	onSend?: (text: string) => void;
 }) {
 	const submit = useMutation(
 		api.core.quiz.submit.mutationOptions({
@@ -94,7 +144,7 @@ function QuizAnswer({
 		}),
 	);
 
-	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
 		const formData = new FormData(event.currentTarget);
@@ -106,11 +156,27 @@ function QuizAnswer({
 					: String(formData.get(question.id) ?? ""),
 		}));
 
-		submit.mutate({
-			slotId: message.slotId,
-			lessonId: message.lessonId,
-			answers,
-		});
+		try {
+			await submit.mutateAsync({
+				slotId: message.slotId,
+				lessonId: message.lessonId,
+				answers,
+			});
+		} catch {
+			return;
+		}
+
+		for (const answer of answers) {
+			onSend?.(
+				JSON.stringify({
+					type: "quiz_answer",
+					slotId: message.slotId,
+					lessonId: message.lessonId,
+					questionId: answer.questionId,
+					anwser: answer.anwser,
+				} satisfies QuizAnswerMessage),
+			);
+		}
 	}
 
 	return (
@@ -124,8 +190,10 @@ function QuizAnswer({
 			{questions.map((question) => {
 				const choices =
 					question.type === "choices"
-						? (question.choices ?? [])
-						: (question.options ?? []);
+						? question.choices
+						: question.type === "options"
+							? question.options
+							: [];
 				const isText = question.type === "text";
 
 				return (
@@ -154,5 +222,69 @@ function QuizAnswer({
 				</QuestionnaireSubmit>
 			</QuestionnaireActions>
 		</Questionnaire>
+	);
+}
+
+function AnswerCheck({ chosen, label }: { chosen: boolean; label: string }) {
+	return (
+		<Item variant={chosen ? "secondary" : "outline"} size="sm">
+			<ItemContent>
+				<ItemTitle>{label}</ItemTitle>
+			</ItemContent>
+			{chosen && <ItemDescription>{<CheckIcon />}</ItemDescription>}
+		</Item>
+	);
+}
+
+export function QuizAnswerCard({ message }: { message: QuizAnswerMessage }) {
+	const { data: questions, isPending } = useQuery(
+		api.core.quiz.get.queryOptions({
+			input: { lessonId: message.lessonId, quizIds: [message.questionId] },
+		}),
+	);
+
+	if (isPending) return <Skeleton className="h-16 w-full" />;
+
+	const question = questions?.[0];
+	if (!question) return null;
+
+	const choices = question.type === "choices" ? question.choices : [];
+	const options = question.type === "options" ? question.options : [];
+	const pickedChoices =
+		question.type === "choices" && Array.isArray(message.anwser)
+			? message.anwser
+			: [];
+	const pickedOption =
+		question.type === "options" && typeof message.anwser === "string"
+			? message.anwser
+			: "";
+
+	return (
+		<ItemGroup>
+			<Item variant="outline" size="sm">
+				<ItemContent>
+					<ItemTitle>{question.question}</ItemTitle>
+					<ItemDescription>
+						{question.type === "text"
+							? message.anwser
+							: "Answered by the student."}
+					</ItemDescription>
+				</ItemContent>
+			</Item>
+			{choices.map((choice) => (
+				<AnswerCheck
+					key={choice}
+					chosen={pickedChoices.includes(choice)}
+					label={choice}
+				/>
+			))}
+			{options.map((option) => (
+				<AnswerCheck
+					key={option}
+					chosen={pickedOption === option}
+					label={option}
+				/>
+			))}
+		</ItemGroup>
 	);
 }

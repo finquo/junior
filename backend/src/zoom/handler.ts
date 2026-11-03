@@ -62,9 +62,10 @@ export const zoomEventHandler = zoomEvents(
 					"zoom-recording-list-existing-keys",
 					mediaStorage.getKeys(sessionName),
 				);
-				if (!existingKeys) return;
 
-				const start = nextVideoIndex(existingKeys, sessionName);
+				const start = existingKeys
+					? nextVideoIndex(existingKeys, sessionName)
+					: 0;
 
 				for (const [offset, downloadUrl] of downloadUrls.entries()) {
 					const index = start + offset;

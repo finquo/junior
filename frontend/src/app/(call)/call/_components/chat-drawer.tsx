@@ -39,7 +39,12 @@ import {
 } from "@/components/ui/message-scroller";
 import { RenderWhenRole } from "@/hooks/role";
 import { type GetFormZod, getInitials } from "@/lib/utils";
-import { parseQuizMessage, QuizMessageCard } from "./quiz-message";
+import {
+	parseQuizAnswerMessage,
+	parseQuizMessage,
+	QuizAnswerCard,
+	QuizMessageCard,
+} from "./quiz-message";
 import { QuizPicker } from "./quiz-picker";
 
 export type ChatMessage = {
@@ -112,6 +117,7 @@ export function ChatDrawer({
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
 										const quiz = parseQuizMessage(message.text);
+										const answer = parseQuizAnswerMessage(message.text);
 										const isLastOfGroup =
 											messages[index + 1]?.senderId !== message.senderId;
 										const showAvatar = !isMine && isLastOfGroup;
@@ -123,7 +129,9 @@ export function ChatDrawer({
 											</Avatar>
 										);
 										const bubble = quiz ? (
-											<QuizMessageCard message={quiz} />
+											<QuizMessageCard message={quiz} onSend={onSend} />
+										) : answer ? (
+											<QuizAnswerCard message={answer} />
 										) : (
 											<Bubble align={align} variant={variant}>
 												<BubbleContent>{message.text}</BubbleContent>

@@ -2,8 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { QuizMessage } from "backend/config";
-import { BookOpenIcon, PlusIcon } from "lucide-react";
+import { BookOpenIcon } from "lucide-react";
 import { useState } from "react";
+import { QuizList } from "@/components/custom/quiz";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,10 +24,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { InputGroupButton } from "@/components/ui/input-group";
 import { api } from "@/hooks/api";
-
 export function QuizPicker({
 	slotId,
 	onSend,
@@ -61,6 +59,12 @@ export function QuizPicker({
 		setSelected([]);
 	}
 
+	function toggle(id: string, checked: boolean) {
+		setSelected((current) =>
+			checked ? [...current, id] : current.filter((value) => value !== id),
+		);
+	}
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
@@ -79,26 +83,16 @@ export function QuizPicker({
 								Choose the questions to send to the student in this session.
 							</DialogDescription>
 						</DialogHeader>
-						<FieldGroup>
-							{questions.map((question) => (
-								<Field key={question.id} orientation="horizontal">
-									<Checkbox
-										id={question.id}
-										checked={selected.includes(question.id)}
-										onCheckedChange={(checked) =>
-											setSelected((current) =>
-												checked
-													? [...current, question.id]
-													: current.filter((id) => id !== question.id),
-											)
-										}
-									/>
-									<FieldLabel htmlFor={question.id}>
-										{question.question}
-									</FieldLabel>
-								</Field>
-							))}
-						</FieldGroup>
+						<QuizList quiz={questions} lessonId={lessonId ?? ""}>
+							{(question) => (
+								<Checkbox
+									id={question.id}
+									aria-label={question.question}
+									checked={selected.includes(question.id)}
+									onCheckedChange={(checked) => toggle(question.id, !!checked)}
+								/>
+							)}
+						</QuizList>
 						<DialogFooter>
 							<DialogClose asChild>
 								<Button variant="outline">Close</Button>

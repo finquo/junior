@@ -87,10 +87,12 @@ export function QuizList({
 	quiz,
 	lessonId,
 	editable,
+	children,
 }: {
 	quiz: Quiz[];
 	lessonId: string;
 	editable?: boolean;
+	children?: (question: Quiz) => React.ReactNode;
 }) {
 	if (quiz.length === 0) {
 		return (
@@ -121,6 +123,8 @@ export function QuizList({
 						{index + 1}. {question.question}
 					</AccordionTrigger>
 					<AccordionContent className="space-y-2">
+						{children?.(question)}
+
 						{editable && (
 							<RenderWhenRole role={["admin", "scheduler"]}>
 								<ButtonGroup>

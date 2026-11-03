@@ -57,6 +57,16 @@ export const quizMessageZod = z.object({
 
 export type QuizMessage = z.infer<typeof quizMessageZod>;
 
+export const quizAnswerMessageZod = z.object({
+	type: z.literal("quiz_answer"),
+	slotId: z.string(),
+	lessonId: z.string(),
+	questionId: z.string(),
+	anwser: z.union([z.string(), z.array(z.string())]),
+});
+
+export type QuizAnswerMessage = z.infer<typeof quizAnswerMessageZod>;
+
 export const quizSubmitZod = z.array(
 	z.object({
 		questionId: z.string(),
