@@ -89,7 +89,7 @@ export function AddQuizDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-w-lg">
+			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Add Quiz Question</DialogTitle>
 					<DialogDescription>

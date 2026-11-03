@@ -94,7 +94,7 @@ export function EditQuizDialog({
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-w-lg">
+			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Quiz Question</DialogTitle>
 					<DialogDescription>

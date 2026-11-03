@@ -57,7 +57,6 @@ function Joined({ id }: { id: string }) {
 			canRecord={canRecord}
 			role={user.role ?? "student"}
 			avatar={user.image ?? undefined}
-			backgroundImage="/banner.jpg"
 			disableVideo={!camera}
 			disableAudio={!mic}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}

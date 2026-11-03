@@ -72,7 +72,7 @@ export function QuizPicker({
 							Pick a quiz
 						</DropdownMenuItem>
 					</DialogTrigger>
-					<DialogContent className="max-w-lg">
+					<DialogContent>
 						<DialogHeader>
 							<DialogTitle>Pick a quiz</DialogTitle>
 							<DialogDescription>

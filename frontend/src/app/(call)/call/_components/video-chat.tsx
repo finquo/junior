@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import type { Participant } from "@zoom/videosdk";
 import ZoomVideo, { ConnectionState, RecordingStatus } from "@zoom/videosdk";
 import {
@@ -21,6 +20,8 @@ import {
 	CctvIcon,
 	CctvOffIcon,
 	EllipsisIcon,
+	ImageIcon,
+	ImageOffIcon,
 	InfoIcon,
 	LogOutIcon,
 	MessageSquareIcon,
@@ -36,7 +37,6 @@ import {
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
@@ -67,6 +67,13 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -74,8 +81,16 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemMedia,
+	ItemTitle,
+} from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
-import { api } from "@/hooks/api";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useJoinPreferences } from "./call-preferences";
 import { ChatDrawer, type ChatMessage } from "./chat-drawer";
@@ -84,6 +99,8 @@ import { ParticipantsDrawer } from "./participants-drawer";
 
 // Self floats separately, so the main grid tops out at three others.
 const MAX_REMOTE_TILES = 3;
+
+const VIRTUAL_BACKGROUND = "/background.png";
 
 const videoTileStyle = {
 	width: "100%",
@@ -171,7 +188,6 @@ function VideoTile({
 	videoOn,
 	role: roleProp,
 	avatar,
-	backgroundImage,
 	menu = false,
 }: {
 	user: SessionUser;
@@ -180,14 +196,12 @@ function VideoTile({
 	videoOn?: boolean;
 	role?: string;
 	avatar?: string;
-	backgroundImage?: string;
 	menu?: boolean;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
 	const video = videoOn ?? user.bVideoOn;
 	const role = roleProp ?? participantRole(user) ?? "guest";
 	const roleName = roleLabel(role);
-	const isTeacher = role === "teacher";
 	const name = participantName(user);
 
 	return (
@@ -195,16 +209,6 @@ function VideoTile({
 			<VideoPlayerContainerComponent style={videoTileStyle}>
 				<VideoPlayerComponent user={user} />
 			</VideoPlayerContainerComponent>
-			{!video && isTeacher && backgroundImage && (
-				<Image
-					src={backgroundImage}
-					alt=""
-					fill
-					sizes="(max-width: 640px) 100vw, 33vw"
-					className="select-none object-cover"
-					draggable={false}
-				/>
-			)}
 			{!video && (
 				<div className="absolute inset-0">
 					<div className="flex size-full flex-row items-center justify-center gap-3">
@@ -240,7 +244,6 @@ export function VideoChat({
 	canRecord,
 	role,
 	avatar,
-	backgroundImage,
 	disableVideo,
 	disableAudio,
 	onLeave,
@@ -255,7 +258,6 @@ export function VideoChat({
 	canRecord: boolean;
 	role: string;
 	avatar?: string;
-	backgroundImage?: string;
 	disableVideo: boolean;
 	disableAudio: boolean;
 	onLeave: () => void;
@@ -271,10 +273,9 @@ export function VideoChat({
 		joinOptions,
 	);
 	const { setCamera, setMic } = useJoinPreferences();
-	const endSlot = useMutation(api.core.slot.end.mutationOptions());
 	const participants = useSessionUsers();
 	const myself = useMyself();
-	const { isVideoOn, toggleVideo } = useVideoState();
+	const { isVideoOn } = useVideoState();
 	const { isAudioMuted, isCapturingAudio, setCapture, setMute } =
 		useAudioState();
 	const { ScreenshareRef, startScreenshare, stopScreenshare, isScreensharing } =
@@ -287,8 +288,9 @@ export function VideoChat({
 	const [recordingPending, setRecordingPending] = useState(false);
 	const [audioPending, setAudioPending] = useState(false);
 	const [overlay, setOverlay] = useState<
-		"participants" | "details" | "end" | "leave" | null
+		"participants" | "details" | "camera" | "end" | "leave" | null
 	>(null);
+	const [virtualBackground, setVirtualBackground] = useState(false);
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
@@ -499,16 +501,6 @@ export function VideoChat({
 	};
 
 	const endMeeting = async () => {
-		try {
-			if (slotId) await endSlot.mutateAsync({ id: slotId });
-		} catch (error) {
-			toast.error({
-				title: "Could not end meeting",
-				description: sdkErrorDescription(error),
-			});
-			return;
-		}
-
 		await ZoomVideo.createClient().leave(true);
 		if (onEnd) onEnd();
 		else onLeave();
@@ -547,13 +539,54 @@ export function VideoChat({
 		}
 	};
 
-	const toggleCamera = async () => {
-		const next = !isVideoOn;
-		await toggleVideo();
+	const setCameraOn = async (next: boolean) => {
+		const stream = ZoomVideo.createClient().getMediaStream();
+
+		try {
+			if (next) {
+				await stream.startVideo(
+					virtualBackground
+						? { virtualBackground: { imageUrl: VIRTUAL_BACKGROUND } }
+						: undefined,
+				);
+			} else {
+				await stream.stopVideo();
+			}
+		} catch (error) {
+			toast.error({
+				title: "Could not change camera",
+				description: sdkErrorDescription(error),
+			});
+			return;
+		}
+
 		void setCamera(next);
 		if (next) toast.success({ title: "Camera on" });
 		else toast.info({ title: "Camera off" });
 	};
+
+	const setVirtualBackgroundOn = async (next: boolean) => {
+		try {
+			if (isVideoOn) {
+				await ZoomVideo.createClient()
+					.getMediaStream()
+					.updateVirtualBackgroundImage(next ? VIRTUAL_BACKGROUND : undefined);
+			}
+		} catch (error) {
+			toast.error({
+				title: "Could not change background",
+				description: sdkErrorDescription(error),
+			});
+			return;
+		}
+
+		setVirtualBackground(next);
+	};
+
+	const cameraStatus = isVideoOn ? "On" : "Off";
+	const virtualBackgroundSupported =
+		isInSession &&
+		ZoomVideo.createClient().getMediaStream().isSupportVirtualBackground();
 
 	const toggleScreenshare = async () => {
 		if (isScreensharing) {
@@ -593,9 +626,9 @@ export function VideoChat({
 		},
 		{
 			id: "camera",
-			label: isVideoOn ? "Camera off" : "Camera on",
+			label: "Camera",
 			icon: isVideoOn ? <VideoIcon /> : <VideoOffIcon />,
-			onSelect: toggleCamera,
+			onSelect: () => setOverlay("camera"),
 		},
 		{
 			id: "screenshare",
@@ -701,7 +734,6 @@ export function VideoChat({
 								key={participant.userId}
 								user={participant}
 								avatar={participant.avatar}
-								backgroundImage={backgroundImage}
 								className="aspect-video min-w-64 shadow-lg"
 							/>
 						))}
@@ -714,7 +746,6 @@ export function VideoChat({
 							key={participant.userId}
 							user={participant}
 							avatar={participant.avatar}
-							backgroundImage={backgroundImage}
 							menu
 						/>
 					))}
@@ -736,7 +767,6 @@ export function VideoChat({
 							videoOn={isVideoOn}
 							role={role}
 							avatar={avatar}
-							backgroundImage={backgroundImage}
 							className="aspect-video min-w-64 shadow-lg"
 						/>
 					)}
@@ -764,6 +794,74 @@ export function VideoChat({
 						onOpenChange={(open) => setOverlay(open ? "details" : null)}
 					/>
 				)}
+
+				<Dialog
+					open={overlay === "camera"}
+					onOpenChange={(open) => setOverlay(open ? "camera" : null)}
+				>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Camera</DialogTitle>
+							<DialogDescription>
+								Your camera is currently {cameraStatus}.
+							</DialogDescription>
+						</DialogHeader>
+						{myself && (
+							<VideoTile
+								user={myself}
+								voiceOn={isAudioOn}
+								videoOn={isVideoOn}
+								role={role}
+								avatar={avatar}
+								className="aspect-video"
+							/>
+						)}
+						<FieldGroup>
+							<FieldLabel htmlFor="camera-switch">
+								<Field orientation="horizontal" className="items-start">
+									<ItemMedia variant="icon">
+										{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+									</ItemMedia>
+									<ItemContent>
+										<ItemTitle>Camera</ItemTitle>
+									</ItemContent>
+									<ItemActions>
+										<Switch
+											id="camera-switch"
+											aria-label="Camera"
+											checked={isVideoOn}
+											onCheckedChange={(checked) => void setCameraOn(checked)}
+										/>
+									</ItemActions>
+								</Field>
+							</FieldLabel>
+							<FieldLabel htmlFor="virtual-background-switch">
+								<Field orientation="horizontal" className="items-start">
+									<ItemMedia variant="icon">
+										{virtualBackground ? <ImageIcon /> : <ImageOffIcon />}
+									</ItemMedia>
+									<ItemContent>
+										<ItemTitle>Virtual background</ItemTitle>
+										<ItemDescription>
+											Replace your background with the banner.
+										</ItemDescription>
+									</ItemContent>
+									<ItemActions>
+										<Switch
+											id="virtual-background-switch"
+											aria-label="Virtual background"
+											checked={virtualBackground}
+											disabled={!isVideoOn || !virtualBackgroundSupported}
+											onCheckedChange={(checked) =>
+												void setVirtualBackgroundOn(checked)
+											}
+										/>
+									</ItemActions>
+								</Field>
+							</FieldLabel>
+						</FieldGroup>
+					</DialogContent>
+				</Dialog>
 
 				{canEndMeeting && (
 					<AlertDialog

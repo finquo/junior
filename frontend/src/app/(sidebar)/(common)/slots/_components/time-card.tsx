@@ -182,7 +182,7 @@ export function TimeCard({
 								Pick Presize Time
 							</Button>
 						</DialogTrigger>
-						<DialogContent>
+						<DialogContent className="max-w-[calc(100%-2rem)]">
 							<DialogHeader>
 								<DialogTitle>Pick a precise time</DialogTitle>
 								<DialogDescription>
