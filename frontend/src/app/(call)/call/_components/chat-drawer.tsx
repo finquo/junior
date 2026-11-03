@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import { cn } from "cn";
 import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
@@ -28,7 +29,11 @@ import {
 	InputGroupButton,
 	InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { Message, MessageContent } from "@/components/ui/message";
+import {
+	Message,
+	MessageContent,
+	MessageHeader,
+} from "@/components/ui/message";
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -62,12 +67,14 @@ export function ChatDrawer({
 	children,
 	messages,
 	myUserId,
+	roles,
 	slotId,
 	onSend,
 }: {
 	children: React.ReactElement;
 	messages: ChatMessage[];
 	myUserId?: string;
+	roles?: Map<string, string>;
 	slotId?: string;
 	onSend: (text: string) => void;
 }) {
@@ -111,16 +118,25 @@ export function ChatDrawer({
 					<MessageScrollerProvider autoScroll>
 						<MessageScroller>
 							<MessageScrollerViewport>
-								<MessageScrollerContent className="gap-4">
+								<MessageScrollerContent className="gap-2">
 									{messages.map((message, index) => {
 										const isMine = message.senderId === myUserId;
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
 										const quiz = parseQuizMessage(message.text);
 										const answer = parseQuizAnswerMessage(message.text);
+										const role = roles?.get(message.senderId);
 										const isLastOfGroup =
 											messages[index + 1]?.senderId !== message.senderId;
-										const showAvatar = !isMine && isLastOfGroup;
+										const showDetails =
+											messages[index - 1]?.senderId !== message.senderId;
+										const details = (
+											<MessageHeader
+												className={cn(align === "end" && "text-right")}
+											>
+												{message.senderName} · {role ?? "guest"}
+											</MessageHeader>
+										);
 										const avatar = (
 											<Avatar size="sm">
 												<AvatarFallback>
@@ -145,8 +161,9 @@ export function ChatDrawer({
 											>
 												<Message align={align}>
 													<MessageContent>
+														{!isMine && showDetails && details}
 														{bubble}
-														{showAvatar && avatar}
+														{!isMine && isLastOfGroup && avatar}
 													</MessageContent>
 												</Message>
 											</MessageScrollerItem>

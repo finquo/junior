@@ -1,7 +1,7 @@
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Slot } from "radix-ui";
+import type * as React from "react";
 
 function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
 	return (
@@ -14,7 +14,7 @@ function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const bubbleVariants = cva(
-	"group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
+	"group/bubble relative flex w-fit min-w-0 max-w-[80%] flex-col gap-1 data-[variant=ghost]:max-w-full data-[align=end]:self-end group-data-[align=end]/message:self-end",
 	{
 		variants: {
 			variant: {
@@ -73,7 +73,7 @@ function BubbleContent({
 		<Comp
 			data-slot="bubble-content"
 			className={cn(
-				"w-fit max-w-full min-w-0 overflow-hidden rounded-3xl border border-transparent px-3 py-2.5 text-sm leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3 [button,a]:focus-visible:ring-ring/30",
+				"wrap-break-word w-fit min-w-5 max-w-full overflow-hidden rounded-3xl border border-transparent px-4 py-1.5 text-sm leading-relaxed group-data-[align=end]/bubble:self-end [button,a]:outline-none [button,a]:transition-colors [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3 [button,a]:focus-visible:ring-ring/30 [button]:text-left",
 				className,
 			)}
 			{...props}
@@ -121,4 +121,4 @@ function BubbleReactions({
 	);
 }
 
-export { BubbleGroup, Bubble, BubbleContent, BubbleReactions };
+export { Bubble, BubbleContent, BubbleGroup, BubbleReactions };

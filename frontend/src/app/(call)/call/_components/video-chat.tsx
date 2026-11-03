@@ -189,6 +189,7 @@ function VideoTile({
 	role: roleProp,
 	avatar,
 	menu = false,
+	mirror = false,
 }: {
 	user: SessionUser;
 	className?: string;
@@ -197,6 +198,7 @@ function VideoTile({
 	role?: string;
 	avatar?: string;
 	menu?: boolean;
+	mirror?: boolean;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
 	const video = videoOn ?? user.bVideoOn;
@@ -206,7 +208,13 @@ function VideoTile({
 
 	return (
 		<Frame className={cn("overflow-hidden p-0", className)}>
-			<VideoPlayerContainerComponent style={videoTileStyle}>
+			<VideoPlayerContainerComponent
+				style={
+					mirror
+						? { ...videoTileStyle, transform: "scaleX(-1)" }
+						: videoTileStyle
+				}
+			>
 				<VideoPlayerComponent user={user} />
 			</VideoPlayerContainerComponent>
 			{!video && (
@@ -294,6 +302,15 @@ export function VideoChat({
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
+
+	const chatRoles = new Map(
+		participants.map((participant) => [
+			participant.userId.toString(),
+			roleLabel(participantRole(participant) ?? "guest"),
+		]),
+	);
+	const myChatId = myself?.userId.toString() ?? myUserIdRef.current;
+	if (myChatId) chatRoles.set(myChatId, roleLabel(role));
 
 	// A participant list containing ourselves means the join is already live,
 	// even if startAudio/startVideo are still resolving.
@@ -663,6 +680,7 @@ export function VideoChat({
 			<ChatDrawer
 				messages={chatMessages}
 				myUserId={myself?.userId.toString()}
+				roles={chatRoles}
 				slotId={slotId}
 				onSend={sendChat}
 			>
@@ -767,6 +785,7 @@ export function VideoChat({
 							videoOn={isVideoOn}
 							role={role}
 							avatar={avatar}
+							mirror
 							className="aspect-video min-w-64 shadow-lg"
 						/>
 					)}
@@ -813,6 +832,7 @@ export function VideoChat({
 								videoOn={isVideoOn}
 								role={role}
 								avatar={avatar}
+								mirror
 								className="aspect-video"
 							/>
 						)}
