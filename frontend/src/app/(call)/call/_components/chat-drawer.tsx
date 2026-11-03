@@ -107,11 +107,14 @@ export function ChatDrawer({
 						<MessageScroller>
 							<MessageScrollerViewport>
 								<MessageScrollerContent className="gap-4">
-									{messages.map((message) => {
+									{messages.map((message, index) => {
 										const isMine = message.senderId === myUserId;
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
 										const quiz = parseQuizMessage(message.text);
+										const isLastOfGroup =
+											messages[index + 1]?.senderId !== message.senderId;
+										const showAvatar = !isMine && isLastOfGroup;
 										const avatar = (
 											<Avatar size="sm">
 												<AvatarFallback>
@@ -126,8 +129,6 @@ export function ChatDrawer({
 												<BubbleContent>{message.text}</BubbleContent>
 											</Bubble>
 										);
-										const first = isMine ? bubble : avatar;
-										const second = isMine ? avatar : bubble;
 
 										return (
 											<MessageScrollerItem
@@ -136,8 +137,8 @@ export function ChatDrawer({
 											>
 												<Message align={align}>
 													<MessageContent>
-														{first}
-														{second}
+														{bubble}
+														{showAvatar && avatar}
 													</MessageContent>
 												</Message>
 											</MessageScrollerItem>

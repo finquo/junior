@@ -479,6 +479,11 @@ export function VideoChat({
 		(userId) => userId !== myself?.userId,
 	);
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
+	const sharingParticipants = participants.filter(
+		(participant) =>
+			participant.userId !== myself?.userId &&
+			remoteScreenShareUsers.includes(participant.userId),
+	);
 
 	const sendChat = (text: string) => {
 		void ZoomVideo.createClient().getChatClient().sendToAll(text);
@@ -687,6 +692,20 @@ export function VideoChat({
 							))}
 						</ScreenShareContainerComponent>
 					</Frame>
+				)}
+
+				{isRemoteSharing && (
+					<div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
+						{sharingParticipants.map((participant) => (
+							<VideoTile
+								key={participant.userId}
+								user={participant}
+								avatar={participant.avatar}
+								backgroundImage={backgroundImage}
+								className="aspect-video min-w-64 shadow-lg"
+							/>
+						))}
+					</div>
 				)}
 
 				{!isRemoteSharing &&
