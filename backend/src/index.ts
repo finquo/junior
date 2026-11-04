@@ -9,7 +9,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import z from "zod";
-import { appRouter } from "@/api/routers";
+import { appRouter } from "@/api";
 import { createContext } from "./api/context";
 import { bot } from "./chat/whatsapp";
 import { auth } from "./services";

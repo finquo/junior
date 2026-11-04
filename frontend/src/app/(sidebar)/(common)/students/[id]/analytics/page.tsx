@@ -1,10 +1,7 @@
-export default async function ({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
-	const { id } = await params;
+"use client";
+
+export default function () {
 	return (
-		<iframe title="PDF" src={`/students/${id}/pdf`} className="h-full w-full" />
+		<iframe title="PDF" src={"/analytics/students"} className="h-full w-full" />
 	);
 }

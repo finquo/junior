@@ -18,12 +18,12 @@ export default defineConfig([
 		},
 	},
 	{
-		entry: [
-			"./src/auth/export.ts",
-			"./src/api/index.ts",
-			"./src/config/index.ts",
-			"./src/db/export.ts",
-		],
+		entry: {
+			auth: "./src/auth/export.ts",
+			api: "./src/api/export.ts",
+			config: "./src/config/index.ts",
+			db: "./src/db/export.ts",
+		},
 		format: "esm",
 		outDir: "./dist",
 		clean: false,
