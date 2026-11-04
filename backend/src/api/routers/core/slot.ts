@@ -2,6 +2,7 @@ import { and, eq, gt, inArray, lt } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { notifySlotCreated } from "@/chat/notify";
 import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
@@ -308,11 +309,22 @@ export const slotRouter = {
 					expectedEndTime: new Date(d.startTime.getTime() + d.period),
 				})),
 		)
-		.handler(async ({ input }) => {
-			return await tryAPI(
+		.handler(async ({ input, context }) => {
+			const created = await tryAPI(
 				"db-core-create-slot",
 				db.insert(schema.slot).values(input).returning(),
 			);
+
+			if (created !== undefined && created[0] !== undefined) {
+				try {
+					const appUrl = new URL(context.req.url).origin;
+					await notifySlotCreated(created[0].id, appUrl);
+				} catch (error) {
+					console.error("[core-create-slot-notify]", error);
+				}
+			}
+
+			return created;
 		}),
 	update: getRolesProcedure(["admin", "scheduler"])
 		.input(
