@@ -107,6 +107,10 @@ app.use("/openapi/*", async (c, next) => {
 									name: "Vercel",
 									url: "https://finquo-junior.vercel.app/api",
 								},
+								{
+									name: "Vercel",
+									url: "https://test.finquo.ai/api",
+								},
 							],
 						},
 					}),

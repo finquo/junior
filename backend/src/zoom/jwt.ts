@@ -35,3 +35,17 @@ export async function generateZoomToken(
 		process.env.ZOOM_SDK_SECRET,
 	);
 }
+
+export function generateZoomAPIToken() {
+	const iat = Math.floor(Date.now() / 1000);
+	const exp = iat + 60 * 60 * 2;
+
+	return sign(
+		{
+			iss: process.env.ZOOM_API_ID,
+			iat,
+			exp,
+		},
+		process.env.ZOOM_API_KEY,
+	);
+}

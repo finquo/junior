@@ -14,7 +14,7 @@ import {
 	getSlotCheckStatus,
 	getUnavailableIntervals,
 } from "@/utils/slot";
-import { zoomAPI } from "@/zoom/api";
+import { getZoomAPI } from "@/zoom/api";
 import { generateZoomToken } from "@/zoom/jwt";
 
 const endRecordingBeforeStopping = true;
@@ -135,6 +135,8 @@ export const slotRouter = {
 			);
 			if (!slot) throw getError("NOT_FOUND", "Slot not found");
 
+			const zoomAPI = await getZoomAPI();
+
 			if (endRecordingBeforeStopping) {
 				const { error } = await zoomAPI("/sessions/:sessionId/events", {
 					params: { sessionId: slot.id },
@@ -149,9 +151,8 @@ export const slotRouter = {
 					);
 			}
 
-			const { error } = await zoomAPI("/sessions/:sessionId/status", {
+			const { error } = await zoomAPI("@delete/sessions/:sessionId", {
 				params: { sessionId: slot.id },
-				body: { action: "end" },
 			});
 
 			if (error)

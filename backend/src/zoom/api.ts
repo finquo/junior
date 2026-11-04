@@ -1,5 +1,6 @@
 import { createFetch, createSchema } from "@better-fetch/fetch";
 import z from "zod";
+import { generateZoomAPIToken } from "./jwt";
 
 const sessionId = z
 	.string()
@@ -25,14 +26,23 @@ const zoomAPISchema = createSchema(
 				sessionId,
 			}),
 		},
+		"@delete/sessions/:sessionId": {
+			method: "delete",
+			params: z.object({
+				sessionId,
+			}),
+		},
 	},
 	{ strict: true },
 );
 
-export const zoomAPI = createFetch({
-	baseURL: `https://api.zoom.us/v2/accounts/${process.env.ZOOM_API_ID}/videosdk`,
-	headers: {
-		"x-api-key": process.env.ZOOM_API_KEY,
-	},
-	schema: zoomAPISchema,
-});
+export const getZoomAPI = async () => {
+	return createFetch({
+		baseURL: "https://api.zoom.us/v2/videosdk",
+		auth: {
+			type: "Bearer",
+			token: await generateZoomAPIToken(),
+		},
+		schema: zoomAPISchema,
+	});
+};
