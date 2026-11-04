@@ -191,7 +191,13 @@ export default function Page() {
 							</ItemContent>
 							<ItemActions>
 								<Button asChild>
-									<Link href={`/call/${next.id}` as "/"}>Open Call</Link>
+									<Link
+										target="_blank"
+										rel="noopener noreferrer"
+										href={`/call/${next.id}` as "/"}
+									>
+										Open Call
+									</Link>
 								</Button>
 							</ItemActions>
 						</Item>
