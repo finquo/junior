@@ -1,8 +1,8 @@
-import { and, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, ne } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
-import { notifySlotCreated } from "@/chat/notify";
+import { notifySlotCreated, notifySlotUpdated } from "@/chat/notify";
 import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
@@ -330,7 +330,6 @@ export const slotRouter = {
 	update: getRolesProcedure(["admin", "scheduler"])
 		.input(
 			UpdateSlotSchema.omit({
-				schedulerId: true,
 				createdAt: true,
 				updatedAt: true,
 				endTime: true,
@@ -353,11 +352,48 @@ export const slotRouter = {
 		.handler(async ({ input, context }) => {
 			const { id, ...data } = input;
 
-			return await tryAPI(
+			if (data.schedulerId !== undefined && context.role !== "admin")
+				throw getError("FORBIDDEN", "Only admins can change the scheduler");
+
+			const existing = await tryAPI(
+				"db-core-update-slot-find",
+				db.query.slot.findFirst({
+					where: { id },
+					columns: {
+						startTime: true,
+						teacherId: true,
+						lessonId: true,
+						schedulerId: true,
+					},
+				}),
+			);
+
+			const startTimeChanged = Boolean(
+				data.startTime &&
+					existing &&
+					data.startTime.getTime() !== existing.startTime.getTime(),
+			);
+
+			const participantChanged = Boolean(
+				existing &&
+					((data.teacherId !== undefined &&
+						data.teacherId !== existing.teacherId) ||
+						(data.lessonId !== undefined &&
+							data.lessonId !== existing.lessonId) ||
+						(data.schedulerId !== undefined &&
+							data.schedulerId !== existing.schedulerId)),
+			);
+
+			const updated = await tryAPI(
 				"db-core-update-slot",
 				db
 					.update(schema.slot)
-					.set(data)
+					.set({
+						...data,
+						...(startTimeChanged && data.status === undefined
+							? { status: "rescheduled" as const }
+							: {}),
+					})
 					.where(
 						MapRole(context.role, {
 							admin: eq(schema.slot.id, id),
@@ -437,6 +473,7 @@ export const slotRouter = {
 			z
 				.object({
 					teacherId: z.string(),
+					excludeSlotId: z.string().optional(),
 					date: z.date(),
 					period: periodZod,
 				})
@@ -463,6 +500,9 @@ export const slotRouter = {
 								"started",
 							]),
 							lt(schema.slot.startTime, input.endTime),
+							input.excludeSlotId
+								? ne(schema.slot.id, input.excludeSlotId)
+								: undefined,
 							gt(schema.slot.expectedEndTime, input.date),
 						),
 					),
@@ -554,6 +594,9 @@ export const slotRouter = {
 								"started",
 							]),
 							lt(schema.slot.startTime, dayEnd),
+							input.excludeSlotId
+								? ne(schema.slot.id, input.excludeSlotId)
+								: undefined,
 							gt(schema.slot.expectedEndTime, dayStart),
 						),
 					),

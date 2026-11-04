@@ -269,9 +269,7 @@ export function SessionProfile({
 									</TimelineContent>
 								</TimelineItem>
 								<TimelineItem step={2}>
-									<TimelineIndicator>
-										<PlayIcon />
-									</TimelineIndicator>
+									<TimelineIndicator />
 									<TimelineSeparator />
 									<TimelineHeader>
 										<TimelineTitle>Started</TimelineTitle>
@@ -281,9 +279,7 @@ export function SessionProfile({
 									</TimelineContent>
 								</TimelineItem>
 								<TimelineItem step={3}>
-									<TimelineIndicator>
-										<CheckCheckIcon />
-									</TimelineIndicator>
+									<TimelineIndicator />
 									<TimelineHeader>
 										<TimelineDate>{formatDateTime(data.endTime)}</TimelineDate>
 										<TimelineTitle>Attended</TimelineTitle>
