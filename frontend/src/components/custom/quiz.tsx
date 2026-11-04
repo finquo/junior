@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import type { Quiz } from "backend/config";
+import type { Anwser, Quiz } from "backend/config";
 import {
 	CheckIcon,
 	ListChecksIcon,
@@ -30,6 +30,7 @@ import {
 import {
 	Item,
 	ItemContent,
+	ItemDescription,
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
@@ -37,6 +38,102 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
+import type { API_Returns } from "@/lib/api";
+
+type AnswerStatus =
+	API_Returns["core"]["quiz"]["studentAnswers"][number]["status"];
+
+const answerStatusVariants: Record<
+	AnswerStatus,
+	| "default"
+	| "secondary"
+	| "success"
+	| "warning"
+	| "destructive"
+	| "info"
+	| "outline"
+> = {
+	pending: "outline",
+	answered: "secondary",
+	correct: "success",
+	partially_correct: "warning",
+	wrong: "destructive",
+	retake: "info",
+};
+
+export function AnswerStatusBadge({ status }: { status: AnswerStatus }) {
+	return (
+		<ColorBadge variant={answerStatusVariants[status]}>
+			{status === "partially_correct" ? "Partially Correct" : status}
+		</ColorBadge>
+	);
+}
+
+/**
+ * Renders the correct answer and the student's answer for one question.
+ */
+export function QuizAnswerReview({
+	question,
+	answer,
+}: {
+	question: Quiz;
+	answer: Anwser;
+}) {
+	if (question.type === "text") {
+		return (
+			<ItemGroup>
+				<Item variant="secondary">
+					<ItemMedia variant="icon">
+						<CheckIcon />
+					</ItemMedia>
+					<ItemContent>
+						<ItemTitle>{question.anwser}</ItemTitle>
+						<ItemDescription>Correct answer</ItemDescription>
+					</ItemContent>
+				</Item>
+				<Item variant="outline">
+					<ItemMedia variant="icon">
+						<PenIcon />
+					</ItemMedia>
+					<ItemContent>
+						<ItemTitle>{answer.anwser || "No answer given"}</ItemTitle>
+						<ItemDescription>Student's answer</ItemDescription>
+					</ItemContent>
+				</Item>
+			</ItemGroup>
+		);
+	}
+
+	const choices =
+		question.type === "choices" ? question.choices : question.options;
+	const correctChoices =
+		question.type === "choices" ? question.anwser : [question.anwser];
+	const studentChoices =
+		answer.type === "choices" ? answer.anwser : [answer.anwser];
+
+	return (
+		<ItemGroup>
+			{choices.map((choice) => {
+				const isCorrect = correctChoices.includes(choice);
+				const isPicked = studentChoices.includes(choice);
+				return (
+					<Item key={choice} variant={isCorrect ? "secondary" : "outline"}>
+						<ItemMedia variant="icon">
+							{isCorrect ? <CheckIcon /> : <XIcon />}
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>{choice}</ItemTitle>
+						</ItemContent>
+						{isPicked && (
+							<ColorBadge variant="info">Student's answer</ColorBadge>
+						)}
+						{isCorrect && <ColorBadge variant="success">Correct</ColorBadge>}
+					</Item>
+				);
+			})}
+		</ItemGroup>
+	);
+}
 
 function AnswerRow({ label, correct }: { label: string; correct: boolean }) {
 	return (

@@ -148,25 +148,39 @@ export const quizRouter = {
 				}
 			}
 		}),
-	grade: getRolesProcedure(["teacher"])
+	studentAnswers: getRolesProcedure(["teacher", "scheduler", "admin"])
+		.input(z.object({ studentId: z.string() }))
+		.handler(async ({ input }) => {
+			return await getAPI(
+				"db-core-quiz-student-answers",
+				db
+					.select({
+						id: schema.answer.id,
+						status: schema.answer.status,
+						answer: schema.answer.answer,
+						createdAt: schema.answer.createdAt,
+						updatedAt: schema.answer.updatedAt,
+						lessonId: schema.lesson.id,
+						lessonName: schema.lesson.name,
+						quiz: schema.lesson.quiz,
+					})
+					.from(schema.answer)
+					.innerJoin(schema.lesson, eq(schema.answer.lessonId, schema.lesson.id))
+					.where(eq(schema.answer.studentId, input.studentId))
+					.orderBy(schema.answer.createdAt),
+				[],
+			);
+		}),
+	grade: getRolesProcedure(["teacher", "scheduler", "admin"])
 		.input(
 			z.object({
-				slotId: z.string(),
+				studentId: z.string(),
+				lessonId: z.string(),
 				answerId: z.string(),
 				status: z.enum(["correct", "partially_correct", "wrong"]),
 			}),
 		)
-		.handler(async ({ input, context }) => {
-			const slot = await tryAPI(
-				"db-core-quiz-grade-slot",
-				db.query.slot.findFirst({
-					where: { id: input.slotId },
-					columns: { studentId: true, teacherId: true, lessonId: true },
-				}),
-			);
-			if (!slot || slot.teacherId !== context.user.id)
-				throw getError("FORBIDDEN", "You cannot grade this answer");
-
+		.handler(async ({ input }) => {
 			await tryAPI(
 				"db-core-quiz-grade-update",
 				db
@@ -175,8 +189,8 @@ export const quizRouter = {
 					.where(
 						and(
 							eq(schema.answer.id, input.answerId),
-							eq(schema.answer.studentId, slot.studentId ?? ""),
-							eq(schema.answer.lessonId, slot.lessonId),
+							eq(schema.answer.studentId, input.studentId),
+							eq(schema.answer.lessonId, input.lessonId),
 						),
 					),
 			);
@@ -184,21 +198,12 @@ export const quizRouter = {
 	retake: getRolesProcedure(["teacher", "scheduler", "admin"])
 		.input(
 			z.object({
-				slotId: z.string(),
+				studentId: z.string(),
+				lessonId: z.string(),
 				questionIds: z.array(z.string()).min(1),
 			}),
 		)
-		.handler(async ({ input, context }) => {
-			const slot = await tryAPI(
-				"db-core-quiz-retake-slot",
-				db.query.slot.findFirst({
-					where: { id: input.slotId },
-					columns: { studentId: true, teacherId: true, lessonId: true },
-				}),
-			);
-			if (!slot || slot.teacherId !== context.user.id)
-				throw getError("FORBIDDEN", "You cannot retake this quiz");
-
+		.handler(async ({ input }) => {
 			for (const questionId of input.questionIds) {
 				await tryAPI(
 					"db-core-quiz-retake-update",
@@ -207,8 +212,8 @@ export const quizRouter = {
 						.set({ status: "retake" })
 						.where(
 							and(
-								eq(schema.answer.studentId, slot.studentId ?? ""),
-								eq(schema.answer.lessonId, slot.lessonId),
+								eq(schema.answer.studentId, input.studentId),
+								eq(schema.answer.lessonId, input.lessonId),
 								sql`${schema.answer.answer}->>'questionId' = ${questionId}`,
 							),
 						),
