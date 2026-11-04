@@ -43,6 +43,32 @@ import type { API_Returns } from "@/lib/api";
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 type SlotStatus = SlotData["status"];
 
+export function RequestRescheduleButton({ slot }: { slot: SlotData }) {
+	const { mutate, isPending } = useMutation(
+		api.core.slot.requestReschedule.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([
+					api.core.slot.get.queryKey({ input: { id: slot.id } }),
+					api.core.slot.list.queryKey(),
+				]);
+				toast.success({ title: "Reschedule requested" });
+			},
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending || slot.status === "request_reschedule"}
+			onClick={() => mutate({ id: slot.id })}
+		>
+			{isPending ? <Spinner /> : <RefreshCwIcon />}
+			Request Reschedule
+		</Button>
+	);
+}
+
 export function SlotActions({ slot }: { slot: SlotData }) {
 	const router = useRouter();
 
@@ -97,13 +123,6 @@ export function SlotActions({ slot }: { slot: SlotData }) {
 						>
 							<CheckCheckIcon />
 							Mark as Attended
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							disabled={slot.status === "request_reschedule"}
-							onClick={() => setStatus("request_reschedule")}
-						>
-							<RefreshCwIcon />
-							Request Reschedule
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>

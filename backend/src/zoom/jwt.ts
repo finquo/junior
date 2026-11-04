@@ -15,9 +15,11 @@ export function timingSafeEqual(a: string, b: string) {
 }
 
 export async function generateZoomToken(
-	sessionName: string,
-	role: 1 | 0 = 0,
-	identity = "guest",
+	data: {
+		id: string;
+		user: string;
+	},
+	role: "host" | "guest",
 ) {
 	const iat = Math.round(Date.now() / 1000) - 30;
 	const exp = iat + 60 * 60 * 2;
@@ -25,9 +27,12 @@ export async function generateZoomToken(
 	return sign(
 		{
 			app_key: process.env.ZOOM_SDK_KEY,
-			tpc: sessionName,
-			role_type: role,
-			user_identity: identity,
+			tpc: data.id,
+			session_key: data.id,
+			role_type: role === "host" ? 1 : 0,
+			user_key: data.user,
+			user_identity: data.user,
+			cloud_recording_option: 1,
 			version: 1,
 			iat,
 			exp,

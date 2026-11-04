@@ -1,5 +1,13 @@
-import { db } from "@/services";
 import { NotificationTemplate } from "./template/notification";
+
+type SlotNotification = {
+	startTime: Date;
+	lessonName: string;
+	joinLink: string;
+	student?: { name: string; phoneNumber: string | null };
+	teacher?: { name: string; phoneNumber: string | null };
+	scheduler?: { name: string; phoneNumber: string | null };
+};
 
 const formatSlotTime = (date: Date) =>
 	new Intl.DateTimeFormat("en-IN", {
@@ -13,50 +21,13 @@ const formatSlotTime = (date: Date) =>
 		timeZone: "Asia/Kolkata",
 	}).format(date);
 
-export const notifySlotCreated = async (slotId: string, appUrl: string) => {
-	const slot = await db.query.slot.findFirst({
-		where: { id: slotId },
-		columns: { startTime: true },
-		with: {
-			lesson: { columns: { name: true } },
-			student: {
-				with: { user: { columns: { name: true, phoneNumber: true } } },
-			},
-			teacher: {
-				with: { user: { columns: { name: true, phoneNumber: true } } },
-			},
-			scheduler: {
-				with: { user: { columns: { name: true, phoneNumber: true } } },
-			},
-		},
-	});
-
-	if (!slot) return;
-
-	const when = formatSlotTime(slot.startTime);
-	const lessonName = slot.lesson?.name ?? "a class";
-	const studentName = slot.student?.user?.name ?? "the student";
-	const teacherName = slot.teacher?.user?.name ?? "the teacher";
-	const joinLink = `${appUrl.replace(/\/+$/, "")}/call/${slotId}`;
-
-	const targets = [
-		{
-			number: slot.student?.user?.phoneNumber,
-			title: "Class scheduled",
-			message: `${lessonName} with ${teacherName} on ${when} (IST). Join: ${joinLink}`,
-		},
-		{
-			number: slot.teacher?.user?.phoneNumber,
-			title: "New class scheduled",
-			message: `${lessonName} with ${studentName} on ${when} (IST). Join: ${joinLink}`,
-		},
-		{
-			number: slot.scheduler?.user?.phoneNumber,
-			title: "Class scheduled",
-			message: `${lessonName}: ${studentName} with ${teacherName} on ${when} (IST). Join: ${joinLink}`,
-		},
-	];
-
+const sendAll = async (
+	targets: {
+		number: string | null | undefined;
+		title: string;
+		message: string;
+	}[],
+) => {
 	await Promise.allSettled(
 		targets.map(async (target) => {
 			const number = target.number?.replace(/\D/g, "");
@@ -65,61 +36,65 @@ export const notifySlotCreated = async (slotId: string, appUrl: string) => {
 			try {
 				await NotificationTemplate(number, target.title, target.message);
 			} catch (error) {
-				console.error("[notify-slot-created]", target.title, error);
+				console.error("[notify-slot]", target.title, error);
 			}
 		}),
 	);
 };
 
-export const notifySlotUpdated = async (slotId: string, appUrl: string) => {
-	const slot = await db.query.slot.findFirst({
-		where: { id: slotId },
-		columns: { startTime: true },
-		with: {
-			lesson: { columns: { name: true } },
-			student: {
-				with: { user: { columns: { name: true } } },
-			},
-			teacher: {
-				with: { user: { columns: { name: true, phoneNumber: true } } },
-			},
-			scheduler: {
-				with: { user: { columns: { name: true, phoneNumber: true } } },
-			},
-		},
-	});
+export const notifySlotCreated = async ({
+	startTime,
+	lessonName,
+	joinLink,
+	student,
+	teacher,
+	scheduler,
+}: SlotNotification) => {
+	const when = formatSlotTime(startTime);
+	const studentName = student?.name ?? "the student";
+	const teacherName = teacher?.name ?? "the teacher";
 
-	if (!slot) return;
-
-	const when = formatSlotTime(slot.startTime);
-	const lessonName = slot.lesson?.name ?? "a class";
-	const studentName = slot.student?.user?.name ?? "the student";
-	const teacherName = slot.teacher?.user?.name ?? "the teacher";
-	const joinLink = `${appUrl.replace(/\/+$/, "")}/call/${slotId}`;
-
-	const targets = [
+	await sendAll([
 		{
-			number: slot.teacher?.user?.phoneNumber,
+			number: student?.phoneNumber,
+			title: "Class scheduled",
+			message: `${lessonName} with ${teacherName} on ${when} (IST). Join: ${joinLink}`,
+		},
+		{
+			number: teacher?.phoneNumber,
+			title: "New class scheduled",
+			message: `${lessonName} with ${studentName} on ${when} (IST). Join: ${joinLink}`,
+		},
+		{
+			number: scheduler?.phoneNumber,
+			title: "Class scheduled",
+			message: `${lessonName}: ${studentName} with ${teacherName} on ${when} (IST). Join: ${joinLink}`,
+		},
+	]);
+};
+
+export const notifySlotUpdated = async ({
+	startTime,
+	lessonName,
+	joinLink,
+	student,
+	teacher,
+	scheduler,
+}: SlotNotification) => {
+	const when = formatSlotTime(startTime);
+	const studentName = student?.name ?? "the student";
+	const teacherName = teacher?.name ?? "the teacher";
+
+	await sendAll([
+		{
+			number: teacher?.phoneNumber,
 			title: "Class rescheduled",
 			message: `${lessonName} with ${studentName} on ${when} (IST). Join: ${joinLink}`,
 		},
 		{
-			number: slot.scheduler?.user?.phoneNumber,
+			number: scheduler?.phoneNumber,
 			title: "Class rescheduled",
 			message: `${lessonName}: ${studentName} with ${teacherName} on ${when} (IST). Join: ${joinLink}`,
 		},
-	];
-
-	await Promise.allSettled(
-		targets.map(async (target) => {
-			const number = target.number?.replace(/\D/g, "");
-			if (!number) return;
-
-			try {
-				await NotificationTemplate(number, target.title, target.message);
-			} catch (error) {
-				console.error("[notify-slot-updated]", target.title, error);
-			}
-		}),
-	);
+	]);
 };

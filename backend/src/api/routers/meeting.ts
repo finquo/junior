@@ -19,7 +19,14 @@ export const meetingRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_ID, 0, "guest"),
+					token: await generateZoomToken(
+						{
+							id: DEMO_ID,
+							title: DEMO_ID,
+							user: crypto.randomUUID(),
+						},
+						0,
+					),
 				} as const;
 			}
 
@@ -29,6 +36,7 @@ export const meetingRouter = {
 					where: { id: input.id },
 					columns: {
 						id: true,
+						lessonId: true,
 						meetingLink: true,
 						startTime: true,
 						expectedEndTime: true,
@@ -65,7 +73,14 @@ export const meetingRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(slot.id, 0, "guest"),
+				token: await generateZoomToken(
+					{
+						id: slot.id,
+						title: slot.lessonId,
+						user: crypto.randomUUID(),
+					},
+					0,
+				),
 			} as const;
 		}),
 };

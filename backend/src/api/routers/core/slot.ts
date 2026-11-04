@@ -5,7 +5,7 @@ import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { notifySlotCreated, notifySlotUpdated } from "@/chat/notify";
 import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
-import { InsertSlotSchema, SelectSlotSchema, UpdateSlotSchema } from "@/db/zod";
+import { InsertSlotSchema, UpdateSlotSchema } from "@/db/zod";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 import {
@@ -38,11 +38,11 @@ export const slotRouter = {
 		)
 		.handler(async ({ input, context }) => {
 			const role = MapRole(context.role, {
-				admin: 1,
-				scheduler: 1,
-				teacher: 1,
-				student: 0,
-				qa_auditor: 0,
+				admin: "host",
+				scheduler: "host",
+				teacher: "host",
+				student: "guest",
+				qa_auditor: "guest",
 			} as const);
 
 			// Authenticated demo sandbox. Remove this branch before deploying.
@@ -54,7 +54,13 @@ export const slotRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(DEMO_ID, role, context.role),
+					token: await generateZoomToken(
+						{
+							id: DEMO_ID,
+							user: context.user.id,
+						},
+						role,
+					),
 				} as const;
 			}
 
@@ -68,6 +74,7 @@ export const slotRouter = {
 						startTime: true,
 						expectedEndTime: true,
 						endTime: true,
+						lessonId: true,
 						studentId: true,
 						teacherId: true,
 						schedulerId: true,
@@ -117,50 +124,79 @@ export const slotRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(slot.id, role, context.role),
+				token: await generateZoomToken(
+					{
+						id: slot.id,
+						user: context.user.id,
+					},
+					role,
+				),
 			} as const;
 		}),
 	end: getRolesProcedure(["admin", "scheduler"])
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ input, context }) => {
-			const slot = await tryAPI(
-				"db-core-end-slot-find",
-				db.query.slot.findFirst({
-					where: MapRole(context.role, {
-						admin: { id: input.id },
-						scheduler: { id: input.id, schedulerId: context.user.id },
+			let startTime = new Date();
+
+			if (input.id !== DEMO_ID) {
+				const slot = await tryAPI(
+					"db-core-end-slot-find",
+					db.query.slot.findFirst({
+						where: MapRole(context.role, {
+							admin: { id: input.id },
+							scheduler: { id: input.id, schedulerId: context.user.id },
+						}),
+						columns: { id: true, startTime: true, expectedEndTime: true },
 					}),
-					columns: { id: true },
-				}),
-			);
-			if (!slot) throw getError("NOT_FOUND", "Slot not found");
+				);
+				if (!slot) throw getError("NOT_FOUND", "Slot not found");
+				startTime = slot.startTime;
+			}
 
 			const zoomAPI = await getZoomAPI();
 
-			if (endRecordingBeforeStopping) {
-				const { error } = await zoomAPI("/sessions/:sessionId/events", {
-					params: { sessionId: slot.id },
-					body: { method: "recording.stop" },
-				});
-
-				if (error)
-					throw getError(
-						"INTERNAL_SERVER_ERROR",
-						`Zoom stop recording failed (${error.status})`,
-						error,
-					);
-			}
-
-			const { error } = await zoomAPI("@delete/sessions/:sessionId", {
-				params: { sessionId: slot.id },
+			const { data: list, error: listError } = await zoomAPI("/sessions", {
+				query: {
+					type: "past",
+					session_name: input.id,
+					from: startTime,
+				},
 			});
 
-			if (error)
+			if (listError)
 				throw getError(
 					"INTERNAL_SERVER_ERROR",
-					`Zoom end session failed (${error.status})`,
-					error,
+					`Zoom list sessions failed (${listError.status})`,
+					listError,
 				);
+
+			const sessions = list.sessions ?? [];
+
+			if (!sessions.length)
+				throw getError("NOT_FOUND", "No Zoom session found for this slot");
+
+			for (const session of sessions) {
+				const { error } = await zoomAPI(
+					"/sessions/:sessionId/livestream/status",
+					{
+						params: { sessionId: session.id },
+						body: {
+							action: "stop",
+						},
+					},
+				);
+
+				if (error) console.error(error);
+
+				const { error: error2 } = await zoomAPI("/sessions/:sessionId/status", {
+					params: { sessionId: session.id },
+					body: {
+						action: "end",
+					},
+				});
+
+				if (error2) console.error(error2);
+			}
 
 			return { ended: true } as const;
 		}),
@@ -316,13 +352,48 @@ export const slotRouter = {
 				db.insert(schema.slot).values(input).returning(),
 			);
 
-			if (created !== undefined && created[0] !== undefined) {
-				try {
-					const appUrl = new URL(context.req.url).origin;
-					await notifySlotCreated(created[0].id, appUrl);
-				} catch (error) {
-					console.error("[core-create-slot-notify]", error);
-				}
+			const slot = created?.[0];
+			if (!slot) return created;
+
+			try {
+				const lesson = await tryAPI(
+					"db-core-create-slot-lesson",
+					db.query.lesson.findFirst({
+						where: { id: slot.lessonId },
+						columns: { name: true },
+					}),
+				);
+				const users = await getAPI(
+					"db-core-create-slot-users",
+					db
+						.select({
+							id: schema.user.id,
+							name: schema.user.name,
+							phoneNumber: schema.user.phoneNumber,
+						})
+						.from(schema.user)
+						.where(
+							inArray(
+								schema.user.id,
+								[slot.studentId, slot.teacherId, slot.schedulerId].filter(
+									(id): id is string => Boolean(id),
+								),
+							),
+						),
+					[],
+				);
+				const userById = new Map(users.map((user) => [user.id, user]));
+
+				await notifySlotCreated({
+					startTime: slot.startTime,
+					lessonName: lesson?.name ?? "a class",
+					joinLink: `${new URL(context.req.url).origin}/call/${slot.id}`,
+					student: userById.get(slot.studentId ?? ""),
+					teacher: userById.get(slot.teacherId ?? ""),
+					scheduler: userById.get(slot.schedulerId ?? ""),
+				});
+			} catch (error) {
+				console.error("[core-create-slot-notify]", error);
 			}
 
 			return created;
@@ -405,42 +476,66 @@ export const slotRouter = {
 					)
 					.returning(),
 			);
-		}),
-	reschedule: getRolesProcedure(["admin", "scheduler"])
-		.input(
-			UpdateSlotSchema.omit({
-				schedulerId: true,
-				createdAt: true,
-				updatedAt: true,
-				endTime: true,
-			})
-				.merge(
-					SelectSlotSchema.pick({
-						id: true,
-						startTime: true,
-						expectedEndTime: true,
-					}),
-				)
-				.refine((data) => data.startTime < data.expectedEndTime, {
-					message: "startTime must be before expectedEndTime",
-				}),
-		)
-		.handler(async ({ input, context }) => {
-			const { id, ...data } = input;
 
+			const slot = updated?.[0];
+			if (!slot || !(startTimeChanged || participantChanged)) return updated;
+
+			try {
+				const lesson = await tryAPI(
+					"db-core-update-slot-lesson",
+					db.query.lesson.findFirst({
+						where: { id: slot.lessonId },
+						columns: { name: true },
+					}),
+				);
+				const users = await getAPI(
+					"db-core-update-slot-users",
+					db
+						.select({
+							id: schema.user.id,
+							name: schema.user.name,
+							phoneNumber: schema.user.phoneNumber,
+						})
+						.from(schema.user)
+						.where(
+							inArray(
+								schema.user.id,
+								[slot.studentId, slot.teacherId, slot.schedulerId].filter(
+									(id): id is string => Boolean(id),
+								),
+							),
+						),
+					[],
+				);
+				const userById = new Map(users.map((user) => [user.id, user]));
+
+				await notifySlotUpdated({
+					startTime: slot.startTime,
+					lessonName: lesson?.name ?? "a class",
+					joinLink: `${new URL(context.req.url).origin}/call/${id}`,
+					student: userById.get(slot.studentId ?? ""),
+					teacher: userById.get(slot.teacherId ?? ""),
+					scheduler: userById.get(slot.schedulerId ?? ""),
+				});
+			} catch (error) {
+				console.error("[core-update-slot-notify]", error);
+			}
+
+			return updated;
+		}),
+	requestReschedule: getRolesProcedure(["teacher"])
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
 			return await tryAPI(
-				"db-core-reschedule-slot",
+				"db-core-request-reschedule-slot",
 				db
 					.update(schema.slot)
-					.set(data)
+					.set({ status: "request_reschedule" })
 					.where(
-						MapRole(context.role, {
-							admin: eq(schema.slot.id, id),
-							scheduler: and(
-								eq(schema.slot.id, id),
-								eq(schema.slot.schedulerId, context.user.id),
-							),
-						}),
+						and(
+							eq(schema.slot.id, input.id),
+							eq(schema.slot.teacherId, context.user.id),
+						),
 					)
 					.returning(),
 			);
@@ -518,6 +613,7 @@ export const slotRouter = {
 		.input(
 			z.object({
 				teacherId: z.string(),
+				excludeSlotId: z.string().optional(),
 				date: z.coerce.date().transform((d) => {
 					const targetDate = new Date(d);
 					const dayKey = getDaykey(targetDate.getDay());

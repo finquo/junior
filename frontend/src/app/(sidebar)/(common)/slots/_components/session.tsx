@@ -4,12 +4,11 @@ import { langFlag, langName } from "language-emoji";
 import {
 	AudioLinesIcon,
 	CalendarClockIcon,
-	CheckCheckIcon,
 	ClockIcon,
 	ExternalLinkIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
-	PlayIcon,
+	PhoneOffIcon,
 	ScrollTextIcon,
 	UserRoundIcon,
 	VideoIcon,
@@ -55,7 +54,7 @@ import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { getInitials, snakeToTitleCase } from "@/lib/utils";
-import { SlotActions } from "./actions";
+import { RequestRescheduleButton, SlotActions } from "./actions";
 import { EndMeeting } from "./end-meeting";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
@@ -173,13 +172,7 @@ function DetailRow({
 	);
 }
 
-export function SessionProfile({
-	data,
-	edit,
-}: {
-	data: SlotData;
-	edit?: ReactNode;
-}) {
+export function SessionProfile({ data }: { data: SlotData }) {
 	const start = new Date(data.startTime);
 	const expectedEnd = new Date(data.expectedEndTime);
 	const durationMinutes = Math.round(
@@ -205,7 +198,6 @@ export function SessionProfile({
 
 				<CardAction>
 					<ButtonGroup>
-						{edit}
 						<Button size="sm" asChild>
 							<a href={`/call/${data.id}`} target="_blank" rel="noreferrer">
 								<VideoIcon />
