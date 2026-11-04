@@ -26,7 +26,7 @@ export function EndMeeting({
 	label?: string;
 }) {
 	const { mutate, isPending } = useMutation(
-		api.core.slot.end.mutationOptions({
+		api.meeting.end.mutationOptions({
 			onSuccess: () => {
 				toast.success({ title: "Meeting ended" });
 				refetchAPIs([api.core.slot.get.queryKey({ input: { id: slotId } })]);

@@ -33,7 +33,7 @@ function SlotLog({ slotId }: { slotId: string }) {
 		data = [],
 		isPending,
 		isError,
-	} = useQuery(api.core.slot.log.queryOptions({ input: { id: slotId } }));
+	} = useQuery(api.meeting.log.queryOptions({ input: { id: slotId } }));
 
 	if (isError) {
 		return (

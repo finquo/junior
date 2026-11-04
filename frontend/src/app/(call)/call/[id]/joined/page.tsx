@@ -17,7 +17,7 @@ function Joined({ id }: { id: string }) {
 	const { camera, mic, virtualBackground } = useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
-		api.core.slot.join.queryOptions({
+		api.meeting.join.queryOptions({
 			input: { id },
 			refetchOnWindowFocus: false,
 			refetchOnReconnect: false,

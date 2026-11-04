@@ -156,7 +156,7 @@ function CallGate({ id }: { id: string }) {
 	const [joining, setJoining] = useState(false);
 
 	const memberPreflight = useQuery(
-		api.core.slot.join.queryOptions({
+		api.meeting.join.queryOptions({
 			input: { id },
 			enabled: Boolean(user),
 			refetchOnWindowFocus: false,
@@ -164,7 +164,7 @@ function CallGate({ id }: { id: string }) {
 		}),
 	);
 	const guestPreflight = useQuery(
-		api.meeting.join.queryOptions({
+		api.meeting.joinAsGuest.queryOptions({
 			input: { id },
 			enabled: !isPending && !user,
 			refetchOnWindowFocus: false,

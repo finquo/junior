@@ -17,7 +17,7 @@ export function timingSafeEqual(a: string, b: string) {
 export async function generateZoomToken(
 	data: {
 		id: string;
-		user: string;
+		user?: string;
 	},
 	role: "host" | "guest",
 ) {

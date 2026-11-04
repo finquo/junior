@@ -15,7 +15,7 @@ function Guest({ id }: { id: string }) {
 	const { camera, mic, virtualBackground } = useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
-		api.meeting.join.queryOptions({
+		api.meeting.joinAsGuest.queryOptions({
 			input: { id },
 			refetchOnWindowFocus: false,
 			refetchOnReconnect: false,
