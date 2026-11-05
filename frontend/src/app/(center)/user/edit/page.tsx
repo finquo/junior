@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { api } from "@/hooks/api";
 import { authClient, useAuth } from "@/hooks/auth";
 
 const profileFormSchema = z.object({
@@ -34,8 +35,12 @@ const profileFormSchema = z.object({
 });
 
 export default function ProfileEditPage() {
-	const { data } = useAuth<true>();
+	const { data, refetch } = useAuth<true>();
 	const [resetKey, setResetKey] = useState(0);
+
+	const { mutateAsync: updatePhoneNumber } = useMutation(
+		api.common.updatePhoneNumber.mutationOptions(),
+	);
 
 	const { mutate: updateProfile, isPending: isSaving } = useMutation({
 		mutationKey: ["update-profile"],
@@ -46,15 +51,19 @@ export default function ProfileEditPage() {
 		}: {
 			name: string;
 			image?: string | null;
-			phoneNumber?: string;
+			phoneNumber: string | null;
 		}) => {
 			const { data: resData, error } = await authClient.updateUser({
 				name: name.trim(),
 				image: image === null ? null : image || undefined,
-				phoneNumber: phoneNumber?.trim() || null,
 			});
 
 			if (error) throw error;
+
+			if (phoneNumber !== (data?.phoneNumber ?? null)) {
+				await updatePhoneNumber({ phoneNumber });
+				refetch();
+			}
 
 			return resData;
 		},
@@ -83,7 +92,7 @@ export default function ProfileEditPage() {
 		onSubmit: async ({ value }) => {
 			updateProfile({
 				name: value.name,
-				phoneNumber: value.phoneNumber,
+				phoneNumber: value.phoneNumber ?? null,
 				image: value.avatar,
 			});
 		},

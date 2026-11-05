@@ -1,5 +1,7 @@
-import { Countries, Currencies, Languages } from "utils";
+import { eq } from "drizzle-orm";
+import { Countries, Currencies, Languages, PhoneNumberZod } from "utils";
 import z from "zod";
+import { schema } from "@/db";
 import { db } from "@/services";
 import { protectedProcedure, publicProcedure, tryAPI } from "../procedure";
 
@@ -98,6 +100,25 @@ export const commonRouter = {
 						programInfo: true,
 					},
 				}),
+			);
+		}),
+	updatePhoneNumber: protectedProcedure
+		.input(
+			z.object({
+				phoneNumber: PhoneNumberZod.nullable(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			return await tryAPI(
+				"db-common-update-phone-number",
+				db
+					.update(schema.user)
+					.set({
+						phoneNumber: input.phoneNumber,
+						phoneNumberVerified: false,
+					})
+					.where(eq(schema.user.id, context.user.id))
+					.returning(),
 			);
 		}),
 	getLanguages: publicProcedure.handler(() => Languages),
