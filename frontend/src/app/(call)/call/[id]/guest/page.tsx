@@ -12,7 +12,8 @@ import { VideoChat } from "../../_components/zoom";
 
 function Guest({ id }: { id: string }) {
 	const router = useRouter();
-	const { camera, mic, virtualBackground } = useJoinPreferences();
+	const { camera, mic, virtualBackground, cameraId, microphoneId, speakerId } =
+		useJoinPreferences();
 
 	const { data, isPending, isError, error, refetch } = useQuery(
 		api.meeting.joinAsGuest.queryOptions({
@@ -54,6 +55,9 @@ function Guest({ id }: { id: string }) {
 			disableVideo={!camera}
 			disableAudio={!mic}
 			virtualBackground={virtualBackground}
+			cameraId={cameraId}
+			microphoneId={microphoneId}
+			speakerId={speakerId}
 			onLeave={() => router.push(`/call/${id}/left` as "/")}
 			onEnd={() => router.push(`/call/${id}/ended` as "/")}
 		/>

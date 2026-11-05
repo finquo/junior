@@ -22,7 +22,6 @@ import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardAction,
@@ -50,42 +49,9 @@ import { useAuth } from "@/hooks/auth";
 import { getCallName, setCallName } from "../_components/call-name";
 import { CallNotice } from "../_components/call-notice";
 import { useJoinPreferences } from "../_components/call-preferences";
+import { CallPreviewPanel, useCallPreview } from "./_components/call-preview";
 
 const JOIN_WINDOW_MS = 10 * 60 * 1000;
-
-async function requestDevices(video: boolean, audio: boolean) {
-	if (!navigator.mediaDevices?.getUserMedia) {
-		toast.error({
-			title: "This browser cannot access your camera or microphone",
-		});
-		return;
-	}
-
-	const requests: Promise<MediaStream>[] = [];
-	if (video)
-		requests.push(navigator.mediaDevices.getUserMedia({ video: true }));
-	if (audio)
-		requests.push(navigator.mediaDevices.getUserMedia({ audio: true }));
-
-	const results = await Promise.allSettled(requests);
-	let failed = false;
-
-	for (const result of results) {
-		if (result.status === "fulfilled") {
-			for (const track of result.value.getTracks()) track.stop();
-		} else {
-			failed = true;
-		}
-	}
-
-	if (failed) {
-		toast.error({
-			title: "Camera or microphone permission was not granted",
-			description:
-				"You can still join and allow access from the in-call controls.",
-		});
-	}
-}
 
 function formatDateTime(value: Date | string) {
 	return new Date(value).toLocaleString([], {
@@ -152,6 +118,7 @@ function CallGate({ id }: { id: string }) {
 		virtualBackground,
 		setVirtualBackground,
 	} = useJoinPreferences();
+	const preview = useCallPreview();
 	const [guestName, setGuestName] = useState("");
 	const [joining, setJoining] = useState(false);
 
@@ -262,7 +229,6 @@ function CallGate({ id }: { id: string }) {
 			if (latest.data?.status !== "live") return;
 
 			setCallName(id, userName);
-			if (!companionActive) await requestDevices(camera, mic);
 
 			const target = user ? "joined" : "guest";
 			const search = window.location.search;
@@ -280,7 +246,7 @@ function CallGate({ id }: { id: string }) {
 				</CardTitle>
 				<CardDescription>
 					{isLive
-						? "We will ask for camera and microphone access when you join."
+						? "Turn on the camera or microphone to preview and choose devices before joining."
 						: "Join opens 10 minutes before the scheduled start."}
 				</CardDescription>
 				<CardAction>
@@ -289,7 +255,7 @@ function CallGate({ id }: { id: string }) {
 					</ColorBadge>
 				</CardAction>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="grid gap-4 md:grid-cols-2">
 				<ItemGroup className="gap-2">
 					<Item variant="muted" size="sm">
 						<ItemMedia variant="icon">
@@ -390,6 +356,8 @@ function CallGate({ id }: { id: string }) {
 						onCheckedChange={toggleMic}
 					/>
 				</ItemGroup>
+
+				{!companionActive && <CallPreviewPanel preview={preview} />}
 			</CardContent>
 			<CardFooter>
 				<Button

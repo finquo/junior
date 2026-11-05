@@ -103,6 +103,9 @@ export function VideoChat({
 	disableVideo,
 	disableAudio,
 	virtualBackground = false,
+	cameraId = null,
+	microphoneId = null,
+	speakerId = null,
 	onLeave,
 	onEnd,
 }: {
@@ -118,6 +121,9 @@ export function VideoChat({
 	disableVideo: boolean;
 	disableAudio: boolean;
 	virtualBackground?: boolean;
+	cameraId?: string | null;
+	microphoneId?: string | null;
+	speakerId?: string | null;
 	onLeave: () => void;
 	onEnd?: () => void;
 }) {
@@ -125,6 +131,11 @@ export function VideoChat({
 		disableVideo,
 		disableAudio,
 		virtualBackground,
+		videoOptions: { cameraId: cameraId ?? undefined },
+		audioOptions: {
+			microphoneId: microphoneId ?? undefined,
+			speakerId: speakerId ?? undefined,
+		},
 	}));
 	const { isError, isInSession, error } = useSession(
 		session,
@@ -683,6 +694,31 @@ export function VideoChat({
 						>
 							<div className="animatein hidden group-hover:block">
 								<FieldGroup className="gap-1.5 p-1.5">
+									<FieldLabel htmlFor="tile-audio-switch">
+										<Field className="h-10" orientation="horizontal">
+											<ItemMedia variant="icon">
+												{audioPending ? (
+													<Spinner />
+												) : isAudioOn ? (
+													<MicIcon />
+												) : (
+													<MicOffIcon />
+												)}
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>Audio</ItemTitle>
+											</ItemContent>
+											<ItemActions>
+												<Switch
+													id="tile-audio-switch"
+													aria-label="Audio"
+													checked={isAudioOn}
+													disabled={audioPending}
+													onCheckedChange={() => toggleMicrophone()}
+												/>
+											</ItemActions>
+										</Field>
+									</FieldLabel>
 									<FieldLabel htmlFor="tile-camera-switch">
 										<Field className="h-10" orientation="horizontal">
 											<ItemMedia variant="icon">
