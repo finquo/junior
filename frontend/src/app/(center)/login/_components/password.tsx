@@ -1,18 +1,18 @@
 "use client";
 
 import { useQueryState } from "nuqs";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MutationButton } from "@/hooks/button";
 import { getClientBaseUrl } from "@/hooks/url";
 import { authClient } from "@/lib/auth";
+import { PasswordField } from "./password-field";
 
 export const PasswordLogin = () => {
 	const [email, setEmail] = useQueryState("email", { defaultValue: "" });
-	const [password, setPassword] = useQueryState("password", {
-		defaultValue: "",
-	});
+	const [password, setPassword] = useState("");
 	const [redirect_to] = useQueryState("redirect_to", { defaultValue: "/me" });
 	const callbackURL = getClientBaseUrl(redirect_to);
 
@@ -32,13 +32,19 @@ export const PasswordLogin = () => {
 				},
 			}}
 			mutate={(mutate) => (
-				<>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						mutate();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="email">Email</FieldLabel>
 							<Input
 								id="email"
 								type="email"
+								autoComplete="email"
 								placeholder="name@example.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -46,30 +52,35 @@ export const PasswordLogin = () => {
 						</Field>
 						<Field>
 							<FieldLabel htmlFor="password">Password</FieldLabel>
-							<Input
+							<PasswordField
 								id="password"
-								type="password"
-								placeholder="super-secret"
+								autoComplete="current-password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={setPassword}
 							/>
 						</Field>
 					</FieldGroup>
-					<Button onClick={() => mutate()} disabled={!email || !password}>
+					<Button type="submit" disabled={!email || !password}>
 						Sign In
 					</Button>
-				</>
+				</form>
 			)}
 			isPending={<Button disabled>Signing In...</Button>}
 			isSuccess={<Button variant="outline">Redirecting...</Button>}
 			reTry={(mutate) => (
-				<>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						mutate();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="email">Email</FieldLabel>
 							<Input
 								id="email"
 								type="email"
+								autoComplete="email"
 								placeholder="name@example.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -77,23 +88,23 @@ export const PasswordLogin = () => {
 						</Field>
 						<Field>
 							<FieldLabel htmlFor="password">Password</FieldLabel>
-							<Input
+							<PasswordField
 								id="password"
-								type="text"
-								placeholder="super-secret"
+								autoComplete="current-password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={setPassword}
+								defaultVisible
 							/>
 						</Field>
 					</FieldGroup>
 					<Button
+						type="submit"
 						variant="destructive"
-						onClick={() => mutate()}
 						disabled={!email || !password}
 					>
 						Error! Try Again
 					</Button>
-				</>
+				</form>
 			)}
 		/>
 	);

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MutationButton } from "@/hooks/button";
 import { getClientBaseUrl } from "@/hooks/url";
 import { authClient } from "@/lib/auth";
+import { PasswordField } from "./password-field";
 
 export const CreateAccount = () => {
 	const [name, setName] = useState("");
@@ -34,13 +35,19 @@ export const CreateAccount = () => {
 				},
 			}}
 			mutate={(mutate) => (
-				<>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						mutate();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="name">Name</FieldLabel>
 							<Input
 								id="name"
-								type="name"
+								type="text"
+								autoComplete="name"
 								placeholder="Name"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
@@ -51,6 +58,7 @@ export const CreateAccount = () => {
 							<Input
 								id="email"
 								type="email"
+								autoComplete="email"
 								placeholder="name@example.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -58,30 +66,35 @@ export const CreateAccount = () => {
 						</Field>
 						<Field>
 							<FieldLabel htmlFor="password">Password</FieldLabel>
-							<Input
+							<PasswordField
 								id="password"
-								type="password"
-								placeholder="super-secret"
+								autoComplete="new-password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={setPassword}
 							/>
 						</Field>
 					</FieldGroup>
-					<Button onClick={() => mutate()} disabled={!email || !password}>
+					<Button type="submit" disabled={!name || !email || !password}>
 						Create Account
 					</Button>
-				</>
+				</form>
 			)}
 			isPending={<Button disabled>Signing In...</Button>}
 			isSuccess={<Button variant="outline">Redirecting...</Button>}
 			reTry={(mutate) => (
-				<>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						mutate();
+					}}
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="name">Name</FieldLabel>
 							<Input
 								id="name"
-								type="name"
+								type="text"
+								autoComplete="name"
 								placeholder="Name"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
@@ -92,6 +105,7 @@ export const CreateAccount = () => {
 							<Input
 								id="email"
 								type="email"
+								autoComplete="email"
 								placeholder="name@example.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -99,23 +113,23 @@ export const CreateAccount = () => {
 						</Field>
 						<Field>
 							<FieldLabel htmlFor="password">Password</FieldLabel>
-							<Input
+							<PasswordField
 								id="password"
-								type="text"
-								placeholder="super-secret"
+								autoComplete="new-password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={setPassword}
+								defaultVisible
 							/>
 						</Field>
 					</FieldGroup>
 					<Button
-						onClick={() => mutate()}
-						disabled={!email || !password}
+						type="submit"
 						variant="destructive"
+						disabled={!name || !email || !password}
 					>
 						Error! Try Again
 					</Button>
-				</>
+				</form>
 			)}
 		/>
 	);

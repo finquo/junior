@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lt, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { SwitchFunc } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
@@ -264,6 +264,19 @@ export const slotRouter = {
 			);
 
 			const slot = updated?.[0];
+
+			if (slot?.status === "attended" && slot.studentId) {
+				await tryAPI(
+					"db-core-update-slot-mark-attended-student",
+					db
+						.update(schema.student)
+						.set({
+							attendedLessons: sql`ARRAY(SELECT DISTINCT unnest(${schema.student.attendedLessons} || ARRAY[${slot.lessonId}]::text[]))`,
+						})
+						.where(eq(schema.student.id, slot.studentId)),
+				);
+			}
+
 			if (!slot || !(startTimeChanged || participantChanged)) return updated;
 
 			try {

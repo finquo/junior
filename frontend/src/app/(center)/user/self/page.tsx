@@ -22,6 +22,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { authClient, useAuth } from "@/hooks/auth";
+import { formatDate } from "@/lib/format";
 import { getInitials } from "@/lib/utils";
 
 export default function SelfPage() {
@@ -51,6 +52,26 @@ export default function SelfPage() {
 						<ItemContent>
 							<ItemTitle>Role</ItemTitle>
 							<ItemDescription>{user?.role}</ItemDescription>
+						</ItemContent>
+					</Item>
+					<Item size="xs">
+						<ItemContent>
+							<ItemTitle>Member Since</ItemTitle>
+							<ItemDescription>{formatDate(user?.createdAt)}</ItemDescription>
+						</ItemContent>
+					</Item>
+					<Item size="xs">
+						<ItemContent>
+							<ItemTitle>Email Verified</ItemTitle>
+							<ItemDescription>
+								{user?.emailVerified ? "Yes" : "No"}
+							</ItemDescription>
+						</ItemContent>
+					</Item>
+					<Item size="xs">
+						<ItemContent>
+							<ItemTitle>Last Updated</ItemTitle>
+							<ItemDescription>{formatDate(user?.updatedAt)}</ItemDescription>
 						</ItemContent>
 					</Item>
 				</ItemGroup>

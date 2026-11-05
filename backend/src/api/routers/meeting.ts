@@ -283,7 +283,7 @@ export const meetingRouter = {
 			);
 			if (!slot) throw getError("NOT_FOUND", "Slot not found");
 
-			const logs = await getAPI(
+			return await getAPI(
 				"db-core-slot-logs",
 				db.query.slotLog.findMany({
 					where: { slotId: slot.id },
@@ -291,12 +291,5 @@ export const meetingRouter = {
 				}),
 				[],
 			);
-
-			return logs.map((log) => ({
-				id: log.id,
-				createdAt: log.createdAt,
-				event: (log.data as { event?: string }).event ?? "unknown",
-				data: log.data,
-			}));
 		}),
 };

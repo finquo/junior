@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { AsteriskIcon } from "lucide-react";
 import { useParams } from "next/navigation";
+import { getRelateTime } from "utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
 	Card,
@@ -16,6 +18,7 @@ import {
 	TraceCollapsibleContent,
 	TraceCollapsibleTrigger,
 	TraceDescription,
+	TraceIcon,
 	TraceLine,
 	TraceTitle,
 } from "@/components/ui/trace";
@@ -65,12 +68,17 @@ function SlotLog({ slotId }: { slotId: string }) {
 				)}
 				{data.map((log) => (
 					<Trace key={log.id}>
-						<TraceCollapsible>
+						<TraceCollapsible defaultOpen>
 							<TraceCollapsibleTrigger>
 								<TraceLine>
-									<TraceTitle>{log.event}</TraceTitle>
+									<TraceIcon>
+										<AsteriskIcon />
+									</TraceIcon>
+									<TraceTitle>
+										{log.category}: {log.event}
+									</TraceTitle>
 									<TraceDescription>
-										{formatDateTime(log.createdAt)}
+										{getRelateTime(log.createdAt)} ago
 									</TraceDescription>
 								</TraceLine>
 							</TraceCollapsibleTrigger>
