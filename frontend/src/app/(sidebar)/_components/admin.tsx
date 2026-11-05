@@ -5,6 +5,7 @@ import {
 	BriefcaseBusinessIcon,
 	CalendarHeartIcon,
 	ComponentIcon,
+	FolderOpenIcon,
 	GraduationCapIcon,
 	ListIcon,
 	PackageIcon,
@@ -202,6 +203,18 @@ export function SidebarConfig({
 							// 	api: api.sidebar.slots.queryOptions(),
 							// 	getLink: (id) => `/slots/${id}`,
 							// },
+						},
+						{
+							title: "Medias",
+							url: "/medias",
+							icon: <FolderOpenIcon />,
+							subItems: [
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/medias",
+								},
+							],
 						},
 						{
 							title: "Payments",

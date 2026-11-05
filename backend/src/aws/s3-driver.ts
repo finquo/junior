@@ -112,7 +112,7 @@ export const s3Driver = defineDriver(
 					throw error;
 				}
 			},
-			async getKeys(base) {
+			async getKeys(base = "") {
 				const keys: string[] = [];
 				let token: string | undefined;
 				const s3Prefix = dirPath(base);

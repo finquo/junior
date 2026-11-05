@@ -28,6 +28,8 @@ async function getMediaArtifact(id: string, path: string) {
 	};
 }
 
+const normalizeMediaKey = (key: string) => key.replace(/:/g, "/");
+
 const toMediaPath = (id: string, key: string) =>
 	key.replace(`${id}:`, "").replace(/:/g, "/");
 
@@ -347,4 +349,70 @@ export const mediaRouter = {
 				),
 			);
 		}),
+
+	library: {
+		list: getRolesProcedure(["admin", "scheduler", "qa_auditor"]).handler(
+			async () => {
+				const keys = await getAPI(
+					"aws-s3-list-media-library-keys",
+					mediaStorage.getKeys(),
+					[],
+				);
+
+				const grouped = new Map<string, string[]>();
+				for (const raw of keys) {
+					const key = normalizeMediaKey(raw);
+					const slotId = key.split("/")[0];
+					if (!slotId || key === slotId) continue;
+
+					grouped.set(slotId, [...(grouped.get(slotId) ?? []), key]);
+				}
+
+				return [...grouped].map(([slotId, files]) => ({ slotId, files }));
+			},
+		),
+
+		files: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
+			.input(z.object({ id: z.string().min(1) }))
+			.handler(async ({ input }) => {
+				const keys = await getAPI(
+					"aws-s3-list-media-library-files",
+					mediaStorage.getKeys(input.id),
+					[],
+				);
+
+				return keys.map(normalizeMediaKey);
+			}),
+
+		download: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
+			.input(
+				z.object({
+					key: z
+						.string()
+						.min(1)
+						.refine((key) => key.includes("/") && !key.includes(".."), {
+							message: "Key must be <slotId>/<file>",
+						}),
+				}),
+			)
+			.handler(async ({ input }) => {
+				const meta = await mediaStorage.getMeta(input.key);
+				if (!meta) throw getError("NOT_FOUND", `File not found: ${input.key}`);
+
+				const url = await tryAPI(
+					"aws-s3-presign-library-download",
+					getMediaDownloadURL(input.key),
+				);
+				if (!url)
+					throw getError(
+						"INTERNAL_SERVER_ERROR",
+						"Failed to presign download URL",
+					);
+
+				return {
+					url,
+					name: input.key.split("/").pop() ?? input.key,
+				};
+			}),
+	},
 };
