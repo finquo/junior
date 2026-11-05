@@ -1,11 +1,17 @@
 import z from "zod";
 import { summarizeTranscript } from "@/ai/summarize";
 import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
+import { createSplitAudioJob, createToAudioJob } from "@/aws/job";
 import {
-	createSplitAudioJob,
-	createToAudioJob,
+	byNumber,
+	CHUNK_LENGTH_SECONDS,
+	getMediaArtifact,
 	getMediaDownloadURL,
+	isAllowedAssetPath,
+	mediaKey,
 	mediaStorage,
+	normalizeMediaKey,
+	toMediaPath,
 } from "@/aws/media";
 import { notifySlotSummary } from "@/chat/notify";
 import { db } from "@/services";
@@ -18,57 +24,33 @@ type TranscriptSegment = {
 	endSecond: number;
 };
 
-async function getMediaArtifact(id: string, path: string) {
-	const meta = await mediaStorage.getMeta(`${id}/${path}`);
-	if (!meta) return null;
-
-	return {
-		path,
-		size: Number(meta.size ?? 0) || null,
-	};
-}
-
-const normalizeMediaKey = (key: string) => key.replace(/:/g, "/");
-
-const toMediaPath = (id: string, key: string) =>
-	key.replace(`${id}:`, "").replace(/:/g, "/");
-
-const STATIC_ASSET_PATHS = [
-	"video.mp4",
-	"audio.mp3",
-	"transcript/main.json",
-	"summary/main.json",
-	"summary/chunks.json",
-] as const;
-
-const isChunkAssetPath = (path: string) =>
-	/^(chunks\/.*_\d+\.[^.]+|transcript\/chunks\/\d+\.json)$/.test(path);
+const videoIndex = z.number().int().min(0).default(0);
 
 export const mediaRouter = {
 	jobs: {
 		toAudio: getRolesProcedure(["admin", "scheduler"])
-			.input(z.object({ id: z.string().min(1) }))
+			.input(z.object({ id: z.string().min(1), index: videoIndex }))
 			.handler(({ input }) =>
 				tryAPI(
 					"aws-mediaconvert-video-to-audio",
-					createToAudioJob({ id: input.id }),
+					createToAudioJob({ id: input.id, index: input.index }),
 				),
 			),
 
 		splitAudio: getRolesProcedure(["admin", "scheduler"])
-			.input(z.object({ id: z.string().min(1) }))
+			.input(z.object({ id: z.string().min(1), index: videoIndex }))
 			.handler(({ input }) =>
 				tryAPI(
 					"aws-mediaconvert-split-audio",
-					createSplitAudioJob({ id: input.id }),
+					createSplitAudioJob({ id: input.id, index: input.index }),
 				),
 			),
 	},
 
 	video: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
-			const key = `${input.id}/video.mp4`;
+			const key = `${input.id}/videos/${input.index}.mp4`;
 			const meta = await mediaStorage.getMeta(key);
 			if (!meta) throw getError("NOT_FOUND", `Video not found for ${input.id}`);
 
@@ -79,9 +61,9 @@ export const mediaRouter = {
 		}),
 
 	audio: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
-			const key = `${input.id}/audio.mp3`;
+			const key = `${input.id}/audios/${input.index}.mp3`;
 			const meta = await mediaStorage.getMeta(key);
 			if (!meta) throw getError("NOT_FOUND", `Audio not found for ${input.id}`);
 
@@ -93,11 +75,11 @@ export const mediaRouter = {
 
 	chunks: {
 		list: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
-			.input(z.object({ id: z.string().min(1) }))
+			.input(z.object({ id: z.string().min(1), index: videoIndex }))
 			.handler(async ({ input }) => {
 				const keys = await getAPI(
 					"aws-s3-list-audio-chunks",
-					mediaStorage.getKeys(`${input.id}/chunks/`),
+					mediaStorage.getKeys(`${input.id}/audio-chunks/${input.index}/`),
 					[],
 				);
 
@@ -106,35 +88,35 @@ export const mediaRouter = {
 	},
 
 	meta: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
-			const { id } = input;
+			const { id, index: n } = input;
 
 			const [chunkKeys, transcriptChunkKeys] = await Promise.all([
 				getAPI(
 					"aws-s3-list-audio-chunks",
-					mediaStorage.getKeys(`${id}/chunks/`),
+					mediaStorage.getKeys(`${id}/audio-chunks/${n}/`),
 					[],
 				),
 				getAPI(
 					"aws-s3-list-transcript-chunks",
-					mediaStorage.getKeys(`${id}/transcript/chunks/`),
+					mediaStorage.getKeys(`${id}/transcript-chunks/${n}/`),
 					[],
 				),
 			]);
 
 			const [video, audio, transcript, summary, chunkSummary] =
 				await Promise.all([
-					getMediaArtifact(id, "video.mp4"),
-					getMediaArtifact(id, "audio.mp3"),
-					getMediaArtifact(id, "transcript/main.json"),
+					getMediaArtifact(id, `videos/${n}.mp4`),
+					getMediaArtifact(id, `audios/${n}.mp3`),
+					getMediaArtifact(id, `transcript-single/${n}.json`),
 					getMediaArtifact(id, "summary/main.json"),
 					getMediaArtifact(id, "summary/chunks.json"),
 				]);
 
 			const chunkPaths = chunkKeys
 				.map((key) => toMediaPath(id, key))
-				.filter((path) => /_(\d+)\.[^.]+$/.test(path));
+				.filter((path) => /audio_chunk_\d{9}\.aac$/.test(path));
 
 			const transcriptChunkPaths = transcriptChunkKeys.map((key) =>
 				toMediaPath(id, key),
@@ -142,9 +124,9 @@ export const mediaRouter = {
 
 			const chunks = await Promise.all(
 				chunkPaths.map(async (path) => {
-					const number = path.match(/_(\d+)\.[^.]+$/)?.[1] ?? null;
+					const number = path.match(/audio_chunk_(\d{9})\.aac$/)?.[1] ?? null;
 					const transcriptPath = number
-						? `transcript/chunks/${number}.json`
+						? `transcript-chunks/${n}/${Number(number)}.json`
 						: null;
 					if (
 						!transcriptPath ||
@@ -167,15 +149,11 @@ export const mediaRouter = {
 	download: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
 		.input(z.object({ id: z.string().min(1), path: z.string().min(1) }))
 		.handler(async ({ input }) => {
-			const allowed =
-				(STATIC_ASSET_PATHS as readonly string[]).includes(input.path) ||
-				isChunkAssetPath(input.path);
-			if (!allowed)
+			if (!isAllowedAssetPath(input.path))
 				throw getError(
 					"INPUT_VALIDATION",
 					`Unknown media asset path for ${input.id}: ${input.path}`,
 				);
-
 			const key = `${input.id}/${input.path}`;
 			const meta = await mediaStorage.getMeta(key);
 			if (!meta)
@@ -198,9 +176,9 @@ export const mediaRouter = {
 		}),
 
 	summarize: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
-			const inputKey = `${input.id}/transcript/main.json`;
+			const inputKey = `${input.id}/transcript-single/${input.index}.json`;
 			const segments =
 				await mediaStorage.getItem<TranscriptSegment[]>(inputKey);
 			if (!segments)
@@ -228,14 +206,14 @@ export const mediaRouter = {
 		}),
 
 	summarizeChunks: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
 			const keys = await getAPI(
 				"aws-s3-list-transcript-chunks",
-				mediaStorage.getKeys(`${input.id}/transcript/chunks/`),
+				mediaStorage.getKeys(`${input.id}/transcript-chunks/${input.index}/`),
 				[],
 			);
-			keys.sort();
+			keys.sort(byNumber);
 
 			const transcripts = await Promise.all(
 				keys.map((key) => mediaStorage.getItem<TranscriptSegment[]>(key)),
@@ -327,27 +305,68 @@ export const mediaRouter = {
 		),
 
 	transcribeAudio: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(({ input }) =>
-			tryAPI("aws-transcribe-audio", transcribeAudio(`${input.id}/audio.mp3`)),
+			tryAPI(
+				"aws-transcribe-audio",
+				transcribeAudio(`${input.id}/audios/${input.index}.mp3`),
+			),
 		),
 
 	transcribeAudioChunks: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
 			const keys = await getAPI(
 				"aws-s3-list-audio-chunks",
-				mediaStorage.getKeys(`${input.id}/chunks/`),
+				mediaStorage.getKeys(`${input.id}/audio-chunks/${input.index}/`),
 				[],
 			);
 
-			const chunks = keys.filter((key) => /_(\d+)\.[^.]+$/.test(key));
+			const chunks = keys.filter((key) => /audio_chunk_\d{9}\.aac$/.test(key));
 
 			return Promise.all(
 				chunks.map((key) =>
 					tryAPI("aws-transcribe-audio-chunk", transcribeAudioChunk(key)),
 				),
 			);
+		}),
+
+	mergeChunks: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1), index: videoIndex }))
+		.handler(async ({ input }) => {
+			const keys = await getAPI(
+				"aws-s3-list-transcript-chunks",
+				mediaStorage.getKeys(`${input.id}/transcript-chunks/${input.index}/`),
+				[],
+			);
+			keys.sort(byNumber);
+
+			if (keys.length === 0)
+				throw getError(
+					"NOT_FOUND",
+					`Transcript chunks not found for ${input.id}/${input.index}`,
+				);
+
+			const chunks = await Promise.all(
+				keys.map((key) => mediaStorage.getItem<TranscriptSegment[]>(key)),
+			);
+
+			const segments = chunks.flatMap((chunk, position) =>
+				(chunk ?? []).map((segment) => ({
+					...segment,
+					startSecond: segment.startSecond + position * CHUNK_LENGTH_SECONDS,
+					endSecond: segment.endSecond + position * CHUNK_LENGTH_SECONDS,
+				})),
+			);
+
+			const outputKey = mediaKey(input.id, `transcript/${input.index}.json`);
+
+			await tryAPI(
+				"aws-s3-save-merged-transcript",
+				mediaStorage.setItem(outputKey, JSON.stringify(segments, null, 2)),
+			);
+
+			return { outputKey, segments };
 		}),
 
 	library: {

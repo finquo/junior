@@ -5,17 +5,17 @@ import { schema } from "@/db";
 import { db } from "@/services";
 import { zoomEvents } from "./webhook";
 
-const VIDEO_FILE = /^video(?:_(\d+))?\.mp4$/;
+const VIDEO_FILE = /^(\d+)\.mp4$/;
 
 function nextVideoIndex(keys: string[], sessionName: string) {
-	const prefix = `${sessionName}/`;
+	const prefix = `${sessionName}/videos/`;
 
 	const indexes = keys
 		.map((key) => key.replace(/:/g, "/"))
 		.filter((key) => key.startsWith(prefix))
 		.flatMap((key) => {
 			const match = VIDEO_FILE.exec(key.slice(prefix.length));
-			return match ? [Number(match[1] ?? 0)] : [];
+			return match ? [Number(match[1])] : [];
 		});
 
 	return indexes.length === 0 ? 0 : Math.max(...indexes) + 1;
@@ -70,10 +70,7 @@ export const zoomEventHandler = zoomEvents(
 				for (const [offset, downloadUrl] of downloadUrls.entries()) {
 					const index = start + offset;
 
-					const key =
-						index === 0
-							? `${sessionName}/video.mp4`
-							: `${sessionName}/video_${index}.mp4`;
+					const key = `${sessionName}/videos/${index}.mp4`;
 
 					console.log({ offset, downloadUrl, index, key });
 

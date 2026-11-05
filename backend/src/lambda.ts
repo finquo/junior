@@ -21,7 +21,7 @@ export const handler = async (event: any, context: LambdaContext) => {
 
 		const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
 
-		if (/\/chunks\/audio_\d+\.[^.]+$/.test(key))
+		if (/\/audio-chunks\/\d+\/audio_chunk_\d{9}\.aac$/.test(key))
 			return transcribeAudioChunk(key);
 
 		return transcribeAudio(key);

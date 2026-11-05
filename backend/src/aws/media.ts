@@ -1,22 +1,66 @@
-import {
-	CreateJobCommand,
-	type CreateJobCommandInput,
-	MediaConvertClient,
-} from "@aws-sdk/client-mediaconvert";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createStorage } from "unstorage";
 import { bucket } from "./bucket";
-import {
-	AWS_REGION,
-	MEDIA_BUCKET,
-	MEDIA_CONVERT_ENDPOINT,
-	MEDIA_CONVERT_QUEUE_ARN,
-	MEDIA_CONVERT_ROLE_ARN,
-} from "./config";
+import { MEDIA_BUCKET } from "./config";
 import { s3Driver, toS3Path } from "./s3-driver";
 
-const CHUNK_LENGTH_SECONDS = 120;
+export const CHUNK_LENGTH_SECONDS = 120;
+
+type MediaLayout = {
+	videos: `${number}.mp4`;
+	audios: `${number}.mp3`;
+	"audio-chunks": `${number}/audio_chunk_${string}.aac`;
+	"transcript-single": `${number}.json`;
+	"transcript-chunks": `${number}/${number}.json`;
+	transcript: `${number}.json`;
+	summary: "main.json" | "chunks.json";
+};
+
+type MediaFolder = keyof MediaLayout;
+
+type MediaPath<F extends MediaFolder = MediaFolder> = `${F}/${MediaLayout[F]}`;
+
+type MediaDir<F extends MediaFolder = MediaFolder> = `${F}/${number}`;
+
+type MediaKey<F extends MediaFolder = MediaFolder> =
+	`${string}/${MediaPath<F>}`;
+
+export const mediaKey = <F extends MediaFolder>(
+	id: string,
+	path: MediaPath<F>,
+) => `${id}/${path}` as MediaKey<F>;
+
+export const mediaDir = <F extends MediaFolder>(id: string, dir: MediaDir<F>) =>
+	`${id}/${dir}`;
+
+export const ALLOWED_ASSET_PATHS = [
+	/^videos\/\d+\.mp4$/,
+	/^audios\/\d+\.mp3$/,
+	/^audio-chunks\/\d+\/audio\.m3u8$/,
+	/^audio-chunks\/\d+\/audio_chunk_\d{9}\.aac$/,
+	/^transcript-single\/\d+\.json$/,
+	/^transcript-chunks\/\d+\/\d+\.json$/,
+	/^transcript\/\d+\.json$/,
+	/^summary\/main\.json$/,
+	/^summary\/chunks\.json$/,
+] satisfies RegExp[];
+
+export const isAllowedAssetPath = (path: string) =>
+	ALLOWED_ASSET_PATHS.some((pattern) => pattern.test(path));
+
+export const normalizeMediaKey = (key: string) => key.replace(/:/g, "/");
+
+export const toMediaPath = (id: string, key: string) => {
+	const normalized = normalizeMediaKey(key);
+	return normalized.startsWith(`${id}/`)
+		? normalized.slice(id.length + 1)
+		: normalized;
+};
+
+export const byNumber = (a: string, b: string) =>
+	(Number(a.match(/(\d+)\.json$/)?.[1]) || 0) -
+	(Number(b.match(/(\d+)\.json$/)?.[1]) || 0);
 
 /**
 	Media lives under its own prefix so the bucket can also host the
@@ -35,122 +79,28 @@ export const mediaStorage = createStorage({
 	driver: s3Driver({ bucket: MEDIA_BUCKET, prefix: MEDIA_PREFIX }),
 });
 
+type MediaArtifact = {
+	path: string;
+	size: number | null;
+};
+
+export async function getMediaArtifact(
+	id: string,
+	path: string,
+): Promise<MediaArtifact | null> {
+	const meta = await mediaStorage.getMeta(`${id}/${path}`);
+	if (!meta) return null;
+
+	return {
+		path,
+		size: Number(meta.size ?? 0) || null,
+	};
+}
+
 export function getMediaDownloadURL(key: string, expiresIn = 3600) {
 	return getSignedUrl(
 		bucket,
 		new GetObjectCommand({ Bucket: MEDIA_BUCKET, Key: mediaPath(key) }),
 		{ expiresIn },
 	);
-}
-
-const mediaConvert = new MediaConvertClient({
-	region: AWS_REGION,
-	endpoint: MEDIA_CONVERT_ENDPOINT,
-});
-
-async function createJob(settings: CreateJobCommandInput["Settings"]) {
-	const { Job } = await mediaConvert.send(
-		new CreateJobCommand({
-			Role: MEDIA_CONVERT_ROLE_ARN,
-			Queue: MEDIA_CONVERT_QUEUE_ARN,
-			Settings: settings,
-		}),
-	);
-
-	return { jobId: Job?.Id, status: Job?.Status };
-}
-
-export function createToAudioJob({ id }: { id: string }) {
-	return createJob({
-		Inputs: [
-			{
-				FileInput: getMediaBucketURL(`${id}/video.mp4`),
-				AudioSelectors: {
-					"Audio Selector 1": {
-						SelectorType: "TRACK",
-						Tracks: [1],
-					},
-				},
-			},
-		],
-		OutputGroups: [
-			{
-				Name: "Audio",
-				OutputGroupSettings: {
-					Type: "FILE_GROUP_SETTINGS",
-					FileGroupSettings: {
-						Destination: getMediaBucketURL(`${id}/audio`),
-					},
-				},
-				Outputs: [
-					{
-						Extension: "mp3",
-						ContainerSettings: { Container: "RAW" },
-						AudioDescriptions: [
-							{
-								AudioSourceName: "Audio Selector 1",
-								CodecSettings: {
-									Codec: "MP3",
-									Mp3Settings: {
-										Bitrate: 128000,
-										Channels: 1,
-										SampleRate: 48000,
-										RateControlMode: "CBR",
-									},
-								},
-							},
-						],
-					},
-				],
-			},
-		],
-	});
-}
-
-export function createSplitAudioJob({ id }: { id: string }) {
-	return createJob({
-		Inputs: [
-			{
-				FileInput: getMediaBucketURL(`${id}/audio.mp3`),
-				AudioSelectors: {
-					"Audio Selector 1": {
-						SelectorType: "TRACK",
-						Tracks: [1],
-					},
-				},
-			},
-		],
-		OutputGroups: [
-			{
-				Name: "AudioChunks",
-				OutputGroupSettings: {
-					Type: "HLS_GROUP_SETTINGS",
-					HlsGroupSettings: {
-						Destination: getMediaBucketURL(`${id}/chunks/`),
-						SegmentLength: CHUNK_LENGTH_SECONDS,
-						MinSegmentLength: CHUNK_LENGTH_SECONDS,
-						SegmentControl: "SEGMENTED_FILES",
-					},
-				},
-				Outputs: [
-					{
-						ContainerSettings: { Container: "M3U8" },
-						AudioDescriptions: [
-							{
-								AudioSourceName: "Audio Selector 1",
-								CodecSettings: {
-									Codec: "AAC",
-									AacSettings: {
-										Bitrate: 128000,
-										CodingMode: "CODING_MODE_2_0",
-										SampleRate: 48000,
-									},
-								},
-							},
-						],
-					},
-				],
-			},
-		],
-	});
 }

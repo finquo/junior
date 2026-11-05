@@ -340,7 +340,7 @@ export function MediaPipeline({
 					</CardHeader>
 					<CardContent>
 						<Timeline
-							defaultValue={getActiveStep([
+							value={getActiveStep([
 								attended,
 								!!media.video,
 								!!media.audio,
@@ -361,7 +361,7 @@ export function MediaPipeline({
 								title="Recording Saved"
 								description={
 									media.video
-										? "video.mp4 is in the media bucket."
+										? "videos/0.mp4 is in the media bucket."
 										: "No recording uploaded yet."
 								}
 								actions={
@@ -380,7 +380,7 @@ export function MediaPipeline({
 								title="Converted to Audio"
 								description={
 									media.audio
-										? "audio.mp3 extracted from the recording."
+										? "audios/0.mp3 extracted from the recording."
 										: "Waiting for the conversion job."
 								}
 								error={errors.toAudio}
@@ -431,9 +431,8 @@ export function MediaPipeline({
 						</CardHeader>
 						<CardContent>
 							<Timeline
-								defaultValue={getActiveStep([
+								value={getActiveStep([
 									!!media.transcript,
-									!!media.summary,
 									!!media.summary,
 								])}
 							>
@@ -442,7 +441,7 @@ export function MediaPipeline({
 									title="Audio Transcribed"
 									description={
 										media.transcript
-											? "transcript/main.json is ready."
+											? "transcript-single/0.json is ready."
 											: "The full audio is not transcribed yet."
 									}
 									error={errors.transcribeAudio}
@@ -541,7 +540,7 @@ export function MediaPipeline({
 						</CardHeader>
 						<CardContent>
 							<Timeline
-								defaultValue={getActiveStep([
+								value={getActiveStep([
 									media.chunks.length > 0,
 									chunksTranscribed,
 									!!media.chunkSummary,
