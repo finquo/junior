@@ -1,6 +1,5 @@
 "use client";
 
-import type { Participant } from "@zoom/videosdk";
 import ZoomVideo, { ConnectionState, RecordingStatus } from "@zoom/videosdk";
 import {
 	LocalScreenShareComponent,
@@ -13,13 +12,10 @@ import {
 	useSession,
 	useSessionUsers,
 	useVideoState,
-	VideoPlayerComponent,
-	VideoPlayerContainerComponent,
 } from "@zoom/videosdk-react";
 import {
 	CctvIcon,
 	CctvOffIcon,
-	EllipsisIcon,
 	ImageIcon,
 	ImageOffIcon,
 	InfoIcon,
@@ -30,10 +26,8 @@ import {
 	MonitorDot,
 	MonitorOff,
 	PhoneOffIcon,
-	PinIcon,
-	UserIcon,
+	SwitchCameraIcon,
 	UsersIcon,
-	UserXIcon,
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
@@ -57,8 +51,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -73,14 +65,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
 	ItemActions,
@@ -89,6 +73,7 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -96,151 +81,14 @@ import { useJoinPreferences } from "./call-preferences";
 import { ChatDrawer, type ChatMessage } from "./chat-drawer";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
-
-// Self floats separately, so the main grid tops out at three others.
-const MAX_REMOTE_TILES = 3;
-
-const VIRTUAL_BACKGROUND = "/background.png";
-
-const videoTileStyle = {
-	width: "100%",
-	aspectRatio: "16 / 9",
-	overflow: "hidden",
-	borderRadius: "var(--radius-lg)",
-} as const;
-
-type SessionUser = ReturnType<typeof useSessionUsers>[number];
-
-function participantName(participant: Participant) {
-	return participant.displayName || "Guest";
-}
-
-function participantRole(participant: Participant) {
-	return participant.userIdentity || participant.userKey;
-}
-
-function roleLabel(role: string) {
-	const label = role.replaceAll("_", " ");
-
-	return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function isVoiceOn(participant: Participant) {
-	return participant.audio !== "" && participant.muted === false;
-}
-
-function sdkErrorDescription(error: unknown) {
-	if (error instanceof Error) return error.message;
-
-	if (
-		typeof error === "object" &&
-		error !== null &&
-		"reason" in error &&
-		typeof error.reason === "string"
-	) {
-		return error.reason;
-	}
-
-	return undefined;
-}
-
-function RemoteUserMenu({ user }: { user: SessionUser }) {
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="secondary"
-					size="icon-sm"
-					className="absolute top-2 right-2"
-					aria-label={`Actions for ${participantName(user)}`}
-				>
-					<EllipsisIcon />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>{participantName(user)}</DropdownMenuLabel>
-				<DropdownMenuItem>
-					<MicOffIcon />
-					Mute
-				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<VideoOffIcon />
-					Stop video
-				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<PinIcon />
-					Pin
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem variant="destructive">
-					<UserXIcon />
-					Remove
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	);
-}
-
-function VideoTile({
-	user,
-	className,
-	voiceOn,
-	videoOn,
-	role: roleProp,
-	avatar,
-	menu = false,
-	mirror = false,
-}: {
-	user: SessionUser;
-	className?: string;
-	voiceOn?: boolean;
-	videoOn?: boolean;
-	role?: string;
-	avatar?: string;
-	menu?: boolean;
-	mirror?: boolean;
-}) {
-	const voice = voiceOn ?? isVoiceOn(user);
-	const video = videoOn ?? user.bVideoOn;
-	const role = roleProp ?? participantRole(user) ?? "guest";
-	const roleName = roleLabel(role);
-	const name = participantName(user);
-
-	return (
-		<Frame className={cn("overflow-hidden p-0", className)}>
-			<VideoPlayerContainerComponent
-				style={
-					mirror
-						? { ...videoTileStyle, transform: "scaleX(-1)" }
-						: videoTileStyle
-				}
-			>
-				<VideoPlayerComponent user={user} />
-			</VideoPlayerContainerComponent>
-			{!video && (
-				<div className="absolute inset-0">
-					<div className="flex size-full flex-row items-center justify-center gap-3">
-						<Avatar size="lg">
-							<AvatarImage src={avatar} alt={name} />
-							<AvatarFallback>
-								<UserIcon />
-							</AvatarFallback>
-						</Avatar>
-						<div className="flex flex-col items-start gap-1">
-							<span className="font-medium text-sm">{name}</span>
-							<span className="text-muted-foreground text-xs">{roleName}</span>
-						</div>
-					</div>
-				</div>
-			)}
-			<Badge variant="secondary" className="absolute bottom-2 left-2 gap-1.5">
-				{voice ? <MicIcon /> : <MicOffIcon />}
-				{video && name}
-			</Badge>
-			{menu && <RemoteUserMenu user={user} />}
-		</Frame>
-	);
-}
+import {
+	MAX_REMOTE_TILES,
+	participantRole,
+	roleLabel,
+	sdkErrorDescription,
+	VIRTUAL_BACKGROUND,
+} from "./utils";
+import { VideoTile } from "./video-tile";
 
 export function VideoChat({
 	session,
@@ -603,6 +451,30 @@ export function VideoChat({
 		else toast.info({ title: "Camera off" });
 	};
 
+	const flipCamera = async () => {
+		const stream = ZoomVideo.createClient().getMediaStream();
+		const cameras = stream.getCameraList();
+		const index = cameras.findIndex(
+			(camera) => camera.deviceId === stream.getActiveCamera(),
+		);
+		const next = cameras[(index + 1) % cameras.length];
+
+		if (!next) {
+			toast.error({ title: "No other camera found" });
+			return;
+		}
+
+		try {
+			await stream.switchCamera(next.deviceId);
+			toast.success({ title: "Camera switched" });
+		} catch (error) {
+			toast.error({
+				title: "Could not switch camera",
+				description: sdkErrorDescription(error),
+			});
+		}
+	};
+
 	const setVirtualBackgroundOn = async (next: boolean) => {
 		try {
 			if (isVideoOn) {
@@ -664,9 +536,9 @@ export function VideoChat({
 		},
 		{
 			id: "camera",
-			label: "Camera",
+			label: isVideoOn ? "Camera off" : "Camera on",
 			icon: isVideoOn ? <VideoIcon /> : <VideoOffIcon />,
-			onSelect: () => setOverlay("camera"),
+			onSelect: () => void setCameraOn(!isVideoOn),
 		},
 		{
 			id: "screenshare",
@@ -807,8 +679,82 @@ export function VideoChat({
 							role={role}
 							avatar={avatar}
 							mirror
-							className="aspect-video min-w-64 shadow-lg"
-						/>
+							className="group min-w-64 shadow-lg"
+						>
+							<div className="animatein hidden group-hover:block">
+								<FieldGroup className="gap-1.5 p-1.5">
+									<FieldLabel htmlFor="tile-camera-switch">
+										<Field className="h-10" orientation="horizontal">
+											<ItemMedia variant="icon">
+												{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>Camera</ItemTitle>
+											</ItemContent>
+											<ItemActions>
+												<Switch
+													id="tile-camera-switch"
+													aria-label="Camera"
+													checked={isVideoOn}
+													onCheckedChange={(checked) =>
+														void setCameraOn(checked)
+													}
+												/>
+											</ItemActions>
+										</Field>
+									</FieldLabel>
+									<FieldLabel htmlFor="tile-background-switch">
+										<Field className="h-10" orientation="horizontal">
+											<ItemMedia variant="icon">
+												{virtualBackgroundEnabled ? (
+													<ImageIcon />
+												) : (
+													<ImageOffIcon />
+												)}
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>Background</ItemTitle>
+											</ItemContent>
+											<ItemActions>
+												<Switch
+													id="tile-background-switch"
+													aria-label="Virtual background"
+													checked={virtualBackgroundEnabled}
+													disabled={!isVideoOn || !virtualBackgroundSupported}
+													onCheckedChange={(checked) =>
+														void setVirtualBackgroundOn(checked)
+													}
+												/>
+											</ItemActions>
+										</Field>
+									</FieldLabel>
+									<FieldLabel htmlFor="tile-flip-camera">
+										<Field className="h-10" orientation="horizontal">
+											<ItemMedia variant="icon">
+												<SwitchCameraIcon />
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>Flip camera</ItemTitle>
+											</ItemContent>
+											<ItemActions>
+												<Button
+													id="tile-flip-camera"
+													type="button"
+													size="icon-sm"
+													variant="ghost"
+													aria-label="Flip camera"
+													disabled={!isVideoOn}
+													onClick={() => void flipCamera()}
+												>
+													<SwitchCameraIcon />
+												</Button>
+											</ItemActions>
+										</Field>
+									</FieldLabel>
+								</FieldGroup>
+								<Separator />
+							</div>
+						</VideoTile>
 					)}
 				</div>
 

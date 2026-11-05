@@ -4,11 +4,12 @@ import { langFlag, langName } from "language-emoji";
 import {
 	AudioLinesIcon,
 	CalendarClockIcon,
+	CheckCheckIcon,
 	ClockIcon,
 	ExternalLinkIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
-	PhoneOffIcon,
+	PlayIcon,
 	ScrollTextIcon,
 	UserRoundIcon,
 	VideoIcon,
@@ -232,6 +233,9 @@ export function SessionProfile({ data }: { data: SlotData }) {
 						</RenderWhenRole>
 						<RenderWhenRole role={["admin", "scheduler"]}>
 							<EndMeeting slotId={data.id} />
+						</RenderWhenRole>
+						<RenderWhenRole role={["teacher"]}>
+							<RequestRescheduleButton slot={data} />
 						</RenderWhenRole>
 						<SlotActions slot={data} />
 					</ButtonGroup>

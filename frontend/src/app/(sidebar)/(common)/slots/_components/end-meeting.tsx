@@ -18,13 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
 
-export function EndMeeting({
-	slotId,
-	label = "End meeting",
-}: {
-	slotId: string;
-	label?: string;
-}) {
+export function EndMeeting({ slotId }: { slotId: string }) {
 	const { mutate, isPending } = useMutation(
 		api.meeting.end.mutationOptions({
 			onSuccess: () => {
@@ -45,7 +39,7 @@ export function EndMeeting({
 			<AlertDialogTrigger asChild>
 				<Button variant="destructive" size="sm">
 					<PhoneOffIcon />
-					{label}
+					End meeting
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
