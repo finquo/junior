@@ -7,6 +7,7 @@ import {
 	CHUNK_LENGTH_SECONDS,
 	getMediaArtifact,
 	getMediaDownloadURL,
+	getMediaMeta,
 	isAllowedAssetPath,
 	mediaKey,
 	mediaStorage,
@@ -51,7 +52,7 @@ export const mediaRouter = {
 		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
 			const key = `${input.id}/videos/${input.index}.mp4`;
-			const meta = await mediaStorage.getMeta(key);
+			const meta = await getMediaMeta(key);
 			if (!meta) throw getError("NOT_FOUND", `Video not found for ${input.id}`);
 
 			return {
@@ -64,7 +65,7 @@ export const mediaRouter = {
 		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
 			const key = `${input.id}/audios/${input.index}.mp3`;
-			const meta = await mediaStorage.getMeta(key);
+			const meta = await getMediaMeta(key);
 			if (!meta) throw getError("NOT_FOUND", `Audio not found for ${input.id}`);
 
 			return {
@@ -83,7 +84,7 @@ export const mediaRouter = {
 					[],
 				);
 
-				return Promise.all(keys.map((key) => mediaStorage.getMeta(key)));
+				return Promise.all(keys.map((key) => getMediaMeta(key)));
 			}),
 	},
 
@@ -155,7 +156,7 @@ export const mediaRouter = {
 					`Unknown media asset path for ${input.id}: ${input.path}`,
 				);
 			const key = `${input.id}/${input.path}`;
-			const meta = await mediaStorage.getMeta(key);
+			const meta = await getMediaMeta(key);
 			if (!meta)
 				throw getError("NOT_FOUND", `Media asset not found: ${input.path}`);
 
@@ -275,9 +276,7 @@ export const mediaRouter = {
 
 			if (!slot) throw getError("NOT_FOUND", "Session not found");
 
-			const summaryMeta = await mediaStorage.getMeta(
-				`${input.id}/summary/main.json`,
-			);
+			const summaryMeta = await getMediaMeta(`${input.id}/summary/main.json`);
 			if (!summaryMeta)
 				throw getError("NOT_FOUND", "Summary not generated yet");
 
@@ -415,7 +414,7 @@ export const mediaRouter = {
 				}),
 			)
 			.handler(async ({ input }) => {
-				const meta = await mediaStorage.getMeta(input.key);
+				const meta = await getMediaMeta(input.key);
 				if (!meta) throw getError("NOT_FOUND", `File not found: ${input.key}`);
 
 				const url = await tryAPI(

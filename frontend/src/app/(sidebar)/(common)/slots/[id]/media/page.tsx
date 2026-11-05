@@ -2,12 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/hooks/api";
 import { MediaPipeline } from "./_components/pipeline";
 
 function SessionMedia({ slotId }: { slotId: string }) {
+	const [index, setIndex] = useState(0);
+
 	const {
 		data: slot,
 		isPending: isSlotPending,
@@ -18,13 +21,19 @@ function SessionMedia({ slotId }: { slotId: string }) {
 		}),
 	);
 
+	const { data: files = [] } = useQuery(
+		api.media.library.files.queryOptions({
+			input: { id: slotId },
+		}),
+	);
+
 	const {
 		data: media,
 		isPending: isMediaPending,
 		isError: isMediaError,
 	} = useQuery(
 		api.media.meta.queryOptions({
-			input: { id: slotId },
+			input: { id: slotId, index },
 		}),
 	);
 
@@ -54,7 +63,22 @@ function SessionMedia({ slotId }: { slotId: string }) {
 		);
 	}
 
-	return <MediaPipeline slot={slot} media={media} />;
+	const videoIndexes = files
+		.flatMap((file) => {
+			const match = file.match(/\/videos\/(\d+)\.mp4$/);
+			return match?.[1] ? [Number(match[1])] : [];
+		})
+		.sort((a, b) => a - b);
+
+	return (
+		<MediaPipeline
+			slot={slot}
+			media={media}
+			index={index}
+			videoIndexes={videoIndexes}
+			onIndexChange={setIndex}
+		/>
+	);
 }
 
 export default function Page() {

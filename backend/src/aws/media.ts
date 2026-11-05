@@ -84,16 +84,21 @@ type MediaArtifact = {
 	size: number | null;
 };
 
+export async function getMediaMeta(key: string) {
+	const meta = await mediaStorage.getMeta(key);
+	return meta.size === undefined ? null : { size: Number(meta.size) };
+}
+
 export async function getMediaArtifact(
 	id: string,
 	path: string,
 ): Promise<MediaArtifact | null> {
-	const meta = await mediaStorage.getMeta(`${id}/${path}`);
+	const meta = await getMediaMeta(`${id}/${path}`);
 	if (!meta) return null;
 
 	return {
 		path,
-		size: Number(meta.size ?? 0) || null,
+		size: meta.size || null,
 	};
 }
 
