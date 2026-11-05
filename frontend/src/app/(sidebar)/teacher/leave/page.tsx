@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/hooks/api";
+import { LeavesCard } from "./_components";
 
 export default function Page() {
 	const { data, isPending, isError } = useQuery(

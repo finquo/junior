@@ -11,8 +11,21 @@ const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
 	transpilePackages: ["backend"],
+	// serverExternalPackages: [
+	// 	"@takumi-rs/core",
+	// 	"@takumi-rs/wasm",
+	// 	"@takumi-rs/helpers",
+	// ],
 	images: { unoptimized: true },
 	allowedDevOrigins: ["192.168.*.*"],
+	webpack: (config) => {
+		config.experiments = {
+			...config.experiments,
+			asyncWebAssembly: true,
+			syncWebAssembly: true,
+		};
+		return config;
+	},
 };
 
 // export default nextConfig;
