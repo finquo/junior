@@ -5,9 +5,11 @@ import {
 	CircleAlertIcon,
 	DownloadIcon,
 	FileAudioIcon,
+	FileJsonIcon,
 	FileTextIcon,
 	GitForkIcon,
 	RefreshCwIcon,
+	SendIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -115,6 +117,53 @@ function DownloadButton({
 		>
 			{isPending ? <Spinner /> : <DownloadIcon />}
 			{label}
+		</Button>
+	);
+}
+
+function ShowSummaryButton({ id }: { id: string }) {
+	const { mutate, isPending } = useMutation(
+		api.media.download.mutationOptions({
+			onSuccess: (data) => {
+				if (data.url) window.open(data.url, "_blank", "noopener,noreferrer");
+			},
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending}
+			onClick={() => mutate({ id, path: "summary/main.json" })}
+		>
+			{isPending ? <Spinner /> : <FileJsonIcon />}
+			Show Summary
+		</Button>
+	);
+}
+
+function SendToParentButton({ id }: { id: string }) {
+	const { mutate, isPending } = useMutation(
+		api.media.sendSummary.mutationOptions({
+			onSuccess: () => {
+				toast.success({ title: "Summary sent to parent" });
+			},
+			onError: (error) => {
+				toast.error({ title: error.message });
+			},
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending}
+			onClick={() => mutate({ id })}
+		>
+			{isPending ? <Spinner /> : <SendIcon />}
+			Sent to parent
 		</Button>
 	);
 }
@@ -464,16 +513,20 @@ export function MediaPipeline({
 									}
 									actions={
 										media.summary ? (
-											<Button asChild variant="outline" size="sm">
-												<a
-													href={`/slots/${id}/media/pdf`}
-													target="_blank"
-													rel="noreferrer"
-												>
-													<FileTextIcon />
-													Open PDF
-												</a>
-											</Button>
+											<>
+												<Button asChild variant="outline" size="sm">
+													<a
+														href={`/analytics/slots/${id}` as "/"}
+														target="_blank"
+														rel="noreferrer"
+													>
+														<FileTextIcon />
+														Show PDF
+													</a>
+												</Button>
+												<ShowSummaryButton id={id} />
+												<SendToParentButton id={id} />
+											</>
 										) : undefined
 									}
 								/>

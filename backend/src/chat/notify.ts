@@ -73,6 +73,42 @@ export const notifySlotCreated = async ({
 	]);
 };
 
+export const notifyStudentReport = async ({
+	name,
+	phoneNumber,
+	link,
+}: {
+	name: string;
+	phoneNumber: string;
+	link: string;
+}) => {
+	await sendAll([
+		{
+			number: phoneNumber,
+			title: "Performance report",
+			message: `Hi ${name}, view your performance report anytime: ${link}`,
+		},
+	]);
+};
+
+export const notifySlotSummary = async ({
+	name,
+	phoneNumber,
+	link,
+}: {
+	name: string;
+	phoneNumber: string;
+	link: string;
+}) => {
+	await sendAll([
+		{
+			number: phoneNumber,
+			title: "Session summary",
+			message: `Hi ${name}, view the session summary anytime: ${link}`,
+		},
+	]);
+};
+
 export const notifySlotUpdated = async ({
 	startTime,
 	lessonName,

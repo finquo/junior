@@ -1,13 +1,13 @@
 import { call } from "@orpc/server";
-import { appRouter } from "backend/api";
+import { analyticsRouter } from "backend/api";
 import { getPDF } from "@/components/pdf";
-import { ReportTemplateFrame } from "../_components/layout";
+import { ReportTemplateFrame } from "../_components/layouter";
 import type { BaseReportData } from "../_components/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-	const data = await call(appRouter.analytics.demo, undefined, {});
+	const data = await call(analyticsRouter.demo, undefined, {});
 	return await getPDF(
 		<ReportTemplateFrame
 			theme={undefined}

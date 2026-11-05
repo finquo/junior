@@ -1,10 +1,9 @@
 import type { InferRouterOutputs } from "@orpc/server";
-import type { appRouter } from "backend/api";
+import type { analyticsRouter } from "backend/api";
 import { Badge } from "@/components/pdf/badge/badge";
 import { DataTable } from "@/components/pdf/data-table/data-table";
-import { KeyValue } from "@/components/pdf/key-value/key-value";
+import { PdfGraph } from "@/components/pdf/graph/graph";
 import { PageFooter } from "@/components/pdf/page-footer/page-footer";
-import { PageHeader } from "@/components/pdf/page-header/page-header";
 import { PageNumber } from "@/components/pdf/page-number/page-number";
 import { Section } from "@/components/pdf/section/section";
 import { Text } from "@/components/pdf/text/text";
@@ -12,10 +11,21 @@ import { usePdfcnTheme } from "@/components/pdf/theme-provider";
 import { Document, Page, StyleSheet, View } from "@/lib/pdf-primitives";
 
 type StudentReportData = InferRouterOutputs<
-	typeof appRouter
->["analytics"]["studentReport"];
+	typeof analyticsRouter
+>["studentReport"];
 
 const NOT_PROVIDED = "Not provided - edit from dashboard";
+
+const PALETTE = [
+	"#6366F1",
+	"#10B981",
+	"#F59E0B",
+	"#F43F5E",
+	"#0EA5E9",
+	"#8B5CF6",
+];
+
+const UPCOMING_STATUSES = ["scheduled", "request_reschedule", "rescheduled"];
 
 const formatDate = (value: Date | string | null | undefined) => {
 	if (!value) {
@@ -34,63 +44,151 @@ const formatDateTime = (value: Date | string | null | undefined) => {
 	});
 };
 
+const countBy = <T,>(items: T[], pick: (item: T) => string) =>
+	items.reduce<Record<string, number>>((acc, item) => {
+		const key = pick(item);
+		acc[key] = (acc[key] ?? 0) + 1;
+		return acc;
+	}, {});
+
 export const StudentReport = ({ data }: { data: StudentReportData }) => {
 	const theme = usePdfcnTheme();
 	const { student, attendedLessons, slots, payments, materials, answers } =
 		data;
+	const now = new Date(data.generatedAt);
 
 	const styles = StyleSheet.create({
-		metricCard: {
+		accentBar: {
+			borderRadius: 2,
+			height: 6,
+		},
+		accentBarTrack: {
+			backgroundColor: theme.colors.muted,
+			borderRadius: 2,
+			height: 6,
+			overflow: "hidden",
+			width: "100%",
+		},
+		chartHalf: {
+			flex: 1,
+		},
+		chartRow: {
+			flexDirection: "row",
+			gap: 12,
+		},
+		col: {
+			flex: 1,
+		},
+		graphShell: {
 			backgroundColor: theme.colors.background,
 			borderColor: theme.colors.border,
 			borderRadius: theme.primitives.borderRadius.md,
 			borderStyle: "solid",
 			borderWidth: 1,
-			padding: 8,
-			width: "48.6%",
+			padding: 12,
 		},
-		metricLabel: {
+		hero: {
+			backgroundColor: theme.colors.primary,
+			borderRadius: theme.primitives.borderRadius.md,
+			padding: 18,
+		},
+		heroMeta: {
+			color: theme.colors.primaryForeground,
+			fontSize: 9,
+			marginTop: 2,
+			opacity: 0.85,
+		},
+		heroName: {
+			color: theme.colors.primaryForeground,
+			fontSize: 22,
+			fontWeight: theme.primitives.fontWeights.bold,
+		},
+		kpiCard: {
+			borderRadius: theme.primitives.borderRadius.md,
+			borderStyle: "solid",
+			borderWidth: 1,
+			padding: 10,
+			width: "23.5%",
+		},
+		kpiLabel: {
+			fontSize: 8,
+			letterSpacing: 0.5,
+			marginBottom: 4,
+			textTransform: "uppercase",
+		},
+		kpiValue: {
+			color: theme.colors.foreground,
+			fontSize: 16,
+			fontWeight: theme.primitives.fontWeights.bold,
+		},
+		profileCard: {
+			borderRadius: theme.primitives.borderRadius.md,
+			borderStyle: "solid",
+			borderTopWidth: 3,
+			borderWidth: 1,
+			padding: 10,
+			width: "31.8%",
+		},
+		profileGrid: {
+			flexDirection: "row",
+			flexWrap: "wrap",
+			gap: 8,
+		},
+		profileLabel: {
+			fontSize: 8,
+			letterSpacing: 0.5,
+			marginBottom: 3,
+			textTransform: "uppercase",
+		},
+		profileValue: {
+			color: theme.colors.foreground,
+			fontSize: 10,
+			fontWeight: theme.primitives.fontWeights.medium,
+		},
+		kpiRow: {
+			flexDirection: "row",
+			gap: 8,
+		},
+		page: {
+			backgroundColor: theme.colors.background,
+			boxSizing: "border-box",
+			paddingBottom: 16,
+			paddingLeft: 16,
+			paddingRight: 16,
+			paddingTop: 16,
+			position: "relative",
+		},
+		personCard: {
+			borderLeftWidth: 4,
+			borderRadius: theme.primitives.borderRadius.md,
+			borderStyle: "solid",
+			padding: 10,
+		},
+		personName: {
+			color: theme.colors.foreground,
+			fontSize: 12,
+			fontWeight: theme.primitives.fontWeights.bold,
+		},
+		personRole: {
 			color: theme.colors.mutedForeground,
 			fontSize: 8,
 			letterSpacing: 0.5,
 			marginBottom: 2,
 			textTransform: "uppercase",
 		},
-		metricValue: {
-			color: theme.colors.foreground,
-			fontSize: 14,
-			fontWeight: theme.primitives.fontWeights.bold,
-		},
-		metricsGrid: {
+		twoCol: {
 			flexDirection: "row",
-			flexWrap: "wrap",
-			gap: 8,
-		},
-		page: {
-			backgroundColor: theme.colors.background,
-			boxSizing: "border-box",
-			minHeight: 841,
-			paddingBottom: theme.spacing.page.marginBottom,
-			paddingLeft: theme.spacing.page.marginLeft,
-			paddingRight: theme.spacing.page.marginRight,
-			paddingTop: theme.spacing.page.marginTop,
-			position: "relative",
-		},
-		pageBreak: {
-			breakAfter: "page",
-		},
-		toolbar: {
-			alignItems: "center",
-			flexDirection: "row",
-			justifyContent: "space-between",
-			marginBottom: 8,
+			gap: 12,
 		},
 	});
 
 	const studentName = student.user?.name ?? NOT_PROVIDED;
 	const programName = student.programInfo?.name ?? NOT_PROVIDED;
+	const programDescription = student.programInfo?.description ?? undefined;
 	const mentorName = student.mentor?.user?.name ?? NOT_PROVIDED;
+	const mentorEmail = student.mentor?.user?.email ?? undefined;
 	const supervisorName = student.scheduler?.user?.name ?? NOT_PROVIDED;
+	const supervisorEmail = student.scheduler?.user?.email ?? undefined;
 	const email = student.user?.email ?? NOT_PROVIDED;
 	const age = String(student.age ?? NOT_PROVIDED);
 	const grade = String(student.grade ?? NOT_PROVIDED);
@@ -111,10 +209,45 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 				.filter(Boolean)
 				.join(", ")
 		: NOT_PROVIDED;
+
+	const totalProgramLessons = student.programInfo?.lessons?.length ?? 0;
+	const attendedCount = attendedLessons.length;
+	const progressPercent =
+		totalProgramLessons > 0
+			? Math.min(100, Math.round((attendedCount / totalProgramLessons) * 100))
+			: 0;
+
+	const pastSlots = slots.filter((slot) => new Date(slot.startTime) < now);
+	const attendedSlots = slots.filter((slot) => slot.status === "attended");
+	const attendanceRate =
+		pastSlots.length > 0
+			? `${Math.round((attendedSlots.length / pastSlots.length) * 100)}%`
+			: NOT_PROVIDED;
+
+	const upcomingSlots = slots
+		.filter(
+			(slot) =>
+				new Date(slot.startTime) >= now &&
+				UPCOMING_STATUSES.includes(slot.status),
+		)
+		.sort(
+			(a, b) =>
+				new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+		);
+
+	const paidTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+	const paidLabel = student.paid ? "Fully Paid" : "Payment Pending";
 	const paidTone = student.paid ? "success" : "warning";
-	const paidLabel = student.paid ? "Paid" : "Payment Pending";
-	const totalFee = `${student.currency} ${student.amount}`;
-	const remaining = `${student.currency} ${student.remaining}`;
+
+	const slotStatusCounts = countBy(slots, (slot) => slot.status);
+	const slotGraphData = Object.entries(slotStatusCounts).map(
+		([label, value]) => ({ label, value }),
+	);
+
+	const answerStatusCounts = countBy(answers, (answer) => answer.status);
+	const answerGraphData = Object.entries(answerStatusCounts).map(
+		([label, value]) => ({ label, value }),
+	);
 
 	const lessonRows = attendedLessons.map((lesson) => ({
 		name: lesson.name,
@@ -122,9 +255,14 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 		description: lesson.description ?? NOT_PROVIDED,
 	}));
 
-	const slotRows = slots.map((slot) => ({
+	const upcomingRows = upcomingSlots.map((slot) => ({
 		start: formatDateTime(slot.startTime),
-		expectedEnd: formatDateTime(slot.expectedEndTime),
+		end: formatDateTime(slot.expectedEndTime),
+		status: slot.status,
+	}));
+
+	const pastRows = pastSlots.map((slot) => ({
+		start: formatDateTime(slot.startTime),
 		ended: formatDateTime(slot.endTime),
 		status: slot.status,
 	}));
@@ -142,112 +280,253 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 		createdAt: formatDate(material.createdAt),
 	}));
 
-	const answerRows = answers.map((answer) => ({
-		status: answer.status,
-		updatedAt: formatDate(answer.updatedAt),
-	}));
-
 	const noteRows = student.notes.map((note) => ({
 		text: note.text,
 		writtenBy: note.writterBy,
 		createdAt: formatDate(note.createdAt),
 	}));
 
+	const profileItems = [
+		{ label: "Email", value: email, color: PALETTE[0] },
+		{ label: "Age", value: age, color: PALETTE[1] },
+		{ label: "Grade", value: grade, color: PALETTE[2] },
+		{ label: "Schooling", value: schooling, color: PALETTE[3] },
+		{ label: "Country", value: country, color: PALETTE[4] },
+		{ label: "Languages", value: languages, color: PALETTE[5] },
+		{ label: "Address", value: addressText, color: PALETTE[0] },
+	];
+
+	const kpis = [
+		{
+			label: "Lessons Completed",
+			value: `${attendedCount}${totalProgramLessons ? ` / ${totalProgramLessons}` : ""}`,
+			color: PALETTE[0],
+		},
+		{
+			label: "Attendance",
+			value: attendanceRate,
+			color: PALETTE[1],
+		},
+		{
+			label: "Upcoming Classes",
+			value: String(upcomingSlots.length),
+			color: PALETTE[4],
+		},
+		{
+			label: "Balance Due",
+			value: `${student.currency} ${student.remaining}`,
+			color: student.remaining > 0 ? PALETTE[2] : PALETTE[1],
+		},
+	];
+
+	const footer = (
+		<PageFooter
+			variant="minimal"
+			leftText={studentName}
+			rightText={<PageNumber size="xs" />}
+			pagePadding={theme.spacing.page.marginLeft}
+		/>
+	);
+
 	return (
 		<Document title={`Student Report ${studentName}`}>
-			<Page size="A4" style={[styles.page, styles.pageBreak]}>
-				<PageHeader
-					variant="two-column"
-					title={studentName}
-					subtitle={`Student Progress Report · ${programName}`}
-					rightText={`Enrolled ${formatDate(student.createdAt)}`}
-					rightSubText={`Generated ${formatDate(data.generatedAt)}`}
-					marginBottom={14}
-				/>
-
-				<View style={styles.toolbar}>
-					<Badge label={paidLabel} variant={paidTone} size="sm" />
-					<Text variant="xs" color="mutedForeground" noMargin>
-						{email}
+			<Page size="A4" style={styles.page}>
+				<View style={styles.hero}>
+					<Text style={styles.heroMeta}>STUDENT PROGRESS REPORT</Text>
+					<Text style={styles.heroName} noMargin>
+						{studentName}
+					</Text>
+					<Text style={styles.heroMeta}>
+						{`${programName} · Enrolled ${formatDate(student.createdAt)} · Report ${formatDate(data.generatedAt)}`}
 					</Text>
 				</View>
 
-				<Section variant="card" padding="md" noWrap>
+				<View style={[styles.kpiRow, { marginTop: 14 }]}>
+					{kpis.map((kpi) => (
+						<View
+							key={kpi.label}
+							style={[
+								styles.kpiCard,
+								{
+									borderColor: kpi.color,
+									backgroundColor: theme.colors.background,
+								},
+							]}
+						>
+							<Text style={{ ...styles.kpiLabel, color: kpi.color }} noMargin>
+								{kpi.label}
+							</Text>
+							<Text style={styles.kpiValue} noMargin>
+								{kpi.value}
+							</Text>
+						</View>
+					))}
+				</View>
+
+				<Section padding="md" noWrap>
 					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Executive Summary
+						Program Progress
 					</Text>
-					<View style={styles.metricsGrid}>
-						<View style={styles.metricCard}>
-							<Text style={styles.metricLabel} noMargin>
-								Total Fee
+					<Text variant="xs" noMargin>
+						{programName}
+					</Text>
+					{programDescription ? (
+						<Text variant="xs" color="mutedForeground">
+							{programDescription}
+						</Text>
+					) : null}
+					<View style={[styles.accentBarTrack, { marginTop: 8 }]}>
+						<View
+							style={[
+								styles.accentBar,
+								{ backgroundColor: PALETTE[1], width: `${progressPercent}%` },
+							]}
+						/>
+					</View>
+					<View style={{ marginTop: 6 }}>
+						<Badge
+							label={`${progressPercent}% complete`}
+							variant="success"
+							size="sm"
+						/>
+						<Badge label={paidLabel} variant={paidTone} size="sm" />
+					</View>
+				</Section>
+
+				<View style={[styles.twoCol, { marginTop: 4 }]}>
+					<View style={styles.col}>
+						<View
+							style={[
+								styles.personCard,
+								{
+									borderLeftColor: PALETTE[0],
+									backgroundColor: theme.colors.background,
+									borderColor: theme.colors.border,
+								},
+							]}
+						>
+							<Text style={styles.personRole} noMargin>
+								Mentor
 							</Text>
-							<Text style={styles.metricValue} noMargin>
-								{totalFee}
+							<Text style={styles.personName} noMargin>
+								{mentorName}
 							</Text>
+							{mentorEmail ? (
+								<Text variant="xs" color="mutedForeground" noMargin>
+									{mentorEmail}
+								</Text>
+							) : null}
 						</View>
-						<View style={styles.metricCard}>
-							<Text style={styles.metricLabel} noMargin>
-								Remaining
+					</View>
+					<View style={styles.col}>
+						<View
+							style={[
+								styles.personCard,
+								{
+									borderLeftColor: PALETTE[5],
+									backgroundColor: theme.colors.background,
+									borderColor: theme.colors.border,
+								},
+							]}
+						>
+							<Text style={styles.personRole} noMargin>
+								Supervisor
 							</Text>
-							<Text style={styles.metricValue} noMargin>
-								{remaining}
+							<Text style={styles.personName} noMargin>
+								{supervisorName}
 							</Text>
+							{supervisorEmail ? (
+								<Text variant="xs" color="mutedForeground" noMargin>
+									{supervisorEmail}
+								</Text>
+							) : null}
 						</View>
-						<View style={styles.metricCard}>
-							<Text style={styles.metricLabel} noMargin>
-								Lessons Attended
-							</Text>
-							<Text style={styles.metricValue} noMargin>
-								{String(attendedLessons.length)}
-							</Text>
+					</View>
+				</View>
+
+				<Section padding="md" noWrap>
+					<Text variant="sm" transform="uppercase" color="mutedForeground">
+						Student Profile
+					</Text>
+					<View style={styles.profileGrid}>
+						{profileItems.map((item) => (
+							<View
+								key={item.label}
+								style={[
+									styles.profileCard,
+									{
+										backgroundColor: theme.colors.background,
+										borderColor: item.color,
+									},
+								]}
+							>
+								<Text
+									style={{ ...styles.profileLabel, color: item.color }}
+									noMargin
+								>
+									{item.label}
+								</Text>
+								<Text style={styles.profileValue} noMargin>
+									{item.value}
+								</Text>
+							</View>
+						))}
+					</View>
+				</Section>
+
+				{footer}
+			</Page>
+
+			<Page size="A4" style={styles.page}>
+				<Section padding="md" noWrap>
+					<Text variant="sm" transform="uppercase" color="mutedForeground">
+						Performance
+					</Text>
+					<View style={styles.chartRow}>
+						<View style={styles.chartHalf}>
+							<View style={styles.graphShell}>
+								<PdfGraph
+									variant="donut"
+									data={answerGraphData}
+									title="Quiz results"
+									subtitle="Answer status across lessons"
+									centerLabel={String(answers.length)}
+									legend="bottom"
+									colors={PALETTE}
+									showValues
+									fullWidth
+									height={200}
+									containerPadding={12}
+									wrapperPadding={12}
+									style={{ marginBottom: 0 }}
+								/>
+							</View>
 						</View>
-						<View style={styles.metricCard}>
-							<Text style={styles.metricLabel} noMargin>
-								Scheduled Slots
-							</Text>
-							<Text style={styles.metricValue} noMargin>
-								{String(slots.length)}
-							</Text>
+						<View style={styles.chartHalf}>
+							<View style={styles.graphShell}>
+								<PdfGraph
+									variant="bar"
+									data={slotGraphData}
+									title="Class status"
+									subtitle="All scheduled classes"
+									colors={PALETTE}
+									showValues
+									showGrid
+									legend="none"
+									fullWidth
+									height={200}
+									containerPadding={12}
+									wrapperPadding={12}
+									style={{ marginBottom: 0 }}
+								/>
+							</View>
 						</View>
 					</View>
 				</Section>
 
 				<Section padding="md" noWrap>
 					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Student Profile
-					</Text>
-					<KeyValue
-						size="sm"
-						divided
-						items={[
-							{ key: "Email", value: email },
-							{ key: "Age", value: age },
-							{ key: "Grade", value: grade },
-							{ key: "Schooling", value: schooling },
-							{ key: "Country", value: country },
-							{ key: "Languages", value: languages },
-							{ key: "Address", value: addressText },
-							{ key: "Program", value: programName },
-							{ key: "Mentor", value: mentorName },
-							{ key: "Supervisor", value: supervisorName },
-						]}
-					/>
-				</Section>
-
-				<PageFooter
-					variant="three-column"
-					leftText="Confidential — Internal Use"
-					centerText="Generated with pdfcn"
-					rightText={<PageNumber size="xs" />}
-					sticky
-					pagePadding={theme.spacing.page.marginLeft}
-				/>
-			</Page>
-
-			<Page size="A4" style={[styles.page, styles.pageBreak]}>
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Attended Lessons
+						Lessons Attended
 					</Text>
 					<DataTable
 						variant="compact"
@@ -264,36 +543,45 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 
 				<Section padding="md" noWrap>
 					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Class Schedule
+						Upcoming Classes
 					</Text>
 					<DataTable
 						variant="compact"
 						size="compact"
 						stripe
 						columns={[
-							{ header: "Start", key: "start" },
-							{ header: "Expected End", key: "expectedEnd" },
-							{ header: "Ended", key: "ended" },
+							{ header: "Starts", key: "start" },
+							{ header: "Ends", key: "end" },
 							{ align: "center", header: "Status", key: "status" },
 						]}
-						data={slotRows}
+						data={upcomingRows}
 					/>
 				</Section>
 
-				<PageFooter
-					variant="three-column"
-					leftText="Confidential — Internal Use"
-					centerText="Generated with pdfcn"
-					rightText={<PageNumber size="xs" />}
-					sticky
-					pagePadding={theme.spacing.page.marginLeft}
-				/>
+				{footer}
 			</Page>
 
 			<Page size="A4" style={styles.page}>
 				<Section padding="md" noWrap>
 					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Payments
+						Class History
+					</Text>
+					<DataTable
+						variant="compact"
+						size="compact"
+						stripe
+						columns={[
+							{ header: "Started", key: "start" },
+							{ header: "Ended", key: "ended" },
+							{ align: "center", header: "Status", key: "status" },
+						]}
+						data={pastRows}
+					/>
+				</Section>
+
+				<Section padding="md" noWrap>
+					<Text variant="sm" transform="uppercase" color="mutedForeground">
+						Payments · {student.currency} {paidTotal} paid
 					</Text>
 					<DataTable
 						variant="compact"
@@ -328,23 +616,7 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 
 				<Section padding="md" noWrap>
 					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Answers
-					</Text>
-					<DataTable
-						variant="compact"
-						size="compact"
-						stripe
-						columns={[
-							{ align: "center", header: "Status", key: "status" },
-							{ header: "Updated On", key: "updatedAt" },
-						]}
-						data={answerRows}
-					/>
-				</Section>
-
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Staff Notes
+						Mentor Notes
 					</Text>
 					<DataTable
 						variant="compact"
@@ -352,21 +624,14 @@ export const StudentReport = ({ data }: { data: StudentReportData }) => {
 						stripe
 						columns={[
 							{ header: "Note", key: "text" },
-							{ header: "Written By", key: "writtenBy" },
+							{ header: "By", key: "writtenBy" },
 							{ header: "Date", key: "createdAt" },
 						]}
 						data={noteRows}
 					/>
 				</Section>
 
-				<PageFooter
-					variant="three-column"
-					leftText="Confidential — Internal Use"
-					centerText="Generated with pdfcn"
-					rightText={<PageNumber size="xs" />}
-					sticky
-					pagePadding={theme.spacing.page.marginLeft}
-				/>
+				{footer}
 			</Page>
 		</Document>
 	);

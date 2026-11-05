@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
 import {
 	BookMarkedIcon,
@@ -7,6 +8,7 @@ import {
 	CakeIcon,
 	CoinsIcon,
 	ExternalLinkIcon,
+	FileTextIcon,
 	GlobeIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
@@ -14,12 +16,14 @@ import {
 	NotebookPenIcon,
 	PenIcon,
 	SchoolIcon,
+	SendIcon,
 	UserRoundIcon,
 	VenetianMaskIcon,
 	VideoIcon,
 	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { sileo as toast } from "sileo";
 import { Countries } from "utils";
 import { PhoneNumberBadge } from "@/components/phone-badge";
 import { ProgramLink } from "@/components/program";
@@ -53,11 +57,13 @@ import {
 } from "@/components/ui/item";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { UserEditDrawer } from "@/components/user-edit-drawer";
 import { ImpersonateButton } from "@/hooks/admin";
+import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
@@ -126,6 +132,26 @@ function PersonItemSkeleton({ label }: { label: string }) {
 				<Skeleton className="h-3 w-32" />
 			</ItemContent>
 		</Item>
+	);
+}
+
+function SendReportButton({ studentId }: { studentId: string }) {
+	const { mutate, isPending } = useMutation(
+		api.core.student.sendReport.mutationOptions({
+			onSuccess: () => toast.success({ title: "Report link sent to student" }),
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending}
+			onClick={() => mutate({ id: studentId })}
+		>
+			{isPending ? <Spinner /> : <SendIcon />}
+			Send Report
+		</Button>
 	);
 }
 
@@ -215,6 +241,15 @@ export function StudentProfile({
 									Edit User
 								</Button>
 							</UserEditDrawer>
+						</RenderWhenRole>
+						<RenderWhenRole role={["admin", "scheduler"]}>
+							<Button variant="outline" size="sm" asChild>
+								<Link href={`/students/${data.id}/analytics` as "/"}>
+									<FileTextIcon />
+									View Report
+								</Link>
+							</Button>
+							<SendReportButton studentId={data.id} />
 						</RenderWhenRole>
 						<RenderWhenRole role="admin">
 							<ImpersonateButton userId={data.id} asChild>

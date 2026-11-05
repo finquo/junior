@@ -7,6 +7,9 @@ import {
 	getMediaDownloadURL,
 	mediaStorage,
 } from "@/aws/media";
+import { notifySlotSummary } from "@/chat/notify";
+import { db } from "@/services";
+import { MapRole } from "@/utils/role";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "../procedure";
 
 type TranscriptSegment = {
@@ -272,6 +275,49 @@ export const mediaRouter = {
 			return { outputKey, summary };
 		}),
 
+	sendSummary: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1) }))
+		.handler(async ({ input, context }) => {
+			const slot = await tryAPI(
+				"db-media-send-summary-slot",
+				db.query.slot.findFirst({
+					where: MapRole(context.role, {
+						admin: { id: input.id },
+						scheduler: { id: input.id, schedulerId: context.user.id },
+					}),
+					with: {
+						student: {
+							with: { user: { columns: { name: true, phoneNumber: true } } },
+						},
+					},
+				}),
+			);
+
+			if (!slot) throw getError("NOT_FOUND", "Session not found");
+
+			const summaryMeta = await mediaStorage.getMeta(
+				`${input.id}/summary/main.json`,
+			);
+			if (!summaryMeta)
+				throw getError("NOT_FOUND", "Summary not generated yet");
+
+			const student = slot.student?.user;
+			if (!student) throw getError("NOT_FOUND", "Student not found");
+
+			if (!student.phoneNumber) {
+				throw getError("BAD_REQUEST", "Student has no phone number");
+			}
+
+			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}`;
+
+			await notifySlotSummary({
+				name: student.name,
+				phoneNumber: student.phoneNumber,
+				link,
+			});
+
+			return { link };
+		}),
 	summarizeRaw: getRolesProcedure(["admin", "scheduler"])
 		.input(z.object({ text: z.string().min(1) }))
 		.handler(({ input }) =>

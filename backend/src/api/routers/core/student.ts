@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { resolveDefaultAmount } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { notifyStudentReport } from "@/chat/notify";
 import { schema } from "@/db";
 import {
 	InsertStudentSchema,
@@ -401,6 +402,36 @@ export const studentRouter = {
 					.where(eq(schema.student.id, input.id))
 					.returning(),
 			);
+		}),
+	sendReport: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
+			const student = await tryAPI(
+				"db-core-send-report-student",
+				db.query.student.findFirst({
+					where: MapRole(context.role, {
+						admin: { id: input.id },
+						scheduler: { id: input.id, supervisorId: context.user.id },
+					}),
+					with: { user: { columns: { name: true, phoneNumber: true } } },
+				}),
+			);
+
+			if (!student) throw getError("NOT_FOUND", "Student not found");
+
+			if (!student.user?.phoneNumber) {
+				throw getError("BAD_REQUEST", "Student has no phone number");
+			}
+
+			const link = `${new URL(context.req.url).origin}/analytics/students/${input.id}`;
+
+			await notifyStudentReport({
+				name: student.user.name,
+				phoneNumber: student.user.phoneNumber,
+				link,
+			});
+
+			return { link };
 		}),
 	create: getRolesProcedure(["admin", "enrollment_advisor"])
 		.input(

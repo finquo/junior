@@ -1,6 +1,8 @@
 import { os } from "@orpc/server";
 import { eq, inArray } from "drizzle-orm";
 import z from "zod";
+import { meetingSummarySchema } from "@/ai/summarize";
+import { mediaStorage } from "@/aws/media";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getAPI, getError, tryAPI } from "../procedure";
@@ -24,7 +26,12 @@ export const analyticsRouter = {
 							with: { user: { columns: { name: true, email: true } } },
 						},
 						programInfo: {
-							columns: { name: true, description: true, price: true },
+							columns: {
+								name: true,
+								description: true,
+								price: true,
+								lessons: true,
+							},
 						},
 					},
 				}),
@@ -88,6 +95,42 @@ export const analyticsRouter = {
 				payments,
 				materials,
 				answers,
+			};
+		}),
+	slotReport: publicNextProcedure
+		.input(z.object({ id: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			const slot = await tryAPI(
+				"db-analytics-slot-report-slot",
+				db.query.slot.findFirst({
+					where: { id: input.id },
+					with: {
+						lesson: { columns: { name: true, language: true } },
+						student: {
+							with: { user: { columns: { name: true } } },
+						},
+						teacher: {
+							with: { user: { columns: { name: true } } },
+						},
+					},
+				}),
+			);
+
+			if (!slot) throw getError("NOT_FOUND", "Session not found");
+
+			const raw = await tryAPI(
+				"aws-s3-get-slot-summary",
+				mediaStorage.getItem(`${input.id}/summary/main.json`),
+			);
+
+			if (!raw) throw getError("NOT_FOUND", "Summary not generated yet");
+
+			const summary = meetingSummarySchema.parse(raw);
+
+			return {
+				generatedAt: new Date().toISOString(),
+				slot,
+				summary,
 			};
 		}),
 	demo: publicNextProcedure.handler(

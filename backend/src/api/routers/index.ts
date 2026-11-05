@@ -1,7 +1,6 @@
 import { openapi } from "@orpc/openapi";
 import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
-import { analyticsRouter as analytics } from "./analytics";
 import { chatRouter as chat } from "./chat";
 import { commonRouter as common } from "./common";
 import { lessonRouter as lessonCore } from "./core/lesson";
@@ -29,7 +28,6 @@ export const appRouter = {
 		.handler(({ context: c }) => c.user),
 	sidebar,
 	admin,
-	analytics,
 	scheduler,
 	teacher,
 	student,

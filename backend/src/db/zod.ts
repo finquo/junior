@@ -6,7 +6,7 @@ import {
 	PhoneNumberZod,
 } from "utils";
 import z, { type ZodObject, type ZodRawShape, type ZodString } from "zod";
-import { roleEnumZod } from "@/auth";
+import { roleEnumZod } from "@/auth/permissions";
 import {
 	addressZod,
 	availabilityZod,
