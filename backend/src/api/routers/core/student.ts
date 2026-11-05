@@ -3,6 +3,7 @@ import { resolveDefaultAmount } from "utils";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import { notifyStudentReport } from "@/chat/notify";
+import { noteZod } from "@/config/profile";
 import { schema } from "@/db";
 import {
 	InsertStudentSchema,
@@ -432,6 +433,49 @@ export const studentRouter = {
 			});
 
 			return { link };
+		}),
+	addNote: getRolesProcedure(["admin", "scheduler", "teacher"])
+		.input(
+			noteZod.pick({ text: true }).extend({
+				id: z.string(),
+				text: z.string().trim().min(1, "Note cannot be empty"),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const note = {
+				text: input.text,
+				writterBy: context.user.id,
+				createdAt: new Date().toISOString(),
+			};
+
+			const updated = await tryAPI(
+				"db-core-add-student-note",
+				db
+					.update(schema.student)
+					.set({
+						notes: sql`${schema.student.notes} || ${JSON.stringify([note])}::jsonb`,
+					})
+					.where(
+						MapRole(context.role, {
+							admin: eq(schema.student.id, input.id),
+							scheduler: and(
+								eq(schema.student.id, input.id),
+								eq(schema.student.supervisorId, context.user.id),
+							),
+							teacher: and(
+								eq(schema.student.id, input.id),
+								eq(schema.student.mentorId, context.user.id),
+							),
+						}),
+					)
+					.returning({ notes: schema.student.notes }),
+			);
+
+			const [row] = updated ?? [];
+
+			if (!row) throw getError("NOT_FOUND", "Student not found");
+
+			return { notes: row.notes };
 		}),
 	create: getRolesProcedure(["admin", "enrollment_advisor"])
 		.input(

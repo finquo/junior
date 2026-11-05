@@ -15,6 +15,7 @@ import {
 	MapPinIcon,
 	NotebookPenIcon,
 	PenIcon,
+	PlusIcon,
 	SchoolIcon,
 	SendIcon,
 	UserRoundIcon,
@@ -68,6 +69,7 @@ import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
+import { AddNoteDialog } from "./add-note-dialog";
 import { EditStudentDrawer } from "./edit-drawer";
 
 type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
@@ -600,6 +602,16 @@ export function StudentProfile({
 								<CardDescription>
 									Internal observations recorded for this student.
 								</CardDescription>
+								<CardAction>
+									<RenderWhenRole role={["admin", "scheduler", "teacher"]}>
+										<AddNoteDialog studentId={data.id}>
+											<Button variant="outline" size="sm">
+												<PlusIcon />
+												Add Note
+											</Button>
+										</AddNoteDialog>
+									</RenderWhenRole>
+								</CardAction>
 							</CardHeader>
 							<CardContent>
 								{notes.length === 0 ? (
@@ -621,9 +633,19 @@ export function StudentProfile({
 												<TableRow key={idx as number}>
 													<TableCell>{note.text}</TableCell>
 													<TableCell>
-														<ColorBadge>
-															{snakeToTitleCase(note.writterBy)}
-														</ColorBadge>
+														<FetchUser
+															id={note.writterBy}
+															isPending={<Skeleton className="h-4 w-24" />}
+														>
+															{(user) => (
+																<>
+																	{user.name}
+																	<ColorBadge>
+																		{snakeToTitleCase(user.role)}
+																	</ColorBadge>
+																</>
+															)}
+														</FetchUser>
 													</TableCell>
 													<TableCell>{formatDate(note.createdAt)}</TableCell>
 												</TableRow>

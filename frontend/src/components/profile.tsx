@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/table";
 import { UserContactDropdown } from "@/components/user-contact-dropdown";
 import { SwitchNode } from "@/components/utils";
+import { FetchUser } from "@/hooks/user";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 
 export { UserEditDrawer } from "./user-edit-drawer";
@@ -178,7 +179,18 @@ export function StudentProfile({ student }: { student?: StudentType | null }) {
 									{notes.map((note, idx) => (
 										<TableRow key={idx as number}>
 											<TableCell>{note.text}</TableCell>
-											<TableCell>{note.writterBy}</TableCell>
+											<TableCell>
+												<FetchUser id={note.writterBy}>
+													{(user) => (
+														<>
+															{user.name}
+															<ColorBadge>
+																{snakeToTitleCase(user.role)}
+															</ColorBadge>
+														</>
+													)}
+												</FetchUser>
+											</TableCell>
 											<TableCell>{formatDate(note.createdAt)}</TableCell>
 										</TableRow>
 									))}
