@@ -13,6 +13,7 @@ import { slotRouter as slotCore } from "./core/slot";
 import { studentRouter as studentCore } from "./core/student";
 import { teacherRouter as teacherCore } from "./core/teacher";
 import { userRouter as userCore } from "./core/user";
+import { materialRouter as materialCore } from "./material";
 import { mediaRouter as media } from "./media";
 import { meetingRouter as meeting } from "./meeting";
 import { schedulerRouter as scheduler } from "./scheduler";
@@ -36,6 +37,7 @@ export const appRouter = {
 	media,
 	core: {
 		lesson: lessonCore,
+		material: materialCore,
 		payment: paymentCore,
 		program: programCore,
 		quiz: quizCore,

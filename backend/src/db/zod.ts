@@ -140,6 +140,30 @@ export const UpdateLessonSchema = createUpdateSchema(schema.lesson)
 		period: intervalHourZod.optional(),
 	});
 
+// Material
+export const OrderStatusZod = z.enum(schema.orderStatusEnum.enumValues);
+export const SelectMaterialSchema = createSelectSchema(
+	schema.material,
+).safeExtend({
+	order: OrderStatusZod,
+	lessons: z.string().array(),
+	shippingAddress: addressZod,
+});
+export const InsertMaterialSchema = createInsertSchema(
+	schema.material,
+).safeExtend({
+	order: OrderStatusZod.optional(),
+	lessons: z.string().array().optional(),
+	shippingAddress: addressZod,
+});
+export const UpdateMaterialSchema = createUpdateSchema(
+	schema.material,
+).safeExtend({
+	order: OrderStatusZod.optional(),
+	lessons: z.string().array().optional(),
+	shippingAddress: addressZod.optional(),
+});
+
 // Payment
 export const SelectPaymentSchema = createSelectSchema(schema.payment);
 export const InsertPaymentSchema = createInsertSchema(schema.payment);

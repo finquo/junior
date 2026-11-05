@@ -95,6 +95,16 @@ const relations = defineRelations(schema, (r) => ({
 			to: r.student.id,
 		}),
 	},
+	material: {
+		student: r.one.student({
+			from: r.material.studentId,
+			to: r.student.id,
+		}),
+		scheduler: r.one.scheduler({
+			from: r.material.schedulerId,
+			to: r.scheduler.id,
+		}),
+	},
 	lesson: {
 		slots: r.many.slot(),
 		answers: r.many.answer(),

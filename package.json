@@ -28,6 +28,7 @@
 		"frontend": "vp run --filter frontend",
 		"backend": "vp run --filter backend",
 		"dev": "vp run -r --parallel dev",
+		"start": "vp run -r --parallel start",
 		"compile": "vp run -r compile",
 		"construct": "vp run -r construct",
 		"build": "vp run -r build",

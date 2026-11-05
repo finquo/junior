@@ -7,6 +7,7 @@ import {
 	ComponentIcon,
 	GraduationCapIcon,
 	ListIcon,
+	PackageIcon,
 	PlusIcon,
 	ScanEyeIcon,
 	UserPenIcon,
@@ -161,6 +162,23 @@ export function SidebarConfig({
 									icon: <ListIcon />,
 									title: "Show List",
 									url: "/lessons",
+								},
+							],
+						},
+						{
+							title: "Materials",
+							url: "/materials",
+							icon: <PackageIcon />,
+							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Create New",
+									url: "/materials/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/materials",
 								},
 							],
 						},

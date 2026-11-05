@@ -9,7 +9,7 @@
 		"check": "tsc --noEmit",
 		"format": "biome format ./ --write",
 		"dev": "bun run --env-file=../.env --hot src/index.ts --port 3000",
-		"start": "node out/index.mjs",
+		"start": "varlock codegen && tsdown --watch",
 		"env:generate": "varlock codegen",
 		"auth:generate": "auth generate --config src/services.ts --output src/db/auth.test.ts --yes",
 		"db:generate": "drizzle-kit generate",
