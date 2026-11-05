@@ -28,24 +28,24 @@
 			"default": "./out/index.mjs"
 		},
 		"./config": {
-			"import": "./dist/config.mjs",
-			"types": "./dist/config.d.mts",
-			"default": "./dist/config.mjs"
+			"import": "./out/config.mjs",
+			"types": "./out/config.d.mts",
+			"default": "./out/config.mjs"
 		},
 		"./auth": {
-			"import": "./dist/auth.mjs",
-			"types": "./dist/auth.d.mts",
-			"default": "./dist/auth.mjs"
+			"import": "./out/auth.mjs",
+			"types": "./out/auth.d.mts",
+			"default": "./out/auth.mjs"
 		},
 		"./db": {
-			"import": "./dist/db.mjs",
-			"types": "./dist/db.d.mts",
-			"default": "./dist/db.mjs"
+			"import": "./out/db.mjs",
+			"types": "./out/db.d.mts",
+			"default": "./out/db.mjs"
 		},
 		"./api": {
-			"types": "./dist/api.d.mts",
-			"import": "./dist/api.mjs",
-			"default": "./dist/api.mjs"
+			"types": "./out/api.d.mts",
+			"import": "./out/api.mjs",
+			"default": "./out/api.mjs"
 		}
 	},
 	"dependencies": {

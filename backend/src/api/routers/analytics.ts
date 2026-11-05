@@ -1,8 +1,95 @@
 import { os } from "@orpc/server";
+import { eq, inArray } from "drizzle-orm";
+import z from "zod";
+import { schema } from "@/db";
+import { db } from "@/services";
+import { getAPI, getError, tryAPI } from "../procedure";
 
 const publicNextProcedure = os.$context();
 
 export const analyticsRouter = {
+	studentReport: publicNextProcedure
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input }) => {
+			const student = await tryAPI(
+				"db-analytics-student-report-student",
+				db.query.student.findFirst({
+					where: { id: input.id },
+					with: {
+						user: { columns: { name: true, email: true, image: true } },
+						mentor: {
+							with: { user: { columns: { name: true, email: true } } },
+						},
+						scheduler: {
+							with: { user: { columns: { name: true, email: true } } },
+						},
+						programInfo: {
+							columns: { name: true, description: true, price: true },
+						},
+					},
+				}),
+			);
+
+			if (!student) throw getError("NOT_FOUND", "Student not found");
+
+			const attendedIds = student.attendedLessons ?? [];
+
+			const [attendedLessons, slots, payments, materials, answers] =
+				await Promise.all([
+					attendedIds.length === 0
+						? []
+						: getAPI(
+								"db-analytics-student-report-attended-lessons",
+								db
+									.select()
+									.from(schema.lesson)
+									.where(inArray(schema.lesson.id, attendedIds)),
+								[],
+							),
+					getAPI(
+						"db-analytics-student-report-slots",
+						db
+							.select()
+							.from(schema.slot)
+							.where(eq(schema.slot.studentId, input.id)),
+						[],
+					),
+					getAPI(
+						"db-analytics-student-report-payments",
+						db
+							.select()
+							.from(schema.payment)
+							.where(eq(schema.payment.studentId, input.id)),
+						[],
+					),
+					getAPI(
+						"db-analytics-student-report-materials",
+						db
+							.select()
+							.from(schema.material)
+							.where(eq(schema.material.studentId, input.id)),
+						[],
+					),
+					getAPI(
+						"db-analytics-student-report-answers",
+						db
+							.select()
+							.from(schema.answer)
+							.where(eq(schema.answer.studentId, input.id)),
+						[],
+					),
+				]);
+
+			return {
+				generatedAt: new Date().toISOString(),
+				student,
+				attendedLessons,
+				slots,
+				payments,
+				materials,
+				answers,
+			};
+		}),
 	demo: publicNextProcedure.handler(
 		() =>
 			({
