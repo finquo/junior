@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import {
 	DownloadIcon,
+	EyeIcon,
 	FileIcon,
 	FileTextIcon,
 	LinkIcon,
@@ -74,6 +75,14 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 		}),
 	);
 
+	const { mutate: view, isPending: isViewPending } = useMutation(
+		api.media.library.download.mutationOptions({
+			onSuccess: ({ url }) => {
+				window.open(url, "_blank", "noopener,noreferrer");
+			},
+		}),
+	);
+
 	const { mutate: remove, isPending: isDeletePending } = useMutation(
 		api.media.library.delete.mutationOptions({
 			onSuccess: () => {
@@ -85,7 +94,8 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 		}),
 	);
 
-	const isBusy = isLinkPending || isDownloadPending || isDeletePending;
+	const isBusy =
+		isLinkPending || isDownloadPending || isViewPending || isDeletePending;
 
 	return (
 		<Attachment state={isBusy ? "processing" : "done"}>
@@ -95,6 +105,13 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 				<AttachmentDescription>{path}</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
+				<AttachmentAction
+					aria-label={`View ${name}`}
+					disabled={isBusy}
+					onClick={() => view({ key: path, inline: true })}
+				>
+					{isViewPending ? <Spinner /> : <EyeIcon />}
+				</AttachmentAction>
 				<AttachmentAction
 					aria-label={`Download ${name}`}
 					disabled={isBusy}

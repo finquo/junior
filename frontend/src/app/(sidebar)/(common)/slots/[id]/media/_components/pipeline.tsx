@@ -12,12 +12,14 @@ import {
 	FileAudioIcon,
 	FileJsonIcon,
 	FileTextIcon,
+	FolderIcon,
 	PlayIcon,
 	RefreshCwIcon,
 	SendIcon,
 	TrashIcon,
 	VideoIcon,
 } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
@@ -528,6 +530,12 @@ export function MediaPipeline({
 				<CardDescription>Recording and processing jobs.</CardDescription>
 				<CardAction>
 					<ButtonGroup>
+						<Button variant="outline" size="sm" asChild>
+							<Link href={`/medias/${id}` as "/"}>
+								<FolderIcon />
+								Files
+							</Link>
+						</Button>
 						<Button variant="outline" size="sm" onClick={refresh}>
 							<RefreshCwIcon />
 							Refresh

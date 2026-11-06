@@ -491,6 +491,7 @@ export const mediaRouter = {
 						.refine((key) => key.includes("/") && !key.includes(".."), {
 							message: "Key must be <slotId>/<file>",
 						}),
+					inline: z.boolean().optional(),
 				}),
 			)
 			.handler(async ({ input }) => {
@@ -499,7 +500,13 @@ export const mediaRouter = {
 
 				const url = await tryAPI(
 					"aws-s3-presign-library-download",
-					getMediaDownloadURL(input.key, undefined, input.key.split("/").pop()),
+					input.inline
+						? getMediaViewURL(input.key)
+						: getMediaDownloadURL(
+								input.key,
+								undefined,
+								input.key.split("/").pop(),
+							),
 				);
 				if (!url)
 					throw getError(

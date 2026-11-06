@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { ExternalLinkIcon, TrashIcon } from "lucide-react";
+import { ExternalLinkIcon, TrashIcon, VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { CopyButton } from "@/components/copy";
@@ -94,6 +94,11 @@ const columns: ColumnDef<DataTableFeatures, LibraryRecord>[] =
 					<Button variant="outline" size="icon-sm" asChild>
 						<Link href={`/medias/${row.original.slotId}` as "/"}>
 							<ExternalLinkIcon />
+						</Link>
+					</Button>
+					<Button variant="outline" size="icon-sm" asChild>
+						<Link href={`/slots/${row.original.slotId}/media` as "/"}>
+							<VideoIcon />
 						</Link>
 					</Button>
 					<DeleteSlotButton slotId={row.original.slotId} />

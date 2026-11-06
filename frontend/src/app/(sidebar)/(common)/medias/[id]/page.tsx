@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -53,6 +53,12 @@ function SessionMedia({ slotId }: { slotId: string }) {
 								<Spinner />
 							</Button>
 						)}
+						<Button variant="outline" asChild>
+							<Link href={`/slots/${slotId}/media` as "/"}>
+								<VideoIcon />
+								Pipeline
+							</Link>
+						</Button>
 						<Button variant="outline" asChild>
 							<Link href={"/medias" as "/"}>
 								<ArrowLeftIcon />
