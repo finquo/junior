@@ -126,11 +126,7 @@ export function SlotActions({ slot }: { slot: SlotData }) {
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>
-							<Link
-								href={
-									`/slots/${slot.id}/edit?studentId=${slot.studentId ?? ""}&lessonId=${slot.lessonId ?? ""}` as "/"
-								}
-							>
+							<Link href={`/slots/${slot.id}/edit`}>
 								<CalendarClockIcon />
 								Reschedule
 							</Link>

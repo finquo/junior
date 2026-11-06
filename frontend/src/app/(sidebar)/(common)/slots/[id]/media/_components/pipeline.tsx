@@ -8,6 +8,7 @@ import {
 import {
 	CircleAlertIcon,
 	DownloadIcon,
+	EyeIcon,
 	FileAudioIcon,
 	FileJsonIcon,
 	FileTextIcon,
@@ -114,15 +115,26 @@ function DownloadButton({
 	);
 
 	return (
-		<Button
-			variant="outline"
-			size="sm"
-			disabled={isPending}
-			onClick={() => mutate({ id, path })}
-		>
-			{isPending ? <Spinner /> : <DownloadIcon />}
-			{label}
-		</Button>
+		<ButtonGroup>
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={isPending}
+				onClick={() => mutate({ id, path, inline: true })}
+			>
+				<EyeIcon />
+				View
+			</Button>
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={isPending}
+				onClick={() => mutate({ id, path })}
+			>
+				{isPending ? <Spinner /> : <DownloadIcon />}
+				{label}
+			</Button>
+		</ButtonGroup>
 	);
 }
 
@@ -206,7 +218,15 @@ function ShowSummaryButton({ id }: { id: string }) {
 	);
 }
 
-function SendToParentButton({ id }: { id: string }) {
+function SendToParentButton({
+	id,
+	source,
+	disabled,
+}: {
+	id: string;
+	source?: "chunks";
+	disabled?: boolean;
+}) {
 	const { mutate, isPending } = useMutation(
 		api.media.sendSummary.mutationOptions({
 			onSuccess: () => {
@@ -222,11 +242,11 @@ function SendToParentButton({ id }: { id: string }) {
 		<Button
 			variant="outline"
 			size="sm"
-			disabled={isPending}
-			onClick={() => mutate({ id })}
+			disabled={disabled || isPending}
+			onClick={() => mutate({ id, source })}
 		>
 			{isPending ? <Spinner /> : <SendIcon />}
-			Sent to parent
+			Send to student
 		</Button>
 	);
 }
@@ -434,6 +454,32 @@ function ChunkItem({
 	);
 }
 
+function TranscriptItem({
+	id,
+	index,
+	path,
+}: {
+	id: string;
+	index: number;
+	path: string;
+}) {
+	return (
+		<Item variant="outline">
+			<ItemMedia variant="icon">
+				<FileJsonIcon />
+			</ItemMedia>
+			<ItemContent>
+				<ItemTitle>{path.split("/").pop() ?? path}</ItemTitle>
+				<ItemDescription>{path}</ItemDescription>
+			</ItemContent>
+			<ItemActions>
+				<DownloadButton id={id} path={path} label="Transcript" />
+				<DeleteButton id={id} path={path} label="Transcript" index={index} />
+			</ItemActions>
+		</Item>
+	);
+}
+
 export function MediaPipeline({
 	slot,
 	media,
@@ -454,6 +500,9 @@ export function MediaPipeline({
 	const transcribedChunks = media.chunks.filter((chunk) => chunk.transcript);
 	const chunksTranscribed =
 		media.chunks.length > 0 && transcribedChunks.length === media.chunks.length;
+	const transcriptPaths = media.chunks.flatMap((chunk) =>
+		chunk.transcript ? [chunk.transcript.path] : [],
+	);
 
 	const handleSuccess = (action: ActionKey, title: string) => () => {
 		setErrors((previous) => {
@@ -565,7 +614,7 @@ export function MediaPipeline({
 										id={id}
 										index={index}
 										media={media}
-										disabled={!attended || !media.video}
+										disabled={!media.video}
 										onDone={refresh}
 									/>
 								</CardAction>
@@ -690,6 +739,20 @@ export function MediaPipeline({
 												: "Waiting for the chunks."
 										}
 										error={errors.transcribeChunks}
+										children={
+											transcriptPaths.length > 0 && (
+												<ItemGroup>
+													{transcriptPaths.map((path) => (
+														<TranscriptItem
+															key={path}
+															id={id}
+															index={index}
+															path={path}
+														/>
+													))}
+												</ItemGroup>
+											)
+										}
 										actions={
 											<RetryAction
 												api={api.media.transcribeAudioChunks.mutationOptions({
@@ -728,6 +791,20 @@ export function MediaPipeline({
 														label="Summary"
 													/>
 												)}
+												{media.chunkSummary && (
+													<Button asChild variant="outline" size="sm">
+														<a
+															href={
+																`/analytics/slots/${id}?source=chunks` as "/"
+															}
+															target="_blank"
+															rel="noreferrer"
+														>
+															<FileTextIcon />
+															PDF
+														</a>
+													</Button>
+												)}
 												<RetryAction
 													api={api.media.summarizeChunks.mutationOptions({
 														onError: handleError("summarizeChunks"),
@@ -743,10 +820,23 @@ export function MediaPipeline({
 											</>
 										}
 									/>
+									<PipelineStep
+										step={5}
+										title="Send Report to Student"
+										description="Sends the report link to the student's phone."
+										actions={
+											<SendToParentButton
+												id={id}
+												source="chunks"
+												disabled={!media.chunkSummary}
+											/>
+										}
+									/>
 								</Timeline>
 							</CardContent>
 						</Card>
 
+						{/*
 						<Card size="sm">
 							<CardHeader>
 								<CardTitle>Direct</CardTitle>
@@ -860,6 +950,7 @@ export function MediaPipeline({
 								</Timeline>
 							</CardContent>
 						</Card>
+						*/}
 					</TabsContent>
 				</Tabs>
 			</CardContent>

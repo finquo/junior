@@ -9,6 +9,7 @@ import {
 	getMediaArtifact,
 	getMediaDownloadURL,
 	getMediaMeta,
+	getMediaViewURL,
 	isAllowedAssetPath,
 	mediaKey,
 	mediaStorage,
@@ -149,7 +150,13 @@ export const mediaRouter = {
 		}),
 
 	download: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
-		.input(z.object({ id: z.string().min(1), path: z.string().min(1) }))
+		.input(
+			z.object({
+				id: z.string().min(1),
+				path: z.string().min(1),
+				inline: z.boolean().optional(),
+			}),
+		)
 		.handler(async ({ input }) => {
 			if (!isAllowedAssetPath(input.path))
 				throw getError(
@@ -163,7 +170,9 @@ export const mediaRouter = {
 
 			const url = await tryAPI(
 				"aws-s3-presign-download",
-				getMediaDownloadURL(key, undefined, key.split("/").pop()),
+				input.inline
+					? getMediaViewURL(key)
+					: getMediaDownloadURL(key, undefined, key.split("/").pop()),
 			);
 			if (!url)
 				throw getError(
@@ -277,7 +286,12 @@ export const mediaRouter = {
 		}),
 
 	sendSummary: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1) }))
+		.input(
+			z.object({
+				id: z.string().min(1),
+				source: z.enum(["main", "chunks"]).optional(),
+			}),
+		)
 		.handler(async ({ input, context }) => {
 			const slot = await tryAPI(
 				"db-media-send-summary-slot",
@@ -296,7 +310,11 @@ export const mediaRouter = {
 
 			if (!slot) throw getError("NOT_FOUND", "Session not found");
 
-			const summaryMeta = await getMediaMeta(`${input.id}/summary/main.json`);
+			const isChunks = input.source === "chunks";
+
+			const summaryMeta = await getMediaMeta(
+				`${input.id}/summary/${isChunks ? "chunks" : "main"}.json`,
+			);
 			if (!summaryMeta)
 				throw getError("NOT_FOUND", "Summary not generated yet");
 
@@ -307,7 +325,7 @@ export const mediaRouter = {
 				throw getError("BAD_REQUEST", "Student has no phone number");
 			}
 
-			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}`;
+			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}${isChunks ? "?source=chunks" : ""}`;
 
 			await notifySlotSummary({
 				name: student.name,
@@ -418,8 +436,6 @@ export const mediaRouter = {
 					mediaStorage.getKeys(input.id),
 					[],
 				);
-
-				console.log(keys);
 
 				return keys.map(normalizeMediaKey);
 			}),

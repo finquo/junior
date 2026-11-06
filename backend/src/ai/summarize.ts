@@ -1,5 +1,5 @@
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
-import { sarvam } from "sarvam-ai-sdk";
 import { z } from "zod";
 
 export const meetingSummarySchema = z.object({
@@ -49,10 +49,7 @@ export const meetingSummarySchema = z.object({
 
 export async function summarizeTranscript(transcript: string) {
 	const { object } = await generateObject({
-		model: sarvam("sarvam-105b", {
-			reasoning_effort: "none",
-			experimental_json_mode: true,
-		}),
+		model: openrouter("google/gemini-2.5-flash"),
 		temperature: 0.2,
 		maxOutputTokens: 3000,
 		schema: meetingSummarySchema,

@@ -3,6 +3,24 @@ import { sarvam } from "sarvam-ai-sdk";
 import { normalizeKey } from "unstorage";
 import { CHUNK_FILE, mediaKey, mediaStorage } from "../aws/media";
 
+type TranscribeResult = {
+	text: string;
+	segments: { text: string; startSecond: number; endSecond: number }[];
+	durationInSeconds?: number;
+};
+
+function toSegments(result: TranscribeResult) {
+	if (result.segments.length > 0) return result.segments;
+
+	return [
+		{
+			text: result.text,
+			startSecond: 0,
+			endSecond: result.durationInSeconds ?? 0,
+		},
+	];
+}
+
 export async function transcribeAudio(key: string) {
 	const parts = normalizeKey(key).split(":");
 	const [id, folder, filename] = parts;
@@ -18,13 +36,15 @@ export async function transcribeAudio(key: string) {
 	);
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
-	const { segments } = await transcribe({
+	const result = await transcribe({
 		model: sarvam.transcription("saaras:v4", "unknown", {
 			mode: "transcribe",
 			with_timestamps: true,
 		}),
 		audio,
 	});
+
+	const segments = toSegments(result);
 
 	const outputKey = mediaKey(id, `transcript-single/${Number(number)}.json`);
 
@@ -58,13 +78,15 @@ export async function transcribeAudioChunk(key: string) {
 	const audio = await mediaStorage.getItemRaw<Uint8Array>(normalizeKey(key));
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
-	const { segments } = await transcribe({
+	const result = await transcribe({
 		model: sarvam.transcription("saaras:v4", "unknown", {
 			mode: "transcribe",
 			with_timestamps: true,
 		}),
 		audio,
 	});
+
+	const segments = toSegments(result);
 
 	const outputKey = mediaKey(
 		id,

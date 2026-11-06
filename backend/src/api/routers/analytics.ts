@@ -98,7 +98,12 @@ export const analyticsRouter = {
 			};
 		}),
 	slotReport: publicNextProcedure
-		.input(z.object({ id: z.string().min(1) }))
+		.input(
+			z.object({
+				id: z.string().min(1),
+				source: z.enum(["main", "chunks"]).optional(),
+			}),
+		)
 		.handler(async ({ input }) => {
 			const slot = await tryAPI(
 				"db-analytics-slot-report-slot",
@@ -120,7 +125,11 @@ export const analyticsRouter = {
 
 			const raw = await tryAPI(
 				"aws-s3-get-slot-summary",
-				mediaStorage.getItem(`${input.id}/summary/main.json`),
+				mediaStorage.getItem(
+					input.source === "chunks"
+						? `${input.id}/summary/chunks.json`
+						: `${input.id}/summary/main.json`,
+				),
 			);
 
 			if (!raw) throw getError("NOT_FOUND", "Summary not generated yet");

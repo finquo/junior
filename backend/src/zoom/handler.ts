@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { tryAPI, tryFunc } from "utils";
-import { mediaStorage } from "@/aws/media";
+import { hasZoomVideo, mediaStorage, saveZoomVideo } from "@/aws/media";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getZoomAPI } from "@/zoom/api";
@@ -81,25 +81,31 @@ export const zoomEventHandler = zoomEvents(
 					return extension?.toUpperCase() === "MP4";
 				});
 
-				const downloadUrls = videos.flatMap((file) =>
-					file.download_url ? [file.download_url] : [],
-				);
-
 				const existingKeys = await tryAPI(
 					"zoom-recording-list-existing-keys",
 					mediaStorage.getKeys(sessionName),
 				);
 
-				const start = existingKeys
+				let index = existingKeys
 					? nextVideoIndex(existingKeys, sessionName)
 					: 0;
 
-				for (const [offset, downloadUrl] of downloadUrls.entries()) {
-					const index = start + offset;
+				for (const file of videos) {
+					const downloadUrl = file.download_url;
+					const zoomFileId = file.id;
+
+					if (!downloadUrl || !zoomFileId) continue;
+
+					const saved = await tryAPI(
+						"zoom-recording-check-duplicate",
+						hasZoomVideo(sessionName, zoomFileId),
+					);
+
+					if (saved) continue;
 
 					const key = `${sessionName}/videos/${index}.mp4`;
 
-					console.log({ offset, downloadUrl, index, key });
+					console.log({ downloadUrl, zoomFileId, index, key });
 
 					const data = await tryFunc(
 						`zoom-recording-download-${index}`,
@@ -123,8 +129,10 @@ export const zoomEventHandler = zoomEvents(
 
 					await tryAPI(
 						`zoom-recording-upload-${index}`,
-						mediaStorage.setItemRaw(key, new Uint8Array(data)),
+						saveZoomVideo(key, new Uint8Array(data), zoomFileId),
 					);
+
+					index++;
 				}
 			},
 		},

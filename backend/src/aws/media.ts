@@ -1,4 +1,8 @@
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+	GetObjectCommand,
+	HeadObjectCommand,
+	PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createStorage } from "unstorage";
 import { bucket } from "./bucket";
@@ -103,6 +107,64 @@ export async function getMediaArtifact(
 		path,
 		size: meta.size || null,
 	};
+}
+
+const CONTENT_TYPES: Record<string, string> = {
+	mp4: "video/mp4",
+	mp3: "audio/mpeg",
+	aac: "audio/aac",
+	json: "application/json",
+	m3u8: "application/vnd.apple.mpegurl",
+};
+
+export function getMediaViewURL(key: string, expiresIn = 3600) {
+	const extension = key.split(".").pop() ?? "";
+	const filename = key.split("/").pop();
+	return getSignedUrl(
+		bucket,
+		new GetObjectCommand({
+			Bucket: MEDIA_BUCKET,
+			Key: mediaPath(key),
+			ResponseContentType: CONTENT_TYPES[extension],
+			ResponseContentDisposition: `inline; filename="${filename}"`,
+		}),
+		{ expiresIn },
+	);
+}
+
+const ZOOM_FILE_ID_META = "zoom-file-id";
+
+const VIDEO_KEY = /\/videos\/\d+\.mp4$/;
+
+export async function saveZoomVideo(
+	key: string,
+	body: Uint8Array,
+	zoomFileId: string,
+) {
+	await bucket.send(
+		new PutObjectCommand({
+			Bucket: MEDIA_BUCKET,
+			Key: mediaPath(key),
+			Body: body,
+			Metadata: { [ZOOM_FILE_ID_META]: zoomFileId },
+		}),
+	);
+}
+
+export async function hasZoomVideo(sessionName: string, zoomFileId: string) {
+	const keys = await mediaStorage.getKeys(sessionName);
+
+	for (const key of keys) {
+		if (!VIDEO_KEY.test(normalizeMediaKey(key))) continue;
+
+		const res = await bucket.send(
+			new HeadObjectCommand({ Bucket: MEDIA_BUCKET, Key: mediaPath(key) }),
+		);
+
+		if (res.Metadata?.[ZOOM_FILE_ID_META] === zoomFileId) return true;
+	}
+
+	return false;
 }
 
 export function getMediaDownloadURL(
