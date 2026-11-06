@@ -26,6 +26,7 @@ export const slot = pgTable(
 	"slot",
 	{
 		id: generateId().primaryKey(),
+		sessionId: text(),
 		meetingLink: text(),
 
 		studentId: getId().references(() => student.id, { onDelete: "cascade" }),

@@ -3,6 +3,7 @@ import { tryAPI, tryFunc } from "utils";
 import { mediaStorage } from "@/aws/media";
 import { schema } from "@/db";
 import { db } from "@/services";
+import { getZoomAPI } from "@/zoom/api";
 import { zoomEvents } from "./webhook";
 
 const VIDEO_FILE = /^(\d+)\.mp4$/;
@@ -24,6 +25,32 @@ function nextVideoIndex(keys: string[], sessionName: string) {
 export const zoomEventHandler = zoomEvents(
 	{
 		session: {
+			started: async (c) => {
+				const sessionName = c.var.data?.object.session_name;
+				const sessionId = c.var.data?.object.session_id;
+
+				if (!sessionName || !sessionId) return;
+
+				await tryAPI(
+					"zoom-session-started-update-slot",
+					db
+						.update(schema.slot)
+						.set({
+							status: "started",
+							sessionId,
+						})
+						.where(eq(schema.slot.id, sessionName)),
+				);
+
+				const zoomAPI = await getZoomAPI();
+
+				const { error } = await zoomAPI("/sessions/:sessionId/events", {
+					params: { sessionId },
+					body: { method: "recording.start" },
+				});
+
+				if (error) console.error(error);
+			},
 			ended: async (c) => {
 				const sessionName = c.var.data?.object.session_name;
 				const timestamp = c.var.timestamp;

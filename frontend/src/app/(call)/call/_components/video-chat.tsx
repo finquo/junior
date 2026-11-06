@@ -698,7 +698,7 @@ export function VideoChat({
 						>
 							<div className="animatein hidden group-hover:block">
 								<FieldGroup className="gap-1.5 p-1.5">
-									<FieldLabel htmlFor="tile-audio-switch">
+									<FieldLabel htmlFor="tile-microphone-switch">
 										<Field className="h-10" orientation="horizontal">
 											<ItemMedia variant="icon">
 												{audioPending ? (
@@ -710,12 +710,12 @@ export function VideoChat({
 												)}
 											</ItemMedia>
 											<ItemContent>
-												<ItemTitle>Audio</ItemTitle>
+												<ItemTitle>Microphone</ItemTitle>
 											</ItemContent>
 											<ItemActions>
 												<Switch
-													id="tile-audio-switch"
-													aria-label="Audio"
+													id="tile-microphone-switch"
+													aria-label="Microphone"
 													checked={isAudioOn}
 													disabled={audioPending}
 													onCheckedChange={() => toggleMicrophone()}
