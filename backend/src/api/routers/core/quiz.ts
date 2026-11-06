@@ -165,7 +165,10 @@ export const quizRouter = {
 						quiz: schema.lesson.quiz,
 					})
 					.from(schema.answer)
-					.innerJoin(schema.lesson, eq(schema.answer.lessonId, schema.lesson.id))
+					.innerJoin(
+						schema.lesson,
+						eq(schema.answer.lessonId, schema.lesson.id),
+					)
 					.where(eq(schema.answer.studentId, input.studentId))
 					.orderBy(schema.answer.createdAt),
 				[],

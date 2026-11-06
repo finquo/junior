@@ -5,12 +5,14 @@ import { bucket } from "./bucket";
 import { MEDIA_BUCKET } from "./config";
 import { s3Driver, toS3Path } from "./s3-driver";
 
-export const CHUNK_LENGTH_SECONDS = 120;
+export const CHUNK_LENGTH_SECONDS = 25;
+
+export const CHUNK_FILE = /(\d+)_audio_(\d+)\.aac$/;
 
 type MediaLayout = {
 	videos: `${number}.mp4`;
 	audios: `${number}.mp3`;
-	"audio-chunks": `${number}/audio_chunk_${string}.aac`;
+	"audio-chunks": `${number}/${number}_audio_${number}.aac`;
 	"transcript-single": `${number}.json`;
 	"transcript-chunks": `${number}/${number}.json`;
 	transcript: `${number}.json`;
@@ -37,8 +39,9 @@ export const mediaDir = <F extends MediaFolder>(id: string, dir: MediaDir<F>) =>
 export const ALLOWED_ASSET_PATHS = [
 	/^videos\/\d+\.mp4$/,
 	/^audios\/\d+\.mp3$/,
-	/^audio-chunks\/\d+\/audio\.m3u8$/,
-	/^audio-chunks\/\d+\/audio_chunk_\d{9}\.aac$/,
+	/^audio-chunks\/\d+\/\d+\.m3u8$/,
+	/^audio-chunks\/\d+\/\d+_audio\.m3u8$/,
+	/^audio-chunks\/\d+\/\d+_audio_\d+\.aac$/,
 	/^transcript-single\/\d+\.json$/,
 	/^transcript-chunks\/\d+\/\d+\.json$/,
 	/^transcript\/\d+\.json$/,
@@ -102,10 +105,20 @@ export async function getMediaArtifact(
 	};
 }
 
-export function getMediaDownloadURL(key: string, expiresIn = 3600) {
+export function getMediaDownloadURL(
+	key: string,
+	expiresIn = 3600,
+	filename?: string,
+) {
 	return getSignedUrl(
 		bucket,
-		new GetObjectCommand({ Bucket: MEDIA_BUCKET, Key: mediaPath(key) }),
+		new GetObjectCommand({
+			Bucket: MEDIA_BUCKET,
+			Key: mediaPath(key),
+			ResponseContentDisposition: filename
+				? `attachment; filename="${filename}"`
+				: undefined,
+		}),
 		{ expiresIn },
 	);
 }

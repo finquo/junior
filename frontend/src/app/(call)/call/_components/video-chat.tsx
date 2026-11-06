@@ -149,8 +149,7 @@ export function VideoChat({
 	const participants = useSessionUsers();
 	const myself = useMyself();
 	const { isVideoOn } = useVideoState();
-	const { isAudioMuted, isCapturingAudio, setCapture, setMute } =
-		useAudioState();
+	const { isAudioMuted, isCapturingAudio } = useAudioState();
 	const { ScreenshareRef, startScreenshare, stopScreenshare, isScreensharing } =
 		useScreenshare();
 	const screenShareUsers = useScreenShareUsers();
@@ -408,22 +407,27 @@ export function VideoChat({
 
 		setAudioPending(true);
 
+		const stream = ZoomVideo.createClient().getMediaStream();
+
 		try {
 			if (!isCapturingAudio) {
-				await setCapture(true, { mute: false });
+				const result = await stream.startAudio();
+				if (result) throw result;
 				void setMic(true);
 				toast.success({ title: "Microphone on" });
 				return;
 			}
 
 			if (isAudioMuted) {
-				await setMute(false);
+				const result = await stream.unmuteAudio();
+				if (result) throw result;
 				void setMic(true);
 				toast.success({ title: "Microphone on" });
 				return;
 			}
 
-			await setMute(true);
+			const result = await stream.muteAudio();
+			if (result) throw result;
 			void setMic(false);
 			toast.info({ title: "Microphone off" });
 		} catch (error) {

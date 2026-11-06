@@ -7,9 +7,22 @@ import {
 	FileTextIcon,
 	LinkIcon,
 	Music2Icon,
+	TrashIcon,
 	VideoIcon,
 } from "lucide-react";
 import { sileo as toast } from "sileo";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
 	Attachment,
 	AttachmentAction,
@@ -27,7 +40,8 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
-import { api } from "@/hooks/api";
+import { api, refetchAPIs } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 
 const fileIcon = (name: string) => {
 	const extension = name.split(".").pop()?.toLowerCase();
@@ -40,7 +54,7 @@ const fileIcon = (name: string) => {
 	return <FileIcon />;
 };
 
-function MediaFile({ path }: { path: string }) {
+function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 	const name = path.split("/").pop() ?? path;
 
 	const { mutate: getLink, isPending: isLinkPending } = useMutation(
@@ -60,7 +74,18 @@ function MediaFile({ path }: { path: string }) {
 		}),
 	);
 
-	const isBusy = isLinkPending || isDownloadPending;
+	const { mutate: remove, isPending: isDeletePending } = useMutation(
+		api.media.library.delete.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([
+					api.media.library.files.queryKey({ input: { id: slotId } }),
+				]);
+				toast.success({ title: `${name} deleted` });
+			},
+		}),
+	);
+
+	const isBusy = isLinkPending || isDownloadPending || isDeletePending;
 
 	return (
 		<Attachment orientation={"vertical"} state={isBusy ? "processing" : "done"}>
@@ -84,12 +109,48 @@ function MediaFile({ path }: { path: string }) {
 				>
 					{isLinkPending ? <Spinner /> : <LinkIcon />}
 				</AttachmentAction>
+				<RenderWhenRole role={["admin", "scheduler"]}>
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<AttachmentAction aria-label={`Delete ${name}`} disabled={isBusy}>
+								{isDeletePending ? <Spinner /> : <TrashIcon />}
+							</AttachmentAction>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogMedia>
+									<TrashIcon />
+								</AlertDialogMedia>
+								<AlertDialogTitle>Delete {name}?</AlertDialogTitle>
+								<AlertDialogDescription>
+									{path} will be removed from the bucket. This cannot be undone.
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									variant="destructive"
+									onClick={() => remove({ key: path })}
+								>
+									<TrashIcon />
+									Delete
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+				</RenderWhenRole>
 			</AttachmentActions>
 		</Attachment>
 	);
 }
 
-export function MediaFileList({ files }: { files: string[] }) {
+export function MediaFileList({
+	files,
+	slotId,
+}: {
+	files: string[];
+	slotId: string;
+}) {
 	if (files.length === 0) {
 		return (
 			<Empty>
@@ -106,7 +167,7 @@ export function MediaFileList({ files }: { files: string[] }) {
 	return (
 		<AttachmentGroup>
 			{files.map((path) => (
-				<MediaFile key={path} path={path} />
+				<MediaFile key={path} path={path} slotId={slotId} />
 			))}
 		</AttachmentGroup>
 	);

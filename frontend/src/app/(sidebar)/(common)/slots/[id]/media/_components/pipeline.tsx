@@ -1,11 +1,20 @@
 "use client";
 
-import { type UseMutationOptions, useMutation } from "@tanstack/react-query";
+import {
+	type UseMutationOptions,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
 import {
 	CircleAlertIcon,
 	DownloadIcon,
 	FileAudioIcon,
+	FileJsonIcon,
+	FileTextIcon,
+	PlayIcon,
 	RefreshCwIcon,
+	SendIcon,
+	TrashIcon,
 	VideoIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -22,6 +31,18 @@ import {
 	TimelineTitle,
 } from "@/components/reui/timeline";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -57,7 +78,12 @@ type ActionKey =
 	| "toAudio"
 	| "splitAudio"
 	| "transcribeChunks"
-	| "summarizeChunks";
+	| "summarizeChunks"
+	| "transcribeAudio"
+	| "summarize";
+
+const POLL_MS = 5000;
+const TIMEOUT_MS = 30 * 60 * 1000;
 
 function getActiveStep(completed: boolean[]) {
 	let step = 0;
@@ -68,15 +94,6 @@ function getActiveStep(completed: boolean[]) {
 	}
 
 	return step;
-}
-
-function triggerFileDownload(url: string, name: string) {
-	const anchor = document.createElement("a");
-	anchor.href = url;
-	anchor.download = name;
-	document.body.appendChild(anchor);
-	anchor.click();
-	anchor.remove();
 }
 
 function DownloadButton({
@@ -91,7 +108,7 @@ function DownloadButton({
 	const { mutate, isPending } = useMutation(
 		api.media.download.mutationOptions({
 			onSuccess: (data) => {
-				if (data.url) triggerFileDownload(data.url, data.name);
+				window.open(data.url, "_blank", "noopener,noreferrer");
 			},
 		}),
 	);
@@ -109,15 +126,122 @@ function DownloadButton({
 	);
 }
 
+function DeleteButton({
+	id,
+	path,
+	label,
+	index,
+}: {
+	id: string;
+	path: string;
+	label: string;
+	index: number;
+}) {
+	const { mutate, isPending } = useMutation(
+		api.media.delete.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([
+					api.media.meta.queryKey({ input: { id, index } }),
+					api.media.library.files.queryKey({ input: { id } }),
+				]);
+				toast.success({ title: `${label} deleted` });
+			},
+		}),
+	);
+
+	return (
+		<RenderWhenRole role={["admin", "scheduler"]}>
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button variant="destructive" size="sm" disabled={isPending}>
+						{isPending ? <Spinner /> : <TrashIcon />}
+						Delete
+					</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogMedia>
+							<TrashIcon />
+						</AlertDialogMedia>
+						<AlertDialogTitle>Delete {label}?</AlertDialogTitle>
+						<AlertDialogDescription>
+							{path} will be removed from the bucket. This cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							onClick={() => mutate({ id, path })}
+						>
+							<TrashIcon />
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</RenderWhenRole>
+	);
+}
+
+function ShowSummaryButton({ id }: { id: string }) {
+	const { mutate, isPending } = useMutation(
+		api.media.download.mutationOptions({
+			onSuccess: (data) => {
+				window.open(data.url, "_blank", "noopener,noreferrer");
+			},
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending}
+			onClick={() => mutate({ id, path: "summary/main.json" })}
+		>
+			{isPending ? <Spinner /> : <FileJsonIcon />}
+			Show Summary
+		</Button>
+	);
+}
+
+function SendToParentButton({ id }: { id: string }) {
+	const { mutate, isPending } = useMutation(
+		api.media.sendSummary.mutationOptions({
+			onSuccess: () => {
+				toast.success({ title: "Summary sent to parent" });
+			},
+			onError: (error) => {
+				toast.error({ title: error.message });
+			},
+		}),
+	);
+
+	return (
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={isPending}
+			onClick={() => mutate({ id })}
+		>
+			{isPending ? <Spinner /> : <SendIcon />}
+			Sent to parent
+		</Button>
+	);
+}
+
 function RetryAction<TData, TError, TVariables>({
 	api: mutationApi,
 	input,
 	disabled,
+	label,
 	onSuccess,
 }: {
 	api: UseMutationOptions<TData, TError, TVariables>;
 	input: TVariables;
 	disabled?: boolean;
+	label: string;
 	onSuccess: () => void;
 }) {
 	return (
@@ -128,7 +252,7 @@ function RetryAction<TData, TError, TVariables>({
 				isPending={
 					<Button variant="outline" size="sm" disabled>
 						<Spinner />
-						Retry
+						{label}
 					</Button>
 				}
 				mutate={(mutate) => (
@@ -139,10 +263,96 @@ function RetryAction<TData, TError, TVariables>({
 						onClick={() => mutate(input)}
 					>
 						<RefreshCwIcon />
-						Retry
+						{label}
 					</Button>
 				)}
 			/>
+		</RenderWhenRole>
+	);
+}
+
+function RunAllButton({
+	id,
+	index,
+	media,
+	disabled,
+	onDone,
+}: {
+	id: string;
+	index: number;
+	media: MediaData;
+	disabled: boolean;
+	onDone: () => void;
+}) {
+	const queryClient = useQueryClient();
+	const [step, setStep] = useState<string | null>(null);
+
+	const toAudio = useMutation(api.media.jobs.toAudio.mutationOptions());
+	const splitAudio = useMutation(api.media.jobs.splitAudio.mutationOptions());
+	const transcribeChunks = useMutation(
+		api.media.transcribeAudioChunks.mutationOptions(),
+	);
+	const summarizeChunks = useMutation(
+		api.media.summarizeChunks.mutationOptions(),
+	);
+
+	const readMeta = () =>
+		queryClient.fetchQuery(
+			api.media.meta.queryOptions({
+				input: { id, index },
+				staleTime: 0,
+			}),
+		);
+
+	const waitUntil = async (done: (meta: MediaData) => boolean) => {
+		const deadline = Date.now() + TIMEOUT_MS;
+
+		while (Date.now() < deadline) {
+			if (done(await readMeta())) return;
+			await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+		}
+
+		throw new Error("Timed out waiting for the job to finish");
+	};
+
+	const run = async () => {
+		try {
+			if (!media.audio) {
+				setStep("Converting to audio");
+				await toAudio.mutateAsync({ id, index });
+				await waitUntil((meta) => !!meta.audio);
+			}
+
+			if (media.chunks.length === 0) {
+				setStep("Splitting audio");
+				await splitAudio.mutateAsync({ id, index });
+				await waitUntil((meta) => meta.chunks.length > 0);
+			}
+
+			setStep("Transcribing chunks");
+			await transcribeChunks.mutateAsync({ id, index });
+
+			setStep("Creating summary");
+			await summarizeChunks.mutateAsync({ id, index });
+
+			toast.success({ title: "Pipeline finished" });
+		} catch (error) {
+			toast.error({
+				title: "Pipeline stopped",
+				description: error instanceof Error ? error.message : undefined,
+			});
+		} finally {
+			setStep(null);
+			onDone();
+		}
+	};
+
+	return (
+		<RenderWhenRole role={["admin", "scheduler"]}>
+			<Button size="sm" disabled={disabled || step !== null} onClick={run}>
+				{step ? <Spinner /> : <PlayIcon />}
+				{step ?? "Run all"}
+			</Button>
 		</RenderWhenRole>
 	);
 }
@@ -187,7 +397,15 @@ function PipelineStep({
 	);
 }
 
-function ChunkItem({ id, chunk }: { id: string; chunk: ChunkData }) {
+function ChunkItem({
+	id,
+	index,
+	chunk,
+}: {
+	id: string;
+	index: number;
+	chunk: ChunkData;
+}) {
 	return (
 		<Item variant="outline">
 			<ItemMedia variant="icon">
@@ -210,6 +428,7 @@ function ChunkItem({ id, chunk }: { id: string; chunk: ChunkData }) {
 				) : (
 					<Badge variant="outline">Pending</Badge>
 				)}
+				<DeleteButton id={id} path={chunk.path} label="Chunk" index={index} />
 			</ItemActions>
 		</Item>
 	);
@@ -250,22 +469,28 @@ export function MediaPipeline({
 		setErrors((previous) => ({ ...previous, [action]: error.message }));
 	};
 
+	const refresh = () =>
+		refetchAPIs([api.media.meta.queryKey({ input: { id, index } })]);
+
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Media Pipeline</CardTitle>
 				<CardDescription>Recording and processing jobs.</CardDescription>
 				<CardAction>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() =>
-							refetchAPIs([api.media.meta.queryKey({ input: { id, index } })])
-						}
-					>
-						<RefreshCwIcon />
-						Refresh
-					</Button>
+					<ButtonGroup>
+						<RunAllButton
+							id={id}
+							index={index}
+							media={media}
+							disabled={!attended || !media.video}
+							onDone={refresh}
+						/>
+						<Button variant="outline" size="sm" onClick={refresh}>
+							<RefreshCwIcon />
+							Refresh
+						</Button>
+					</ButtonGroup>
 				</CardAction>
 			</CardHeader>
 
@@ -301,6 +526,12 @@ export function MediaPipeline({
 											id={id}
 											path={`videos/${n}.mp4`}
 											label="Video"
+										/>
+										<DeleteButton
+											id={id}
+											path={`videos/${n}.mp4`}
+											label="Recording"
+											index={index}
 										/>
 									</ItemActions>
 								</Item>
@@ -349,28 +580,49 @@ export function MediaPipeline({
 										}
 										error={errors.toAudio}
 										actions={
-											<>
-												{media.audio && (
-													<DownloadButton
-														id={id}
-														path={media.audio.path}
-														label="Audio"
-													/>
+											<RetryAction
+												api={api.media.jobs.toAudio.mutationOptions({
+													onError: handleError("toAudio"),
+												})}
+												input={{ id, index }}
+												disabled={!media.video}
+												label={media.audio ? "Retry" : "Convert"}
+												onSuccess={handleSuccess(
+													"toAudio",
+													"Audio conversion job started",
 												)}
-												<RetryAction
-													api={api.media.jobs.toAudio.mutationOptions({
-														onError: handleError("toAudio"),
-													})}
-													input={{ id, index }}
-													disabled={!media.video}
-													onSuccess={handleSuccess(
-														"toAudio",
-														"Audio conversion job started",
-													)}
-												/>
-											</>
+											/>
 										}
-									/>
+									>
+										{media.audio && (
+											<ItemGroup>
+												<Item variant="outline">
+													<ItemMedia variant="icon">
+														<FileAudioIcon />
+													</ItemMedia>
+													<ItemContent>
+														<ItemTitle>{`${index}.mp3`}</ItemTitle>
+														<ItemDescription>
+															{media.audio.path}
+														</ItemDescription>
+													</ItemContent>
+													<ItemActions>
+														<DownloadButton
+															id={id}
+															path={media.audio.path}
+															label="Audio"
+														/>
+														<DeleteButton
+															id={id}
+															path={media.audio.path}
+															label="Audio"
+															index={index}
+														/>
+													</ItemActions>
+												</Item>
+											</ItemGroup>
+										)}
+									</PipelineStep>
 
 									<PipelineStep
 										step={2}
@@ -392,6 +644,7 @@ export function MediaPipeline({
 												})}
 												input={{ id, index }}
 												disabled={!media.audio}
+												label={media.chunks.length > 0 ? "Retry" : "Convert"}
 												onSuccess={handleSuccess(
 													"splitAudio",
 													"Audio split job started",
@@ -402,7 +655,12 @@ export function MediaPipeline({
 										{media.chunks.length > 0 && (
 											<ItemGroup>
 												{media.chunks.map((chunk) => (
-													<ChunkItem key={chunk.path} id={id} chunk={chunk} />
+													<ChunkItem
+														key={chunk.path}
+														id={id}
+														index={index}
+														chunk={chunk}
+													/>
 												))}
 											</ItemGroup>
 										)}
@@ -428,6 +686,9 @@ export function MediaPipeline({
 												})}
 												input={{ id, index }}
 												disabled={media.chunks.length === 0}
+												label={
+													transcribedChunks.length > 0 ? "Retry" : "Convert"
+												}
 												onSuccess={handleSuccess(
 													"transcribeChunks",
 													"Chunks transcribed",
@@ -462,12 +723,127 @@ export function MediaPipeline({
 													})}
 													input={{ id, index }}
 													disabled={!chunksTranscribed}
+													label={media.chunkSummary ? "Retry" : "Convert"}
 													onSuccess={handleSuccess(
 														"summarizeChunks",
 														"Chunked transcript summarized",
 													)}
 												/>
 											</>
+										}
+									/>
+								</Timeline>
+							</CardContent>
+						</Card>
+
+						<Card size="sm">
+							<CardHeader>
+								<CardTitle>Direct</CardTitle>
+								<CardDescription>
+									From the full audio. Only works for audio under 30 seconds.
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<Timeline
+									value={getActiveStep([!!media.transcript, !!media.summary])}
+								>
+									<PipelineStep
+										step={1}
+										title={
+											media.transcript
+												? "Audio Transcribed"
+												: "Transcribe Audio"
+										}
+										description={
+											media.transcript
+												? `transcript-single/${index}.json is ready.`
+												: "The full audio is not transcribed yet."
+										}
+										error={errors.transcribeAudio}
+										actions={
+											<>
+												{media.transcript && (
+													<DownloadButton
+														id={id}
+														path={media.transcript.path}
+														label="Transcript"
+													/>
+												)}
+												<RetryAction
+													api={api.media.transcribeAudio.mutationOptions({
+														onError: handleError("transcribeAudio"),
+													})}
+													input={{ id, index }}
+													disabled={!media.audio}
+													label={media.transcript ? "Retry" : "Convert"}
+													onSuccess={handleSuccess(
+														"transcribeAudio",
+														"Audio transcribed",
+													)}
+												/>
+											</>
+										}
+									/>
+
+									<PipelineStep
+										step={2}
+										title={media.summary ? "Summary Created" : "Create Summary"}
+										description={
+											media.summary
+												? "summary/main.json is ready."
+												: "No summary from the full transcript."
+										}
+										error={errors.summarize}
+										actions={
+											<>
+												{media.summary && (
+													<DownloadButton
+														id={id}
+														path={media.summary.path}
+														label="Summary"
+													/>
+												)}
+												<RetryAction
+													api={api.media.summarize.mutationOptions({
+														onError: handleError("summarize"),
+													})}
+													input={{ id, index }}
+													disabled={!media.transcript}
+													label={media.summary ? "Retry" : "Convert"}
+													onSuccess={handleSuccess(
+														"summarize",
+														"Transcript summarized",
+													)}
+												/>
+											</>
+										}
+									/>
+
+									<PipelineStep
+										step={3}
+										title="Summary PDF"
+										description={
+											media.summary
+												? "Render the summary as a shareable PDF."
+												: "The PDF export becomes available once the summary is ready."
+										}
+										actions={
+											media.summary ? (
+												<>
+													<Button asChild variant="outline" size="sm">
+														<a
+															href={`/analytics/slots/${id}` as "/"}
+															target="_blank"
+															rel="noreferrer"
+														>
+															<FileTextIcon />
+															Show PDF
+														</a>
+													</Button>
+													<ShowSummaryButton id={id} />
+													<SendToParentButton id={id} />
+												</>
+											) : undefined
 										}
 									/>
 								</Timeline>

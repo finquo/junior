@@ -1,7 +1,7 @@
 import { transcribe } from "ai";
 import { sarvam } from "sarvam-ai-sdk";
 import { normalizeKey } from "unstorage";
-import { mediaKey, mediaStorage } from "../aws/media";
+import { CHUNK_FILE, mediaKey, mediaStorage } from "../aws/media";
 
 export async function transcribeAudio(key: string) {
 	const parts = normalizeKey(key).split(":");
@@ -40,7 +40,7 @@ export async function transcribeAudio(key: string) {
 export async function transcribeAudioChunk(key: string) {
 	const parts = normalizeKey(key).split(":");
 	const [id, folder, number, filename] = parts;
-	const match = filename?.match(/^audio_chunk_(\d{9})\.aac$/);
+	const match = filename?.match(CHUNK_FILE);
 
 	if (
 		!id ||
@@ -50,10 +50,10 @@ export async function transcribeAudioChunk(key: string) {
 		!match?.[1]
 	)
 		throw new Error(
-			`Expected <id>/audio-chunks/<number>/audio_chunk_<index>.aac, received: ${key}`,
+			`Expected <id>/audio-chunks/<number>/<number>_audio_<index>.aac, received: ${key}`,
 		);
 
-	const index = Number(match[1]);
+	const index = Number(match[2]);
 
 	const audio = await mediaStorage.getItemRaw<Uint8Array>(normalizeKey(key));
 	if (!audio) throw new Error(`Missing media object: ${key}`);

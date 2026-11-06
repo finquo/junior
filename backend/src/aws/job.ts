@@ -112,18 +112,16 @@ export function createSplitAudioJob({
 					Type: "HLS_GROUP_SETTINGS",
 					HlsGroupSettings: {
 						Destination: getMediaBucketURL(
-							`${mediaDir(id, `audio-chunks/${index}`)}/audio`,
+							`${mediaDir(id, `audio-chunks/${index}`)}/`,
 						),
 						SegmentLength: CHUNK_LENGTH_SECONDS,
-						MinSegmentLength: CHUNK_LENGTH_SECONDS,
+						MinSegmentLength: 1,
 						SegmentControl: "SEGMENTED_FILES",
 					},
 				},
 				Outputs: [
 					{
-						OutputSettings: {
-							HlsSettings: { SegmentModifier: "chunk" },
-						},
+						NameModifier: "_audio",
 						ContainerSettings: { Container: "M3U8" },
 						AudioDescriptions: [
 							{

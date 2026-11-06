@@ -1,9 +1,7 @@
 "use client";
 
-import ZoomVideo, {
-	type LocalAudioTrack,
-	type LocalVideoTrack,
-} from "@zoom/videosdk";
+import type ZoomVideoSDK from "@zoom/videosdk";
+import type { LocalAudioTrack, LocalVideoTrack } from "@zoom/videosdk";
 import { MicIcon, VideoOffIcon, Volume2Icon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
@@ -275,13 +273,17 @@ export function useCallPreview() {
 	);
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const videoTrackRef = useRef<LocalVideoTrack | undefined>(undefined);
+	const zoomRef = useRef<typeof ZoomVideoSDK | undefined>(undefined);
 
 	useEffect(() => {
 		let cancelled = false;
 
 		const refreshDevices = async () => {
+			const zoom = zoomRef.current;
+			if (!zoom) return;
+
 			try {
-				setDevices(await ZoomVideo.getDevices());
+				setDevices(await zoom.getDevices());
 			} catch (error) {
 				toast.error({
 					title: "Could not list devices",
@@ -292,9 +294,11 @@ export function useCallPreview() {
 
 		const init = async () => {
 			try {
+				const { default: ZoomVideo } = await import("@zoom/videosdk");
 				await ZoomVideo.createClient().init("en-US", "Global", {
 					patchJsMedia: true,
 				});
+				zoomRef.current = ZoomVideo;
 			} catch (error) {
 				toast.error({
 					title: "Could not initialize preview",
@@ -324,9 +328,10 @@ export function useCallPreview() {
 	useEffect(() => {
 		const player = videoRef.current;
 
-		if (!loaded || !camera || !player) return;
+		const zoom = zoomRef.current;
+		if (!loaded || !camera || !player || !zoom) return;
 
-		const track = ZoomVideo.createLocalVideoTrack(
+		const track = zoom.createLocalVideoTrack(
 			cameraId && cameraId !== DEFAULT_DEVICE ? cameraId : undefined,
 		);
 		videoTrackRef.current = track;
@@ -363,13 +368,14 @@ export function useCallPreview() {
 	}, [loaded, camera, cameraId, virtualBackground]);
 
 	useEffect(() => {
-		if (!loaded || !mic) {
+		const zoom = zoomRef.current;
+		if (!loaded || !mic || !zoom) {
 			setAudioTrack(undefined);
 			setMicLevel(0);
 			return;
 		}
 
-		const track = ZoomVideo.createLocalAudioTrack(
+		const track = zoom.createLocalAudioTrack(
 			microphoneId && microphoneId !== DEFAULT_DEVICE
 				? microphoneId
 				: undefined,

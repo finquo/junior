@@ -4,6 +4,7 @@ import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
 import { createSplitAudioJob, createToAudioJob } from "@/aws/job";
 import {
 	byNumber,
+	CHUNK_FILE,
 	CHUNK_LENGTH_SECONDS,
 	getMediaArtifact,
 	getMediaDownloadURL,
@@ -117,7 +118,7 @@ export const mediaRouter = {
 
 			const chunkPaths = chunkKeys
 				.map((key) => toMediaPath(id, key))
-				.filter((path) => /audio_chunk_\d{9}\.aac$/.test(path));
+				.filter((path) => CHUNK_FILE.test(path));
 
 			const transcriptChunkPaths = transcriptChunkKeys.map((key) =>
 				toMediaPath(id, key),
@@ -125,7 +126,7 @@ export const mediaRouter = {
 
 			const chunks = await Promise.all(
 				chunkPaths.map(async (path) => {
-					const number = path.match(/audio_chunk_(\d{9})\.aac$/)?.[1] ?? null;
+					const number = path.match(CHUNK_FILE)?.[2] ?? null;
 					const transcriptPath = number
 						? `transcript-chunks/${n}/${Number(number)}.json`
 						: null;
@@ -162,7 +163,7 @@ export const mediaRouter = {
 
 			const url = await tryAPI(
 				"aws-s3-presign-download",
-				getMediaDownloadURL(key),
+				getMediaDownloadURL(key, undefined, key.split("/").pop()),
 			);
 			if (!url)
 				throw getError(
@@ -174,6 +175,25 @@ export const mediaRouter = {
 				url,
 				name: key.split("/").pop() ?? input.path,
 			};
+		}),
+
+	delete: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1), path: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			if (!isAllowedAssetPath(input.path))
+				throw getError(
+					"INPUT_VALIDATION",
+					`Unknown media asset path for ${input.id}: ${input.path}`,
+				);
+
+			const key = `${input.id}/${input.path}`;
+			const meta = await getMediaMeta(key);
+			if (!meta)
+				throw getError("NOT_FOUND", `Media asset not found: ${input.path}`);
+
+			await tryAPI("aws-s3-delete-media", mediaStorage.removeItem(key));
+
+			return { path: input.path };
 		}),
 
 	summarize: getRolesProcedure(["admin", "scheduler"])
@@ -321,7 +341,7 @@ export const mediaRouter = {
 				[],
 			);
 
-			const chunks = keys.filter((key) => /audio_chunk_\d{9}\.aac$/.test(key));
+			const chunks = keys.filter((key) => CHUNK_FILE.test(key));
 
 			return Promise.all(
 				chunks.map((key) =>
@@ -399,7 +419,32 @@ export const mediaRouter = {
 					[],
 				);
 
+				console.log(keys);
+
 				return keys.map(normalizeMediaKey);
+			}),
+
+		delete: getRolesProcedure(["admin", "scheduler"])
+			.input(
+				z.object({
+					key: z
+						.string()
+						.min(1)
+						.refine((key) => key.includes("/") && !key.includes(".."), {
+							message: "Key must be <slotId>/<file>",
+						}),
+				}),
+			)
+			.handler(async ({ input }) => {
+				const meta = await getMediaMeta(input.key);
+				if (!meta) throw getError("NOT_FOUND", `File not found: ${input.key}`);
+
+				await tryAPI(
+					"aws-s3-delete-library-file",
+					mediaStorage.removeItem(input.key),
+				);
+
+				return { key: input.key };
 			}),
 
 		download: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
@@ -419,7 +464,7 @@ export const mediaRouter = {
 
 				const url = await tryAPI(
 					"aws-s3-presign-library-download",
-					getMediaDownloadURL(input.key),
+					getMediaDownloadURL(input.key, undefined, input.key.split("/").pop()),
 				);
 				if (!url)
 					throw getError(

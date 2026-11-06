@@ -63,7 +63,7 @@ function SessionMedia({ slotId }: { slotId: string }) {
 				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
-				<MediaFileList files={data} />
+				<MediaFileList files={data} slotId={slotId} />
 			</FramePanel>
 		</Frame>
 	);
