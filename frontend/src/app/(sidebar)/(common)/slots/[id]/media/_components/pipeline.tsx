@@ -479,13 +479,6 @@ export function MediaPipeline({
 				<CardDescription>Recording and processing jobs.</CardDescription>
 				<CardAction>
 					<ButtonGroup>
-						<RunAllButton
-							id={id}
-							index={index}
-							media={media}
-							disabled={!attended || !media.video}
-							onDone={refresh}
-						/>
 						<Button variant="outline" size="sm" onClick={refresh}>
 							<RefreshCwIcon />
 							Refresh
@@ -512,6 +505,15 @@ export function MediaPipeline({
 					</CardHeader>
 					<CardContent>
 						<ItemGroup>
+							{videoIndexes.length === 0 && (
+								<Alert>
+									<CircleAlertIcon />
+									<AlertTitle>No recordings</AlertTitle>
+									<AlertDescription>
+										No recording has been saved for this session yet.
+									</AlertDescription>
+								</Alert>
+							)}
 							{videoIndexes.map((n) => (
 								<Item key={n} variant="outline">
 									<ItemMedia variant="icon">
@@ -558,6 +560,15 @@ export function MediaPipeline({
 								<CardDescription>
 									Audio conversion, chunks, transcripts, and summary.
 								</CardDescription>
+								<CardAction>
+									<RunAllButton
+										id={id}
+										index={index}
+										media={media}
+										disabled={!attended || !media.video}
+										onDone={refresh}
+									/>
+								</CardAction>
 							</CardHeader>
 							<CardContent>
 								<Timeline

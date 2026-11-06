@@ -88,7 +88,7 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 	const isBusy = isLinkPending || isDownloadPending || isDeletePending;
 
 	return (
-		<Attachment orientation={"vertical"} state={isBusy ? "processing" : "done"}>
+		<Attachment state={isBusy ? "processing" : "done"}>
 			<AttachmentMedia>{fileIcon(name)}</AttachmentMedia>
 			<AttachmentContent>
 				<AttachmentTitle>{name}</AttachmentTitle>
@@ -165,10 +165,10 @@ export function MediaFileList({
 	}
 
 	return (
-		<AttachmentGroup>
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{files.map((path) => (
 				<MediaFile key={path} path={path} slotId={slotId} />
 			))}
-		</AttachmentGroup>
+		</div>
 	);
 }

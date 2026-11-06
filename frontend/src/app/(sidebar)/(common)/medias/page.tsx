@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { ExternalLinkIcon } from "lucide-react";
+import { ExternalLinkIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
+import { sileo as toast } from "sileo";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -16,11 +17,24 @@ import {
 	FramePanel,
 	FrameTitle,
 } from "@/components/reui/frame";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Spinner } from "@/components/ui/spinner";
-import { api } from "@/hooks/api";
+import { api, refetchAPIs } from "@/hooks/api";
+import { RenderWhenRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
@@ -76,14 +90,62 @@ const columns: ColumnDef<DataTableFeatures, LibraryRecord>[] =
 			enableHiding: false,
 			meta: { align: "right" },
 			cell: ({ row }) => (
-				<Button variant="outline" size="icon-sm" asChild>
-					<Link href={`/medias/${row.original.slotId}` as "/"}>
-						<ExternalLinkIcon />
-					</Link>
-				</Button>
+				<ButtonGroup>
+					<Button variant="outline" size="icon-sm" asChild>
+						<Link href={`/medias/${row.original.slotId}` as "/"}>
+							<ExternalLinkIcon />
+						</Link>
+					</Button>
+					<DeleteSlotButton slotId={row.original.slotId} />
+				</ButtonGroup>
 			),
 		}),
 	]);
+
+function DeleteSlotButton({ slotId }: { slotId: string }) {
+	const { mutate, isPending } = useMutation(
+		api.media.library.deleteSlot.mutationOptions({
+			onSuccess: ({ deleted }) => {
+				refetchAPIs([api.media.library.list.queryKey()]);
+				toast.success({ title: `Deleted ${deleted} files for ${slotId}` });
+			},
+		}),
+	);
+
+	return (
+		<RenderWhenRole role={["admin", "scheduler"]}>
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button variant="outline" size="icon-sm" disabled={isPending}>
+						{isPending ? <Spinner /> : <TrashIcon />}
+					</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogMedia>
+							<TrashIcon />
+						</AlertDialogMedia>
+						<AlertDialogTitle>Delete all files for {slotId}?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Every recording, audio, chunk, transcript, and summary under this
+							session will be removed. This cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							onClick={() => mutate({ id: slotId })}
+						>
+							<TrashIcon />
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</RenderWhenRole>
+	);
+}
 
 export default function Page() {
 	const { data = [], isPending } = useQuery(

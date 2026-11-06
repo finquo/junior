@@ -424,6 +424,25 @@ export const mediaRouter = {
 				return keys.map(normalizeMediaKey);
 			}),
 
+		deleteSlot: getRolesProcedure(["admin", "scheduler"])
+			.input(z.object({ id: z.string().min(1) }))
+			.handler(async ({ input }) => {
+				const keys = await getAPI(
+					"aws-s3-list-slot-files",
+					mediaStorage.getKeys(input.id),
+					[],
+				);
+				if (keys.length === 0)
+					throw getError("NOT_FOUND", `No files found for ${input.id}`);
+
+				await tryAPI(
+					"aws-s3-delete-slot-files",
+					Promise.all(keys.map((key) => mediaStorage.removeItem(key))),
+				);
+
+				return { id: input.id, deleted: keys.length };
+			}),
+
 		delete: getRolesProcedure(["admin", "scheduler"])
 			.input(
 				z.object({
