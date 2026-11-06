@@ -12,10 +12,10 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
+import { FetchLesson } from "@/hooks/lesson";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import {
-	LessonSelector,
 	PeriodSelector,
 	UserSelector,
 } from "../../../_components/selecter";
@@ -45,6 +45,31 @@ function ReadonlyUserField({ name, label }: { name: string; label: string }) {
 	);
 }
 
+function ReadonlyLessonField() {
+	const [lesson] = useQueryState("lessonId");
+
+	return (
+		<Field className="w-full min-w-[200px] sm:w-auto">
+			<FieldLabel htmlFor="lessonId">Lesson</FieldLabel>
+			<Select disabled value={lesson}>
+				<SelectTrigger id="lessonId" className="w-full min-w-[200px]">
+					<SelectValue
+						placeholder="No Lesson selected"
+						children={(item: string) => (
+							<FetchLesson
+								id={item}
+								isPending={<Skeleton className="h-4 w-24" />}
+							>
+								{(lesson) => lesson.name}
+							</FetchLesson>
+						)}
+					/>
+				</SelectTrigger>
+			</Select>
+		</Field>
+	);
+}
+
 export function EditUsersCard() {
 	return (
 		<Card>
@@ -53,7 +78,7 @@ export function EditUsersCard() {
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<ReadonlyUserField name="studentId" label="Student" />
-				<LessonSelector />
+				<ReadonlyLessonField />
 				<UserSelector
 					name="teacherId"
 					label="Teacher"

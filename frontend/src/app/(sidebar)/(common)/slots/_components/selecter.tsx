@@ -245,6 +245,10 @@ export function LessonSelector({
 
 export function PeriodSelector() {
 	const [duration, setDuration] = useQueryState("duration", parseAsInteger);
+	const options =
+		duration && !period.includes(duration)
+			? [...period, duration].sort((a, b) => a - b)
+			: period;
 
 	return (
 		<Field className="w-full min-w-[200px] sm:w-auto">
@@ -263,7 +267,7 @@ export function PeriodSelector() {
 				<SelectContent alignItemWithTrigger={false}>
 					<SelectGroup>
 						<SelectLabel>Select a Period</SelectLabel>
-						{period.map((p) => (
+						{options.map((p) => (
 							<SelectItem key={p} value={p}>
 								{p} mins
 							</SelectItem>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	CalendarCheckIcon,
@@ -107,6 +108,75 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 
 	const startTime = date && selectedTime ? dateWithTime : undefined;
 	const adminSchedulerId = isAdmin ? (schedulerId ?? undefined) : undefined;
+
+	const { data: slot } = useQuery(
+		api.core.slot.get.queryOptions({ input: { id: slotId } }),
+	);
+
+	const expectedEndTime =
+		startTime && new Date(startTime.getTime() + duration * 60_000);
+
+	const timeChanged = Boolean(
+		slot &&
+			startTime &&
+			expectedEndTime &&
+			(startTime.getTime() !== new Date(slot.startTime).getTime() ||
+				expectedEndTime.getTime() !== new Date(slot.expectedEndTime).getTime()),
+	);
+
+	const reschedule = useMutation(
+		api.core.slot.reschedule.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([
+					api.core.slot.get.queryKey({ input: { id: slotId } }),
+					api.core.slot.list.queryKey(),
+				]);
+			},
+		}),
+	);
+
+	const update = useMutation(
+		api.core.slot.update.mutationOptions({
+			onSuccess: () => {
+				refetchAPIs([
+					api.core.slot.get.queryKey({ input: { id: slotId } }),
+					api.core.slot.list.queryKey(),
+				]);
+				toast.success({
+					title: "Session updated successfully!",
+				});
+				router.push(`/slots/${slotId}` as "/");
+			},
+		}),
+	);
+
+	const isSaving = reschedule.isPending || update.isPending;
+
+	const handleSave = async () => {
+		if (!teacherId || !lessonId || !startTime || !expectedEndTime) return;
+
+		try {
+			if (timeChanged) {
+				await reschedule.mutateAsync({
+					id: slotId,
+					startTime,
+					expectedEndTime,
+				});
+			}
+
+			await update.mutateAsync({
+				id: slotId,
+				teacherId,
+				lessonId,
+				schedulerId: adminSchedulerId,
+			});
+		} catch (error) {
+			toast.error({
+				title: "Could not save session",
+				description: error instanceof Error ? error.message : undefined,
+			});
+		}
+	};
 
 	return (
 		<Card>
@@ -272,47 +342,10 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 							/>
 						</DropdownMenuContent>
 					</DropdownMenu>
-					<MutationButton
-						api={api.core.slot.update.mutationOptions()}
-						onSuccess={() => {
-							refetchAPIs([
-								api.core.slot.get.queryKey({ input: { id: slotId } }),
-								api.core.slot.list.queryKey(),
-							]);
-							toast.success({
-								title: "Session updated successfully!",
-							});
-							router.push(`/slots/${slotId}` as "/");
-						}}
-						isPending={
-							<Button disabled variant="outline">
-								<Spinner />
-								Save
-							</Button>
-						}
-						mutate={(mutate) => (
-							<Button
-								disabled={!isComplete}
-								onClick={() => {
-									if (!teacherId || !lessonId || !startTime) return;
-
-									mutate({
-										id: slotId,
-										teacherId,
-										lessonId,
-										schedulerId: adminSchedulerId,
-										startTime,
-										expectedEndTime: new Date(
-											startTime.getTime() + duration * 60_000,
-										),
-									});
-								}}
-							>
-								<CalendarCheckIcon />
-								Save
-							</Button>
-						)}
-					/>
+					<Button disabled={!isComplete || isSaving} onClick={handleSave}>
+						{isSaving ? <Spinner /> : <CalendarCheckIcon />}
+						Save
+					</Button>
 				</ButtonGroup>
 			</CardFooter>
 		</Card>

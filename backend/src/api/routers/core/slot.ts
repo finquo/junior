@@ -190,21 +190,12 @@ export const slotRouter = {
 				createdAt: true,
 				updatedAt: true,
 				endTime: true,
-			})
-				.required({
-					id: true,
-				})
-				.refine(
-					(data) => {
-						if (data.startTime && data.expectedEndTime) {
-							return data.startTime < data.expectedEndTime;
-						}
-						return true;
-					},
-					{
-						message: "startTime must be before expectedEndTime",
-					},
-				),
+				studentId: true,
+				startTime: true,
+				expectedEndTime: true,
+			}).required({
+				id: true,
+			}),
 		)
 		.handler(async ({ input, context }) => {
 			const { id, ...data } = input;
@@ -225,12 +216,6 @@ export const slotRouter = {
 				}),
 			);
 
-			const startTimeChanged = Boolean(
-				data.startTime &&
-					existing &&
-					data.startTime.getTime() !== existing.startTime.getTime(),
-			);
-
 			const participantChanged = Boolean(
 				existing &&
 					((data.teacherId !== undefined &&
@@ -245,12 +230,7 @@ export const slotRouter = {
 				"db-core-update-slot",
 				db
 					.update(schema.slot)
-					.set({
-						...data,
-						...(startTimeChanged && data.status === undefined
-							? { status: "rescheduled" as const }
-							: {}),
-					})
+					.set(data)
 					.where(
 						MapRole(context.role, {
 							admin: eq(schema.slot.id, id),
@@ -277,8 +257,9 @@ export const slotRouter = {
 				);
 			}
 
-			if (!slot || !(startTimeChanged || participantChanged)) return updated;
+			if (!slot || !participantChanged) return updated;
 
+			/*
 			try {
 				const lesson = await tryAPI(
 					"db-core-update-slot-lesson",
@@ -319,6 +300,96 @@ export const slotRouter = {
 			} catch (error) {
 				console.error("[core-update-slot-notify]", error);
 			}
+			*/
+
+			return updated;
+		}),
+	reschedule: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			UpdateSlotSchema.pick({
+				id: true,
+				startTime: true,
+				expectedEndTime: true,
+			})
+				.required({
+					id: true,
+					startTime: true,
+					expectedEndTime: true,
+				})
+				.refine((data) => data.startTime < data.expectedEndTime, {
+					message: "startTime must be before expectedEndTime",
+				}),
+		)
+		.handler(async ({ input, context }) => {
+			const { id, ...data } = input;
+
+			const updated = await tryAPI(
+				"db-core-reschedule-slot",
+				db
+					.update(schema.slot)
+					.set({
+						...data,
+						status: "rescheduled",
+						endTime: null,
+						sessionId: null,
+					})
+					.where(
+						MapRole(context.role, {
+							admin: eq(schema.slot.id, id),
+							scheduler: and(
+								eq(schema.slot.id, id),
+								eq(schema.slot.schedulerId, context.user.id),
+							),
+						}),
+					)
+					.returning(),
+			);
+
+			const slot = updated?.[0];
+			if (!slot) return updated;
+
+			/*
+			try {
+				const lesson = await tryAPI(
+					"db-core-reschedule-slot-lesson",
+					db.query.lesson.findFirst({
+						where: { id: slot.lessonId },
+						columns: { name: true },
+					}),
+				);
+				const users = await getAPI(
+					"db-core-reschedule-slot-users",
+					db
+						.select({
+							id: schema.user.id,
+							name: schema.user.name,
+							phoneNumber: schema.user.phoneNumber,
+						})
+						.from(schema.user)
+						.where(
+							inArray(
+								schema.user.id,
+								[slot.studentId, slot.teacherId, slot.schedulerId].filter(
+									(id): id is string => Boolean(id),
+								),
+							),
+						),
+					[],
+				);
+				const userById = new Map(users.map((user) => [user.id, user]));
+
+				await notifySlotUpdated({
+					startTime: slot.startTime,
+					lessonName: lesson?.name ?? "a class",
+					joinLink: `${new URL(context.req.url).origin}/call/${id}`,
+					student: userById.get(slot.studentId ?? ""),
+					teacher: userById.get(slot.teacherId ?? ""),
+					scheduler: userById.get(slot.schedulerId ?? ""),
+				});
+			} catch (error) {
+				console.error("[core-reschedule-slot-notify]", error);
+			}
+			*/
 
 			return updated;
 		}),
