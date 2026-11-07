@@ -35,7 +35,7 @@ export async function transcribeAudio(key: string) {
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
 	const result = await transcribe({
-		model: openrouter.transcription("openai/whisper-large-v3-turbo"),
+		model: openrouter.transcription("google/gemini-3.5-transcribe"),
 		audio,
 	});
 
@@ -74,7 +74,7 @@ export async function transcribeAudioChunk(key: string) {
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
 	const result = await transcribe({
-		model: openrouter.transcription("openai/whisper-large-v3-turbo"),
+		model: openrouter.transcription("google/gemini-3.5-transcribe"),
 		audio,
 	});
 

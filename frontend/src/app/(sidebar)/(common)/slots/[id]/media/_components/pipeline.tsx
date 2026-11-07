@@ -199,6 +199,62 @@ function DeleteButton({
 	);
 }
 
+function DeleteChunksButton({
+	id,
+	index,
+	target,
+	label,
+}: {
+	id: string;
+	index: number;
+	target: "audio" | "transcripts";
+	label: string;
+}) {
+	const { mutate, isPending } = useMutation(
+		api.media.deleteChunks.mutationOptions({
+			onSuccess: ({ deleted }) => {
+				refetchAPIs([api.media.meta.queryKey({ input: { id, index } })]);
+				toast.success({ title: `Deleted ${deleted} chunk files` });
+			},
+		}),
+	);
+
+	return (
+		<RenderWhenRole role={["admin", "scheduler"]}>
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button variant="destructive" size="sm" disabled={isPending}>
+						{isPending ? <Spinner /> : <TrashIcon />}
+						{label}
+					</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogMedia>
+							<TrashIcon />
+						</AlertDialogMedia>
+						<AlertDialogTitle>{label}?</AlertDialogTitle>
+						<AlertDialogDescription>
+							All files in this group for this recording will be removed. This
+							cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							onClick={() => mutate({ id, index, target })}
+						>
+							<TrashIcon />
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</RenderWhenRole>
+	);
+}
+
 function ShowSummaryButton({ id }: { id: string }) {
 	const { mutate, isPending } = useMutation(
 		api.media.download.mutationOptions({
@@ -719,18 +775,26 @@ export function MediaPipeline({
 										}
 										error={errors.splitAudio}
 										actions={
-											<RetryAction
-												api={api.media.jobs.splitAudio.mutationOptions({
-													onError: handleError("splitAudio"),
-												})}
-												input={{ id, index }}
-												disabled={!media.audio}
-												label={media.chunks.length > 0 ? "Retry" : "Convert"}
-												onSuccess={handleSuccess(
-													"splitAudio",
-													"Audio split job started",
-												)}
-											/>
+											<>
+												<RetryAction
+													api={api.media.jobs.splitAudio.mutationOptions({
+														onError: handleError("splitAudio"),
+													})}
+													input={{ id, index }}
+													disabled={!media.audio}
+													label={media.chunks.length > 0 ? "Retry" : "Convert"}
+													onSuccess={handleSuccess(
+														"splitAudio",
+														"Audio split job started",
+													)}
+												/>
+												<DeleteChunksButton
+													id={id}
+													index={index}
+													target="audio"
+													label="Delete chunks"
+												/>
+											</>
 										}
 									>
 										{media.chunks.length > 0 && (
@@ -780,6 +844,12 @@ export function MediaPipeline({
 										}
 										actions={
 											<>
+												<DeleteChunksButton
+													id={id}
+													index={index}
+													target="transcripts"
+													label="Delete transcripts"
+												/>
 												<RetryAction
 													api={api.media.transcribeAudioChunks.mutationOptions({
 														onError: handleError("transcribeChunks"),

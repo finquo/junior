@@ -10,7 +10,7 @@ import { bucket } from "./bucket";
 import { MEDIA_BUCKET } from "./config";
 import { s3Driver, toS3Path } from "./s3-driver";
 
-export const CHUNK_LENGTH_SECONDS = 25;
+export const CHUNK_LENGTH_SECONDS = 20 * 60;
 
 export const CHUNK_FILE = /(\d+)_audio_(\d+)\.aac$/;
 

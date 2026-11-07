@@ -410,6 +410,32 @@ export const mediaRouter = {
 			return results;
 		}),
 
+	deleteChunks: getRolesProcedure(["admin", "scheduler"])
+		.input(
+			z.object({
+				id: z.string().min(1),
+				index: videoIndex,
+				target: z.enum(["audio", "transcripts"]),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const folder =
+				input.target === "audio" ? "audio-chunks" : "transcript-chunks";
+
+			const keys = await getAPI(
+				"aws-s3-list-chunk-files",
+				mediaStorage.getKeys(`${input.id}/${folder}/${input.index}/`),
+				[],
+			);
+
+			await tryAPI(
+				"aws-s3-delete-chunk-files",
+				Promise.all(keys.map((key) => mediaStorage.removeItem(key))),
+			);
+
+			return { index: input.index, deleted: keys.length };
+		}),
+
 	mergeChunks: getRolesProcedure(["admin", "scheduler"])
 		.input(z.object({ id: z.string().min(1), index: videoIndex }))
 		.handler(async ({ input }) => {
