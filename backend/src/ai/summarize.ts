@@ -1,6 +1,6 @@
-import { openrouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { openrouter } from "./index";
 
 export const meetingSummarySchema = z.object({
 	title: z.string(),

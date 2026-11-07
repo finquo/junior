@@ -1,15 +1,13 @@
 import { transcribe } from "ai";
-import { sarvam } from "sarvam-ai-sdk";
 import { normalizeKey } from "unstorage";
 import { CHUNK_FILE, mediaKey, mediaStorage } from "../aws/media";
+import { openrouter } from "./index";
 
-type TranscribeResult = {
+function toSegments(result: {
 	text: string;
 	segments: { text: string; startSecond: number; endSecond: number }[];
 	durationInSeconds?: number;
-};
-
-function toSegments(result: TranscribeResult) {
+}) {
 	if (result.segments.length > 0) return result.segments;
 
 	return [
@@ -37,10 +35,7 @@ export async function transcribeAudio(key: string) {
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
 	const result = await transcribe({
-		model: sarvam.transcription("saaras:v4", "unknown", {
-			mode: "transcribe",
-			with_timestamps: true,
-		}),
+		model: openrouter.transcription("openai/whisper-large-v3-turbo"),
 		audio,
 	});
 
@@ -79,10 +74,7 @@ export async function transcribeAudioChunk(key: string) {
 	if (!audio) throw new Error(`Missing media object: ${key}`);
 
 	const result = await transcribe({
-		model: sarvam.transcription("saaras:v4", "unknown", {
-			mode: "transcribe",
-			with_timestamps: true,
-		}),
+		model: openrouter.transcription("openai/whisper-large-v3-turbo"),
 		audio,
 	});
 
