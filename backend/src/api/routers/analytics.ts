@@ -9,6 +9,18 @@ import { getAPI, getError, tryAPI } from "../procedure";
 
 const publicNextProcedure = os.$context();
 
+// Demo sandbox slot. Remove this branch before deploying.
+const DEMO_ID = "demo";
+const DEMO_SLOT = {
+	id: DEMO_ID,
+	startTime: new Date(),
+	expectedEndTime: new Date(Date.now() + 45 * 60_000),
+	endTime: null,
+	lesson: { name: "Demo Lesson", language: "en-IN" },
+	student: { user: { name: "Demo Student" } },
+	teacher: { user: { name: "Demo Teacher" } },
+};
+
 export const analyticsRouter = {
 	studentReport: publicNextProcedure
 		.input(z.object({ id: z.string() }))
@@ -105,21 +117,24 @@ export const analyticsRouter = {
 			}),
 		)
 		.handler(async ({ input }) => {
-			const slot = await tryAPI(
-				"db-analytics-slot-report-slot",
-				db.query.slot.findFirst({
-					where: { id: input.id },
-					with: {
-						lesson: { columns: { name: true, language: true } },
-						student: {
-							with: { user: { columns: { name: true } } },
-						},
-						teacher: {
-							with: { user: { columns: { name: true } } },
-						},
-					},
-				}),
-			);
+			const slot =
+				input.id === DEMO_ID
+					? DEMO_SLOT
+					: await tryAPI(
+							"db-analytics-slot-report-slot",
+							db.query.slot.findFirst({
+								where: { id: input.id },
+								with: {
+									lesson: { columns: { name: true, language: true } },
+									student: {
+										with: { user: { columns: { name: true } } },
+									},
+									teacher: {
+										with: { user: { columns: { name: true } } },
+									},
+								},
+							}),
+						);
 
 			if (!slot) throw getError("NOT_FOUND", "Session not found");
 

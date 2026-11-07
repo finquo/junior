@@ -457,6 +457,18 @@ function ChunkItem({
 	);
 }
 
+function FileScroll({
+	count,
+	children,
+}: {
+	count: number;
+	children: ReactNode;
+}) {
+	if (count < 10) return children;
+
+	return <ScrollArea className="h-96">{children}</ScrollArea>;
+}
+
 function TranscriptItem({
 	id,
 	index,
@@ -664,34 +676,32 @@ export function MediaPipeline({
 										}
 									>
 										{media.audio && (
-											<ScrollArea className="h-96">
-												<ItemGroup>
-													<Item variant="outline">
-														<ItemMedia variant="icon">
-															<FileAudioIcon />
-														</ItemMedia>
-														<ItemContent>
-															<ItemTitle>{`${index}.mp3`}</ItemTitle>
-															<ItemDescription>
-																{media.audio.path}
-															</ItemDescription>
-														</ItemContent>
-														<ItemActions>
-															<DownloadButton
-																id={id}
-																path={media.audio.path}
-																label="Audio"
-															/>
-															<DeleteButton
-																id={id}
-																path={media.audio.path}
-																label="Audio"
-																index={index}
-															/>
-														</ItemActions>
-													</Item>
-												</ItemGroup>
-											</ScrollArea>
+											<ItemGroup>
+												<Item variant="outline">
+													<ItemMedia variant="icon">
+														<FileAudioIcon />
+													</ItemMedia>
+													<ItemContent>
+														<ItemTitle>{`${index}.mp3`}</ItemTitle>
+														<ItemDescription>
+															{media.audio.path}
+														</ItemDescription>
+													</ItemContent>
+													<ItemActions>
+														<DownloadButton
+															id={id}
+															path={media.audio.path}
+															label="Audio"
+														/>
+														<DeleteButton
+															id={id}
+															path={media.audio.path}
+															label="Audio"
+															index={index}
+														/>
+													</ItemActions>
+												</Item>
+											</ItemGroup>
 										)}
 									</PipelineStep>
 
@@ -724,7 +734,7 @@ export function MediaPipeline({
 										}
 									>
 										{media.chunks.length > 0 && (
-											<ScrollArea className="h-96">
+											<FileScroll count={media.chunks.length}>
 												<ItemGroup>
 													{media.chunks.map((chunk) => (
 														<ChunkItem
@@ -735,7 +745,7 @@ export function MediaPipeline({
 														/>
 													))}
 												</ItemGroup>
-											</ScrollArea>
+											</FileScroll>
 										)}
 									</PipelineStep>
 
@@ -754,7 +764,7 @@ export function MediaPipeline({
 										error={errors.transcribeChunks}
 										children={
 											transcriptPaths.length > 0 && (
-												<ScrollArea className="h-96">
+												<FileScroll count={transcriptPaths.length}>
 													<ItemGroup>
 														{transcriptPaths.map((path) => (
 															<TranscriptItem
@@ -765,7 +775,7 @@ export function MediaPipeline({
 															/>
 														))}
 													</ItemGroup>
-												</ScrollArea>
+												</FileScroll>
 											)
 										}
 										actions={

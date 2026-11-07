@@ -374,6 +374,7 @@ export const mediaRouter = {
 				id: z.string().min(1),
 				index: videoIndex,
 				onlyMissing: z.boolean().optional(),
+				chunk: z.string().optional(),
 			}),
 		)
 		.handler(async ({ input }) => {
@@ -383,7 +384,10 @@ export const mediaRouter = {
 				[],
 			);
 
-			const chunks = keys.filter((key) => CHUNK_FILE.test(key));
+			const chunks = keys.filter(
+				(key) =>
+					CHUNK_FILE.test(key) && (!input.chunk || key.endsWith(input.chunk)),
+			);
 
 			const pending = input.onlyMissing
 				? await getMissingTranscripts(input.id, chunks)
