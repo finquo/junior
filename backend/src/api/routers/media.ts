@@ -11,6 +11,7 @@ import {
 	getMediaMeta,
 	getMediaViewURL,
 	isAllowedAssetPath,
+	listMediaFiles,
 	mediaKey,
 	mediaStorage,
 	normalizeMediaKey,
@@ -28,6 +29,23 @@ type TranscriptSegment = {
 };
 
 const videoIndex = z.number().int().min(0).default(0);
+
+async function getMissingTranscripts(id: string, keys: string[]) {
+	const missing: string[] = [];
+
+	for (const key of keys) {
+		const [, , number, filename] = normalizeMediaKey(key).split("/");
+		const match = filename?.match(CHUNK_FILE);
+		if (!number || !match?.[2]) continue;
+
+		const transcript = await getMediaMeta(
+			`${id}/transcript-chunks/${Number(number)}/${Number(match[2])}.json`,
+		);
+		if (!transcript) missing.push(key);
+	}
+
+	return missing;
+}
 
 export const mediaRouter = {
 	jobs: {
@@ -351,7 +369,13 @@ export const mediaRouter = {
 		),
 
 	transcribeAudioChunks: getRolesProcedure(["admin", "scheduler"])
-		.input(z.object({ id: z.string().min(1), index: videoIndex }))
+		.input(
+			z.object({
+				id: z.string().min(1),
+				index: videoIndex,
+				onlyMissing: z.boolean().optional(),
+			}),
+		)
 		.handler(async ({ input }) => {
 			const keys = await getAPI(
 				"aws-s3-list-audio-chunks",
@@ -361,11 +385,25 @@ export const mediaRouter = {
 
 			const chunks = keys.filter((key) => CHUNK_FILE.test(key));
 
-			return Promise.all(
-				chunks.map((key) =>
+			const pending = input.onlyMissing
+				? await getMissingTranscripts(input.id, chunks)
+				: chunks;
+
+			const results = await Promise.allSettled(
+				pending.map((key) =>
 					tryAPI("aws-transcribe-audio-chunk", transcribeAudioChunk(key)),
 				),
 			);
+
+			const failed = results.filter((result) => result.status === "rejected");
+
+			if (failed.length > 0)
+				throw getError(
+					"INTERNAL_SERVER_ERROR",
+					`${failed.length} of ${pending.length} chunks failed to transcribe`,
+				);
+
+			return results;
 		}),
 
 	mergeChunks: getRolesProcedure(["admin", "scheduler"])
@@ -433,7 +471,7 @@ export const mediaRouter = {
 			.handler(async ({ input }) => {
 				const keys = await getAPI(
 					"aws-s3-list-media-library-files",
-					mediaStorage.getKeys(input.id),
+					listMediaFiles(input.id),
 					[],
 				);
 

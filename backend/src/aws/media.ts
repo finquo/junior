@@ -1,6 +1,7 @@
 import {
 	GetObjectCommand,
 	HeadObjectCommand,
+	ListObjectsV2Command,
 	PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -85,6 +86,36 @@ export const getMediaBucketURL = (key: string) => {
 export const mediaStorage = createStorage({
 	driver: s3Driver({ bucket: MEDIA_BUCKET, prefix: MEDIA_PREFIX }),
 });
+
+export async function listMediaFiles(id: string) {
+	const objects: { key: string; lastModified: number }[] = [];
+	let token: string | undefined;
+
+	do {
+		const res = await bucket.send(
+			new ListObjectsV2Command({
+				Bucket: MEDIA_BUCKET,
+				Prefix: `${MEDIA_PREFIX}/${id}/`,
+				ContinuationToken: token,
+			}),
+		);
+
+		for (const item of res.Contents ?? []) {
+			if (!item.Key || !item.LastModified) continue;
+
+			objects.push({
+				key: item.Key.slice(MEDIA_PREFIX.length + 1),
+				lastModified: item.LastModified.getTime(),
+			});
+		}
+
+		token = res.NextContinuationToken;
+	} while (token);
+
+	return objects
+		.sort((a, b) => a.lastModified - b.lastModified)
+		.map((object) => object.key);
+}
 
 type MediaArtifact = {
 	path: string;

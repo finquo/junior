@@ -66,6 +66,7 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, refetchAPIs } from "@/hooks/api";
@@ -663,32 +664,34 @@ export function MediaPipeline({
 										}
 									>
 										{media.audio && (
-											<ItemGroup>
-												<Item variant="outline">
-													<ItemMedia variant="icon">
-														<FileAudioIcon />
-													</ItemMedia>
-													<ItemContent>
-														<ItemTitle>{`${index}.mp3`}</ItemTitle>
-														<ItemDescription>
-															{media.audio.path}
-														</ItemDescription>
-													</ItemContent>
-													<ItemActions>
-														<DownloadButton
-															id={id}
-															path={media.audio.path}
-															label="Audio"
-														/>
-														<DeleteButton
-															id={id}
-															path={media.audio.path}
-															label="Audio"
-															index={index}
-														/>
-													</ItemActions>
-												</Item>
-											</ItemGroup>
+											<ScrollArea className="h-96">
+												<ItemGroup>
+													<Item variant="outline">
+														<ItemMedia variant="icon">
+															<FileAudioIcon />
+														</ItemMedia>
+														<ItemContent>
+															<ItemTitle>{`${index}.mp3`}</ItemTitle>
+															<ItemDescription>
+																{media.audio.path}
+															</ItemDescription>
+														</ItemContent>
+														<ItemActions>
+															<DownloadButton
+																id={id}
+																path={media.audio.path}
+																label="Audio"
+															/>
+															<DeleteButton
+																id={id}
+																path={media.audio.path}
+																label="Audio"
+																index={index}
+															/>
+														</ItemActions>
+													</Item>
+												</ItemGroup>
+											</ScrollArea>
 										)}
 									</PipelineStep>
 
@@ -721,16 +724,18 @@ export function MediaPipeline({
 										}
 									>
 										{media.chunks.length > 0 && (
-											<ItemGroup>
-												{media.chunks.map((chunk) => (
-													<ChunkItem
-														key={chunk.path}
-														id={id}
-														index={index}
-														chunk={chunk}
-													/>
-												))}
-											</ItemGroup>
+											<ScrollArea className="h-96">
+												<ItemGroup>
+													{media.chunks.map((chunk) => (
+														<ChunkItem
+															key={chunk.path}
+															id={id}
+															index={index}
+															chunk={chunk}
+														/>
+													))}
+												</ItemGroup>
+											</ScrollArea>
 										)}
 									</PipelineStep>
 
@@ -749,33 +754,51 @@ export function MediaPipeline({
 										error={errors.transcribeChunks}
 										children={
 											transcriptPaths.length > 0 && (
-												<ItemGroup>
-													{transcriptPaths.map((path) => (
-														<TranscriptItem
-															key={path}
-															id={id}
-															index={index}
-															path={path}
-														/>
-													))}
-												</ItemGroup>
+												<ScrollArea className="h-96">
+													<ItemGroup>
+														{transcriptPaths.map((path) => (
+															<TranscriptItem
+																key={path}
+																id={id}
+																index={index}
+																path={path}
+															/>
+														))}
+													</ItemGroup>
+												</ScrollArea>
 											)
 										}
 										actions={
-											<RetryAction
-												api={api.media.transcribeAudioChunks.mutationOptions({
-													onError: handleError("transcribeChunks"),
-												})}
-												input={{ id, index }}
-												disabled={media.chunks.length === 0}
-												label={
-													transcribedChunks.length > 0 ? "Retry" : "Convert"
-												}
-												onSuccess={handleSuccess(
-													"transcribeChunks",
-													"Chunks transcribed",
-												)}
-											/>
+											<>
+												<RetryAction
+													api={api.media.transcribeAudioChunks.mutationOptions({
+														onError: handleError("transcribeChunks"),
+													})}
+													input={{ id, index, onlyMissing: true }}
+													disabled={
+														media.chunks.length === 0 || chunksTranscribed
+													}
+													label="Retry failed"
+													onSuccess={handleSuccess(
+														"transcribeChunks",
+														"Failed chunks transcribed",
+													)}
+												/>
+												<RetryAction
+													api={api.media.transcribeAudioChunks.mutationOptions({
+														onError: handleError("transcribeChunks"),
+													})}
+													input={{ id, index }}
+													disabled={media.chunks.length === 0}
+													label={
+														transcribedChunks.length > 0 ? "Retry" : "Convert"
+													}
+													onSuccess={handleSuccess(
+														"transcribeChunks",
+														"Chunks transcribed",
+													)}
+												/>
+											</>
 										}
 									/>
 
