@@ -1,3 +1,4 @@
+import { and, eq } from "drizzle-orm";
 import z from "zod";
 import {
 	getAPI,
@@ -6,6 +7,7 @@ import {
 	publicProcedure,
 	tryAPI,
 } from "@/api/procedure";
+import { schema } from "@/db";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 import { getZoomAPI } from "@/zoom/api";
@@ -241,6 +243,24 @@ export const meetingRouter = {
 
 			if (!sessions.length)
 				throw getError("NOT_FOUND", "No Zoom session found for this slot");
+
+			if (input.id !== DEMO_ID) {
+				await tryAPI(
+					"db-meeting-end-mark-attended",
+					db
+						.update(schema.slot)
+						.set({ status: "attended", endTime: new Date() })
+						.where(
+							MapRole(context.role, {
+								admin: eq(schema.slot.id, input.id),
+								scheduler: and(
+									eq(schema.slot.id, input.id),
+									eq(schema.slot.schedulerId, context.user.id),
+								),
+							}),
+						),
+				);
+			}
 
 			for (const session of sessions) {
 				const { error } = await zoomAPI(

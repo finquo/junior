@@ -331,7 +331,7 @@ export const slotRouter = {
 						...data,
 						status: "rescheduled",
 						endTime: null,
-						sessionId: null,
+						sessionKey: null,
 					})
 					.where(
 						MapRole(context.role, {

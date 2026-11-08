@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "c081d8be-657a-437c-bb0c-339878643400",
+  "id": "391cbc69-0d2e-4905-9718-2a1696323050",
   "prevIds": [
     "ce6c6c3b-4d2f-45ca-9f61-255ab254c2fa"
   ],
@@ -1133,7 +1133,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "sessionId",
+      "name": "sessionKey",
       "entityType": "columns",
       "schema": "public",
       "table": "slot"
@@ -1238,6 +1238,19 @@
       "generated": null,
       "identity": null,
       "name": "endTime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "slot"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "participants",
       "entityType": "columns",
       "schema": "public",
       "table": "slot"

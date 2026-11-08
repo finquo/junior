@@ -15,6 +15,7 @@ import {
 	noteZod,
 	quizZod,
 	schoolingZod,
+	slotParticipantZod,
 } from "@/config";
 import * as schema from "./schema/index";
 
@@ -113,9 +114,15 @@ export const UpdateProgramSchema = createUpdateSchema(
 });
 
 // Slot
-export const SelectSlotSchema = createSelectSchema(schema.slot);
-export const InsertSlotSchema = createInsertSchema(schema.slot);
-export const UpdateSlotSchema = createUpdateSchema(schema.slot);
+export const SelectSlotSchema = createSelectSchema(schema.slot).safeExtend({
+	participants: slotParticipantZod.array(),
+});
+export const InsertSlotSchema = createInsertSchema(schema.slot).omit({
+	participants: true,
+});
+export const UpdateSlotSchema = createUpdateSchema(schema.slot).omit({
+	participants: true,
+});
 
 // Lesson
 export const SelectLessonSchema = createSelectSchema(schema.lesson)

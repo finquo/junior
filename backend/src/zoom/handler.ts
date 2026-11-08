@@ -1,26 +1,17 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { tryAPI, tryFunc } from "utils";
-import { hasZoomVideo, mediaStorage, saveZoomVideo } from "@/aws/media";
+import {
+	hasZoomVideo,
+	mediaKey,
+	mediaStorage,
+	nextVideoIndex,
+	saveZoomVideo,
+} from "@/aws/media";
+import type { SlotParticipant } from "@/config";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getZoomAPI } from "@/zoom/api";
 import { zoomEvents } from "./webhook";
-
-const VIDEO_FILE = /^(\d+)\.mp4$/;
-
-function nextVideoIndex(keys: string[], sessionName: string) {
-	const prefix = `${sessionName}/videos/`;
-
-	const indexes = keys
-		.map((key) => key.replace(/:/g, "/"))
-		.filter((key) => key.startsWith(prefix))
-		.flatMap((key) => {
-			const match = VIDEO_FILE.exec(key.slice(prefix.length));
-			return match ? [Number(match[1])] : [];
-		});
-
-	return indexes.length === 0 ? 0 : Math.max(...indexes) + 1;
-}
 
 export const zoomEventHandler = zoomEvents(
 	{
@@ -28,6 +19,7 @@ export const zoomEventHandler = zoomEvents(
 			started: async (c) => {
 				const sessionName = c.var.data?.object.session_name;
 				const sessionId = c.var.data?.object.session_id;
+				const sessionKey = c.var.data?.object.session_key ?? sessionId;
 
 				if (!sessionName || !sessionId) return;
 
@@ -37,7 +29,7 @@ export const zoomEventHandler = zoomEvents(
 						.update(schema.slot)
 						.set({
 							status: "started",
-							sessionId,
+							sessionKey,
 						})
 						.where(eq(schema.slot.id, sessionName)),
 				);
@@ -57,6 +49,36 @@ export const zoomEventHandler = zoomEvents(
 
 				if (!sessionName || !timestamp) return;
 
+				const slot = await tryAPI(
+					"zoom-session-ended-find-slot",
+					db.query.slot.findFirst({
+						where: { id: sessionName },
+						columns: { id: true, sessionKey: true, participants: true },
+					}),
+				);
+
+				if (!slot) return;
+
+				const sessionKey = c.var.data?.object.session_key ?? slot.sessionKey;
+				const participants = slot.participants.filter(
+					(participant) => participant.sessionKey === sessionKey,
+				);
+				const userIds = [...new Set(participants.map((p) => p.userId))];
+
+				const users = userIds.length
+					? ((await tryAPI(
+							"zoom-session-ended-find-users",
+							db
+								.select({ id: schema.user.id, role: schema.user.role })
+								.from(schema.user)
+								.where(inArray(schema.user.id, userIds)),
+						)) ?? [])
+					: [];
+
+				const teachers = users.filter((user) => user.role === "teacher");
+
+				if (userIds.length < 2 || teachers.length < 1) return;
+
 				await tryAPI(
 					"zoom-session-ended-update-slot",
 					db
@@ -65,7 +87,73 @@ export const zoomEventHandler = zoomEvents(
 							status: "attended",
 							endTime: new Date(timestamp),
 						})
-						.where(eq(schema.slot.id, sessionName)),
+						.where(eq(schema.slot.id, slot.id)),
+				);
+			},
+			user_joined: async (c) => {
+				const sessionName = c.var.data?.object.session_name;
+				const user = c.var.data?.object.user;
+				const userId = user?.user_key;
+
+				if (!sessionName || !user || !userId) return;
+
+				const slot = await tryAPI(
+					"zoom-user-joined-find-slot",
+					db.query.slot.findFirst({
+						where: { id: sessionName },
+						columns: { id: true, sessionKey: true },
+					}),
+				);
+
+				const sessionKey = c.var.data?.object.session_key ?? slot?.sessionKey;
+
+				if (!slot || !sessionKey) return;
+
+				const participant: SlotParticipant = {
+					userId,
+					sessionKey,
+					name: user.name,
+					joinedAt: user.join_time,
+					leftAt: null,
+				};
+
+				await tryAPI(
+					"zoom-user-joined-append-participant",
+					db
+						.update(schema.slot)
+						.set({
+							participants: sql`array_append(${schema.slot.participants}, ${JSON.stringify(participant)}::jsonb)`,
+						})
+						.where(eq(schema.slot.id, slot.id)),
+				);
+			},
+			user_left: async (c) => {
+				const sessionName = c.var.data?.object.session_name;
+				const user = c.var.data?.object.user;
+				const userId = user?.user_key;
+
+				if (!sessionName || !user || !userId) return;
+
+				const slot = await tryAPI(
+					"zoom-user-left-find-slot",
+					db.query.slot.findFirst({
+						where: { id: sessionName },
+						columns: { id: true, sessionKey: true },
+					}),
+				);
+
+				const sessionKey = c.var.data?.object.session_key ?? slot?.sessionKey;
+
+				if (!slot || !sessionKey) return;
+
+				await tryAPI(
+					"zoom-user-left-update-participant",
+					db
+						.update(schema.slot)
+						.set({
+							participants: sql`ARRAY(SELECT CASE WHEN p->>'userId' = ${userId} AND p->>'sessionKey' = ${sessionKey} AND p->>'leftAt' IS NULL THEN jsonb_set(p, '{leftAt}', to_jsonb(${user.leave_time}::text)) ELSE p END FROM unnest(${schema.slot.participants}) AS p)`,
+						})
+						.where(eq(schema.slot.id, slot.id)),
 				);
 			},
 			recording_completed: async (c) => {
@@ -103,7 +191,7 @@ export const zoomEventHandler = zoomEvents(
 
 					if (saved) continue;
 
-					const key = `${sessionName}/videos/${index}.mp4`;
+					const key = mediaKey(sessionName, `videos/${index}.mp4`);
 
 					console.log({ downloadUrl, zoomFileId, index, key });
 

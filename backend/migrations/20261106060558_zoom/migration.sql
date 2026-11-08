@@ -1,1 +1,0 @@
-ALTER TABLE "slot" ADD COLUMN "sessionId" text;

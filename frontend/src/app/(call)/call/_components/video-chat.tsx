@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import ZoomVideo, { ConnectionState, RecordingStatus } from "@zoom/videosdk";
 import {
 	LocalScreenShareComponent,
@@ -76,6 +77,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { api } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { useJoinPreferences } from "./call-preferences";
 import { ChatDrawer, type ChatMessage } from "./chat-drawer";
@@ -167,6 +169,15 @@ export function VideoChat({
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
+	const endMeetingMutation = useMutation(
+		api.meeting.end.mutationOptions({
+			onError: (error) =>
+				toast.error({
+					title: "Could not mark meeting as ended",
+					description: error.message,
+				}),
+		}),
+	);
 
 	const chatRoles = new Map(
 		participants.map((participant) => [
@@ -397,6 +408,12 @@ export function VideoChat({
 	};
 
 	const endMeeting = async () => {
+		if (slotId && ["admin", "scheduler"].includes(role)) {
+			await endMeetingMutation
+				.mutateAsync({ id: slotId })
+				.catch(() => undefined);
+		}
+
 		await ZoomVideo.createClient().leave(true);
 		if (onEnd) onEnd();
 		else onLeave();

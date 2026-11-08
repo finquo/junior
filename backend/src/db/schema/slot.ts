@@ -7,7 +7,7 @@ import {
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
-import type { Database } from "..";
+import type { SlotParticipant } from "@/config";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { lesson } from "./lesson";
 import { scheduler } from "./scheduler";
@@ -26,7 +26,7 @@ export const slot = pgTable(
 	"slot",
 	{
 		id: generateId().primaryKey(),
-		sessionId: text(),
+		sessionKey: text(),
 		meetingLink: text(),
 
 		studentId: getId().references(() => student.id, { onDelete: "cascade" }),
@@ -51,6 +51,12 @@ export const slot = pgTable(
 			withTimezone: true,
 			mode: "date",
 		}),
+
+		participants: jsonb()
+			.$type<SlotParticipant>()
+			.array()
+			.notNull()
+			.default([]),
 
 		status: slotStatusEnum("status").notNull().default("scheduled"),
 

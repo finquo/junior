@@ -311,6 +311,19 @@ export const mediaRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			// Demo sandbox. Remove this branch before deploying.
+			if (input.id === "demo") {
+				const link = `${new URL(context.req.url).origin}/analytics/slots/demo${input.source === "chunks" ? "?source=chunks" : ""}`;
+
+				await notifySlotSummary({
+					name: "Demo",
+					phoneNumber: "+919846101882",
+					link,
+				});
+
+				return { link };
+			}
+
 			const slot = await tryAPI(
 				"db-media-send-summary-slot",
 				db.query.slot.findFirst({

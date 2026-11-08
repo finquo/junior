@@ -42,3 +42,13 @@ export const experienceZod = z.object({
 });
 
 export type Experience = z.infer<typeof experienceZod>;
+
+export const slotParticipantZod = z.object({
+	userId: z.string(),
+	sessionKey: z.string(),
+	name: z.string(),
+	joinedAt: z.string(),
+	leftAt: z.string().nullable(),
+});
+
+export type SlotParticipant = z.infer<typeof slotParticipantZod>;

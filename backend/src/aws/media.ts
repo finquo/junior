@@ -198,6 +198,22 @@ export async function hasZoomVideo(sessionName: string, zoomFileId: string) {
 	return false;
 }
 
+const VIDEO_FILE = /^(\d+)\.mp4$/;
+
+export function nextVideoIndex(keys: string[], sessionName: string) {
+	const prefix = `${sessionName}/videos/`;
+
+	const indexes = keys
+		.map((key) => key.replace(/:/g, "/"))
+		.filter((key) => key.startsWith(prefix))
+		.flatMap((key) => {
+			const match = VIDEO_FILE.exec(key.slice(prefix.length));
+			return match ? [Number(match[1])] : [];
+		});
+
+	return indexes.length === 0 ? 0 : Math.max(...indexes) + 1;
+}
+
 export function getMediaDownloadURL(
 	key: string,
 	expiresIn = 3600,
