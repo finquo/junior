@@ -123,6 +123,11 @@ export const notifySlotUpdated = async ({
 
 	await sendAll([
 		{
+			number: student?.phoneNumber,
+			title: "Class rescheduled",
+			message: `${lessonName} with ${teacherName} rescheduled to ${when} (IST). Join: ${joinLink}`,
+		},
+		{
 			number: teacher?.phoneNumber,
 			title: "Class rescheduled",
 			message: `${lessonName} with ${studentName} on ${when} (IST). Join: ${joinLink}`,

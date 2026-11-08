@@ -348,7 +348,6 @@ export const slotRouter = {
 			const slot = updated?.[0];
 			if (!slot) return updated;
 
-			/*
 			try {
 				const lesson = await tryAPI(
 					"db-core-reschedule-slot-lesson",
@@ -389,7 +388,6 @@ export const slotRouter = {
 			} catch (error) {
 				console.error("[core-reschedule-slot-notify]", error);
 			}
-			*/
 
 			return updated;
 		}),
