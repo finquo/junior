@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import {
 	Frame,
 	FrameActions,
@@ -16,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Spinner } from "@/components/ui/spinner";
+import { Toggle } from "@/components/ui/toggle";
 import { api } from "@/hooks/api";
 import { MediaFileList } from "./_components/file-list";
 
@@ -29,6 +31,7 @@ function SessionMedia({ slotId }: { slotId: string }) {
 			input: { id: slotId },
 		}),
 	);
+	const [videosOnly, setVideosOnly] = useState(true);
 
 	if (isError) {
 		return (
@@ -48,6 +51,14 @@ function SessionMedia({ slotId }: { slotId: string }) {
 				<FrameDescription>Files stored for this session</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
+						<Toggle
+							variant={"outline"}
+							pressed={videosOnly}
+							onPressedChange={setVideosOnly}
+						>
+							<VideoIcon />
+							Video Files Only
+						</Toggle>
 						{isPending && (
 							<Button variant="outline" size="icon" disabled>
 								<Spinner />
@@ -69,7 +80,7 @@ function SessionMedia({ slotId }: { slotId: string }) {
 				</FrameActions>
 			</FrameHeader>
 			<FramePanel>
-				<MediaFileList files={data} slotId={slotId} />
+				<MediaFileList files={data} slotId={slotId} videosOnly={videosOnly} />
 			</FramePanel>
 		</Frame>
 	);

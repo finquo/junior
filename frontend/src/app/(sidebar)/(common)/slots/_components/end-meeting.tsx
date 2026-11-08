@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { PhoneOffIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import {
 	AlertDialog,
@@ -14,11 +13,16 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
 
-export function EndMeeting({ slotId }: { slotId: string }) {
+export function EndMeetingDialog({
+	slotId,
+	children,
+}: {
+	slotId: string;
+	children: React.ReactElement;
+}) {
 	const { mutate, isPending } = useMutation(
 		api.meeting.end.mutationOptions({
 			onSuccess: () => {
@@ -36,12 +40,7 @@ export function EndMeeting({ slotId }: { slotId: string }) {
 
 	return (
 		<AlertDialog>
-			<AlertDialogTrigger asChild>
-				<Button variant="destructive" size="sm">
-					<PhoneOffIcon />
-					End meeting
-				</Button>
-			</AlertDialogTrigger>
+			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>End meeting for all?</AlertDialogTitle>

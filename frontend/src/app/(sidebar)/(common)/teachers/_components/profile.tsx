@@ -8,6 +8,7 @@ import {
 	CalendarIcon,
 	ExternalLinkIcon,
 	LanguagesIcon,
+	MoreHorizontalIcon,
 	PenIcon,
 	PlaneIcon,
 	UserRoundIcon,
@@ -25,6 +26,12 @@ import {
 } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -118,36 +125,45 @@ export function TeacherProfile({ data }: { data: TeacherData }) {
 								Schedule Session
 							</Link>
 						</Button>
-						<Button variant="outline" size="sm" asChild>
-							<Link href="/slots">
-								<CalendarIcon />
-								View Sessions
-							</Link>
-						</Button>
-						<RenderWhenRole role={["admin", "scheduler"]}>
-							<EditTeacherDrawer teacher={data}>
-								<Button variant="outline" size="sm">
-									<PenIcon />
-									Edit
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="icon-sm">
+									<MoreHorizontalIcon />
 								</Button>
-							</EditTeacherDrawer>
-						</RenderWhenRole>
-						<RenderWhenRole role="admin">
-							<UserEditDrawer userId={data.id} userData={data.user}>
-								<Button variant="outline" size="sm">
-									<PenIcon />
-									Edit User
-								</Button>
-							</UserEditDrawer>
-						</RenderWhenRole>
-						<RenderWhenRole role="admin">
-							<ImpersonateButton userId={data.id} asChild>
-								<Button variant="outline" size="sm">
-									<VenetianMaskIcon />
-									Impersonate
-								</Button>
-							</ImpersonateButton>
-						</RenderWhenRole>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem asChild>
+									<Link href="/slots">
+										<CalendarIcon />
+										View Sessions
+									</Link>
+								</DropdownMenuItem>
+								<RenderWhenRole role={["admin", "scheduler"]}>
+									<EditTeacherDrawer teacher={data}>
+										<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+											<PenIcon />
+											Edit
+										</DropdownMenuItem>
+									</EditTeacherDrawer>
+								</RenderWhenRole>
+								<RenderWhenRole role="admin">
+									<UserEditDrawer userId={data.id} userData={data.user}>
+										<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+											<PenIcon />
+											Edit User
+										</DropdownMenuItem>
+									</UserEditDrawer>
+								</RenderWhenRole>
+								<RenderWhenRole role="admin">
+									<ImpersonateButton userId={data.id} asChild>
+										<DropdownMenuItem>
+											<VenetianMaskIcon />
+											Impersonate
+										</DropdownMenuItem>
+									</ImpersonateButton>
+								</RenderWhenRole>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</ButtonGroup>
 				</CardAction>
 			</CardHeader>

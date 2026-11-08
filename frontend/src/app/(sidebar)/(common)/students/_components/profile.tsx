@@ -13,6 +13,7 @@ import {
 	GraduationCapIcon,
 	LanguagesIcon,
 	MapPinIcon,
+	MoreHorizontalIcon,
 	NotebookPenIcon,
 	PenIcon,
 	PlusIcon,
@@ -40,6 +41,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Empty,
 	EmptyDescription,
@@ -137,7 +144,7 @@ function PersonItemSkeleton({ label }: { label: string }) {
 	);
 }
 
-function SendReportButton({ studentId }: { studentId: string }) {
+function SendReportItem({ studentId }: { studentId: string }) {
 	const { mutate, isPending } = useMutation(
 		api.core.student.sendReport.mutationOptions({
 			onSuccess: () => toast.success({ title: "Report link sent to student" }),
@@ -145,15 +152,13 @@ function SendReportButton({ studentId }: { studentId: string }) {
 	);
 
 	return (
-		<Button
-			variant="outline"
-			size="sm"
+		<DropdownMenuItem
 			disabled={isPending}
-			onClick={() => mutate({ id: studentId })}
+			onSelect={() => mutate({ id: studentId })}
 		>
 			{isPending ? <Spinner /> : <SendIcon />}
 			Send Report
-		</Button>
+		</DropdownMenuItem>
 	);
 }
 
@@ -214,53 +219,62 @@ export function StudentProfile({
 								Schedule Session
 							</Link>
 						</Button>
-						<Button variant="outline" size="sm" asChild>
-							<Link href={`/students/${data.id}/lessons` as "/"}>
-								<BookOpenIcon />
-								Manage Lessons
-							</Link>
-						</Button>
-						<RenderWhenRole role="admin">
-							<Button variant="outline" size="sm" asChild>
-								<Link href={`/students/${data.id}/payments` as "/"}>
-									<WalletIcon />
-									Payments
-								</Link>
-							</Button>
-						</RenderWhenRole>
-						<RenderWhenRole role={["admin", "scheduler"]}>
-							<EditStudentDrawer student={data}>
-								<Button variant="outline" size="sm">
-									<PenIcon />
-									Edit
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="icon-sm">
+									<MoreHorizontalIcon />
 								</Button>
-							</EditStudentDrawer>
-						</RenderWhenRole>
-						<RenderWhenRole role={["admin", "scheduler"]}>
-							<UserEditDrawer userId={data.id} userData={data.user}>
-								<Button variant="outline" size="sm">
-									<PenIcon />
-									Edit User
-								</Button>
-							</UserEditDrawer>
-						</RenderWhenRole>
-						<RenderWhenRole role={["admin", "scheduler"]}>
-							<Button variant="outline" size="sm" asChild>
-								<Link href={`/students/${data.id}/analytics` as "/"}>
-									<FileTextIcon />
-									View Report
-								</Link>
-							</Button>
-							<SendReportButton studentId={data.id} />
-						</RenderWhenRole>
-						<RenderWhenRole role="admin">
-							<ImpersonateButton userId={data.id} asChild>
-								<Button variant="outline" size="sm">
-									<VenetianMaskIcon />
-									Impersonate
-								</Button>
-							</ImpersonateButton>
-						</RenderWhenRole>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem asChild>
+									<Link href={`/students/${data.id}/lessons` as "/"}>
+										<BookOpenIcon />
+										Manage Lessons
+									</Link>
+								</DropdownMenuItem>
+								<RenderWhenRole role="admin">
+									<DropdownMenuItem asChild>
+										<Link href={`/students/${data.id}/payments` as "/"}>
+											<WalletIcon />
+											Payments
+										</Link>
+									</DropdownMenuItem>
+								</RenderWhenRole>
+								<RenderWhenRole role={["admin", "scheduler"]}>
+									<EditStudentDrawer student={data}>
+										<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+											<PenIcon />
+											Edit
+										</DropdownMenuItem>
+									</EditStudentDrawer>
+								</RenderWhenRole>
+								<RenderWhenRole role={["admin", "scheduler"]}>
+									<UserEditDrawer userId={data.id} userData={data.user}>
+										<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+											<PenIcon />
+											Edit User
+										</DropdownMenuItem>
+									</UserEditDrawer>
+								</RenderWhenRole>
+								<RenderWhenRole role={["admin", "scheduler"]}>
+									<DropdownMenuItem asChild>
+										<Link href={`/students/${data.id}/analytics` as "/"}>
+											<FileTextIcon />
+											View Report
+										</Link>
+									</DropdownMenuItem>
+									<SendReportItem studentId={data.id} />
+								</RenderWhenRole>
+								<RenderWhenRole role="admin">
+									<ImpersonateButton userId={data.id} asChild>
+										<DropdownMenuItem>
+											<VenetianMaskIcon />
+											Impersonate
+										</DropdownMenuItem>
+									</ImpersonateButton>
+								</RenderWhenRole>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</ButtonGroup>
 				</CardAction>
 			</CardHeader>

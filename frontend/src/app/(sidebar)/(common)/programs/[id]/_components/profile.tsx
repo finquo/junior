@@ -140,12 +140,6 @@ export function ProgramProfile({
 				<FrameDescription>{data.description}</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
-						<CopyButton
-							text={() => data.id}
-							label="Program ID"
-							variant="outline"
-							size="sm"
-						/>
 						<Button asChild variant="outline" size="sm">
 							<Link href={`/programs/${data.id}/edit` as "/"}>
 								<PenIcon />

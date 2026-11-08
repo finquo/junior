@@ -4,18 +4,19 @@ import { langFlag, langName } from "language-emoji";
 import {
 	AudioLinesIcon,
 	CalendarClockIcon,
-	CheckCheckIcon,
 	ClockIcon,
 	ExternalLinkIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
-	PlayIcon,
+	PhoneOffIcon,
+	RefreshCwIcon,
 	ScrollTextIcon,
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { sileo as toast } from "sileo";
 import { getDurationFromInterval } from "utils";
 import {
 	Timeline,
@@ -39,6 +40,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
 	Item,
 	ItemActions,
@@ -50,13 +52,16 @@ import {
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { api, refetchAPIs } from "@/hooks/api";
+import { MutationButton } from "@/hooks/button";
 import { FetchLesson } from "@/hooks/lesson";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { getInitials, snakeToTitleCase } from "@/lib/utils";
-import { RequestRescheduleButton, SlotActions } from "./actions";
-import { EndMeeting } from "./end-meeting";
+import { SlotActions } from "./actions";
+import { EndMeetingDialog } from "./end-meeting";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
@@ -205,14 +210,6 @@ export function SessionProfile({ data }: { data: SlotData }) {
 								Open Call
 							</a>
 						</Button>
-						{data.meetingLink && (
-							<Button variant="outline" size="sm" asChild>
-								<a href={data.meetingLink} target="_blank" rel="noreferrer">
-									<VideoIcon />
-									Join
-								</a>
-							</Button>
-						)}
 						{data.status === "attended" && (
 							<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
 								<Button variant="outline" size="sm" asChild>
@@ -223,21 +220,61 @@ export function SessionProfile({ data }: { data: SlotData }) {
 								</Button>
 							</RenderWhenRole>
 						)}
-						<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
-							<Button variant="outline" size="sm" asChild>
-								<Link href={`/slots/${data.id}/log` as "/"}>
-									<ScrollTextIcon />
-									Log
-								</Link>
-							</Button>
-						</RenderWhenRole>
-						<RenderWhenRole role={["admin", "scheduler"]}>
-							<EndMeeting slotId={data.id} />
-						</RenderWhenRole>
-						<RenderWhenRole role={["teacher"]}>
-							<RequestRescheduleButton slot={data} />
-						</RenderWhenRole>
-						<SlotActions slot={data} />
+
+						<SlotActions slot={data}>
+							{data.meetingLink && (
+								<DropdownMenuItem asChild>
+									<a href={data.meetingLink} target="_blank" rel="noreferrer">
+										<VideoIcon />
+										Join
+									</a>
+								</DropdownMenuItem>
+							)}
+							<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
+								<DropdownMenuItem asChild>
+									<Link href={`/slots/${data.id}/log` as "/"}>
+										<ScrollTextIcon />
+										Log
+									</Link>
+								</DropdownMenuItem>
+							</RenderWhenRole>
+							<RenderWhenRole role={["admin", "scheduler"]}>
+								<EndMeetingDialog slotId={data.id}>
+									<DropdownMenuItem variant="destructive">
+										<PhoneOffIcon />
+										End meeting
+									</DropdownMenuItem>
+								</EndMeetingDialog>
+							</RenderWhenRole>
+							<RenderWhenRole role={["teacher"]}>
+								<MutationButton
+									api={api.core.slot.requestReschedule.mutationOptions({
+										onSuccess: () => {
+											refetchAPIs([
+												api.core.slot.get.queryKey({ input: { id: data.id } }),
+												api.core.slot.list.queryKey(),
+											]);
+											toast.success({ title: "Reschedule requested" });
+										},
+									})}
+									mutate={(mutate) => (
+										<DropdownMenuItem
+											disabled={data.status === "request_reschedule"}
+											onSelect={() => mutate({ id: data.id })}
+										>
+											<RefreshCwIcon />
+											Request Reschedule
+										</DropdownMenuItem>
+									)}
+									isPending={
+										<DropdownMenuItem disabled>
+											<Spinner />
+											Requesting
+										</DropdownMenuItem>
+									}
+								/>
+							</RenderWhenRole>
+						</SlotActions>
 					</ButtonGroup>
 				</CardAction>
 			</CardHeader>

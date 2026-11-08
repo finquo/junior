@@ -156,9 +156,18 @@ const columnHelper = createColumnHelper<DataTableFeatures, StudentRecord>();
 
 const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 	columnHelper.columns([
-		columnHelper.display({
-			id: "student",
-			header: "Student",
+		columnHelper.accessor((row) => row.user?.name, {
+			id: "name",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Student" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Student",
+				placeholder: "Search students...",
+				variant: "text",
+			},
 			cell: ({ row }) => (
 				<FetchUser id={row.original.id} isPending={<UserCellSkeleton />}>
 					{(user) => (

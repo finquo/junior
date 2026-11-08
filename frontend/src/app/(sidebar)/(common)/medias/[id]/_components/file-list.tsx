@@ -44,6 +44,15 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
 
+const videoExtensions = ["mp4", "webm"];
+
+export const isVideoFile = (path: string) => {
+	const name = path.split("/").pop() ?? path;
+	const extension = name.split(".").pop()?.toLowerCase() ?? "";
+
+	return videoExtensions.includes(extension);
+};
+
 const fileIcon = (name: string) => {
 	const extension = name.split(".").pop()?.toLowerCase();
 
@@ -164,11 +173,15 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 export function MediaFileList({
 	files,
 	slotId,
+	videosOnly,
 }: {
 	files: string[];
 	slotId: string;
+	videosOnly: boolean;
 }) {
-	if (files.length === 0) {
+	const visibleFiles = videosOnly ? files.filter(isVideoFile) : files;
+
+	if (visibleFiles.length === 0) {
 		return (
 			<Empty>
 				<EmptyHeader>
@@ -183,7 +196,7 @@ export function MediaFileList({
 
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{files.map((path) => (
+			{visibleFiles.map((path) => (
 				<MediaFile key={path} path={path} slotId={slotId} />
 			))}
 		</div>

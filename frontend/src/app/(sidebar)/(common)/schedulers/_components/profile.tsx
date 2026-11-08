@@ -3,6 +3,7 @@
 import {
 	CalendarIcon,
 	MailIcon,
+	MoreHorizontalIcon,
 	PenIcon,
 	PhoneIcon,
 	ShieldCheckIcon,
@@ -16,6 +17,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
@@ -86,28 +93,37 @@ export function SchedulerProfile({ data }: { data: SchedulerData }) {
 								Schedule Session
 							</Link>
 						</Button>
-						<Button variant="outline" size="sm" asChild>
-							<Link href="/slots">
-								<CalendarIcon />
-								View Sessions
-							</Link>
-						</Button>
-						<RenderWhenRole role="admin">
-							<UserEditDrawer userId={data.id} userData={user}>
-								<Button variant="outline" size="sm">
-									<PenIcon />
-									Edit User
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="icon-sm">
+									<MoreHorizontalIcon />
 								</Button>
-							</UserEditDrawer>
-						</RenderWhenRole>
-						<RenderWhenRole role="admin">
-							<ImpersonateButton userId={data.id} asChild>
-								<Button variant="outline" size="sm">
-									<VenetianMaskIcon />
-									Impersonate
-								</Button>
-							</ImpersonateButton>
-						</RenderWhenRole>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem asChild>
+									<Link href="/slots">
+										<CalendarIcon />
+										View Sessions
+									</Link>
+								</DropdownMenuItem>
+								<RenderWhenRole role="admin">
+									<UserEditDrawer userId={data.id} userData={user}>
+										<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+											<PenIcon />
+											Edit User
+										</DropdownMenuItem>
+									</UserEditDrawer>
+								</RenderWhenRole>
+								<RenderWhenRole role="admin">
+									<ImpersonateButton userId={data.id} asChild>
+										<DropdownMenuItem>
+											<VenetianMaskIcon />
+											Impersonate
+										</DropdownMenuItem>
+									</ImpersonateButton>
+								</RenderWhenRole>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</ButtonGroup>
 				</CardAction>
 			</CardHeader>
