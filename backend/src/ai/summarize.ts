@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateObject, type LanguageModel } from "ai";
 import { z } from "zod";
 import { openrouter } from "./index";
 
@@ -49,7 +49,7 @@ export const meetingSummarySchema = z.object({
 
 export async function summarizeTranscript(transcript: string) {
 	const { object } = await generateObject({
-		model: openrouter("google/gemini-2.5-flash"),
+		model: openrouter("google/gemini-2.5-flash") as LanguageModel,
 		temperature: 0.2,
 		maxOutputTokens: 3000,
 		schema: meetingSummarySchema,
@@ -75,59 +75,3 @@ ${transcript}`,
 
 	return object;
 }
-
-// type TranscriptionChunk = {
-// 	speaker?: "teacher" | "student" | "unknown";
-// 	text: string;
-// 	startSeconds?: number;
-// 	endSeconds?: number;
-// };
-
-// const transcriptions: TranscriptionChunk[] = [
-// 	{
-// 		speaker: "teacher",
-// 		text: "Today we will revise recursion and solve a few interview problems.",
-// 		startSeconds: 0,
-// 		endSeconds: 12,
-// 	},
-// 	{
-// 		speaker: "student",
-// 		text: "Sir, I understand base cases, but I get confused about the recursive call.",
-// 		startSeconds: 13,
-// 		endSeconds: 21,
-// 	},
-// 	{
-// 		speaker: "teacher",
-// 		text: "Think of recursion as solving a smaller version of the same problem. Let us trace factorial.",
-// 		startSeconds: 22,
-// 		endSeconds: 40,
-// 	},
-// 	{
-// 		speaker: "student",
-// 		text: "So factorial(3) calls factorial(2), then factorial(1)?",
-// 		startSeconds: 41,
-// 		endSeconds: 48,
-// 	},
-// 	{
-// 		speaker: "teacher",
-// 		text: "Exactly. Now try writing it yourself.",
-// 		startSeconds: 49,
-// 		endSeconds: 55,
-// 	},
-// ];
-
-// if (process.argv[1]?.endsWith("summarize.ts")) {
-// 	const transcript = transcriptions
-// 		.map((chunk, index) => {
-// 			const speaker = chunk.speaker ?? "unknown";
-// 			const time =
-// 				chunk.startSeconds !== undefined && chunk.endSeconds !== undefined
-// 					? ` [${chunk.startSeconds}s-${chunk.endSeconds}s]`
-// 					: "";
-
-// 			return `${index + 1}. ${speaker.toUpperCase()}${time}: ${chunk.text.trim()}`;
-// 		})
-// 		.join("\n");
-
-// 	console.dir(await summarizeTranscript(transcript), { depth: null });
-// }

@@ -14,7 +14,8 @@ jobs:
         runs-on: ubuntu-latest
         environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         env:
-            TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+            ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+            DOMAIN_NAME: ${{ github.ref == 'refs/heads/main' && 'finquo.ai' || 'dev.finquo.ai' }}
 
         steps:
             - name: Print basic info
@@ -24,7 +25,14 @@ jobs:
                   echo "github.ref=${{ github.ref }}"
 
             - name: Print TF vars
-              run: echo "TF_VAR_environment=$TF_VAR_environment"
+              env:
+                  TF_VAR_domain_name: ${{ env.DOMAIN_NAME }}
+                  TF_VAR_environment: ${{ env.ENVIRONMENT }}
+              run: |
+                  echo "ENVIRONMENT=$ENVIRONMENT"
+                  echo "DOMAIN_NAME=$DOMAIN_NAME"
+                  echo "TF_VAR_environment=$TF_VAR_environment"
+                  echo "TF_VAR_domain_name=$TF_VAR_domain_name"
 
             - uses: oNaiPs/secrets-to-env-action@v1
               with:
@@ -49,4 +57,3 @@ jobs:
               run: |
                   echo "EXPORT=$EXPORT"
                   echo "DATABASE_URL (length): ${#DATABASE_URL}"
-                  echo "BETTER_AUTH_URL=$BETTER_AUTH_URL"

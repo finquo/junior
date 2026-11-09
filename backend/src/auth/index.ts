@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { admin as adminPlugin, phoneNumber } from "better-auth/plugins";
 import type { Database } from "@/db";
 import * as schema from "@/db/schema/auth";
+import { getAllowedHosts } from "./origin";
 import { ac, roles } from "./permissions";
 
 export * from "./permissions";
@@ -11,10 +12,10 @@ export function createAuth(db: Database) {
 	return betterAuth({
 		appName: "Finquo Junior",
 		secret: process.env.BETTER_AUTH_SECRET,
-		baseURL: process.env.BETTER_AUTH_URL,
-		trustedOrigins: process.env.CORS_ORIGIN
-			? [process.env.CORS_ORIGIN]
-			: undefined,
+		baseURL: {
+			allowedHosts: getAllowedHosts(),
+			protocol: process.env.NODE_ENV === "development" ? "http" : "https",
+		},
 		emailAndPassword: {
 			enabled: true,
 			disableSignUp: false,
@@ -35,6 +36,7 @@ export function createAuth(db: Database) {
 			level: "debug",
 		},
 		advanced: {
+			trustedProxyHeaders: true,
 			cookiePrefix: "finquo-auth",
 			defaultCookieAttributes: {
 				sameSite: "none",

@@ -11,6 +11,7 @@ import { logger } from "hono/logger";
 import z from "zod";
 import { appRouter } from "@/api";
 import { createContext } from "./api/context";
+import { getOrigin } from "./auth/origin";
 import { bot } from "./chat/whatsapp";
 import { auth } from "./services";
 import { zoomEventHandler } from "./zoom/handler";
@@ -22,7 +23,7 @@ app.use(logger());
 app.use(
 	"/*",
 	cors({
-		origin: process.env.CORS_ORIGIN,
+		origin: getOrigin(),
 		allowMethods: ["GET", "POST", "OPTIONS"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		credentials: true,
