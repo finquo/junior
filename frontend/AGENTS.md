@@ -25,6 +25,20 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 - Reuse backend Zod schemas, types, and lookup dictionaries from `backend/config`; never redefine enums that already exist there.
 - Never hardcode inline lookup dictionaries in pages/components (for example `currencyItems = { INR: "Rupees", USD: "Dollar" } as const`). Shared code/data lives in `packages/utils` — import it (`Currencies`, `Countries`, `CurrencyZod`, ...), or export a new variable from `utils` if it does not exist yet. One source of truth means UI and API updates are single-file edits, not page-by-page hunts.
 
+## Code style tips
+
+- Avoid ternaries inside TSX components. Compute values (including prop defaults) before the JSX; put defaults in function props, not inside the component body.
+- Type props directly in the function signature (`({ href = "/me" }: { href?: Route })`) - no separate exported props interfaces; never export prop types to the outside.
+- Type narrow props with Next typed routes (`href?: Route` from `"next"`) so call sites get route completion/validation.
+- Use objects/values directly in JSX (`socials.name`); don't destructure into locals for trivial members.
+- When building a custom Drawer or Dialog component, accept `children` and render them under `DrawerTrigger` / `DialogTrigger` with `asChild`. The caller passes any styled button as the trigger, so the component can be used anywhere without hardcoding its trigger.
+- Don't import React only for types. Use the `React.` namespace (`React.ReactNode`, `React.ReactElement`) instead.
+- For `children` that will be passed to `asChild` (triggers, buttons, links), type it as `React.ReactElement`, not `React.ReactNode`. `ReactElement` guarantees a single element that Radix can merge props into.
+- Never create a frontend-only copy of a backend Zod schema. Reuse the backend schema (`quizZod`, `*Schema` from `backend/config` / `backend/db`) as the single source of truth; validate parsed payloads against it instead of redefining rules.
+- Never default form values to empty strings (`""`). Empty strings are saved to the database and make null queries impossible. Use `undefined` as the fallback for every optional or unset key, start arrays empty instead of `[""]`, and omit defaults where possible. Convert blank values to `null` or `undefined` only when building the server payload, never in the form defaults.
+- Share components the same way as schemas/config: build a feature's UI once as a named component (for example `QuizList` in `frontend/src/components/custom/quiz.tsx`) and compose it from every route that renders it. Never duplicate the same rendering inline in a route's `_components`. Keep related presentational components together in the same file as separate named exports; forms belong in their own file.
+- `frontend/src/components/custom/` is the home for shared custom (non-shadcn) components.
+
 ## Routes and layouts
 
 - `src/app/page.tsx` - landing page with live backend connection status.
@@ -292,10 +306,10 @@ export default function Page() {
 
 ## Tips and tricks
 
-1. Ask instead of guessing. If a requirement, name, or component detail is ambiguous, ask the developer rather than assuming; they have the visual and business context. Read only the files relevant to the task.
-2. Read official online docs, never reverse-engineer bundled `node_modules` code. For shadcn, use the official component docs.
+1. Next.js here is v16 with breaking changes. Read `frontend/node_modules/next/dist/docs/` before writing Next code.
+2. Read the official shadcn component docs; never reverse-engineer bundled `node_modules` code.
 3. Invalidate narrowly with `refetchAPIs([...queryKey(...)])`; never blanket-invalidate.
-4. Respect the workspace and component boundaries described above.
+4. Respect the component boundaries described above (shadcn primitives in `src/components/ui/`, shared custom components in `src/components/custom/`, route-private components in the nearest `_components/`).
 5. Compose shadcn primitives; do not add wrapper `<div>`s.
 
 ## Pre-finish checklists
