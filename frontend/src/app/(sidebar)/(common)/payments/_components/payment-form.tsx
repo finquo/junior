@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { type PaymentMethod, PaymentMethodZod } from "backend/config";
 import { format } from "date-fns";
 import { CalendarIcon, HandCoinsIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,7 @@ import {
 	FieldGroup,
 	FieldLabel,
 } from "@/components/ui/field";
+import { PaymentMethodField } from "@/components/custom/payment-method-field";
 import { Input } from "@/components/ui/input";
 import {
 	Popover,
@@ -42,6 +44,7 @@ import type { GetFormZod } from "@/lib/utils";
 const basePaymentSchema = z.object({
 	amount: z.string().trim().min(1, "Amount is required"),
 	currency: CurrencyZod,
+	paymentMethod: PaymentMethodZod,
 	paidAt: z.string().optional(),
 	transactionId: z.string().trim().optional(),
 });
@@ -271,6 +274,7 @@ export function NewPaymentForm() {
 				studentId: value.studentId,
 				amount,
 				currency: value.currency,
+				paymentMethod: value.paymentMethod,
 				paidAt: value.paidAt ? new Date(value.paidAt) : undefined,
 				transactionId: value.transactionId || undefined,
 			});
@@ -412,6 +416,19 @@ export function NewPaymentForm() {
 				</div>
 
 				<form.Field
+					name="paymentMethod"
+					children={(field) => (
+						<PaymentMethodField
+							value={field.state.value}
+							isPending={isPending}
+							onChange={(next) =>
+								field.handleChange(next as PaymentMethod)
+							}
+						/>
+					)}
+				/>
+
+				<form.Field
 					name="transactionId"
 					children={(field) => (
 						<TransactionIdField
@@ -471,6 +488,7 @@ export function EditPaymentForm({
 	const form = useForm({
 		defaultValues: {
 			amount: String(payment.amount),
+			paymentMethod: payment.paymentMethod,
 			paidAt: payment.paidAt
 				? new Date(payment.paidAt).toISOString().slice(0, 10)
 				: "",
@@ -498,6 +516,7 @@ export function EditPaymentForm({
 			await mutateAsync({
 				id: payment.id,
 				amount,
+				paymentMethod: value.paymentMethod,
 				paidAt: value.paidAt ? new Date(value.paidAt) : undefined,
 				transactionId: value.transactionId || undefined,
 			});
@@ -540,6 +559,19 @@ export function EditPaymentForm({
 						)}
 					/>
 				</div>
+
+				<form.Field
+					name="paymentMethod"
+					children={(field) => (
+						<PaymentMethodField
+							value={field.state.value}
+							isPending={isPending}
+							onChange={(next) =>
+								field.handleChange(next as PaymentMethod)
+							}
+						/>
+					)}
+				/>
 
 				<form.Field
 					name="transactionId"

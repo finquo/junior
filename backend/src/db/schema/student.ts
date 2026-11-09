@@ -10,6 +10,7 @@ import {
 	text,
 } from "drizzle-orm/pg-core";
 import type { CountryCodes, CurrencyCodes, LanguageCodes } from "utils";
+import { PaymentMethods } from "@/config/payment";
 import type { Address, Note, Schooling } from "@/config/profile";
 import {
 	createdAt,
@@ -94,6 +95,7 @@ export const payment = pgTable(
 			.$type<CurrencyCodes>()
 			.notNull()
 			.$default(() => "INR"),
+		paymentMethod: text({ enum: PaymentMethods }).notNull(),
 
 		createdAt: createdAt(),
 	},

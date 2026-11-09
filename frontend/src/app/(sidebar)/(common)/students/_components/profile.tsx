@@ -77,6 +77,7 @@ import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 import { formatDate, getInitials, snakeToTitleCase } from "@/lib/utils";
 import { AddNoteDialog } from "./add-note-dialog";
+import { StudentPaymentsList } from "./payments-list";
 import { EditStudentDrawer } from "./edit-drawer";
 
 type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
@@ -294,6 +295,12 @@ export function StudentProfile({
 							<NotebookPenIcon />
 							Notes
 						</TabsTrigger>
+						<RenderWhenRole role={["admin", "financier"]}>
+							<TabsTrigger value="payments">
+								<WalletIcon />
+								Payments
+							</TabsTrigger>
+						</RenderWhenRole>
 					</TabsList>
 
 					<TabsContent value="overview" className="flex flex-col gap-4">
@@ -608,6 +615,12 @@ export function StudentProfile({
 							</CardContent>
 						</Card>
 					</TabsContent>
+
+					<RenderWhenRole role={["admin", "financier"]}>
+						<TabsContent value="payments" className="flex flex-col gap-4">
+							<StudentPaymentsList studentId={data.id} />
+						</TabsContent>
+					</RenderWhenRole>
 
 					<TabsContent value="notes" className="flex flex-col gap-4">
 						<Card size="sm">

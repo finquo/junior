@@ -79,6 +79,7 @@ export const paymentRouter = {
 				amount: true,
 				paidAt: true,
 				transactionId: true,
+				paymentMethod: true,
 			}).extend({
 				studentId: z.string(),
 				currency: CurrencyZod.optional(),
@@ -130,6 +131,7 @@ export const paymentRouter = {
 							paidAt: input.paidAt ?? new Date(),
 							currency,
 							transactionId: input.transactionId ?? null,
+							paymentMethod: input.paymentMethod,
 						})
 						.returning();
 
@@ -157,6 +159,7 @@ export const paymentRouter = {
 			SelectPaymentSchema.pick({
 				amount: true,
 				paidAt: true,
+				paymentMethod: true,
 			})
 				.partial()
 				.extend({
@@ -178,7 +181,8 @@ export const paymentRouter = {
 			if (
 				input.amount === undefined &&
 				input.paidAt === undefined &&
-				input.transactionId === undefined
+				input.transactionId === undefined &&
+				input.paymentMethod === undefined
 			)
 				return { payment, remaining: null, paid: null };
 
@@ -210,6 +214,7 @@ export const paymentRouter = {
 								amount: newAmount,
 								paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
 								transactionId: input.transactionId ?? undefined,
+								paymentMethod: input.paymentMethod,
 							})
 							.where(eq(schema.payment.id, payment.id))
 							.returning();
@@ -241,6 +246,7 @@ export const paymentRouter = {
 					.set({
 						paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
 						transactionId: input.transactionId ?? undefined,
+						paymentMethod: input.paymentMethod,
 					})
 					.where(eq(schema.payment.id, payment.id))
 					.returning()

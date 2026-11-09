@@ -6,6 +6,7 @@ import {
 	ComponentIcon,
 	GraduationCapIcon,
 	ListIcon,
+	PlusIcon,
 	UserPenIcon,
 	VideoIcon,
 	WalletIcon,
@@ -69,6 +70,11 @@ export function SidebarConfig({
 							url: "/payments",
 							icon: <WalletIcon />,
 							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Record Payment",
+									url: "/payments/new",
+								},
 								{
 									icon: <ListIcon />,
 									title: "Show List",

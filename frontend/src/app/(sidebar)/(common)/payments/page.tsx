@@ -11,6 +11,7 @@ import {
 	PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { PaymentMethodLabels } from "backend/config";
 import { getCurrencySymbol, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
@@ -41,6 +42,10 @@ import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 
 type PaymentRecord = API_Returns["core"]["payment"]["list"][number];
+
+const paymentMethodFilterOptions = Object.entries(PaymentMethodLabels).map(
+	([value, label]) => ({ label, value }),
+);
 
 function PaymentActions({ payment }: { payment: PaymentRecord }) {
 	return (
@@ -144,6 +149,20 @@ const columns: ColumnDef<DataTableFeatures, PaymentRecord>[] =
 			),
 			enableSorting: true,
 			cell: ({ getValue }) => getValue(),
+		}),
+		columnHelper.accessor("paymentMethod", {
+			id: "paymentMethod",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Method" />
+			),
+			enableColumnFilter: true,
+			enableSorting: true,
+			meta: {
+				label: "Method",
+				variant: "multiSelect",
+				options: paymentMethodFilterOptions,
+			},
+			cell: ({ getValue }) => PaymentMethodLabels[getValue()],
 		}),
 		columnHelper.accessor("transactionId", {
 			id: "transactionId",

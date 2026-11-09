@@ -9,10 +9,12 @@ import {
 	CircleCheckIcon,
 	PenIcon,
 	Trash2Icon,
+	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { sileo as toast } from "sileo";
+import { PaymentMethodLabels } from "backend/config";
 import { getCurrencySymbol, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import Loader from "@/components/loader";
@@ -147,6 +149,18 @@ function Payment({ paymentId }: { paymentId: string }) {
 								{symbol}
 								{payment.amount.toLocaleString()} for{" "}
 								<ProgramLink id={payment.program} />
+							</ItemDescription>
+						</ItemContent>
+					</Item>
+
+					<Item variant="outline">
+						<ItemMedia variant="icon">
+							<WalletIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>Method</ItemTitle>
+							<ItemDescription>
+								{PaymentMethodLabels[payment.paymentMethod]}
 							</ItemDescription>
 						</ItemContent>
 					</Item>

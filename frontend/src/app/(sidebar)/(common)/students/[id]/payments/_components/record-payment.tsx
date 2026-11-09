@@ -2,10 +2,12 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
+import { PaymentMethodZod } from "backend/config";
 import { HandCoinsIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import { Currencies, CurrencyZod, getCurrencySymbol } from "utils";
 import { z } from "zod";
+import { PaymentMethodField } from "@/components/custom/payment-method-field";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -30,6 +32,7 @@ import type { GetFormZod } from "@/lib/utils";
 const recordPaymentSchema = z.object({
 	amount: z.string().trim().min(1, "Amount is required"),
 	currency: CurrencyZod,
+	paymentMethod: PaymentMethodZod,
 	paidAt: z.string().optional(),
 	transactionId: z.string().trim().optional(),
 });
@@ -87,6 +90,7 @@ export function RecordPayment({
 				studentId: id,
 				amount,
 				currency: value.currency,
+				paymentMethod: value.paymentMethod,
 				paidAt: value.paidAt ? new Date(value.paidAt) : undefined,
 				transactionId: value.transactionId || undefined,
 			});
@@ -173,6 +177,17 @@ export function RecordPayment({
 						)}
 					/>
 				</div>
+
+				<form.Field
+					name="paymentMethod"
+					children={(field) => (
+						<PaymentMethodField
+							value={field.state.value}
+							isPending={isPending}
+							onChange={(next) => field.handleChange(next as never)}
+						/>
+					)}
+				/>
 
 				<div className="grid grid-cols-2 gap-4">
 					<form.Field
