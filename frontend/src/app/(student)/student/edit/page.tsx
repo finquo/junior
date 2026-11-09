@@ -2,10 +2,16 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { addressZod, type Schooling, schoolingZod } from "backend/config";
+import {
+	type Address,
+	addressZod,
+	type Schooling,
+	schoolingZod,
+} from "backend/config";
 import { SelectStudentSchema } from "backend/db";
 import { sileo as toast } from "sileo";
 import { Countries, type CountryCodes } from "utils";
+import { useState } from "react";
 import type { z } from "zod";
 import Loader from "@/components/loader";
 import {
@@ -17,6 +23,7 @@ import {
 } from "@/components/reui/frame";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Field,
 	FieldDescription,
@@ -48,14 +55,25 @@ const studentEditSchema = SelectStudentSchema.pick({
 	grade: true,
 	schooling: true,
 	country: true,
-	address: true,
 }).extend({
-	// The form always holds a full address object (blank fields are ""), and
-	// it is normalized to `null` on submit when nothing was entered.
-	address: addressZod,
+	// Addresses are optional: all fields blank means no address (saved as null).
+	address: addressZod.partial(),
+	currentAddress: addressZod.partial(),
 });
 
 type StudentEditValues = z.infer<typeof studentEditSchema>;
+type AddressFormValues = StudentEditValues["address"];
+
+function toAddressValues(address: Address | null | undefined): AddressFormValues {
+	return {
+		line1: address?.line1,
+		line2: address?.line2,
+		city: address?.city,
+		state: address?.state,
+		postalCode: address?.postalCode,
+		country: address?.country,
+	};
+}
 
 function toFormValues(student: StudentData): StudentEditValues {
 	return {
@@ -63,19 +81,23 @@ function toFormValues(student: StudentData): StudentEditValues {
 		grade: student.grade ?? null,
 		schooling: student.schooling ?? null,
 		country: student.country ?? null,
-		address: {
-			line1: student.address?.line1 ?? "",
-			line2: student.address?.line2 ?? "",
-			city: student.address?.city ?? "",
-			state: student.address?.state ?? "",
-			postalCode: student.address?.postalCode ?? "",
-			country: student.address?.country ?? "",
-		},
+		address: toAddressValues(student.address),
+		currentAddress: toAddressValues(student.currentAddress),
 	};
 }
 
-const toServerAddress = (address: StudentEditValues["address"]) =>
-	Object.values(address).some((value) => value.trim() !== "") ? address : null;
+// `undefined` means the address is partly filled, so the user must finish it.
+const toServerAddress = (
+	address: AddressFormValues | undefined,
+): Address | null | undefined => {
+	const values = Object.values(address ?? {});
+	if (values.every((value) => !value?.trim())) return null;
+
+	const { line1, line2, city, state, postalCode, country } = address ?? {};
+	if (!line1 || !city || !state || !postalCode || !country) return undefined;
+
+	return { line1, line2: line2?.trim() || undefined, city, state, postalCode, country };
+};
 
 function StudentEditForm({ student }: { student: StudentData }) {
 	const { mutateAsync, isPending } = useMutation(
@@ -95,18 +117,33 @@ function StudentEditForm({ student }: { student: StudentData }) {
 		}),
 	);
 
+	const [sameAsPermanent, setSameAsPermanent] = useState(false);
+
 	const form = useForm({
 		defaultValues: toFormValues(student),
 		validators: {
 			onSubmit: studentEditSchema as GetFormZod<typeof studentEditSchema>,
 		},
 		onSubmit: async ({ value }) => {
+			const address = toServerAddress(value.address);
+			const currentAddress = toServerAddress(
+				sameAsPermanent ? value.address : value.currentAddress,
+			);
+
+			if (address === undefined || currentAddress === undefined) {
+				toast.error({
+					title: "Complete the address or clear all of its fields",
+				});
+				return;
+			}
+
 			await mutateAsync({
 				age: value.age,
 				grade: value.grade,
 				schooling: value.schooling,
 				country: value.country,
-				address: toServerAddress(value.address),
+				address,
+				currentAddress,
 			});
 		},
 	});
@@ -263,7 +300,7 @@ function StudentEditForm({ student }: { student: StudentData }) {
 												id={field.name}
 												name={field.name}
 												placeholder="123 Main St"
-												value={field.state.value}
+												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
@@ -310,7 +347,7 @@ function StudentEditForm({ student }: { student: StudentData }) {
 											<Input
 												id={field.name}
 												name={field.name}
-												value={field.state.value}
+												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												disabled={isPending}
@@ -327,7 +364,7 @@ function StudentEditForm({ student }: { student: StudentData }) {
 											<Input
 												id={field.name}
 												name={field.name}
-												value={field.state.value}
+												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												disabled={isPending}
@@ -346,7 +383,7 @@ function StudentEditForm({ student }: { student: StudentData }) {
 											<Input
 												id={field.name}
 												name={field.name}
-												value={field.state.value}
+												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												disabled={isPending}
@@ -363,7 +400,7 @@ function StudentEditForm({ student }: { student: StudentData }) {
 											<Input
 												id={field.name}
 												name={field.name}
-												value={field.state.value}
+												value={field.state.value ?? ""}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												disabled={isPending}
@@ -380,6 +417,138 @@ function StudentEditForm({ student }: { student: StudentData }) {
 								Add an address so the institute can reach your family.
 							</AlertDescription>
 						</Alert>
+					)}
+				</FieldSet>
+
+				<FieldSet>
+					<FieldLegend>Current Address</FieldLegend>
+					<FieldDescription>Where you are staying right now</FieldDescription>
+					<Field orientation="horizontal">
+						<Checkbox
+							id="sameAsPermanent"
+							checked={sameAsPermanent}
+							onCheckedChange={(checked) => {
+								const isSame = checked === true;
+								setSameAsPermanent(isSame);
+								if (isSame) {
+									form.setFieldValue(
+										"currentAddress",
+										form.getFieldValue("address"),
+									);
+								}
+							}}
+							disabled={isPending}
+						/>
+						<FieldLabel htmlFor="sameAsPermanent">
+							Same as permanent address
+						</FieldLabel>
+					</Field>
+
+					{!sameAsPermanent && (
+						<FieldGroup>
+							<form.Field
+								name="currentAddress.line1"
+								children={(field) => (
+									<Field>
+										<FieldLabel htmlFor={field.name}>Street Line 1</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											value={field.state.value ?? ""}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+											disabled={isPending}
+										/>
+									</Field>
+								)}
+							/>
+							<form.Field
+								name="currentAddress.line2"
+								children={(field) => (
+									<Field>
+										<FieldLabel htmlFor={field.name}>
+											Street Line 2 (optional)
+										</FieldLabel>
+										<Input
+											id={field.name}
+											name={field.name}
+											value={field.state.value ?? ""}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+											disabled={isPending}
+										/>
+									</Field>
+								)}
+							/>
+							<div className="grid grid-cols-2 gap-4">
+								<form.Field
+									name="currentAddress.city"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>City</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												disabled={isPending}
+											/>
+										</Field>
+									)}
+								/>
+								<form.Field
+									name="currentAddress.state"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>State</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												disabled={isPending}
+											/>
+										</Field>
+									)}
+								/>
+							</div>
+							<div className="grid grid-cols-2 gap-4">
+								<form.Field
+									name="currentAddress.postalCode"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Postal Code</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												disabled={isPending}
+											/>
+										</Field>
+									)}
+								/>
+								<form.Field
+									name="currentAddress.country"
+									children={(field) => (
+										<Field>
+											<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												value={field.state.value ?? ""}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												disabled={isPending}
+											/>
+										</Field>
+									)}
+								/>
+							</div>
+						</FieldGroup>
 					)}
 				</FieldSet>
 			</FieldGroup>

@@ -8,6 +8,8 @@ import {
 	HashIcon,
 	LayersIcon,
 	ListChecksIcon,
+	MoreHorizontalIcon,
+	PackageIcon,
 	PenIcon,
 	UserRoundIcon,
 } from "lucide-react";
@@ -37,6 +39,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Empty,
 	EmptyDescription,
@@ -140,12 +148,21 @@ export function ProgramProfile({
 				<FrameDescription>{data.description}</FrameDescription>
 				<FrameActions>
 					<ButtonGroup>
-						<Button asChild variant="outline" size="sm">
-							<Link href={`/programs/${data.id}/edit` as "/"}>
-								<PenIcon />
-								Edit
-							</Link>
-						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="icon-sm">
+									<MoreHorizontalIcon />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem asChild>
+									<Link href={`/programs/${data.id}/edit` as "/"}>
+										<PenIcon />
+										Edit
+									</Link>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 						<Button asChild size="sm">
 							<Link
 								href={{
@@ -155,6 +172,12 @@ export function ProgramProfile({
 							>
 								<BookOpenIcon />
 								Create Lesson
+							</Link>
+						</Button>
+						<Button asChild size="sm">
+							<Link href={`/programs/${data.id}/materials` as "/"}>
+								<PackageIcon />
+								Materials
 							</Link>
 						</Button>
 					</ButtonGroup>

@@ -37,6 +37,7 @@ export const student = pgTable(
 
 		notes: jsonb().$type<Note[]>().default([]).notNull(),
 		address: jsonb().$type<Address>(),
+		currentAddress: jsonb().$type<Address>(),
 
 		age: smallint(),
 		grade: smallint(),

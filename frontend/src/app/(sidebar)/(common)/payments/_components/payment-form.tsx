@@ -192,7 +192,7 @@ function TransactionIdField({
 				id="transactionId"
 				name="transactionId"
 				placeholder="UPI / bank reference"
-				value={value}
+				value={value ?? ""}
 				onBlur={onBlur}
 				onChange={(e) => onChange(e.target.value)}
 				disabled={isPending}
@@ -257,7 +257,7 @@ export function NewPaymentForm() {
 			amount: "",
 			currency: "INR" as z.infer<typeof basePaymentSchema>["currency"],
 			paidAt: new Date().toISOString().slice(0, 10),
-			transactionId: "",
+			transactionId: undefined,
 		} as z.infer<typeof newPaymentSchema>,
 		validators: {
 			onSubmit: newPaymentSchema as GetFormZod<typeof newPaymentSchema>,
@@ -492,7 +492,7 @@ export function EditPaymentForm({
 			paidAt: payment.paidAt
 				? new Date(payment.paidAt).toISOString().slice(0, 10)
 				: "",
-			transactionId: payment.transactionId ?? "",
+			transactionId: payment.transactionId ?? undefined,
 		} as z.infer<typeof editPaymentSchema>,
 		validators: {
 			onSubmit: editPaymentSchema as GetFormZod<typeof editPaymentSchema>,

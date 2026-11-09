@@ -3,10 +3,11 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { InsertMaterialSchema, OrderStatusZod } from "backend/db";
-import type { z } from "zod";
+import { useState } from "react";
+import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Empty,
 	EmptyDescription,
@@ -43,10 +44,17 @@ import { snakeToTitleCase } from "@/lib/utils";
 
 type MaterialListItem = API_Returns["core"]["material"]["list"][number];
 
+type AddressSource = "permanent" | "current" | "previous";
+
 const materialFormSchema = InsertMaterialSchema.omit({
 	id: true,
 	createdAt: true,
 	updatedAt: true,
+	name: true,
+	lessons: true,
+	programMaterialId: true,
+}).extend({
+	programMaterialId: z.string(),
 });
 
 export type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -67,13 +75,16 @@ export function MaterialForm({
 	const { data: programs = [] } = useQuery(
 		api.core.program.list.queryOptions(),
 	);
+	const { data: materials = [] } = useQuery(
+		api.core.material.list.queryOptions(),
+	);
+	const [addressSource, setAddressSource] = useState<AddressSource>();
 
 	const form = useForm({
 		defaultValues: {
-			name: material?.name,
 			studentId: material?.studentId,
+			programMaterialId: material?.programMaterialId ?? undefined,
 			schedulerId: isAdmin ? material?.schedulerId : undefined,
-			lessons: material?.lessons ?? [],
 			order: material?.order ?? "packing",
 			shippingAddress: material?.shippingAddress ?? {},
 		} as MaterialFormValues,
@@ -86,9 +97,36 @@ export function MaterialForm({
 	});
 
 	const studentId = useStore(form.store, (s) => s.values.studentId);
+	const programMaterialId = useStore(
+		form.store,
+		(s) => s.values.programMaterialId,
+	);
 	const student = students.find((s) => s.id === studentId);
 	const program = programs.find((p) => p.id === student?.program);
-	const programLessonIds = program?.lessons ?? [];
+	const programMaterials = program?.materials ?? [];
+	const programMaterialNames = Object.fromEntries(
+		programMaterials.map((item) => [item.id, item.name]),
+	);
+	const selectedMaterial = programMaterials.find(
+		(item) => item.id === programMaterialId,
+	);
+	const previousMaterial = materials.find(
+		(item) => item.studentId === studentId && item.id !== material?.id,
+	);
+
+	const chooseAddress = (source: AddressSource) => {
+		const address =
+			source === "permanent"
+				? student?.address
+				: source === "current"
+					? student?.currentAddress
+					: previousMaterial?.shippingAddress;
+
+		if (!address) return;
+
+		setAddressSource(source);
+		form.setFieldValue("shippingAddress", address);
+	};
 
 	return (
 		<form
@@ -100,25 +138,6 @@ export function MaterialForm({
 		>
 			<FieldGroup>
 				<form.Field
-					name="name"
-					children={(field) => (
-						<Field data-invalid={field.state.meta.errors.length > 0}>
-							<FieldLabel htmlFor={field.name}>Material Name</FieldLabel>
-							<Input
-								id={field.name}
-								name={field.name}
-								value={field.state.value ?? ""}
-								onBlur={field.handleBlur}
-								onChange={(e) => field.handleChange(e.target.value)}
-								aria-invalid={field.state.meta.errors.length > 0}
-								disabled={isPending}
-							/>
-							<FieldError errors={field.state.meta.errors} />
-						</Field>
-					)}
-				/>
-
-				<form.Field
 					name="studentId"
 					children={(field) => (
 						<>
@@ -129,11 +148,8 @@ export function MaterialForm({
 								onValueChange={(val) => {
 									if (!val) return;
 									field.handleChange(val);
-									form.setFieldValue("lessons", []);
-									const selected = students.find((s) => s.id === val);
-									if (selected?.address) {
-										form.setFieldValue("shippingAddress", selected.address);
-									}
+									form.setFieldValue("programMaterialId", undefined as never);
+									setAddressSource(undefined);
 								}}
 								disabled={isPending}
 								api={api.core.student.list.queryOptions()}
@@ -165,55 +181,62 @@ export function MaterialForm({
 				</RenderWhenRole>
 
 				<form.Field
-					name="lessons"
+					name="programMaterialId"
 					children={(field) => (
-						<FieldSet>
-							<FieldLegend>Lessons</FieldLegend>
-							{program && (
-								<FieldDescription>Program: {program.name}</FieldDescription>
-							)}
-							{programLessonIds.length === 0 && (
-								<Empty>
-									<EmptyHeader>
-										<EmptyTitle>No program lessons</EmptyTitle>
-										<EmptyDescription>
-											Select a student with a program to choose lessons.
-										</EmptyDescription>
-									</EmptyHeader>
-								</Empty>
-							)}
-							<FieldGroup>
-								{programLessonIds.map((lessonId) => (
-									<Field key={lessonId} orientation="horizontal">
-										<Checkbox
-											id={lessonId}
-											checked={(field.state.value ?? []).includes(lessonId)}
-											onCheckedChange={(checked) =>
-												field.handleChange(
-													checked
-														? [...(field.state.value ?? []), lessonId]
-														: (field.state.value ?? []).filter(
-																(id) => id !== lessonId,
-															),
-												)
-											}
-											disabled={isPending}
-										/>
-										<FieldLabel htmlFor={lessonId}>
-											<FetchLesson
-												id={lessonId}
-												isPending={<Skeleton className="h-4 w-24" />}
-											>
-												{(lesson) => lesson.name}
-											</FetchLesson>
-										</FieldLabel>
-									</Field>
-								))}
-							</FieldGroup>
+						<Field data-invalid={field.state.meta.errors.length > 0}>
+							<FieldLabel htmlFor={field.name}>Program Material</FieldLabel>
+							<Select
+								items={programMaterialNames}
+								value={field.state.value}
+								onValueChange={(val) => {
+									if (val) field.handleChange(val);
+								}}
+								disabled={isPending || programMaterials.length === 0}
+							>
+								<SelectTrigger id={field.name} className="w-full min-w-[200px]">
+									<SelectValue placeholder="Select a material" />
+								</SelectTrigger>
+								<SelectContent alignItemWithTrigger={false}>
+									<SelectGroup>
+										{programMaterials.map((item) => (
+											<SelectItem key={item.id} value={item.id}>
+												{item.name}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
 							<FieldError errors={field.state.meta.errors} />
-						</FieldSet>
+						</Field>
 					)}
 				/>
+
+				<FieldSet>
+					<FieldLegend>Lessons</FieldLegend>
+					{program && (
+						<FieldDescription>Program: {program.name}</FieldDescription>
+					)}
+					{!selectedMaterial && (
+						<Empty>
+							<EmptyHeader>
+								<EmptyTitle>No material selected</EmptyTitle>
+								<EmptyDescription>
+									Select a student and a program material to see its lessons.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					)}
+					{selectedMaterial?.lessons.map((lessonId) => (
+						<Badge key={lessonId} variant="outline">
+							<FetchLesson
+								id={lessonId}
+								isPending={<Skeleton className="h-4 w-24" />}
+							>
+								{(lesson) => lesson.name}
+							</FetchLesson>
+						</Badge>
+					))}
+				</FieldSet>
 
 				<form.Field
 					name="order"
@@ -245,6 +268,34 @@ export function MaterialForm({
 						</Field>
 					)}
 				/>
+
+				<Field>
+					<FieldLabel htmlFor="addressSource">Address</FieldLabel>
+					<Select
+						value={addressSource}
+						onValueChange={(val) => {
+							if (val) chooseAddress(val as AddressSource);
+						}}
+						disabled={isPending || !student}
+					>
+						<SelectTrigger id="addressSource" className="w-full min-w-[200px]">
+							<SelectValue placeholder="Choose an address" />
+						</SelectTrigger>
+						<SelectContent alignItemWithTrigger={false}>
+							<SelectGroup>
+								<SelectItem value="permanent" disabled={!student?.address}>
+									Permanent Address
+								</SelectItem>
+								<SelectItem value="current" disabled={!student?.currentAddress}>
+									Current Address
+								</SelectItem>
+								<SelectItem value="previous" disabled={!previousMaterial}>
+									Previous Material Address
+								</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</Field>
 
 				<FieldSet>
 					<FieldLegend>Shipping Address</FieldLegend>

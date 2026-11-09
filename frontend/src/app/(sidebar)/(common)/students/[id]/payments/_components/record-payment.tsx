@@ -65,7 +65,7 @@ export function RecordPayment({
 			amount: "",
 			currency: (currency || "INR") as RecordPaymentValues["currency"],
 			paidAt: new Date().toISOString().slice(0, 10),
-			transactionId: "",
+			transactionId: undefined,
 		} as RecordPaymentValues,
 		validators: {
 			onSubmit: recordPaymentSchema as GetFormZod<typeof recordPaymentSchema>,
@@ -219,7 +219,7 @@ export function RecordPayment({
 									id={field.name}
 									name={field.name}
 									placeholder="UPI / bank reference"
-									value={field.state.value}
+									value={field.state.value ?? ""}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
 									disabled={isPending}

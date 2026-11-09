@@ -96,6 +96,7 @@ export const studentRouter = {
 		.input(
 			UpdateStudentSchema.pick({
 				address: true,
+				currentAddress: true,
 				age: true,
 				country: true,
 				grade: true,

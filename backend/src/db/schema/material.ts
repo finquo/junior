@@ -14,6 +14,7 @@ export const material = pgTable("material", {
 	schedulerId: getId().references(() => scheduler.id, { onDelete: "cascade" }),
 
 	lessons: getId().array().default([]),
+	programMaterialId: text().notNull(),
 
 	order: orderStatusEnum().notNull().default("packing"),
 	shippingAddress: jsonb().$type<Address>().notNull(),

@@ -1,6 +1,7 @@
-import { count, eq } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
+import { ProgramMaterialZod } from "@/config/program";
 import { schema } from "@/db";
 import {
 	InsertProgramSchema,
@@ -106,6 +107,7 @@ export const programRouter = {
 				id: true,
 				createdAt: true,
 				updatedAt: true,
+				materials: true,
 			}),
 		)
 		.handler(async ({ input }) => {
@@ -119,7 +121,7 @@ export const programRouter = {
 		}),
 	update: getRolesProcedure(["admin"])
 		.input(
-			UpdateProgramSchema.required({
+			UpdateProgramSchema.omit({ materials: true }).required({
 				id: true,
 			}),
 		)
@@ -217,6 +219,111 @@ export const programRouter = {
 				db
 					.update(schema.program)
 					.set({ lessons: input.lessons })
+					.where(eq(schema.program.id, input.id))
+					.returning(),
+			);
+		}),
+	materials: getRolesProcedure(["admin"])
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input }) => {
+			const program = await tryAPI(
+				"db-core-program-materials-get-program",
+				db.query.program.findFirst({
+					where: { id: input.id },
+				}),
+			);
+
+			if (!program) throw getError("NOT_FOUND", "Program not found");
+
+			const ids = program.materials.map((material) => material.id);
+
+			const counts = await getAPI(
+				"db-core-program-materials-count",
+				db
+					.select({
+						programMaterialId: schema.material.programMaterialId,
+						count: count(),
+					})
+					.from(schema.material)
+					.where(inArray(schema.material.programMaterialId, ids))
+					.groupBy(schema.material.programMaterialId),
+				[],
+			);
+
+			const countByMaterial = new Map(
+				counts.map((row) => [row.programMaterialId, row.count]),
+			);
+
+			return program.materials.map((material) => ({
+				...material,
+				materialCount: countByMaterial.get(material.id) ?? 0,
+			}));
+		}),
+	addMaterial: getRolesProcedure(["admin"])
+		.input(
+			z.object({ id: z.string() }).extend(
+				ProgramMaterialZod.omit({ id: true }).shape,
+			),
+		)
+		.handler(async ({ input }) => {
+			const program = await tryAPI(
+				"db-core-add-program-material-get-program",
+				db.query.program.findFirst({
+					where: { id: input.id },
+				}),
+			);
+
+			if (!program) throw getError("NOT_FOUND", "Program not found");
+
+			const outsideLessons = input.lessons.filter(
+				(lessonId) => !program.lessons.includes(lessonId),
+			);
+
+			if (outsideLessons.length > 0)
+				throw getError(
+					"INPUT_VALIDATION_FAILED",
+					"Materials can only use lessons from this program",
+				);
+
+			return await tryAPI(
+				"db-core-add-program-material",
+				db
+					.update(schema.program)
+					.set({
+						materials: [
+							...program.materials,
+							{
+								id: crypto.randomUUID(),
+								name: input.name,
+								lessons: input.lessons,
+							},
+						],
+					})
+					.where(eq(schema.program.id, input.id))
+					.returning(),
+			);
+		}),
+	removeMaterial: getRolesProcedure(["admin"])
+		.input(z.object({ id: z.string(), materialId: z.string() }))
+		.handler(async ({ input }) => {
+			const program = await tryAPI(
+				"db-core-remove-program-material-get-program",
+				db.query.program.findFirst({
+					where: { id: input.id },
+				}),
+			);
+
+			if (!program) throw getError("NOT_FOUND", "Program not found");
+
+			return await tryAPI(
+				"db-core-remove-program-material",
+				db
+					.update(schema.program)
+					.set({
+						materials: program.materials.filter(
+							(material) => material.id !== input.materialId,
+						),
+					})
 					.where(eq(schema.program.id, input.id))
 					.returning(),
 			);

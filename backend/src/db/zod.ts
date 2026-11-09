@@ -69,6 +69,7 @@ export const InsertStudentSchema = createInsertSchema(
 	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
+	currentAddress: addressZod.nullable().optional(),
 	country: CountryZod.nullable().optional(),
 	currency: CurrencyZod.nullable().optional(),
 });
@@ -80,6 +81,7 @@ export const SelectStudentSchema = createSelectSchema(
 	program: z.string().nullable(),
 	notes: noteZod.array(),
 	address: addressZod.nullable(),
+	currentAddress: addressZod.nullable(),
 	country: CountryZod.nullable(),
 	currency: CurrencyZod.nullable(),
 });
@@ -91,6 +93,7 @@ export const UpdateStudentSchema = createUpdateSchema(
 	program: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
+	currentAddress: addressZod.nullable().optional(),
 	country: CountryZod.nullable().optional(),
 	currency: CurrencyZod.nullable().optional(),
 });
