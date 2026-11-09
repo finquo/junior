@@ -12,10 +12,6 @@ on:
             - ".github/workflows/state.yml"
             - "!**/*.md"
 
-concurrency:
-    group: deploy-${{ github.ref }}
-    cancel-in-progress: false
-
 jobs:
     state:
         name: Apply Statefull Infra & Database Migrate
@@ -63,6 +59,8 @@ jobs:
 
             - name: Setup OpenTofu
               uses: opentofu/setup-opentofu@v1
+              with:
+                  cache: true
 
             - name: OpenTofu Init & Apply (shared state)
               run: |
