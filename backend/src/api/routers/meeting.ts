@@ -52,6 +52,7 @@ export const meetingRouter = {
 						startTime: true,
 						expectedEndTime: true,
 						endTime: true,
+						status: true,
 					},
 				}),
 			);
@@ -70,7 +71,7 @@ export const meetingRouter = {
 					endTime,
 				} as const;
 
-			if (now > endTime.getTime())
+			if (slot.status === "attended" || now > endTime.getTime())
 				return {
 					status: "ended",
 					meetingLink: slot.meetingLink,
@@ -143,6 +144,7 @@ export const meetingRouter = {
 						startTime: true,
 						expectedEndTime: true,
 						endTime: true,
+						status: true,
 						lessonId: true,
 						studentId: true,
 						teacherId: true,
@@ -179,7 +181,7 @@ export const meetingRouter = {
 					endTime,
 				} as const;
 
-			if (now > endTime.getTime())
+			if (slot.status === "attended" || now > endTime.getTime())
 				return {
 					status: "ended",
 					meetingLink: slot.meetingLink,

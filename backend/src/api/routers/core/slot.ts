@@ -230,7 +230,12 @@ export const slotRouter = {
 				"db-core-update-slot",
 				db
 					.update(schema.slot)
-					.set(data)
+					.set({
+						...data,
+						...(data.status === "attended"
+							? { endTime: sql`COALESCE(${schema.slot.endTime}, now())` }
+							: {}),
+					})
 					.where(
 						MapRole(context.role, {
 							admin: eq(schema.slot.id, id),
