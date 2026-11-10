@@ -7,7 +7,7 @@ import {
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
-import type { SlotParticipant } from "@/config";
+import type { MeetingSummary, SlotParticipant } from "@/config";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
 import { lesson } from "./lesson";
 import { scheduler } from "./scheduler";
@@ -59,6 +59,8 @@ export const slot = pgTable(
 			.default([]),
 
 		status: slotStatusEnum("status").notNull().default("scheduled"),
+
+		summary: jsonb().$type<MeetingSummary>(),
 
 		createdAt: createdAt(),
 		updatedAt: updatedAt(),

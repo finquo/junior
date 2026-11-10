@@ -1,18 +1,13 @@
 import type { InferRouterOutputs } from "@orpc/server";
 import type { analyticsRouter } from "backend/api";
-import type { BadgeVariant } from "@/components/pdf/badge/badge";
-import { Badge } from "@/components/pdf/badge/badge";
 import { PdfGraph } from "@/components/pdf/graph/graph";
-import { PdfList } from "@/components/pdf/list/list";
-import { PageFooter } from "@/components/pdf/page-footer/page-footer";
-import { PageNumber } from "@/components/pdf/page-number/page-number";
 import { Section } from "@/components/pdf/section/section";
 import { Text } from "@/components/pdf/text/text";
 import { usePdfcnTheme } from "@/components/pdf/theme-provider";
 import { Document, Page, StyleSheet, View } from "@/lib/pdf-primitives";
+import { Path, Svg } from "@/lib/pdf-svg";
 
 type SlotReportData = InferRouterOutputs<typeof analyticsRouter>["slotReport"];
-type SlotSummary = SlotReportData["summary"];
 
 const NOT_PROVIDED = "Not provided";
 
@@ -25,475 +20,474 @@ const PALETTE = [
 	"#8B5CF6",
 ];
 
-const understandingMeta: Record<
-	SlotSummary["topicsCovered"][number]["studentUnderstanding"],
-	{ label: string; variant: BadgeVariant; color: string }
-> = {
-	clear: { label: "Clear", variant: "success", color: PALETTE[1] },
-	not_assessed: {
-		label: "Not assessed",
-		variant: "default",
-		color: PALETTE[4],
-	},
-	partial: { label: "Partial", variant: "warning", color: PALETTE[2] },
-	unclear: { label: "Unclear", variant: "destructive", color: PALETTE[3] },
-};
+const tint = (color: string) => ({
+	backgroundColor: `${color}1A`,
+	borderColor: color,
+});
 
-const scoreVariant = (score: number): BadgeVariant => {
-	if (score >= 75) {
-		return "success";
-	}
-	if (score >= 50) {
-		return "warning";
-	}
-	return "destructive";
-};
-
-const scoreColor = (score: number) => {
-	if (score >= 75) {
-		return PALETTE[1];
-	}
-	if (score >= 50) {
-		return PALETTE[2];
-	}
-	return PALETTE[3];
-};
-
-const formatDateTime = (value: Date | string | null | undefined) => {
-	if (!value) {
-		return NOT_PROVIDED;
-	}
-	return new Date(value).toLocaleString("en-IN", {
-		dateStyle: "medium",
-		timeStyle: "short",
+const formatDate = (value: Date | string) =>
+	new Date(value).toLocaleDateString("en-IN", {
+		day: "numeric",
+		month: "short",
+		year: "numeric",
 	});
-};
+
+const formatTime = (value: Date | string) =>
+	new Date(value).toLocaleTimeString("en-IN", {
+		hour: "numeric",
+		minute: "2-digit",
+	});
 
 export const SlotSummaryReport = ({ data }: { data: SlotReportData }) => {
 	const theme = usePdfcnTheme();
-	const { summary, slot } = data;
+	const { summary, slot, program, nextLesson, history } = data;
 
 	const styles = StyleSheet.create({
-		chartShell: {
+		page: {
 			backgroundColor: theme.colors.background,
-			borderColor: theme.colors.border,
+			boxSizing: "border-box",
+			paddingBottom: 10,
+			paddingLeft: 10,
+			paddingRight: 10,
+			paddingTop: 10,
+			position: "relative",
+		},
+		brand: {
+			color: theme.colors.mutedForeground,
+			fontSize: 7,
+			letterSpacing: 1,
+			textTransform: "uppercase",
+		},
+		rule: {
+			backgroundColor: theme.colors.border,
+			height: 1,
+			marginBottom: 12,
+			marginTop: 4,
+			width: "100%",
+		},
+		studentName: {
+			color: theme.colors.foreground,
+			fontSize: 18,
+			fontWeight: theme.primitives.fontWeights.bold,
+		},
+		subHeader: {
+			marginBottom: 6,
+		},
+		factsRow: {
+			flexDirection: "row",
+			gap: 12,
+			marginTop: 10,
+		},
+		fact: {
+			flex: 1,
+		},
+		factLabel: {
+			color: theme.colors.mutedForeground,
+			fontSize: 7,
+			marginBottom: 2,
+			textTransform: "uppercase",
+		},
+		factValue: {
+			color: theme.colors.foreground,
+			fontSize: 10,
+		},
+		card: {
 			borderRadius: theme.primitives.borderRadius.md,
 			borderStyle: "solid",
-			borderWidth: 1,
-			padding: 12,
+			borderWidth: 0.5,
+			padding: 10,
+		},
+		cardBig: {
+			color: theme.colors.foreground,
+			fontSize: 22,
+			fontWeight: theme.primitives.fontWeights.bold,
 		},
 		col: {
 			flex: 1,
 		},
-		hero: {
-			backgroundColor: theme.colors.primary,
-			borderRadius: theme.primitives.borderRadius.md,
-			padding: 18,
-		},
-		heroMeta: {
-			color: theme.colors.primaryForeground,
-			fontSize: 9,
-			marginTop: 2,
-			opacity: 0.85,
-		},
-		heroTitle: {
-			color: theme.colors.primaryForeground,
-			fontSize: 20,
-			fontWeight: theme.primitives.fontWeights.bold,
-		},
-		kpiCard: {
-			borderRadius: theme.primitives.borderRadius.md,
-			borderStyle: "solid",
-			borderWidth: 1,
-			padding: 10,
-			width: "23.5%",
-		},
-		kpiLabel: {
-			fontSize: 8,
-			letterSpacing: 0.5,
-			marginBottom: 4,
-			textTransform: "uppercase",
-		},
-		kpiRow: {
-			flexDirection: "row",
-			gap: 8,
-		},
-		kpiValue: {
-			color: theme.colors.foreground,
-			fontSize: 16,
-			fontWeight: theme.primitives.fontWeights.bold,
-		},
-		page: {
-			backgroundColor: theme.colors.background,
-			boxSizing: "border-box",
-			paddingBottom: 16,
-			paddingLeft: 16,
-			paddingRight: 16,
-			paddingTop: 16,
-			position: "relative",
-		},
-		scoreBar: {
-			borderRadius: 2,
-			height: 6,
-		},
-		scoreTrack: {
-			backgroundColor: theme.colors.muted,
-			borderRadius: 2,
-			height: 6,
-			overflow: "hidden",
-			width: "100%",
-		},
-		card: {
-			backgroundColor: theme.colors.background,
-			borderColor: theme.colors.border,
-			borderLeftWidth: 4,
-			borderRadius: theme.primitives.borderRadius.md,
-			borderStyle: "solid",
-			borderWidth: 1,
-			padding: 10,
-		},
-		cardTitle: {
-			color: theme.colors.foreground,
-			fontSize: 11,
-			fontWeight: theme.primitives.fontWeights.bold,
-			marginBottom: 3,
-		},
 		twoCol: {
 			flexDirection: "row",
-			gap: 12,
+			gap: 10,
+		},
+		listRow: {
+			alignItems: "flex-start",
+			flexDirection: "row",
+			gap: 6,
+			marginBottom: 5,
+		},
+		listText: {
+			color: theme.colors.foreground,
+			fontSize: 8,
+			flex: 1,
+		},
+		listNumber: {
+			color: theme.colors.mutedForeground,
+			fontSize: 8,
+			fontWeight: theme.primitives.fontWeights.bold,
+		},
+		checkCircle: {
+			alignItems: "center",
+			backgroundColor: PALETTE[1],
+			borderRadius: 7,
+			height: 14,
+			justifyContent: "center",
+			width: 14,
+		},
+		openCircle: {
+			borderColor: PALETTE[2],
+			borderRadius: 7,
+			borderStyle: "solid",
+			borderWidth: 1,
+			height: 12,
+			width: 12,
+		},
+		voiceRow: {
+			alignItems: "center",
+			flexDirection: "row",
+			gap: 6,
+			marginTop: 0,
+		},
+		voiceDot: {
+			borderRadius: 4,
+			height: 8,
+			width: 8,
+		},
+		timelineRow: {
+			flexDirection: "row",
+			gap: 8,
+			marginBottom: 1,
+		},
+		timelineDot: {
+			backgroundColor: theme.colors.primary,
+			borderRadius: 3,
+			height: 6,
+			marginTop: 3,
+			width: 6,
+		},
+		wordsWrap: {
+			flexDirection: "row",
+			flexWrap: "wrap",
 		},
 	});
 
 	const studentName = slot.student?.user?.name ?? NOT_PROVIDED;
 	const teacherName = slot.teacher?.user?.name ?? NOT_PROVIDED;
 	const lessonName = slot.lesson?.name ?? NOT_PROVIDED;
-	const teacherScore = summary.engagement.engagementScore.teacher;
-	const studentScore = summary.engagement.engagementScore.student;
-	const resolvedCount = summary.studentQuestionsAndDoubts.filter(
-		(q) => q.wasResolved,
-	).length;
+	const programName = program?.name ?? NOT_PROVIDED;
+	const nextLessonName =
+		nextLesson?.name ?? "No lessons, program has been completed";
 
-	const speakingData = [
-		{
-			label: "Teacher",
-			value: summary.interactionBreakdown.teacherSpeakingPercentage,
-		},
-		{
-			label: "Student",
-			value: summary.interactionBreakdown.studentSpeakingPercentage,
-		},
-		{
-			label: "Silence / unknown",
-			value: summary.interactionBreakdown.unknownOrSilencePercentage,
-		},
+	const startMs = new Date(slot.startTime).getTime();
+	const endMs = new Date(slot.endTime ?? slot.expectedEndTime).getTime();
+	const durationText = `${Math.round((endMs - startMs) / 60000)} min`;
+
+	const voiceData = [
+		{ label: "Teacher", value: summary.voiceBalance.teacherPercentage },
+		{ label: "Student", value: summary.voiceBalance.studentPercentage },
 	];
 
-	const kpis = [
-		{
-			label: "Teacher engagement",
-			value: `${teacherScore}/100`,
-			color: scoreColor(teacherScore),
-		},
-		{
-			label: "Student engagement",
-			value: `${studentScore}/100`,
-			color: scoreColor(studentScore),
-		},
-		{
-			label: "Topics covered",
-			value: String(summary.topicsCovered.length),
-			color: PALETTE[4],
-		},
-		{
-			label: "Doubts resolved",
-			value: `${resolvedCount} / ${summary.studentQuestionsAndDoubts.length}`,
-			color: PALETTE[0],
-		},
-	];
-
-	const footer = (
-		<PageFooter
-			variant="minimal"
-			leftText={summary.title}
-			rightText={<PageNumber size="xs" />}
-			pagePadding={theme.spacing.page.marginLeft}
-		/>
-	);
+	const historyData = history.map((item) => ({
+		label: formatDate(item.startTime),
+		value: item.studentPercentage,
+	}));
 
 	return (
 		<Document title={summary.title}>
 			<Page size="A4" style={styles.page}>
-				<View style={styles.hero}>
-					<Text style={styles.heroMeta}>SESSION SUMMARY</Text>
-					<Text style={styles.heroTitle} noMargin>
-						{summary.title}
-					</Text>
-					<Text style={styles.heroMeta}>
-						{`${lessonName} · ${formatDateTime(slot.startTime)}`}
-					</Text>
-				</View>
+				<Text style={styles.brand} noMargin>
+					Finquo Junior
+				</Text>
+				<View style={styles.rule} />
 
-				<View style={[styles.twoCol, { marginTop: 12 }]}>
-					<View style={styles.col}>
-						<View style={[styles.card, { borderLeftColor: PALETTE[0] }]}>
-							<Text style={styles.kpiLabel} noMargin>
-								Teacher
-							</Text>
-							<Text style={styles.cardTitle} noMargin>
-								{teacherName}
-							</Text>
-						</View>
+				<Text style={styles.studentName} noMargin>
+					{studentName}
+				</Text>
+				<View style={styles.factsRow}>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Program
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{programName}
+						</Text>
 					</View>
-					<View style={styles.col}>
-						<View style={[styles.card, { borderLeftColor: PALETTE[5] }]}>
-							<Text style={styles.kpiLabel} noMargin>
-								Student
-							</Text>
-							<Text style={styles.cardTitle} noMargin>
-								{studentName}
-							</Text>
-						</View>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Lesson
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{lessonName}
+						</Text>
 					</View>
 				</View>
 
-				<View style={[styles.kpiRow, { marginTop: 12 }]}>
-					{kpis.map((kpi) => (
-						<View
-							key={kpi.label}
-							style={[
-								styles.kpiCard,
-								{
-									borderColor: kpi.color,
-									backgroundColor: theme.colors.background,
-								},
-							]}
-						>
-							<Text style={{ ...styles.kpiLabel, color: kpi.color }} noMargin>
-								{kpi.label}
-							</Text>
-							<Text style={styles.kpiValue} noMargin>
-								{kpi.value}
-							</Text>
-						</View>
-					))}
+				<View
+					style={[
+						styles.factsRow,
+						styles.card,
+						tint(PALETTE[4]),
+						{ marginTop: 12 },
+					]}
+				>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Date
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{formatDate(slot.startTime)}
+						</Text>
+					</View>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Time
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{formatTime(slot.startTime)}
+						</Text>
+					</View>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Duration
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{durationText}
+						</Text>
+					</View>
+					<View style={styles.fact}>
+						<Text style={styles.factLabel} noMargin>
+							Teacher
+						</Text>
+						<Text style={styles.factValue} noMargin>
+							{teacherName}
+						</Text>
+					</View>
 				</View>
 
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Overall Summary
-					</Text>
-					<Text variant="base">{summary.overallSummary}</Text>
-				</Section>
-
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Engagement
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Voice Balance
 					</Text>
 					<View style={styles.twoCol}>
-						<View style={styles.col}>
-							<View
-								style={[
-									styles.card,
-									{ borderLeftColor: scoreColor(teacherScore) },
-								]}
-							>
-								<Text style={styles.cardTitle} noMargin>
-									Teacher
-								</Text>
-								<View style={styles.scoreTrack}>
-									<View
-										style={[
-											styles.scoreBar,
-											{
-												backgroundColor: scoreColor(teacherScore),
-												width: `${teacherScore}%`,
-											},
-										]}
-									/>
-								</View>
-								<Badge
-									label={`${teacherScore}/100`}
-									variant={scoreVariant(teacherScore)}
-									size="sm"
+						<View style={[styles.col, styles.card, tint(PALETTE[0])]}>
+							<PdfGraph
+								variant="pie"
+								data={voiceData}
+								legend="none"
+								colors={[PALETTE[0], PALETTE[5]]}
+								width={150}
+								height={140}
+								containerPadding={8}
+								wrapperPadding={8}
+								style={{ marginBottom: 0 }}
+							/>
+							<View style={styles.voiceRow}>
+								<View
+									style={[styles.voiceDot, { backgroundColor: PALETTE[0] }]}
 								/>
-								<Text variant="sm" noMargin>
-									{summary.engagement.teacherEngagement}
+								<Text style={styles.listText} noMargin>
+									{`Teacher ${summary.voiceBalance.teacherPercentage}%`}
+								</Text>
+							</View>
+							<View style={styles.voiceRow}>
+								<View
+									style={[styles.voiceDot, { backgroundColor: PALETTE[5] }]}
+								/>
+								<Text style={styles.listText} noMargin>
+									{`Student ${summary.voiceBalance.studentPercentage}%`}
 								</Text>
 							</View>
 						</View>
-						<View style={styles.col}>
-							<View
-								style={[
-									styles.card,
-									{ borderLeftColor: scoreColor(studentScore) },
-								]}
-							>
-								<Text style={styles.cardTitle} noMargin>
-									Student
-								</Text>
-								<View style={styles.scoreTrack}>
-									<View
-										style={[
-											styles.scoreBar,
-											{
-												backgroundColor: scoreColor(studentScore),
-												width: `${studentScore}%`,
-											},
-										]}
-									/>
-								</View>
-								<Badge
-									label={`${studentScore}/100`}
-									variant={scoreVariant(studentScore)}
-									size="sm"
+						{historyData.length > 0 ? (
+							<View style={[styles.col, styles.card, tint(PALETTE[5])]}>
+								<PdfGraph
+									variant="line"
+									data={historyData}
+									showValues
+									width={300}
+									height={160}
+									containerPadding={8}
+									wrapperPadding={8}
+									colors={[PALETTE[5]]}
+									style={{ marginBottom: 0 }}
 								/>
-								<Text variant="sm" noMargin>
-									{summary.engagement.studentEngagement}
-								</Text>
 							</View>
+						) : null}
+					</View>
+				</Section>
+
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Participation
+					</Text>
+					<View style={styles.twoCol}>
+						<View style={[styles.col, styles.card, tint(PALETTE[2])]}>
+							<Text style={styles.factLabel} noMargin>
+								Questions asked by teacher
+							</Text>
+							<Text style={styles.cardBig} noMargin>
+								{String(summary.participation.teacherQuestionCount)}
+							</Text>
+						</View>
+						<View style={[styles.col, styles.card, tint(PALETTE[1])]}>
+							<Text style={styles.factLabel} noMargin>
+								Meaningful answers by student
+							</Text>
+							<Text style={styles.cardBig} noMargin>
+								{String(summary.participation.studentMeaningfulAnswerCount)}
+							</Text>
 						</View>
 					</View>
 				</Section>
 
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Speaking Time
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Topic Covered
 					</Text>
-					<View style={styles.chartShell}>
-						<PdfGraph
-							variant="donut"
-							data={speakingData}
-							centerLabel={`${summary.interactionBreakdown.studentSpeakingPercentage}%`}
-							legend="right"
-							colors={[PALETTE[0], PALETTE[5], PALETTE[2]]}
-							showValues
-							fullWidth
-							height={200}
-							containerPadding={12}
-							wrapperPadding={12}
-							style={{ marginBottom: 0 }}
-						/>
+					<View style={[styles.card, tint(PALETTE[0])]}>
+						<View style={styles.twoCol}>
+							<View style={styles.col}>
+								{summary.topicsCovered
+									.slice(0, Math.ceil(summary.topicsCovered.length / 2))
+									.map((topic, index) => (
+										<View key={index as number} style={styles.timelineRow}>
+											<View style={styles.timelineDot} />
+											<Text style={styles.listText} noMargin>
+												{topic}
+											</Text>
+										</View>
+									))}
+							</View>
+							<View style={styles.col}>
+								{summary.topicsCovered
+									.slice(Math.ceil(summary.topicsCovered.length / 2))
+									.map((topic, index) => (
+										<View key={index as number} style={styles.timelineRow}>
+											<View style={styles.timelineDot} />
+											<Text style={styles.listText} noMargin>
+												{topic}
+											</Text>
+										</View>
+									))}
+							</View>
+						</View>
 					</View>
-					<Text variant="xs" color="mutedForeground">
-						{`Method: ${summary.interactionBreakdown.method}`}
-					</Text>
 				</Section>
-
-				{footer}
+				<Section padding="none" noWrap>
+					<View style={[styles.card, tint(PALETTE[3])]}>
+						<Text style={styles.factLabel} noMargin>
+							Next session
+						</Text>
+						<Text variant="base" noMargin>
+							{nextLessonName}
+						</Text>
+					</View>
+				</Section>
 			</Page>
 
 			<Page size="A4" style={styles.page}>
-				<Section padding="md" noWrap>
-					<Text variant="sm" transform="uppercase" color="mutedForeground">
-						Topics Covered
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Session Highlights
 					</Text>
-					{summary.topicsCovered.map((topic, index) => {
-						const meta = understandingMeta[topic.studentUnderstanding];
-						return (
-							<View
-								key={index as number}
-								style={[
-									styles.card,
-									{ borderLeftColor: meta.color, marginBottom: 8 },
-								]}
-							>
-								<View
+					<View style={[styles.card, tint(PALETTE[4])]}>
+						{summary.highlights.map((item, index) => (
+							<View key={index as number} style={styles.listRow}>
+								<Text style={styles.listNumber} noMargin>
+									{`${index + 1}.`}
+								</Text>
+								<Text style={styles.listText} noMargin>
+									{item}
+								</Text>
+							</View>
+						))}
+					</View>
+				</Section>
+
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Words from the session
+					</Text>
+					<View style={[styles.card, tint(PALETTE[5])]}>
+						<View style={styles.wordsWrap}>
+							{summary.buzzwords.map((item, index) => (
+								<Text
+									key={index as number}
+									noMargin
 									style={{
-										flexDirection: "row",
-										justifyContent: "space-between",
+										color: PALETTE[index % PALETTE.length],
+										fontSize: ((8 + item.weight * 1.6) * 2) / 3,
+										fontWeight: theme.primitives.fontWeights.bold,
+										marginBottom: 4,
+										marginRight: 10,
 									}}
 								>
-									<Text style={styles.cardTitle} noMargin>
-										{topic.topic}
-									</Text>
-									<Badge label={meta.label} variant={meta.variant} size="sm" />
-								</View>
-								<Text variant="sm" noMargin>
-									{topic.explanation}
+									{item.word}
 								</Text>
-							</View>
-						);
-					})}
+							))}
+						</View>
+					</View>
 				</Section>
 
-				{summary.studentQuestionsAndDoubts.length > 0 ? (
-					<Section padding="md" noWrap>
-						<Text variant="sm" transform="uppercase" color="mutedForeground">
-							Student Questions &amp; Doubts
-						</Text>
-						{summary.studentQuestionsAndDoubts.map((item, index) => {
-							const color = item.wasResolved ? PALETTE[1] : PALETTE[3];
-							return (
-								<View
-									key={index as number}
-									style={[
-										styles.card,
-										{ borderLeftColor: color, marginBottom: 8 },
-									]}
-								>
-									<View
-										style={{
-											flexDirection: "row",
-											justifyContent: "space-between",
-										}}
-									>
-										<Text style={styles.cardTitle} noMargin>
-											{item.question}
-										</Text>
-										<Badge
-											label={item.wasResolved ? "Resolved" : "Unresolved"}
-											variant={item.wasResolved ? "success" : "destructive"}
-											size="sm"
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Learning Outcomes
+					</Text>
+					<View style={[styles.card, tint(PALETTE[1])]}>
+						{summary.learningOutcomes.map((item, index) => (
+							<View key={index as number} style={styles.listRow}>
+								<View style={styles.checkCircle}>
+									<Svg width={8} height={8} viewBox="0 0 24 24">
+										<Path
+											d="M20 6 9 17l-5-5"
+											stroke="#FFFFFF"
+											strokeWidth={3}
+											fill="none"
 										/>
-									</View>
-									{item.teacherResponse ? (
-										<Text variant="sm" noMargin>
-											{item.teacherResponse}
-										</Text>
-									) : null}
+									</Svg>
 								</View>
-							);
-						})}
-					</Section>
-				) : null}
-
-				{footer}
-			</Page>
-
-			<Page size="A4" style={styles.page}>
-				<View style={styles.twoCol}>
-					<View style={styles.col}>
-						<Section variant="card" padding="md" noWrap>
-							<Text variant="sm" transform="uppercase" color="mutedForeground">
-								Key Takeaways
-							</Text>
-							<PdfList
-								variant="checklist"
-								gap="sm"
-								items={summary.keyTakeaways.map((item) => ({
-									checked: true,
-									text: item,
-								}))}
-							/>
-						</Section>
+								<Text style={styles.listText} noMargin>
+									{item}
+								</Text>
+							</View>
+						))}
 					</View>
-					<View style={styles.col}>
-						<Section variant="card" padding="md" noWrap>
-							<Text variant="sm" transform="uppercase" color="mutedForeground">
-								Suggested Next Steps
-							</Text>
-							<PdfList
-								variant="numbered"
-								gap="sm"
-								items={summary.suggestedNextSteps.map((item) => ({
-									text: item,
-								}))}
-							/>
-						</Section>
-					</View>
-				</View>
+				</Section>
 
-				{footer}
+				<Section padding="none" noWrap>
+					<Text variant="base" noMargin style={styles.subHeader}>
+						Activities
+					</Text>
+					<View style={styles.twoCol}>
+						<View style={[styles.col, styles.card, tint(PALETTE[0])]}>
+							<Text style={styles.factLabel} noMargin>
+								Done in session
+							</Text>
+							{summary.activitiesDone.map((item, index) => (
+								<View key={index as number} style={styles.listRow}>
+									<Text style={styles.listNumber} noMargin>
+										{`${index + 1}.`}
+									</Text>
+									<Text style={styles.listText} noMargin>
+										{item}
+									</Text>
+								</View>
+							))}
+						</View>
+						<View style={[styles.col, styles.card, tint(PALETTE[2])]}>
+							<Text style={styles.factLabel} noMargin>
+								Homework / to-do
+							</Text>
+							{summary.homework.map((item, index) => (
+								<View key={index as number} style={styles.listRow}>
+									<View style={styles.openCircle} />
+									<Text style={styles.listText} noMargin>
+										{item}
+									</Text>
+								</View>
+							))}
+						</View>
+					</View>
+				</Section>
 			</Page>
 		</Document>
 	);

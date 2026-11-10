@@ -78,7 +78,7 @@ export const professionalTheme: PdfcnTheme = {
 			marginTop: 40,
 		},
 		paragraphGap: 10,
-		sectionGap: 24,
+		sectionGap: 12,
 	},
 	typography: {
 		body: {

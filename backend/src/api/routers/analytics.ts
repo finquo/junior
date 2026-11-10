@@ -1,8 +1,8 @@
 import { os } from "@orpc/server";
-import { eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, lte } from "drizzle-orm";
 import z from "zod";
-import { meetingSummarySchema } from "@/ai/summarize";
 import { mediaStorage } from "@/aws/media";
+import { meetingSummarySchema } from "@/config/summary";
 import { schema } from "@/db";
 import { db } from "@/services";
 import { getAPI, getError, tryAPI } from "../procedure";
@@ -13,13 +13,36 @@ const publicNextProcedure = os.$context();
 const DEMO_ID = "demo";
 const DEMO_SLOT = {
 	id: DEMO_ID,
+	lessonId: "demo-lesson",
+	studentId: null,
+	summary: null,
 	startTime: new Date(),
 	expectedEndTime: new Date(Date.now() + 45 * 60_000),
 	endTime: null,
-	lesson: { name: "Demo Lesson", language: "en-IN" },
+	lesson: { name: "Demo Lesson", language: "en-IN", program: null },
 	student: { user: { name: "Demo Student" } },
 	teacher: { user: { name: "Demo Teacher" } },
 };
+
+// Demo sandbox. Remove this constant before deploying.
+const DEMO_HISTORY = [
+	{
+		startTime: new Date(Date.now() - 28 * 86_400_000),
+		summary: { voiceBalance: { studentPercentage: 38 } },
+	},
+	{
+		startTime: new Date(Date.now() - 21 * 86_400_000),
+		summary: { voiceBalance: { studentPercentage: 44 } },
+	},
+	{
+		startTime: new Date(Date.now() - 14 * 86_400_000),
+		summary: { voiceBalance: { studentPercentage: 41 } },
+	},
+	{
+		startTime: new Date(Date.now() - 7 * 86_400_000),
+		summary: { voiceBalance: { studentPercentage: 49 } },
+	},
+];
 
 export const analyticsRouter = {
 	studentReport: publicNextProcedure
@@ -110,51 +133,104 @@ export const analyticsRouter = {
 			};
 		}),
 	slotReport: publicNextProcedure
-		.input(
-			z.object({
-				id: z.string().min(1),
-				source: z.enum(["main", "chunks"]).optional(),
-			}),
-		)
+		.input(z.object({ id: z.string().min(1) }))
 		.handler(async ({ input }) => {
-			const slot =
-				input.id === DEMO_ID
-					? DEMO_SLOT
-					: await tryAPI(
-							"db-analytics-slot-report-slot",
-							db.query.slot.findFirst({
-								where: { id: input.id },
-								with: {
-									lesson: { columns: { name: true, language: true } },
-									student: {
-										with: { user: { columns: { name: true } } },
-									},
-									teacher: {
-										with: { user: { columns: { name: true } } },
-									},
+			const isDemo = input.id === DEMO_ID;
+
+			const slot = isDemo
+				? DEMO_SLOT
+				: await tryAPI(
+						"db-analytics-slot-report-slot",
+						db.query.slot.findFirst({
+							where: { id: input.id },
+							with: {
+								lesson: {
+									columns: { name: true, language: true, program: true },
 								},
-							}),
-						);
+								student: {
+									with: { user: { columns: { name: true } } },
+								},
+								teacher: {
+									with: { user: { columns: { name: true } } },
+								},
+							},
+						}),
+					);
 
 			if (!slot) throw getError("NOT_FOUND", "Session not found");
 
-			const raw = await tryAPI(
-				"aws-s3-get-slot-summary",
-				mediaStorage.getItem(
-					input.source === "chunks"
-						? `${input.id}/summary/chunks.json`
-						: `${input.id}/summary/main.json`,
-				),
-			);
+			const summary = isDemo
+				? meetingSummarySchema.parse(
+						await tryAPI(
+							"aws-s3-get-demo-summary",
+							mediaStorage.getItem(`${input.id}/summary/chunks.json`),
+						),
+					)
+				: slot.summary;
 
-			if (!raw) throw getError("NOT_FOUND", "Summary not generated yet");
+			if (!summary) throw getError("NOT_FOUND", "Summary not generated yet");
 
-			const summary = meetingSummarySchema.parse(raw);
+			const programId = isDemo ? null : slot.lesson?.program;
+			const program = programId
+				? await getAPI(
+						"db-analytics-slot-report-program",
+						db.query.program.findFirst({
+							where: { id: programId },
+							columns: { name: true, lessons: true },
+						}),
+						null,
+					)
+				: null;
+
+			const lessonIds = program?.lessons ?? [];
+			const currentIndex = lessonIds.indexOf(slot.lessonId);
+			const nextLessonId =
+				currentIndex >= 0 ? lessonIds[currentIndex + 1] : undefined;
+
+			const nextLesson = nextLessonId
+				? await getAPI(
+						"db-analytics-slot-report-next-lesson",
+						db.query.lesson.findFirst({
+							where: { id: nextLessonId },
+							columns: { name: true },
+						}),
+						null,
+					)
+				: null;
+
+			// Demo sandbox. Remove this branch before deploying.
+			const history = isDemo
+				? DEMO_HISTORY
+				: await getAPI(
+						"db-analytics-slot-report-history",
+						db
+							.select({
+								startTime: schema.slot.startTime,
+								summary: schema.slot.summary,
+							})
+							.from(schema.slot)
+							.where(
+								and(
+									eq(schema.slot.studentId, slot.studentId ?? ""),
+									isNotNull(schema.slot.summary),
+									lte(schema.slot.startTime, slot.startTime),
+								),
+							)
+							.orderBy(desc(schema.slot.startTime))
+							.limit(5),
+						[],
+					);
 
 			return {
 				generatedAt: new Date().toISOString(),
 				slot,
 				summary,
+				program: program ? { name: program.name } : null,
+				nextLesson,
+				history: history.reverse().map((item) => ({
+					startTime: item.startTime,
+					studentPercentage: item.summary?.voiceBalance.studentPercentage ?? 0,
+				})),
 			};
 		}),
 	demo: publicNextProcedure.handler(

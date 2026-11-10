@@ -146,11 +146,13 @@ function DeleteButton({
 	path,
 	label,
 	index,
+	disable,
 }: {
 	id: string;
 	path: string;
 	label: string;
 	index: number;
+	disable?: boolean;
 }) {
 	const { mutate, isPending } = useMutation(
 		api.media.delete.mutationOptions({
@@ -168,7 +170,11 @@ function DeleteButton({
 		<RenderWhenRole role={["admin", "scheduler"]}>
 			<AlertDialog>
 				<AlertDialogTrigger asChild>
-					<Button variant="destructive" size="sm" disabled={isPending}>
+					<Button
+						variant="destructive"
+						size="sm"
+						disabled={disable || isPending}
+					>
 						{isPending ? <Spinner /> : <TrashIcon />}
 						Delete
 					</Button>
@@ -204,11 +210,13 @@ function DeleteChunksButton({
 	index,
 	target,
 	label,
+	disable,
 }: {
 	id: string;
 	index: number;
 	target: "audio" | "transcripts";
 	label: string;
+	disable?: boolean;
 }) {
 	const { mutate, isPending } = useMutation(
 		api.media.deleteChunks.mutationOptions({
@@ -223,7 +231,11 @@ function DeleteChunksButton({
 		<RenderWhenRole role={["admin", "scheduler"]}>
 			<AlertDialog>
 				<AlertDialogTrigger asChild>
-					<Button variant="destructive" size="sm" disabled={isPending}>
+					<Button
+						variant="destructive"
+						size="sm"
+						disabled={disable || isPending}
+					>
 						{isPending ? <Spinner /> : <TrashIcon />}
 						{label}
 					</Button>
@@ -776,6 +788,13 @@ export function MediaPipeline({
 										error={errors.splitAudio}
 										actions={
 											<>
+												<DeleteChunksButton
+													id={id}
+													index={index}
+													target="audio"
+													label="Delete"
+													disable={media.chunks.length === 0}
+												/>
 												<RetryAction
 													api={api.media.jobs.splitAudio.mutationOptions({
 														onError: handleError("splitAudio"),
@@ -787,12 +806,6 @@ export function MediaPipeline({
 														"splitAudio",
 														"Audio split job started",
 													)}
-												/>
-												<DeleteChunksButton
-													id={id}
-													index={index}
-													target="audio"
-													label="Delete chunks"
 												/>
 											</>
 										}
@@ -848,7 +861,8 @@ export function MediaPipeline({
 													id={id}
 													index={index}
 													target="transcripts"
-													label="Delete transcripts"
+													label="Delete"
+													disable={transcriptPaths.length === 0}
 												/>
 												<RetryAction
 													api={api.media.transcribeAudioChunks.mutationOptions({

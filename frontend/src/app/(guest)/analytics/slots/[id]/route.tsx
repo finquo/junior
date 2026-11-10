@@ -7,15 +7,11 @@ import { SlotSummaryReport } from "../_components/slot-summary-report";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-	request: Request,
+	_request: Request,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	const { id } = await params;
-	const source =
-		new URL(request.url).searchParams.get("source") === "chunks"
-			? "chunks"
-			: "main";
-	const data = await call(analyticsRouter.slotReport, { id, source }, {});
+	const data = await call(analyticsRouter.slotReport, { id }, {});
 	return await getPDF(
 		<PdfcnThemeProvider theme={undefined}>
 			<SlotSummaryReport data={data} />

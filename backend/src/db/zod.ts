@@ -12,6 +12,7 @@ import {
 	availabilityZod,
 	experienceZod,
 	intervalHourZod,
+	meetingSummarySchema,
 	noteZod,
 	quizZod,
 	schoolingZod,
@@ -119,12 +120,15 @@ export const UpdateProgramSchema = createUpdateSchema(
 // Slot
 export const SelectSlotSchema = createSelectSchema(schema.slot).safeExtend({
 	participants: slotParticipantZod.array(),
+	summary: meetingSummarySchema.nullable(),
 });
 export const InsertSlotSchema = createInsertSchema(schema.slot).omit({
 	participants: true,
+	summary: true,
 });
 export const UpdateSlotSchema = createUpdateSchema(schema.slot).omit({
 	participants: true,
+	summary: true,
 });
 
 // Lesson

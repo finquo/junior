@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import z from "zod";
 import { summarizeTranscript } from "@/ai/summarize";
 import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
@@ -18,6 +19,7 @@ import {
 	toMediaPath,
 } from "@/aws/media";
 import { notifySlotSummary } from "@/chat/notify";
+import { schema } from "@/db";
 import { db } from "@/services";
 import { MapRole } from "@/utils/role";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "../procedure";
@@ -239,15 +241,31 @@ export const mediaRouter = {
 				)
 				.join("\n");
 
+			const previous = await tryAPI(
+				"db-media-summarize-previous-slot",
+				db.query.slot.findFirst({
+					where: { id: input.id },
+					columns: { summary: true },
+				}),
+			);
+
 			const summary = await tryAPI(
 				"ai-summarize-transcript",
-				summarizeTranscript(transcript),
+				summarizeTranscript(transcript, previous?.summary),
 			);
 			const outputKey = `${input.id}/summary/main.json`;
 
 			await tryAPI(
 				"aws-s3-save-summary",
 				mediaStorage.setItem(outputKey, JSON.stringify(summary, null, 2)),
+			);
+
+			await tryAPI(
+				"db-media-summarize-save-slot",
+				db
+					.update(schema.slot)
+					.set({ summary })
+					.where(eq(schema.slot.id, input.id)),
 			);
 
 			return { outputKey, summary };
@@ -289,15 +307,31 @@ export const mediaRouter = {
 					`Transcript chunks not found for ${input.id}`,
 				);
 
+			const previous = await tryAPI(
+				"db-media-summarize-chunks-previous-slot",
+				db.query.slot.findFirst({
+					where: { id: input.id },
+					columns: { summary: true },
+				}),
+			);
+
 			const summary = await tryAPI(
 				"ai-summarize-transcript-chunks",
-				summarizeTranscript(transcript),
+				summarizeTranscript(transcript, previous?.summary),
 			);
 			const outputKey = `${input.id}/summary/chunks.json`;
 
 			await tryAPI(
 				"aws-s3-save-summary-chunks",
 				mediaStorage.setItem(outputKey, JSON.stringify(summary, null, 2)),
+			);
+
+			await tryAPI(
+				"db-media-summarize-chunks-save-slot",
+				db
+					.update(schema.slot)
+					.set({ summary })
+					.where(eq(schema.slot.id, input.id)),
 			);
 
 			return { outputKey, summary };

@@ -1,53 +1,15 @@
 import { generateObject, type LanguageModel } from "ai";
-import { z } from "zod";
+import { type MeetingSummary, meetingSummarySchema } from "@/config/summary";
 import { openrouter } from "./index";
 
-export const meetingSummarySchema = z.object({
-	title: z.string(),
-	overallSummary: z.string(),
+export async function summarizeTranscript(
+	transcript: string,
+	previousSummary?: MeetingSummary | null,
+) {
+	const previous = previousSummary
+		? `PREVIOUS SESSION SUMMARY (for continuity only, do not copy its wording or invent carry-overs from it):\n${JSON.stringify(previousSummary)}\n\n`
+		: "";
 
-	engagement: z.object({
-		teacherEngagement: z.string(),
-		studentEngagement: z.string(),
-		engagementScore: z.object({
-			teacher: z.number().min(0).max(100),
-			student: z.number().min(0).max(100),
-		}),
-	}),
-
-	topicsCovered: z.array(
-		z.object({
-			topic: z.string(),
-			explanation: z.string(),
-			studentUnderstanding: z.enum([
-				"clear",
-				"partial",
-				"unclear",
-				"not_assessed",
-			]),
-		}),
-	),
-
-	studentQuestionsAndDoubts: z.array(
-		z.object({
-			question: z.string(),
-			wasResolved: z.boolean(),
-			teacherResponse: z.string().nullable(),
-		}),
-	),
-
-	interactionBreakdown: z.object({
-		teacherSpeakingPercentage: z.number().min(0).max(100),
-		studentSpeakingPercentage: z.number().min(0).max(100),
-		unknownOrSilencePercentage: z.number().min(0).max(100),
-		method: z.string(),
-	}),
-
-	keyTakeaways: z.array(z.string()),
-	suggestedNextSteps: z.array(z.string()),
-});
-
-export async function summarizeTranscript(transcript: string) {
 	const { object } = await generateObject({
 		model: openrouter("google/gemini-2.5-flash") as LanguageModel,
 		temperature: 0.2,
@@ -61,15 +23,20 @@ The transcript may contain speaker labels, timestamps, transcription errors, and
 Produce a factual, structured summary.
 
 Rules:
-- Do not invent topics, questions, or events absent from the transcript.
+- Do not invent topics, questions, activities, or events absent from the transcript.
 - If speaker labels are missing or unreliable, infer them cautiously from context.
-- Use timestamps to calculate speaking-time percentages when available.
-- If timestamps are unavailable, estimate from dialogue volume and distribution, and explain that in "method".
-- The three interaction percentages should total approximately 100.
-- If the student asked no questions or doubts, return an empty array.
-- Make takeaways and next steps specific and actionable.
+- voiceBalance: teacherPercentage and studentPercentage must total 100. Use timestamps when available; otherwise estimate from dialogue volume and explain that in "method".
+- participation.teacherQuestionCount: count questions asked by the teacher.
+- participation.studentMeaningfulAnswerCount: count student answers that contain substance. Do not count yes/no/ok/hmm replies.
+- topicsCovered: topic names only, in the order they were discussed. Keep each short.
+- highlights: specific sentences describing the notable moments of the session.
+- buzzwords: key terms from the session with a weight from 1 (minor) to 10 (central).
+- learningOutcomes: concrete points the student learned in this session.
+- activitiesDone: activities actually carried out during the session.
+- homework: actionable tasks the student should do at home or in daily life before the next session. Only include tasks that were set or clearly implied in the transcript.
+- Empty arrays are acceptable when the transcript supports nothing for a field.
 
-TRANSCRIPT:
+${previous}TRANSCRIPT:
 ${transcript}`,
 	});
 

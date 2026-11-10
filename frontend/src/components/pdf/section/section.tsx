@@ -1,6 +1,6 @@
 import { usePdfcnTheme, useSafeMemo } from "@/components/pdf/theme-provider";
-import { View, StyleSheet } from "@/lib/pdf-primitives";
 import type { Style } from "@/lib/pdf-primitives";
+import { StyleSheet, View } from "@/lib/pdf-primitives";
 import { resolveColor } from "@/lib/resolve-color";
 import type { PDFComponentProps } from "@/types/pdf-components";
 import type { PdfcnTheme } from "@/types/pdf-themes";
