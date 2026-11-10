@@ -4,7 +4,7 @@ resource "aws_s3_bucket" "media" {
 }
 
 resource "aws_media_convert_queue" "media" {
-	name			= "finquo-junior-media-queue"
+	name			= "finquo-junior-media-queue-${var.environment}"
 	description		= "MediaConvert test queue"
 
 	pricing_plan	= "ON_DEMAND"
@@ -13,7 +13,7 @@ resource "aws_media_convert_queue" "media" {
 }
 
 resource "aws_iam_role" "media_convert" {
-	name	= "finquo-junior-media-convert"
+	name	= "finquo-junior-media-convert-${var.environment}"
 
 	assume_role_policy	= jsonencode({
 		Version		= "2012-10-17"
@@ -30,7 +30,7 @@ resource "aws_iam_role" "media_convert" {
 }
 
 resource "aws_iam_role_policy" "media_convert_s3" {
-	name	= "finquo-junior-media-convert-s3"
+	name	= "finquo-junior-media-convert-s3-${var.environment}"
 	role	= aws_iam_role.media_convert.id
 
 	policy	= jsonencode({
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy" "media_convert_s3" {
 }
 
 resource "aws_iam_role_policy" "media_lambda" {
-	name	= "finquo-junior-next-lambda-media"
+	name	= "finquo-junior-next-lambda-media-${var.environment}"
 	role	= aws_iam_role.next_lambda.id
 
 	policy	= jsonencode({

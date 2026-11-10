@@ -22,12 +22,12 @@ data "aws_subnets" "default" {
 }
 
 resource "aws_db_subnet_group" "db" {
-	name		= "finquo-junior-db"
+	name		= "finquo-junior-db-${var.environment}"
 	subnet_ids	= data.aws_subnets.default.ids
 }
 
 resource "aws_security_group" "db" {
-	name		= "finquo-junior-db"
+	name		= "finquo-junior-db-${var.environment}"
 	description	= "Postgres access for all finquo deployments"
 	vpc_id		= data.aws_vpc.default.id
 }
@@ -51,7 +51,7 @@ resource "aws_vpc_security_group_egress_rule" "db_all" {
 }
 
 resource "aws_db_instance" "db" {
-	identifier		= "finquo-junior-db"
+	identifier		= "finquo-junior-db-${var.environment}"
 	engine			= "postgres"
 	engine_version		= "17"
 	instance_class		= "db.t4g.micro"
@@ -70,13 +70,18 @@ resource "aws_db_instance" "db" {
 	publicly_accessible	= true
 
 	backup_retention_period	= 7
-	skip_final_snapshot	= true
-	deletion_protection	= false
+	skip_final_snapshot	= false
+	final_snapshot_identifier	= "finquo-junior-db-${var.environment}-final"
 	apply_immediately	= true
+	deletion_protection	= true
+
+	lifecycle {
+		prevent_destroy = true
+	}
 }
 
 resource "aws_ssm_parameter" "database_url" {
-	name	= "/finquo-junior/db/url"
+	name	= "/finquo-junior-${var.environment}/db/url"
 	type	= "SecureString"
 	value	= local.db_url
 }

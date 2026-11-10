@@ -1,3 +1,8 @@
+variable "domain_name" {
+	description	= "Public CloudFront domain"
+	type		= string
+}
+
 locals {
 	assets_prefix	= "_assets"
 
@@ -15,8 +20,43 @@ locals {
 	]
 }
 
+resource "aws_acm_certificate" "cloudfront" {
+	provider		= aws.global
+	domain_name		= var.domain_name
+	validation_method	= "DNS"
+
+	lifecycle {
+		create_before_destroy	= true
+	}
+}
+
+resource "aws_acm_certificate_validation" "cloudfront" {
+	provider		= aws.global
+	certificate_arn		= aws_acm_certificate.cloudfront.arn
+	validation_record_fqdns	= [
+		for option in aws_acm_certificate.cloudfront.domain_validation_options :
+		option.resource_record_name
+	]
+}
+
+resource "aws_cloudfront_function" "forwarded_host" {
+	name		= "finquo-junior-forwarded-host-${var.environment}"
+	runtime		= "cloudfront-js-2.0"
+	comment		= "Preserve the viewer host for Better Auth"
+	publish		= true
+
+	code	= <<-EOT
+		function handler(event) {
+			var request = event.request;
+			request.headers["x-forwarded-host"] = { value: request.headers.host.value };
+			request.headers["x-forwarded-proto"] = { value: "https" };
+			return request;
+		}
+	EOT
+}
+
 resource "aws_cloudfront_origin_access_control" "assets" {
-	name				= "finquo-junior-assets"
+	name				= "finquo-junior-assets-${var.environment}"
 	description			= "CloudFront access to the OpenNext static assets"
 	origin_access_control_origin_type	= "s3"
 	signing_behavior		= "always"
@@ -26,6 +66,7 @@ resource "aws_cloudfront_origin_access_control" "assets" {
 resource "aws_cloudfront_distribution" "assets" {
 	enabled	= true
 	comment	= "finquo-junior"
+	aliases	= [var.domain_name]
 
 	origin {
 		domain_name	= trimsuffix(replace(aws_lambda_function_url.next.function_url, "https://", ""), "/")
@@ -57,6 +98,11 @@ resource "aws_cloudfront_distribution" "assets" {
 		cache_policy_id			= "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 		# Managed-AllViewerExceptHostHeader
 		origin_request_policy_id	= "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+
+		function_association {
+			event_type	= "viewer-request"
+			function_arn	= aws_cloudfront_function.forwarded_host.arn
+		}
 	}
 
 	dynamic "ordered_cache_behavior" {
@@ -82,7 +128,9 @@ resource "aws_cloudfront_distribution" "assets" {
 	}
 
 	viewer_certificate {
-		cloudfront_default_certificate	= true
+		acm_certificate_arn		= aws_acm_certificate_validation.cloudfront.certificate_arn
+		ssl_support_method		= "sni-only"
+		minimum_protocol_version	= "TLSv1.2_2021"
 	}
 }
 
@@ -116,4 +164,14 @@ output "cloudfront_domain_name" {
 
 output "cloudfront_distribution_id" {
 	value = aws_cloudfront_distribution.assets.id
+}
+
+output "cloudfront_certificate_validation" {
+	value = [
+		for option in aws_acm_certificate.cloudfront.domain_validation_options : {
+			name	= option.resource_record_name
+			type	= option.resource_record_type
+			value	= option.resource_record_value
+		}
+	]
 }

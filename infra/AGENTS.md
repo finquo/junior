@@ -5,7 +5,7 @@ Scope: the `infra/` workspace only. Monorepo-level commands, env/Varlock rules, 
 Two independent OpenTofu roots. There is no `.tf` at this level, so always run `tofu` from inside a root.
 
 - `app/` — Next.js Lambda from the CI-built OpenNext zip, Function URL fronted by CloudFront, media S3 bucket (also holding the CloudFront static assets) + MediaConvert queue.
-- `state/` — long-lived shared resources: RDS Postgres, its subnet group/SG, and the `/finquo-junior/db/url` SSM parameter. Put Redis/RabbitMQ here later.
+- `state/` — long-lived shared resources: RDS Postgres, its subnet group/SG, and the `/finquo-junior-<environment>/db/url` SSM parameter. Put Redis/RabbitMQ here later.
 
 ## Commands
 
@@ -23,15 +23,16 @@ tofu apply tfplan
 ## State
 
 - One state bucket per environment (`finquo-junior-opentofu-development`, `finquo-junior-opentofu-production`), `use_lockfile = true`, fixed keys `app/terraform.tfstate` and `state/terraform.tfstate`. The bucket is deliberately **not** in the backend block — S3 names are global, so it is passed at init with `-backend-config="bucket=..."`. Never point two roots at the same key; locks are per key, so the roots can apply concurrently.
-- `state` must be applied before `app`. `app/next.tf` reads the DB URL from the `/finquo-junior/db/url` SSM parameter that `state/db.tf` writes — there is no `terraform_remote_state` between the roots.
+- `state` must be applied before `app`. `app/next.tf` reads the DB URL from the `/finquo-junior-<environment>/db/url` SSM parameter that `state/db.tf` writes — there is no `terraform_remote_state` between the roots.
 - `state` is shared by every deployment in the account: `skip_final_snapshot = true` and `deletion_protection = false` mean destroy is immediate and unrecoverable.
-- One deployment per AWS account. Only names in **global** namespaces carry the environment: the state bucket (via init) and `finquo-junior-media-${var.environment}`. Lambda, IAM, RDS, SSM, and the MediaConvert queue are account-scoped and stay identical in both accounts.
+- Environments may share one AWS account, so every account-scoped identifier carries `${var.environment}`: RDS instance, subnet group, security groups, SSM parameters, Lambda function and log group, IAM roles and policies, MediaConvert queue, CloudFront OAC and functions, and the media bucket. Use the pattern `finquo-junior-<thing>-${var.environment}` (SSM uses `/finquo-junior-${var.environment}/...`). When adding a resource with a name, add the suffix. Renaming an existing name forces replacement for most resource types.
+- Backend code that builds these names must read `ENVIRONMENT` and match the Terraform names (see `backend/src/aws/config.ts`).
 
 ## Environments
 
 | | `development` | `production` |
 |---|---|---|
-| AWS account | local account | separate account |
+| AWS account | same account as production | same account as development |
 | Trigger | local `tofu apply` (default tag) | push to `main` |
 | State bucket | `finquo-junior-opentofu-development` | `finquo-junior-opentofu-production` |
 | Media bucket | `finquo-junior-media-development` | `finquo-junior-media-production` |
