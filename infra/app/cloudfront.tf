@@ -39,22 +39,6 @@ resource "aws_acm_certificate_validation" "cloudfront" {
 	]
 }
 
-resource "aws_cloudfront_function" "forwarded_host" {
-	name		= "finquo-junior-forwarded-host-${var.environment}"
-	runtime		= "cloudfront-js-2.0"
-	comment		= "Preserve the viewer host for Better Auth"
-	publish		= true
-
-	code	= <<-EOT
-		function handler(event) {
-			var request = event.request;
-			request.headers["x-forwarded-host"] = { value: request.headers.host.value };
-			request.headers["x-forwarded-proto"] = { value: "https" };
-			return request;
-		}
-	EOT
-}
-
 resource "aws_cloudfront_origin_access_control" "assets" {
 	name				= "finquo-junior-assets-${var.environment}"
 	description			= "CloudFront access to the OpenNext static assets"
@@ -98,11 +82,6 @@ resource "aws_cloudfront_distribution" "assets" {
 		cache_policy_id			= "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 		# Managed-AllViewerExceptHostHeader
 		origin_request_policy_id	= "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-
-		function_association {
-			event_type	= "viewer-request"
-			function_arn	= aws_cloudfront_function.forwarded_host.arn
-		}
 	}
 
 	dynamic "ordered_cache_behavior" {

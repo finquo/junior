@@ -36,7 +36,6 @@ export function createAuth(db: Database) {
 			level: "debug",
 		},
 		advanced: {
-			trustedProxyHeaders: true,
 			cookiePrefix: "finquo-auth",
 			defaultCookieAttributes: {
 				sameSite: "none",
