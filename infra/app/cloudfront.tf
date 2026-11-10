@@ -6,18 +6,11 @@ variable "domain_name" {
 locals {
 	assets_prefix	= "_assets"
 
+	open_next	= jsondecode(file("../../frontend/.open-next/open-next.output.json"))
+
 	# The S3-origin behaviors from OpenNext's generated `open-next.output.json`.
 	# Everything not listed here (the `*` behavior) goes to the Lambda.
-	asset_behaviors	= [
-		"BUILD_ID",
-		"coi-serviceworker.js",
-		"favicon/*",
-		"favicon.ico",
-		"logo.png",
-		"offline.html",
-		"sw.js",
-		"_next/*",
-	]
+	asset_behaviors	= [for b in local.open_next.behaviors : b.pattern if b.origin == "s3"]
 }
 
 resource "aws_acm_certificate" "cloudfront" {
