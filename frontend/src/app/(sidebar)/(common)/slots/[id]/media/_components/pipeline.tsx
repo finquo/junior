@@ -83,6 +83,7 @@ type ActionKey =
 	| "splitAudio"
 	| "transcribeChunks"
 	| "summarizeChunks"
+	| "summarizeAll"
 	| "transcribeAudio"
 	| "summarize";
 
@@ -583,6 +584,7 @@ export function MediaPipeline({
 	const transcribedChunks = media.chunks.filter((chunk) => chunk.transcript);
 	const chunksTranscribed =
 		media.chunks.length > 0 && transcribedChunks.length === media.chunks.length;
+	const multipleVideos = videoIndexes.length > 1;
 	const transcriptPaths = media.chunks.flatMap((chunk) =>
 		chunk.transcript ? [chunk.transcript.path] : [],
 	);
@@ -593,7 +595,10 @@ export function MediaPipeline({
 			delete next[action];
 			return next;
 		});
-		refetchAPIs([api.media.meta.queryKey({ input: { id, index } })]);
+		refetchAPIs([
+			api.media.meta.queryKey({ input: { id, index } }),
+			api.core.slot.get.queryKey({ input: { id } }),
+		]);
 		toast.success({ title });
 	};
 
@@ -919,9 +924,7 @@ export function MediaPipeline({
 												{media.chunkSummary && (
 													<Button asChild variant="outline" size="sm">
 														<a
-															href={
-																`/analytics/slots/${id}?source=chunks` as "/"
-															}
+															href={`/analytics/slots/${id}` as "/"}
 															target="_blank"
 															rel="noreferrer"
 														>
@@ -1078,6 +1081,62 @@ export function MediaPipeline({
 						*/}
 					</TabsContent>
 				</Tabs>
+
+				{multipleVideos && (
+					<Card size="sm">
+						<CardHeader>
+							<CardTitle>Summary from All Videos</CardTitle>
+							<CardDescription>
+								Combines the chunk transcripts of every recording into one
+								summary.
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<Timeline>
+								<PipelineStep
+									step={1}
+									title={slot.summary ? "Summary Created" : "Create Summary"}
+									description={
+										slot.summary
+											? "Saved to the session summary."
+											: "No summary from all video transcripts."
+									}
+									error={errors.summarizeAll}
+									actions={
+										<RetryAction
+											api={api.media.summarizeAll.mutationOptions({
+												onError: handleError("summarizeAll"),
+											})}
+											input={{ id }}
+											label={slot.summary ? "Retry" : "Convert"}
+											onSuccess={handleSuccess(
+												"summarizeAll",
+												"Summary from all videos created",
+											)}
+										/>
+									}
+								/>
+								<PipelineStep
+									step={2}
+									title="Summary PDF"
+									description="Render the session summary as a shareable PDF."
+									actions={
+										<Button asChild variant="outline" size="sm">
+											<a
+												href={`/analytics/slots/${id}` as "/"}
+												target="_blank"
+												rel="noreferrer"
+											>
+												<FileTextIcon />
+												Show PDF
+											</a>
+										</Button>
+									}
+								/>
+							</Timeline>
+						</CardContent>
+					</Card>
+				)}
 			</CardContent>
 		</Card>
 	);

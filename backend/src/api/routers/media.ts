@@ -326,15 +326,95 @@ export const mediaRouter = {
 				mediaStorage.setItem(outputKey, JSON.stringify(summary, null, 2)),
 			);
 
+			const videos = await getAPI(
+				"aws-s3-list-videos",
+				mediaStorage.getKeys(`${input.id}/videos/`),
+				[],
+			);
+
+			if (videos.length === 1) {
+				await tryAPI(
+					"db-media-summarize-chunks-save-slot",
+					db
+						.update(schema.slot)
+						.set({ summary })
+						.where(eq(schema.slot.id, input.id)),
+				);
+			}
+
+			return { outputKey, summary };
+		}),
+
+	summarizeAll: getRolesProcedure(["admin", "scheduler"])
+		.input(z.object({ id: z.string().min(1) }))
+		.handler(async ({ input }) => {
+			const keys = await getAPI(
+				"aws-s3-list-all-transcript-chunks",
+				mediaStorage.getKeys(`${input.id}/transcript-chunks/`),
+				[],
+			);
+
+			const items = keys
+				.map((key) => {
+					const [, , video, file] = normalizeMediaKey(key).split("/");
+					const chunk = file?.match(/^(\d+)\.json$/)?.[1];
+					if (!video || !chunk) return null;
+					return { key, video: Number(video), chunk: Number(chunk) };
+				})
+				.filter((item) => item !== null)
+				.sort((a, b) => a.video - b.video || a.chunk - b.chunk);
+
+			const transcripts = await Promise.all(
+				items.map(async (item) => ({
+					...item,
+					segments: await mediaStorage.getItem<TranscriptSegment[]>(item.key),
+				})),
+			);
+
+			const transcript = transcripts
+				.map(({ video, chunk, segments }) => {
+					if (!segments?.length) return "";
+
+					const lines = segments
+						.map(
+							(segment, line) =>
+								`${line + 1}. UNKNOWN [${segment.startSecond}s-${segment.endSecond}s]: ${segment.text.trim()}`,
+						)
+						.join("\n");
+
+					return `VIDEO ${video} CHUNK ${chunk}\n${lines}`;
+				})
+				.filter(Boolean)
+				.join("\n\n");
+
+			if (!transcript)
+				throw getError(
+					"NOT_FOUND",
+					`Transcript chunks not found for ${input.id}`,
+				);
+
+			const previous = await tryAPI(
+				"db-media-summarize-all-previous-slot",
+				db.query.slot.findFirst({
+					where: { id: input.id },
+					columns: { summary: true },
+				}),
+			);
+
+			const summary = await tryAPI(
+				"ai-summarize-transcript-all",
+				summarizeTranscript(transcript, previous?.summary),
+			);
+
 			await tryAPI(
-				"db-media-summarize-chunks-save-slot",
+				"db-media-summarize-all-save-slot",
 				db
 					.update(schema.slot)
 					.set({ summary })
 					.where(eq(schema.slot.id, input.id)),
 			);
 
-			return { outputKey, summary };
+			return { summary };
 		}),
 
 	sendSummary: getRolesProcedure(["admin", "scheduler"])
@@ -347,7 +427,7 @@ export const mediaRouter = {
 		.handler(async ({ input, context }) => {
 			// Demo sandbox. Remove this branch before deploying.
 			if (input.id === "demo") {
-				const link = `${new URL(context.req.url).origin}/analytics/slots/demo${input.source === "chunks" ? "?source=chunks" : ""}`;
+				const link = `${new URL(context.req.url).origin}/analytics/slots/demo`;
 
 				await notifySlotSummary({
 					name: "Demo",
@@ -390,7 +470,7 @@ export const mediaRouter = {
 				throw getError("BAD_REQUEST", "Student has no phone number");
 			}
 
-			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}${isChunks ? "?source=chunks" : ""}`;
+			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}`;
 
 			await notifySlotSummary({
 				name: student.name,

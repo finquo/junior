@@ -80,6 +80,7 @@ export const slotRouter = {
 					startTime: now,
 					expectedEndTime: endTime,
 					endTime: null,
+					summary: null,
 					status: "started",
 					createdAt: now,
 					updatedAt: now,
