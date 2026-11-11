@@ -180,11 +180,7 @@ function CallGate({ id }: { id: string }) {
 
 	if (meeting.status === "not_found" || meeting.status === "ended") {
 		return (
-			<Frame className="h-full min-h-0 rounded-none">
-				<FramePanel className="grid h-full min-h-0 place-items-center overflow-hidden">
-					<CallNotice status={meeting.status} onRefresh={preflight.refetch} />
-				</FramePanel>
-			</Frame>
+			<CallNotice status={meeting.status} onRefresh={preflight.refetch} />
 		);
 	}
 
@@ -196,6 +192,9 @@ function CallGate({ id }: { id: string }) {
 	const needsName = !authName;
 	const canJoinAsCompanion = higherRole;
 	const companionActive = !!(canJoinAsCompanion && companion);
+	const contentClassName = companionActive
+		? "grid gap-4"
+		: "grid gap-4 md:grid-cols-2";
 
 	const handleCompanion = (checked: boolean) => {
 		setCompanion(checked);
@@ -255,7 +254,7 @@ function CallGate({ id }: { id: string }) {
 					</ColorBadge>
 				</CardAction>
 			</CardHeader>
-			<CardContent className="grid gap-4 md:grid-cols-2">
+			<CardContent className={contentClassName}>
 				<ItemGroup className="gap-2">
 					<Item variant="muted" size="sm">
 						<ItemMedia variant="icon">

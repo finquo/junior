@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOutIcon, UserPenIcon } from "lucide-react";
+import { LogOutIcon, PenIcon, UserPenIcon } from "lucide-react";
 import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -60,12 +60,16 @@ export function StudentNavUser() {
 				</DropdownMenuGroup>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href={"/student/edit" as "/"}>
-							<UserPenIcon />
-							Edit Profile
-						</Link>
-					</Button>
+					<Link href={"/student/edit" as "/"}>
+						<UserPenIcon />
+						Edit Profile
+					</Link>
+				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<Link href={"/user/edit" as "/"}>
+						<PenIcon />
+						Edit Account
+					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem

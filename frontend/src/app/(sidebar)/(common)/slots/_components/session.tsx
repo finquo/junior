@@ -210,16 +210,14 @@ export function SessionProfile({ data }: { data: SlotData }) {
 								Open Call
 							</a>
 						</Button>
-						{data.status === "attended" && (
-							<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
-								<Button variant="outline" size="sm" asChild>
-									<Link href={`/slots/${data.id}/media` as "/"}>
-										<AudioLinesIcon />
-										Media
-									</Link>
-								</Button>
-							</RenderWhenRole>
-						)}
+						<RenderWhenRole role={["admin", "scheduler", "qa_auditor"]}>
+							<Button variant="outline" size="sm" asChild>
+								<Link href={`/slots/${data.id}/media` as "/"}>
+									<AudioLinesIcon />
+									Media
+								</Link>
+							</Button>
+						</RenderWhenRole>
 
 						<SlotActions slot={data}>
 							{data.meetingLink && (

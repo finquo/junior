@@ -64,6 +64,7 @@ export const studentRouter = {
 				columns: {
 					name: true,
 					description: true,
+					materials: true,
 				},
 			}),
 		);

@@ -4,10 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { langFlag, langName } from "language-emoji";
 import {
+	BookHeartIcon,
 	CalendarIcon,
+	ExternalLink,
+	ExternalLinkIcon,
 	GraduationCapIcon,
 	LanguagesIcon,
 	MapPinIcon,
+	PenIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import {
 	Item,
 	ItemActions,
@@ -63,7 +68,11 @@ export default function Page() {
 	const languages = student.languages ?? [];
 
 	return (
-		<Frame spacing="sm">
+		<Frame>
+			<FrameHeader>
+				<FrameTitle>Details</FrameTitle>
+				<FrameDescription>What your student record holds</FrameDescription>
+			</FrameHeader>
 			<FramePanel>
 				<Item>
 					<ItemMedia>
@@ -80,20 +89,23 @@ export default function Page() {
 						<ItemDescription>{user.email}</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<Button asChild variant="outline" size="sm">
-							<Link href="/student/edit">Edit</Link>
-						</Button>
+						<ButtonGroup>
+							<ButtonGroupText>
+								<PenIcon />
+							</ButtonGroupText>
+							<Button asChild variant="outline" size="sm">
+								<Link href="/student/edit">Edit Profile</Link>
+							</Button>
+							<Button asChild variant="outline" size="sm">
+								<Link href="/user/edit">Edit Account</Link>
+							</Button>
+						</ButtonGroup>
 					</ItemActions>
 				</Item>
 			</FramePanel>
-
 			<FramePanel>
-				<FrameHeader>
-					<FrameTitle>Details</FrameTitle>
-					<FrameDescription>What your student record holds</FrameDescription>
-				</FrameHeader>
 				<ItemGroup>
-					<Item variant="outline">
+					<Item variant="muted">
 						<ItemMedia variant="icon">
 							<UserRoundIcon />
 						</ItemMedia>
@@ -108,7 +120,7 @@ export default function Page() {
 							</FetchUser>
 						</ItemContent>
 						<ItemActions>
-							<Button asChild variant="outline" size="sm">
+							<Button asChild size="sm">
 								<Link href="/student/mentor">View</Link>
 							</Button>
 						</ItemActions>

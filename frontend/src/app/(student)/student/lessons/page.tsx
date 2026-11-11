@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
-import { BookOpenIcon } from "lucide-react";
+import { BookOpenIcon, ClockIcon, LanguagesIcon } from "lucide-react";
 import { formatTimeString } from "utils";
 import Loader from "@/components/loader";
 import {
@@ -21,10 +21,9 @@ import {
 	TimelineIndicator,
 	TimelineItem,
 	TimelineSeparator,
-	TimelineTitle,
 } from "@/components/reui/timeline";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Badge, ColorBadge } from "@/components/ui/badge";
 import {
 	Empty,
 	EmptyDescription,
@@ -32,7 +31,26 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemTitle,
+} from "@/components/ui/item";
 import { api } from "@/hooks/api";
+
+function getStatus(
+	lesson: { id: string; attended: boolean },
+	nextLessonId: string | undefined,
+): {
+	label: string;
+	variant: "success" | "info" | "outline";
+} {
+	if (lesson.attended) return { label: "Attended", variant: "success" };
+	if (lesson.id === nextLessonId) return { label: "Up next", variant: "info" };
+	return { label: "Upcoming", variant: "outline" };
+}
 
 export default function Page() {
 	const {
@@ -57,61 +75,61 @@ export default function Page() {
 	const activeStep = nextLesson ? nextLesson.position - 1 : lessons.length;
 
 	return (
-		<Frame spacing="sm">
+		<Frame>
+			<FrameHeader>
+				<FrameTitle>Your Lessons</FrameTitle>
+				<FrameDescription>
+					The lessons in your program, in order
+				</FrameDescription>
+				<FrameActions>
+					<Badge variant="secondary">
+						{attendedCount} of {lessons.length} attended
+					</Badge>
+				</FrameActions>
+			</FrameHeader>
 			<FramePanel>
-				<FrameHeader>
-					<FrameTitle>Your Lessons</FrameTitle>
-					<FrameDescription>
-						The lessons in your program, in order
-					</FrameDescription>
-					<FrameActions>
-						<Badge variant="secondary">
-							{attendedCount} of {lessons.length} attended
-						</Badge>
-					</FrameActions>
-				</FrameHeader>
 				{lessons.length > 0 ? (
 					<Timeline defaultValue={activeStep}>
-						{lessons.map((lesson) => (
-							<TimelineItem key={lesson.id} step={lesson.position}>
-								<TimelineIndicator />
-								<TimelineSeparator />
-								<TimelineHeader>
-									<TimelineDate>Lesson {lesson.position}</TimelineDate>
-									<TimelineTitle>
-										<span>{lesson.name}</span>
-										<Badge
-											variant={
-												lesson.attended
-													? "success"
-													: lesson.id === nextLesson?.id
-														? "info"
-														: "outline"
-											}
-										>
-											{lesson.attended
-												? "Attended"
-												: lesson.id === nextLesson?.id
-													? "Up next"
-													: "Upcoming"}
-										</Badge>
-									</TimelineTitle>
-								</TimelineHeader>
-								{lesson.description && (
-									<TimelineContent>{lesson.description}</TimelineContent>
-								)}
-								<TimelineContent className="flex flex-wrap items-center gap-1">
-									<Badge variant="secondary">
-										{langFlag(lesson.language)} {langName(lesson.language)}
-									</Badge>
-									{lesson.period && (
-										<Badge variant="outline">
-											{formatTimeString(lesson.period)}
-										</Badge>
-									)}
-								</TimelineContent>
-							</TimelineItem>
-						))}
+						{lessons.map((lesson) => {
+							const status = getStatus(lesson, nextLesson?.id);
+							return (
+								<TimelineItem key={lesson.id} step={lesson.position}>
+									<TimelineIndicator />
+									<TimelineSeparator />
+									<TimelineHeader>
+										<TimelineDate>Lesson {lesson.position}</TimelineDate>
+									</TimelineHeader>
+									<TimelineContent>
+										<Item variant="muted">
+											<ItemContent>
+												<ItemTitle>{lesson.name}</ItemTitle>
+												{lesson.description && (
+													<ItemDescription>
+														{lesson.description}
+													</ItemDescription>
+												)}
+												<ItemDescription className="space-x-2">
+													<Badge variant="secondary">
+														<LanguagesIcon />
+														{langFlag(lesson.language)}{" "}
+														{langName(lesson.language)}
+													</Badge>
+													{lesson.period && (
+														<Badge variant="secondary">
+															<ClockIcon />
+															{formatTimeString(lesson.period)}
+														</Badge>
+													)}
+												</ItemDescription>
+											</ItemContent>
+											<ItemActions>
+												<ColorBadge>{status.label}</ColorBadge>
+											</ItemActions>
+										</Item>
+									</TimelineContent>
+								</TimelineItem>
+							);
+						})}
 					</Timeline>
 				) : (
 					<Empty>

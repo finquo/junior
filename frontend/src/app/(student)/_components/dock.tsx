@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	BookHeartIcon,
 	BookOpenIcon,
 	BriefcaseBusinessIcon,
 	CalendarClockIcon,
@@ -29,7 +30,7 @@ const navItems = [
 		id: "mentor",
 		label: "Mentor",
 		url: "/student/mentor",
-		icon: <BriefcaseBusinessIcon />,
+		icon: <BookHeartIcon />,
 	},
 	{
 		id: "program",

@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import {
 	BookOpenIcon,
+	CalendarChevronsRightIcon,
 	CalendarClockIcon,
+	CalendarFoldIcon,
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -111,7 +113,7 @@ export default function Page() {
 	const next = upcoming[0];
 
 	return (
-		<Frame spacing="sm">
+		<Frame spacing="sm" className="lg:min-h-96 lg:flex-row">
 			<FramePanel>
 				<FrameHeader>
 					<FrameTitle>Next Session</FrameTitle>
@@ -231,6 +233,9 @@ export default function Page() {
 				) : (
 					<Empty>
 						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<CalendarChevronsRightIcon />
+							</EmptyMedia>
 							<EmptyTitle>Nothing scheduled</EmptyTitle>
 							<EmptyDescription>
 								New bookings from your scheduler will show up here.
@@ -254,6 +259,9 @@ export default function Page() {
 				) : (
 					<Empty>
 						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<CalendarFoldIcon />
+							</EmptyMedia>
 							<EmptyTitle>No past sessions</EmptyTitle>
 							<EmptyDescription>
 								Sessions you complete will show up here.

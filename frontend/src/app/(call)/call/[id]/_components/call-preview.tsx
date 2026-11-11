@@ -81,8 +81,12 @@ function DeviceSelect({
 }) {
 	return (
 		<Select value={value} onValueChange={onValueChange}>
-			<SelectTrigger id={id} aria-label={label} className="basis-full">
-				<SelectValue />
+			<SelectTrigger
+				id={id}
+				aria-label={label}
+				className="w-full min-w-0 basis-full"
+			>
+				<SelectValue className="min-w-0 truncate" />
 			</SelectTrigger>
 			<SelectContent>
 				<SelectGroup>
@@ -140,7 +144,7 @@ function MicrophoneItem({ preview }: { preview: CallPreviewState }) {
 	const level = state === "idle" ? preview.micLevel : testLevel;
 
 	return (
-		<Item variant="outline">
+		<Item variant="outline" className="min-w-0">
 			<ItemMedia variant="icon">
 				<MicIcon />
 			</ItemMedia>
@@ -181,7 +185,7 @@ function SpeakerItem({ preview }: { preview: CallPreviewState }) {
 	const [level, setLevel] = useState(0);
 	const testerRef =
 		useRef<ReturnType<LocalAudioTrack["testSpeaker"]>>(undefined);
-	const track = preview.audioTrack;
+	const track = preview.speakerTrack;
 
 	const stop = useCallback(() => {
 		testerRef.current?.destroy();
@@ -220,7 +224,7 @@ function SpeakerItem({ preview }: { preview: CallPreviewState }) {
 	};
 
 	return (
-		<Item variant="outline">
+		<Item variant="outline" className="min-w-0">
 			<ItemMedia variant="icon">
 				<Volume2Icon />
 			</ItemMedia>
@@ -271,6 +275,9 @@ export function useCallPreview() {
 	const [audioTrack, setAudioTrack] = useState<LocalAudioTrack | undefined>(
 		undefined,
 	);
+	const [speakerTrack, setSpeakerTrack] = useState<
+		LocalAudioTrack | undefined
+	>(undefined);
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const videoTrackRef = useRef<LocalVideoTrack | undefined>(undefined);
 	const zoomRef = useRef<typeof ZoomVideoSDK | undefined>(undefined);
@@ -369,6 +376,19 @@ export function useCallPreview() {
 
 	useEffect(() => {
 		const zoom = zoomRef.current;
+		if (!loaded || !zoom) return;
+
+		const track = zoom.createLocalAudioTrack();
+		setSpeakerTrack(track);
+
+		return () => {
+			void track.stop();
+			setSpeakerTrack(undefined);
+		};
+	}, [loaded]);
+
+	useEffect(() => {
+		const zoom = zoomRef.current;
 		if (!loaded || !mic || !zoom) {
 			setAudioTrack(undefined);
 			setMicLevel(0);
@@ -419,6 +439,7 @@ export function useCallPreview() {
 		setSpeakerId,
 		micLevel,
 		audioTrack,
+		speakerTrack,
 		videoRef,
 		cameras: cameraList(devices),
 		microphones: listDevices(devices, "audioinput", "Microphone"),

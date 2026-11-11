@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { type Availability, dayKeys } from "backend/config";
 import { format } from "date-fns";
 import { langFlag, langName } from "language-emoji";
-import { BriefcaseBusinessIcon } from "lucide-react";
+import { BriefcaseBusinessIcon, PhoneIcon } from "lucide-react";
 import Loader from "@/components/loader";
 import {
 	Frame,
@@ -15,6 +16,15 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import {
 	Empty,
 	EmptyDescription,
@@ -57,9 +67,18 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 
 	const languages = mentor.teacherData?.languages ?? [];
 	const experiences = mentor.teacherData?.experiences ?? [];
+	const availability: Partial<Availability> =
+		mentor.teacherData?.availability ?? {};
+	const availableDays = dayKeys.filter((day) => availability[day]?.enabled);
 
 	return (
-		<Frame spacing="sm">
+		<Frame>
+			<FrameHeader>
+				<FrameTitle>My Mentor</FrameTitle>
+				<FrameDescription>
+					A person who you can trust with your doubts
+				</FrameDescription>
+			</FrameHeader>
 			<FramePanel>
 				<Item>
 					<ItemMedia>
@@ -76,44 +95,110 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 						<ItemDescription>{mentor.email}</ItemDescription>
 					</ItemContent>
 					{languages.length > 0 && (
-						<ItemActions>
+						<ItemContent>
 							{languages.map((language) => (
 								<Badge key={language} variant="outline">
 									{langFlag(language)} {langName(language)}
 								</Badge>
 							))}
-						</ItemActions>
+						</ItemContent>
 					)}
+					<ItemActions>
+						<Dialog>
+							<DialogTrigger asChild>
+								<Button variant="outline" size="sm">
+									Experience
+								</Button>
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Experience</DialogTitle>
+									<DialogDescription>
+										Where your mentor has taught
+									</DialogDescription>
+								</DialogHeader>
+								{experiences.length > 0 ? (
+									<ItemGroup>
+										{experiences.map((experience) => (
+											<Item
+												key={`${experience.title}-${experience.startedAt}`}
+												variant="outline"
+											>
+												<ItemMedia variant="icon">
+													<BriefcaseBusinessIcon />
+												</ItemMedia>
+												<ItemContent>
+													<ItemTitle>{experience.title}</ItemTitle>
+													<ItemDescription>
+														{experience.organization} ·{" "}
+														{format(new Date(experience.startedAt), "MMM yyyy")}{" "}
+														–{" "}
+														{experience.endedAt
+															? format(new Date(experience.endedAt), "MMM yyyy")
+															: "Present"}
+													</ItemDescription>
+													{experience.description && (
+														<ItemDescription>
+															{experience.description}
+														</ItemDescription>
+													)}
+												</ItemContent>
+											</Item>
+										))}
+									</ItemGroup>
+								) : (
+									<Empty>
+										<EmptyHeader>
+											<EmptyTitle>No experience listed</EmptyTitle>
+											<EmptyDescription>
+												Your mentor has not added any experience yet.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								)}
+							</DialogContent>
+						</Dialog>
+					</ItemActions>
 				</Item>
+				{mentor.phoneNumber && (
+					<Item variant="outline">
+						<ItemMedia variant="icon">
+							<PhoneIcon />
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>Phone</ItemTitle>
+							<ItemDescription>{mentor.phoneNumber}</ItemDescription>
+						</ItemContent>
+						<ItemActions>
+							<Button variant="outline" size="sm" asChild>
+								<a href={`tel:${mentor.phoneNumber}`}>
+									<PhoneIcon />
+									Call
+								</a>
+							</Button>
+						</ItemActions>
+					</Item>
+				)}
 			</FramePanel>
 
 			<FramePanel>
 				<FrameHeader>
-					<FrameTitle>Experience</FrameTitle>
-					<FrameDescription>Where your mentor has taught</FrameDescription>
+					<FrameTitle>Availability</FrameTitle>
+					<FrameDescription>When your mentor is available</FrameDescription>
 				</FrameHeader>
-				{experiences.length > 0 ? (
+				{availableDays.length > 0 ? (
 					<ItemGroup>
-						{experiences.map((experience) => (
-							<Item
-								key={`${experience.title}-${experience.startedAt}`}
-								variant="outline"
-							>
-								<ItemMedia variant="icon">
-									<BriefcaseBusinessIcon />
-								</ItemMedia>
+						{availableDays.map((day) => (
+							<Item key={day} variant="muted">
 								<ItemContent>
-									<ItemTitle>{experience.title}</ItemTitle>
+									<ItemTitle>
+										{day.charAt(0).toUpperCase() + day.slice(1)}
+									</ItemTitle>
 									<ItemDescription>
-										{experience.organization} ·{" "}
-										{format(new Date(experience.startedAt), "MMM yyyy")} –{" "}
-										{experience.endedAt
-											? format(new Date(experience.endedAt), "MMM yyyy")
-											: "Present"}
+										{availability[day]?.ranges
+											.map((range) => `${range.start} – ${range.end}`)
+											.join(", ")}
 									</ItemDescription>
-									{experience.description && (
-										<ItemDescription>{experience.description}</ItemDescription>
-									)}
 								</ItemContent>
 							</Item>
 						))}
@@ -121,9 +206,9 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 				) : (
 					<Empty>
 						<EmptyHeader>
-							<EmptyTitle>No experience listed</EmptyTitle>
+							<EmptyTitle>No availability set</EmptyTitle>
 							<EmptyDescription>
-								Your mentor has not added any experience yet.
+								Your mentor has not set their availability yet.
 							</EmptyDescription>
 						</EmptyHeader>
 					</Empty>

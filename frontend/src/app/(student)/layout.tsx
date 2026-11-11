@@ -52,7 +52,9 @@ export default function Layout({
 
 	return (
 		<>
-			<Container>{children}</Container>
+			<Container className="lg:min-w-lg xl:min-w-xl 2xl:min-w-2xl">
+				{children}
+			</Container>
 			<StudentDock />
 		</>
 	);

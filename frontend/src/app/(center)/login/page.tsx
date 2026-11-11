@@ -1,6 +1,5 @@
 import {
 	Card,
-	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
@@ -16,9 +15,7 @@ export default function () {
 					Login with credentials you got from us
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="flex flex-col">
-				<PasswordLogin />
-			</CardContent>
+			<PasswordLogin />
 		</Card>
 	);
 }

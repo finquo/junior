@@ -3,6 +3,7 @@
 import { useQueryState } from "nuqs";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MutationButton } from "@/hooks/button";
@@ -38,31 +39,35 @@ export const PasswordLogin = () => {
 						mutate();
 					}}
 				>
-					<FieldGroup>
-						<Field>
-							<FieldLabel htmlFor="email">Email</FieldLabel>
-							<Input
-								id="email"
-								type="email"
-								autoComplete="email"
-								placeholder="name@example.com"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-							/>
-						</Field>
-						<Field>
-							<FieldLabel htmlFor="password">Password</FieldLabel>
-							<PasswordField
-								id="password"
-								autoComplete="current-password"
-								value={password}
-								onChange={setPassword}
-							/>
-						</Field>
-					</FieldGroup>
-					<Button type="submit" disabled={!email || !password}>
-						Sign In
-					</Button>
+					<CardContent>
+						<FieldGroup>
+							<Field>
+								<FieldLabel htmlFor="email">Email</FieldLabel>
+								<Input
+									id="email"
+									type="email"
+									autoComplete="email"
+									placeholder="name@example.com"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+								/>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="password">Password</FieldLabel>
+								<PasswordField
+									id="password"
+									autoComplete="current-password"
+									value={password}
+									onChange={setPassword}
+								/>
+							</Field>
+						</FieldGroup>
+					</CardContent>
+					<CardFooter>
+						<Button type="submit" disabled={!email || !password}>
+							Sign In
+						</Button>
+					</CardFooter>
 				</form>
 			)}
 			isPending={<Button disabled>Signing In...</Button>}
@@ -74,6 +79,7 @@ export const PasswordLogin = () => {
 						mutate();
 					}}
 				>
+					<CardContent />
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="email">Email</FieldLabel>

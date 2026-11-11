@@ -9,9 +9,9 @@ import {
 	schoolingZod,
 } from "backend/config";
 import { SelectStudentSchema } from "backend/db";
-import { sileo as toast } from "sileo";
-import { Countries, type CountryCodes } from "utils";
 import { useState } from "react";
+import { sileo as toast } from "sileo";
+import { Countries, type CountryCodes, PhoneNumberZod } from "utils";
 import type { z } from "zod";
 import Loader from "@/components/loader";
 import {
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
+import { useAuth } from "@/hooks/auth";
 import type { API_Returns } from "@/lib/api";
 import type { GetFormZod } from "@/lib/utils";
 import { snakeToTitleCase } from "@/lib/utils";
@@ -56,6 +57,7 @@ const studentEditSchema = SelectStudentSchema.pick({
 	schooling: true,
 	country: true,
 }).extend({
+	phoneNumber: PhoneNumberZod.optional(),
 	// Addresses are optional: all fields blank means no address (saved as null).
 	address: addressZod.partial(),
 	currentAddress: addressZod.partial(),
@@ -64,7 +66,9 @@ const studentEditSchema = SelectStudentSchema.pick({
 type StudentEditValues = z.infer<typeof studentEditSchema>;
 type AddressFormValues = StudentEditValues["address"];
 
-function toAddressValues(address: Address | null | undefined): AddressFormValues {
+function toAddressValues(
+	address: Address | null | undefined,
+): AddressFormValues {
 	return {
 		line1: address?.line1,
 		line2: address?.line2,
@@ -75,8 +79,12 @@ function toAddressValues(address: Address | null | undefined): AddressFormValues
 	};
 }
 
-function toFormValues(student: StudentData): StudentEditValues {
+function toFormValues(
+	student: StudentData,
+	phoneNumber: string | null | undefined,
+): StudentEditValues {
 	return {
+		phoneNumber: phoneNumber ?? undefined,
 		age: student.age ?? null,
 		grade: student.grade ?? null,
 		schooling: student.schooling ?? null,
@@ -96,7 +104,14 @@ const toServerAddress = (
 	const { line1, line2, city, state, postalCode, country } = address ?? {};
 	if (!line1 || !city || !state || !postalCode || !country) return undefined;
 
-	return { line1, line2: line2?.trim() || undefined, city, state, postalCode, country };
+	return {
+		line1,
+		line2: line2?.trim() || undefined,
+		city,
+		state,
+		postalCode,
+		country,
+	};
 };
 
 function StudentEditForm({ student }: { student: StudentData }) {
@@ -117,10 +132,16 @@ function StudentEditForm({ student }: { student: StudentData }) {
 		}),
 	);
 
-	const [sameAsPermanent, setSameAsPermanent] = useState(false);
+	const { data: user, refetch: refetchUser } = useAuth<true>();
+
+	const { mutateAsync: updatePhoneNumber } = useMutation(
+		api.common.updatePhoneNumber.mutationOptions(),
+	);
+
+	const [sameAsPermanent, setSameAsPermanent] = useState(true);
 
 	const form = useForm({
-		defaultValues: toFormValues(student),
+		defaultValues: toFormValues(student, user.phoneNumber),
 		validators: {
 			onSubmit: studentEditSchema as GetFormZod<typeof studentEditSchema>,
 		},
@@ -135,6 +156,11 @@ function StudentEditForm({ student }: { student: StudentData }) {
 					title: "Complete the address or clear all of its fields",
 				});
 				return;
+			}
+
+			if (value.phoneNumber !== (user.phoneNumber ?? undefined)) {
+				await updatePhoneNumber({ phoneNumber: value.phoneNumber ?? null });
+				refetchUser();
 			}
 
 			await mutateAsync({
@@ -156,135 +182,158 @@ function StudentEditForm({ student }: { student: StudentData }) {
 				form.handleSubmit();
 			}}
 		>
-			<FieldGroup>
-				<div className="grid grid-cols-2 gap-4">
+			<div className="grid gap-6 md:grid-cols-2">
+				<FieldGroup>
 					<form.Field
-						name="age"
+						name="phoneNumber"
 						children={(field) => (
 							<Field>
-								<FieldLabel htmlFor={field.name}>Age</FieldLabel>
+								<FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
 								<Input
 									id={field.name}
 									name={field.name}
-									type="number"
+									type="tel"
+									placeholder="+919876543210"
 									value={field.state.value ?? ""}
 									onBlur={field.handleBlur}
 									onChange={(e) =>
-										field.handleChange(
-											e.target.value === "" ? null : Number(e.target.value),
-										)
-									}
-									disabled={isPending}
-								/>
-								<FieldDescription>Your current age</FieldDescription>
-							</Field>
-						)}
-					/>
-
-					<form.Field
-						name="grade"
-						children={(field) => (
-							<Field>
-								<FieldLabel htmlFor={field.name}>Grade</FieldLabel>
-								<Input
-									id={field.name}
-									name={field.name}
-									type="number"
-									value={field.state.value ?? ""}
-									onBlur={field.handleBlur}
-									onChange={(e) =>
-										field.handleChange(
-											e.target.value === "" ? null : Number(e.target.value),
-										)
+										field.handleChange(e.target.value || undefined)
 									}
 									disabled={isPending}
 								/>
 								<FieldDescription>
-									The grade you are studying in
+									International format, e.g. +919876543210.
 								</FieldDescription>
 							</Field>
 						)}
 					/>
-				</div>
 
-				<div className="grid grid-cols-2 gap-4">
-					<form.Field
-						name="schooling"
-						children={(field) => (
-							<Field>
-								<FieldLabel htmlFor={field.name}>Schooling</FieldLabel>
-								<Select
-									value={field.state.value ?? ""}
-									onValueChange={(val) =>
-										field.handleChange((val as Schooling) || null)
-									}
-									disabled={isPending}
-								>
-									<SelectTrigger
+					<div className="grid grid-cols-2 gap-4">
+						<form.Field
+							name="age"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Age</FieldLabel>
+									<Input
 										id={field.name}
-										className="w-full min-w-[200px]"
-									>
-										<SelectValue placeholder="Select schooling" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectGroup>
-											{schoolingZod.options.map((school) => (
-												<SelectItem key={school} value={school}>
-													{snakeToTitleCase(school)}
-												</SelectItem>
-											))}
-										</SelectGroup>
-									</SelectContent>
-								</Select>
-								<FieldDescription>Your school board</FieldDescription>
-							</Field>
-						)}
-					/>
+										name={field.name}
+										type="number"
+										value={field.state.value ?? ""}
+										onBlur={field.handleBlur}
+										onChange={(e) =>
+											field.handleChange(
+												e.target.value === "" ? null : Number(e.target.value),
+											)
+										}
+										disabled={isPending}
+									/>
+									<FieldDescription>Your current age</FieldDescription>
+								</Field>
+							)}
+						/>
 
-					<form.Field
-						name="country"
-						children={(field) => (
-							<Field>
-								<FieldLabel htmlFor={field.name}>Country</FieldLabel>
-								<Select
-									value={field.state.value ?? ""}
-									onValueChange={(val) =>
-										field.handleChange((val as CountryCodes) || null)
-									}
-									disabled={isPending}
-								>
-									<SelectTrigger
+						<form.Field
+							name="grade"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Grade</FieldLabel>
+									<Input
 										id={field.name}
-										className="w-full min-w-[200px]"
+										name={field.name}
+										type="number"
+										value={field.state.value ?? ""}
+										onBlur={field.handleBlur}
+										onChange={(e) =>
+											field.handleChange(
+												e.target.value === "" ? null : Number(e.target.value),
+											)
+										}
+										disabled={isPending}
+									/>
+									<FieldDescription>
+										The grade you are studying in
+									</FieldDescription>
+								</Field>
+							)}
+						/>
+					</div>
+
+					<div className="grid grid-cols-2 gap-4">
+						<form.Field
+							name="schooling"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Schooling</FieldLabel>
+									<Select
+										value={field.state.value ?? ""}
+										onValueChange={(val) =>
+											field.handleChange((val as Schooling) || null)
+										}
+										disabled={isPending}
 									>
-										<SelectValue placeholder="Select country" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectGroup>
-											{Object.entries(Countries).map(([code, name]) => (
-												<SelectItem key={code} value={code}>
-													{name}
-												</SelectItem>
-											))}
-										</SelectGroup>
-									</SelectContent>
-								</Select>
-								<FieldDescription>Where you live</FieldDescription>
-							</Field>
-						)}
-					/>
-				</div>
+										<SelectTrigger
+											id={field.name}
+											className="w-full min-w-[200px]"
+										>
+											<SelectValue placeholder="Select schooling" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												{schoolingZod.options.map((school) => (
+													<SelectItem key={school} value={school}>
+														{snakeToTitleCase(school)}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+									<FieldDescription>Your school board</FieldDescription>
+								</Field>
+							)}
+						/>
 
-				<FieldSet>
-					<FieldLegend>Address</FieldLegend>
-					<FieldDescription>
-						Where the institute can reach your family
-					</FieldDescription>
+						<form.Field
+							name="country"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+									<Select
+										value={field.state.value ?? ""}
+										onValueChange={(val) =>
+											field.handleChange((val as CountryCodes) || null)
+										}
+										disabled={isPending}
+									>
+										<SelectTrigger
+											id={field.name}
+											className="w-full min-w-[200px]"
+										>
+											<SelectValue placeholder="Select country" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												{Object.entries(Countries).map(([code, name]) => (
+													<SelectItem key={code} value={code}>
+														{name}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+									<FieldDescription>Where you live</FieldDescription>
+								</Field>
+							)}
+						/>
+					</div>
+				</FieldGroup>
 
-					{form.state.values.address.line1 ||
-					form.state.values.address.city ||
-					form.state.values.address.postalCode ||
-					form.state.values.address.country ? (
+				<FieldGroup>
+					<FieldSet>
+						<FieldLegend>Address</FieldLegend>
+						<FieldDescription>
+							Where the institute can reach your family
+						</FieldDescription>
+
 						<FieldGroup>
 							<form.Field
 								name="address.line1"
@@ -410,82 +459,41 @@ function StudentEditForm({ student }: { student: StudentData }) {
 								/>
 							</div>
 						</FieldGroup>
-					) : (
-						<Alert>
-							<AlertTitle>No address saved yet</AlertTitle>
-							<AlertDescription>
-								Add an address so the institute can reach your family.
-							</AlertDescription>
-						</Alert>
-					)}
-				</FieldSet>
+					</FieldSet>
 
-				<FieldSet>
-					<FieldLegend>Current Address</FieldLegend>
-					<FieldDescription>Where you are staying right now</FieldDescription>
-					<Field orientation="horizontal">
-						<Checkbox
-							id="sameAsPermanent"
-							checked={sameAsPermanent}
-							onCheckedChange={(checked) => {
-								const isSame = checked === true;
-								setSameAsPermanent(isSame);
-								if (isSame) {
-									form.setFieldValue(
-										"currentAddress",
-										form.getFieldValue("address"),
-									);
-								}
-							}}
-							disabled={isPending}
-						/>
-						<FieldLabel htmlFor="sameAsPermanent">
-							Same as permanent address
-						</FieldLabel>
-					</Field>
+					<FieldSet>
+						<FieldLegend>Current Address</FieldLegend>
+						<FieldDescription>Where you are staying right now</FieldDescription>
+						<Field orientation="horizontal">
+							<Checkbox
+								id="sameAsPermanent"
+								checked={sameAsPermanent}
+								onCheckedChange={(checked) => {
+									const isSame = checked === true;
+									setSameAsPermanent(isSame);
+									if (isSame) {
+										form.setFieldValue(
+											"currentAddress",
+											form.getFieldValue("address"),
+										);
+									}
+								}}
+								disabled={isPending}
+							/>
+							<FieldLabel htmlFor="sameAsPermanent">
+								Same as permanent address
+							</FieldLabel>
+						</Field>
 
-					{!sameAsPermanent && (
-						<FieldGroup>
-							<form.Field
-								name="currentAddress.line1"
-								children={(field) => (
-									<Field>
-										<FieldLabel htmlFor={field.name}>Street Line 1</FieldLabel>
-										<Input
-											id={field.name}
-											name={field.name}
-											value={field.state.value ?? ""}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											disabled={isPending}
-										/>
-									</Field>
-								)}
-							/>
-							<form.Field
-								name="currentAddress.line2"
-								children={(field) => (
-									<Field>
-										<FieldLabel htmlFor={field.name}>
-											Street Line 2 (optional)
-										</FieldLabel>
-										<Input
-											id={field.name}
-											name={field.name}
-											value={field.state.value ?? ""}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											disabled={isPending}
-										/>
-									</Field>
-								)}
-							/>
-							<div className="grid grid-cols-2 gap-4">
+						{!sameAsPermanent && (
+							<FieldGroup>
 								<form.Field
-									name="currentAddress.city"
+									name="currentAddress.line1"
 									children={(field) => (
 										<Field>
-											<FieldLabel htmlFor={field.name}>City</FieldLabel>
+											<FieldLabel htmlFor={field.name}>
+												Street Line 1
+											</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -498,10 +506,12 @@ function StudentEditForm({ student }: { student: StudentData }) {
 									)}
 								/>
 								<form.Field
-									name="currentAddress.state"
+									name="currentAddress.line2"
 									children={(field) => (
 										<Field>
-											<FieldLabel htmlFor={field.name}>State</FieldLabel>
+											<FieldLabel htmlFor={field.name}>
+												Street Line 2 (optional)
+											</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -513,45 +523,81 @@ function StudentEditForm({ student }: { student: StudentData }) {
 										</Field>
 									)}
 								/>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<form.Field
-									name="currentAddress.postalCode"
-									children={(field) => (
-										<Field>
-											<FieldLabel htmlFor={field.name}>Postal Code</FieldLabel>
-											<Input
-												id={field.name}
-												name={field.name}
-												value={field.state.value ?? ""}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												disabled={isPending}
-											/>
-										</Field>
-									)}
-								/>
-								<form.Field
-									name="currentAddress.country"
-									children={(field) => (
-										<Field>
-											<FieldLabel htmlFor={field.name}>Country</FieldLabel>
-											<Input
-												id={field.name}
-												name={field.name}
-												value={field.state.value ?? ""}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												disabled={isPending}
-											/>
-										</Field>
-									)}
-								/>
-							</div>
-						</FieldGroup>
-					)}
-				</FieldSet>
-			</FieldGroup>
+								<div className="grid grid-cols-2 gap-4">
+									<form.Field
+										name="currentAddress.city"
+										children={(field) => (
+											<Field>
+												<FieldLabel htmlFor={field.name}>City</FieldLabel>
+												<Input
+													id={field.name}
+													name={field.name}
+													value={field.state.value ?? ""}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													disabled={isPending}
+												/>
+											</Field>
+										)}
+									/>
+									<form.Field
+										name="currentAddress.state"
+										children={(field) => (
+											<Field>
+												<FieldLabel htmlFor={field.name}>State</FieldLabel>
+												<Input
+													id={field.name}
+													name={field.name}
+													value={field.state.value ?? ""}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													disabled={isPending}
+												/>
+											</Field>
+										)}
+									/>
+								</div>
+								<div className="grid grid-cols-2 gap-4">
+									<form.Field
+										name="currentAddress.postalCode"
+										children={(field) => (
+											<Field>
+												<FieldLabel htmlFor={field.name}>
+													Postal Code
+												</FieldLabel>
+												<Input
+													id={field.name}
+													name={field.name}
+													value={field.state.value ?? ""}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													disabled={isPending}
+												/>
+											</Field>
+										)}
+									/>
+									<form.Field
+										name="currentAddress.country"
+										children={(field) => (
+											<Field>
+												<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+												<Input
+													id={field.name}
+													name={field.name}
+													value={field.state.value ?? ""}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													disabled={isPending}
+												/>
+											</Field>
+										)}
+									/>
+								</div>
+							</FieldGroup>
+						)}
+					</FieldSet>
+				</FieldGroup>
+			</div>
 
 			<form.Subscribe
 				selector={(state) => [state.canSubmit, state.isDirty]}
@@ -560,7 +606,9 @@ function StudentEditForm({ student }: { student: StudentData }) {
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => form.reset(toFormValues(student))}
+							onClick={() =>
+								form.reset(toFormValues(student, user.phoneNumber))
+							}
 							disabled={!isDirty || isPending}
 						>
 							Reset
@@ -609,7 +657,7 @@ export default function Page() {
 					Update your student details and address
 				</FrameDescription>
 			</FrameHeader>
-			<FramePanel>
+			<FramePanel className="md:min-w-xl lg:min-w-3xl">
 				<StudentEditForm student={record} />
 			</FramePanel>
 		</Frame>
