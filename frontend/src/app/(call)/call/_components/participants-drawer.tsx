@@ -5,7 +5,6 @@ import { MicIcon, MicOffIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { sileo as toast } from "sileo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -27,6 +26,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { getInitials } from "@/lib/utils";
+import { ParticipantRole } from "./video-tile";
 
 function isVoiceOn(participant: Participant) {
 	return participant.audio !== "" && participant.muted === false;
@@ -100,10 +100,7 @@ export function ParticipantsDrawer({
 										) : (
 											<MicOffIcon aria-label="Voice off" />
 										)}
-										{participant.isHost && <Badge>Host</Badge>}
-										{!participant.isHost && participant.isManager && (
-											<ColorBadge>Manager</ColorBadge>
-										)}
+										<ParticipantRole user={participant} />
 									</ItemActions>
 								</Item>
 							);

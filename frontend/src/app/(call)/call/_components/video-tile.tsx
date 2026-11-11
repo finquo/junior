@@ -15,7 +15,7 @@ import {
 import type { ReactElement } from "react";
 import { Frame } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -136,6 +136,18 @@ function TileLabel({
 					inline={inline}
 				/>
 			)}
+		</FetchUser>
+	);
+}
+
+export function ParticipantRole({ user }: { user: SessionUser }) {
+	const fallback = <ColorBadge>{roleLabel("guest")}</ColorBadge>;
+
+	if (!user.userIdentity || isGuestId(user.userIdentity)) return fallback;
+
+	return (
+		<FetchUser id={user.userIdentity} isPending={fallback} notFound={fallback}>
+			{(dbUser) => <ColorBadge>{roleLabel(dbUser.role)}</ColorBadge>}
 		</FetchUser>
 	);
 }
