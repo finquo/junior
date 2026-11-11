@@ -12,6 +12,7 @@ import {
 	UpdateStudentSchema,
 } from "@/db/zod";
 import { auth, db } from "@/services";
+import { appOrigin } from "@/utils/app-url";
 import { MapRole } from "@/utils/role";
 import { orderLessons } from "./program";
 
@@ -424,7 +425,7 @@ export const studentRouter = {
 				throw getError("BAD_REQUEST", "Student has no phone number");
 			}
 
-			const link = `${new URL(context.req.url).origin}/analytics/students/${input.id}`;
+			const link = appOrigin(context.req.url, `/analytics/students/${input.id}`);
 
 			await notifyStudentReport({
 				name: student.user.name,

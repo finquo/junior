@@ -12,7 +12,9 @@ export function createAuth(db: Database) {
 	return betterAuth({
 		appName: "Finquo Junior",
 		secret: process.env.BETTER_AUTH_SECRET,
-		baseURL: process.env.BETTER_AUTH_URL ?? {
+		baseURL: process.env.DOMAIN_NAME
+			? `https://${process.env.DOMAIN_NAME}`
+			: {
 			allowedHosts: getAllowedHosts(),
 			protocol: process.env.NODE_ENV === "development" ? "http" : "https",
 		},

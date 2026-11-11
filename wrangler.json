@@ -14,7 +14,7 @@
 	"keep_vars": true,
 	"vars": {
 		"CORS_ORIGIN": "https://junior.finquo.workers.dev",
-		"BETTER_AUTH_URL": "https://junior.finquo.workers.dev",
+		"DOMAIN_NAME": "junior.finquo.workers.dev",
 		"NODE_ENV": "production",
 		"EXPORT": true,
 		"BUN_VERSION": "1.2.15",

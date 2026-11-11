@@ -21,6 +21,7 @@ import {
 import { notifySlotSummary } from "@/chat/notify";
 import { schema } from "@/db";
 import { db } from "@/services";
+import { appOrigin } from "@/utils/app-url";
 import { MapRole } from "@/utils/role";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "../procedure";
 
@@ -427,7 +428,7 @@ export const mediaRouter = {
 		.handler(async ({ input, context }) => {
 			// Demo sandbox. Remove this branch before deploying.
 			if (input.id === "demo") {
-				const link = `${new URL(context.req.url).origin}/analytics/slots/demo`;
+				const link = appOrigin(context.req.url, "/analytics/slots/demo");
 
 				await notifySlotSummary({
 					name: "Demo",
@@ -470,7 +471,7 @@ export const mediaRouter = {
 				throw getError("BAD_REQUEST", "Student has no phone number");
 			}
 
-			const link = `${new URL(context.req.url).origin}/analytics/slots/${input.id}`;
+			const link = appOrigin(context.req.url, `/analytics/slots/${input.id}`);
 
 			await notifySlotSummary({
 				name: student.name,

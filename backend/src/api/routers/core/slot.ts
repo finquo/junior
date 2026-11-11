@@ -7,6 +7,7 @@ import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, UpdateSlotSchema } from "@/db/zod";
 import { db } from "@/services";
+import { appOrigin } from "@/utils/app-url";
 import { MapRole } from "@/utils/role";
 import {
 	getDayBounds,
@@ -174,7 +175,7 @@ export const slotRouter = {
 				await notifySlotCreated({
 					startTime: slot.startTime,
 					lessonName: lesson?.name ?? "a class",
-					joinLink: `${new URL(context.req.url).origin}/call/${slot.id}`,
+					joinLink: appOrigin(context.req.url, `/call/${slot.id}`),
 					student: userById.get(slot.studentId ?? ""),
 					teacher: userById.get(slot.teacherId ?? ""),
 					scheduler: userById.get(slot.schedulerId ?? ""),
@@ -298,7 +299,7 @@ export const slotRouter = {
 				await notifySlotUpdated({
 					startTime: slot.startTime,
 					lessonName: lesson?.name ?? "a class",
-					joinLink: `${new URL(context.req.url).origin}/call/${id}`,
+					joinLink: appOrigin(context.req.url, `/call/${id}`),
 					student: userById.get(slot.studentId ?? ""),
 					teacher: userById.get(slot.teacherId ?? ""),
 					scheduler: userById.get(slot.schedulerId ?? ""),
@@ -386,7 +387,7 @@ export const slotRouter = {
 				await notifySlotUpdated({
 					startTime: slot.startTime,
 					lessonName: lesson?.name ?? "a class",
-					joinLink: `${new URL(context.req.url).origin}/call/${id}`,
+					joinLink: appOrigin(context.req.url, `/call/${id}`),
 					student: userById.get(slot.studentId ?? ""),
 					teacher: userById.get(slot.teacherId ?? ""),
 					scheduler: userById.get(slot.schedulerId ?? ""),

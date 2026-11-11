@@ -14,6 +14,7 @@ Finquo ("junior") monorepo: Bun workspaces driven by Vite+ (`vp`). Frontend is N
 - Never duplicate a backend Zod schema, type, or lookup dictionary on the frontend; import it from `backend/config` / `backend/db` / `utils` as the single source of truth.
 - Read official online docs instead of reverse-engineering bundled `node_modules` code.
 - Stay inside the workspace you are editing; treat other workspaces as read-only references.
+- Give small URL/helpers an optional path parameter instead of templating paths at each call site (e.g. `appOrigin(req.url, "/call/" + id)`).
 
 ## Agent guides
 
