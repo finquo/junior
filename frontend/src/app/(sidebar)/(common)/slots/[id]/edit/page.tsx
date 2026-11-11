@@ -2,14 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import {
-	parseAsInteger,
-	parseAsIsoDate,
-	parseAsString,
-	useQueryState,
-	useQueryStates,
-} from "nuqs";
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import Loader from "@/components/loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -33,38 +26,26 @@ function toTimeValue(date: Date) {
 }
 
 function EditSlot({ slot }: { slot: SlotData }) {
-	const seeded = useRef(false);
-	const [, setParams] = useQueryStates({
-		studentId: parseAsString,
-		teacherId: parseAsString,
-		schedulerId: parseAsString,
-		lessonId: parseAsString,
-		duration: parseAsInteger,
-		date: parseAsIsoDate,
-		time: parseAsString,
-	});
+	const start = new Date(slot.startTime);
+	const end = new Date(slot.expectedEndTime);
 
-	useEffect(() => {
-		if (seeded.current) return;
-		seeded.current = true;
+	const [teacherId, setTeacherId] = useState<string | null>(slot.teacherId);
+	const [schedulerId, setSchedulerId] = useState<string | null>(
+		slot.schedulerId,
+	);
+	const [date, setDate] = useState(
+		new Date(start.getFullYear(), start.getMonth(), start.getDate()),
+	);
+	const [duration, setDuration] = useState(
+		Math.round((end.getTime() - start.getTime()) / 60_000),
+	);
+	const [time, setTime] = useState(toTimeValue(start));
 
-		const start = new Date(slot.startTime);
-		const end = new Date(slot.expectedEndTime);
-
-		setParams({
-			studentId: slot.studentId,
-			teacherId: slot.teacherId,
-			schedulerId: slot.schedulerId,
-			lessonId: slot.lessonId,
-			duration: Math.round((end.getTime() - start.getTime()) / 60_000),
-			date: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
-			time: toTimeValue(start),
-		});
-	}, [slot, setParams]);
+	const onDateChange = (d: Date | undefined) => {
+		if (d) setDate(d);
+	};
 
 	const { data: teachers } = useQuery(api.core.teacher.list.queryOptions());
-	const [teacherId] = useQueryState("teacherId");
-	const [date] = useQueryState("date", parseAsIsoDate);
 
 	const availability = teachers?.find(
 		(teacher) => teacher.id === teacherId,
@@ -74,7 +55,7 @@ function EditSlot({ slot }: { slot: SlotData }) {
 		...api.core.slot.check.queryOptions({
 			input: {
 				teacherId: teacherId ?? "",
-				date: date ?? new Date(),
+				date,
 				excludeSlotId: slot.id,
 			},
 		}),
@@ -84,11 +65,19 @@ function EditSlot({ slot }: { slot: SlotData }) {
 	return (
 		<ResizablePanelGroup orientation="horizontal">
 			<ResizablePanel className="p-3">
-				<EditUsersCard />
+				<EditUsersCard
+					slot={slot}
+					teacherId={teacherId}
+					onTeacherChange={setTeacherId}
+					schedulerId={schedulerId}
+					onSchedulerChange={setSchedulerId}
+					duration={duration}
+					onDurationChange={setDuration}
+				/>
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel className="p-3">
-				<CalenderPicker />
+				<CalenderPicker value={date} onChange={onDateChange} />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
@@ -97,11 +86,22 @@ function EditSlot({ slot }: { slot: SlotData }) {
 						<TimeCard
 							availability={availability}
 							unavailable={check?.unavailable}
+							duration={duration}
+							date={date ?? null}
+							time={time}
+							onTimeChange={setTime}
 						/>
 					</div>
 					<Separator />
 					<div className="p-3">
-						<EditPreviewCard slotId={slot.id} />
+						<EditPreviewCard
+							slot={slot}
+							teacherId={teacherId}
+							schedulerId={schedulerId}
+							date={date}
+							duration={duration}
+							time={time}
+						/>
 					</div>
 				</div>
 			</ResizablePanel>
@@ -131,7 +131,7 @@ function Session({ slotId }: { slotId: string }) {
 		);
 	}
 
-	return <EditSlot slot={data} />;
+	return <EditSlot key={data.id} slot={data} />;
 }
 
 export default function Page() {

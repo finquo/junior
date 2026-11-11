@@ -35,16 +35,27 @@ export function UserSelector<
 	name = "user",
 	label = "User",
 	defaultUser,
+	value,
+	onChange,
 	onSelect,
 	api,
 }: {
 	name?: string;
 	label?: string;
 	defaultUser?: string;
+	value?: string;
+	onChange?: (id: string) => void;
 	onSelect?: (item: TData[number]) => void;
 	api: UseQueryOptions<TData, TError, TData, TQueryKey>;
 }) {
-	const [user, setUser] = useQueryState(name);
+	const [urlUser, setUrlUser] = useQueryState(name);
+	const user = value ?? urlUser;
+
+	const setUser = (id: string) => {
+		if (onChange) return onChange(id);
+		setUrlUser(id);
+	};
+
 	const { data: list, isPending } = useQuery(api);
 
 	useEffect(() => {
@@ -243,8 +254,24 @@ export function LessonSelector({
 	);
 }
 
-export function PeriodSelector() {
-	const [duration, setDuration] = useQueryState("duration", parseAsInteger);
+export function PeriodSelector({
+	value,
+	onChange,
+}: {
+	value?: number;
+	onChange?: (duration: number) => void;
+}) {
+	const [urlDuration, setUrlDuration] = useQueryState(
+		"duration",
+		parseAsInteger,
+	);
+	const duration = value ?? urlDuration;
+
+	const setDuration = (d: number) => {
+		if (onChange) return onChange(d);
+		setUrlDuration(d);
+	};
+
 	const options =
 		duration && !period.includes(duration)
 			? [...period, duration].sort((a, b) => a - b)

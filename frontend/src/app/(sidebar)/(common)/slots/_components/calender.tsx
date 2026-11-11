@@ -16,8 +16,20 @@ import {
 } from "@/components/ui/card";
 import { getNextDayOfWeek, getToday, getTomorrow } from "@/lib/calender";
 
-export function CalenderPicker() {
-	const [date, setDate] = useQueryState("date", parseAsIsoDate);
+export function CalenderPicker({
+	value,
+	onChange,
+}: {
+	value?: Date;
+	onChange?: (date: Date | undefined) => void;
+}) {
+	const [urlDate, setUrlDate] = useQueryState("date", parseAsIsoDate);
+
+	const date = value ?? urlDate ?? undefined;
+	const setDate = (d: Date | undefined) => {
+		if (onChange) return onChange(d);
+		setUrlDate(d ?? null);
+	};
 
 	return (
 		<Card>
@@ -31,9 +43,9 @@ export function CalenderPicker() {
 					required
 					mode="single"
 					disablePreviousDates
-					selected={date ?? undefined}
-					onSelect={(d) => setDate(d ?? null)}
-					defaultMonth={date ?? undefined}
+					selected={date}
+					onSelect={(d) => setDate(d ?? undefined)}
+					defaultMonth={date}
 					showOutsideDays={false}
 				/>
 			</CardContent>

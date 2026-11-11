@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	CalendarCheckIcon,
@@ -12,7 +12,6 @@ import {
 	UsersIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { parseAsInteger, parseAsIsoDate, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { sileo as toast } from "sileo";
 import { mergeDateWithTimeString } from "utils";
@@ -50,6 +49,9 @@ import { MutationButton } from "@/hooks/button";
 import { FetchLesson } from "@/hooks/lesson";
 import { useHasRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
+import type { API_Returns } from "@/lib/api";
+
+type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
 function SummaryRow({
 	icon,
@@ -75,60 +77,39 @@ function NotSelected() {
 	return <Badge variant="outline">Not selected</Badge>;
 }
 
-export function EditPreviewCard({ slotId }: { slotId: string }) {
+export function EditPreviewCard({
+	slot,
+	teacherId,
+	schedulerId,
+	date,
+	duration,
+	time,
+}: {
+	slot: SlotData;
+	teacherId: string | null;
+	schedulerId: string | null;
+	date: Date;
+	duration: number;
+	time: string;
+}) {
 	const router = useRouter();
 	const isAdmin = useHasRole("admin");
-	const [studentId] = useQueryState("studentId");
-	const [teacherId] = useQueryState("teacherId");
-	const [schedulerId] = useQueryState("schedulerId");
-	const [lessonId] = useQueryState("lessonId");
-	const [duration] = useQueryState("duration", parseAsInteger.withDefault(25));
-	const [date] = useQueryState("date", parseAsIsoDate);
-	const [selectedTime] = useQueryState("time", {
-		defaultValue: "10:00",
-	});
-
-	const isComplete = Boolean(
-		studentId && teacherId && schedulerId && lessonId && date && selectedTime,
-	);
-
-	const formattedDate = date?.toLocaleDateString("en-US", {
-		weekday: "long",
-		day: "numeric",
-		month: "long",
-	});
-
-	const isCheckDisabled = Boolean(!teacherId || !date);
-
-	const dateWithTime = date
-		? selectedTime
-			? mergeDateWithTimeString(date, selectedTime)
-			: date
-		: new Date();
-
-	const startTime = date && selectedTime ? dateWithTime : undefined;
 	const adminSchedulerId = isAdmin ? (schedulerId ?? undefined) : undefined;
 
-	const { data: slot } = useQuery(
-		api.core.slot.get.queryOptions({ input: { id: slotId } }),
-	);
-
-	const expectedEndTime =
-		startTime && new Date(startTime.getTime() + duration * 60_000);
+	const startTime = mergeDateWithTimeString(date, time);
+	const expectedEndTime = new Date(startTime.getTime() + duration * 60_000);
 
 	const timeChanged = Boolean(
-		slot &&
-			startTime &&
-			expectedEndTime &&
-			(startTime.getTime() !== new Date(slot.startTime).getTime() ||
-				expectedEndTime.getTime() !== new Date(slot.expectedEndTime).getTime()),
+		startTime.getTime() !== new Date(slot.startTime).getTime() ||
+			expectedEndTime.getTime() !==
+				new Date(slot.expectedEndTime).getTime(),
 	);
 
 	const reschedule = useMutation(
 		api.core.slot.reschedule.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
-					api.core.slot.get.queryKey({ input: { id: slotId } }),
+					api.core.slot.get.queryKey({ input: { id: slot.id } }),
 					api.core.slot.list.queryKey(),
 				]);
 			},
@@ -139,13 +120,13 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 		api.core.slot.update.mutationOptions({
 			onSuccess: () => {
 				refetchAPIs([
-					api.core.slot.get.queryKey({ input: { id: slotId } }),
+					api.core.slot.get.queryKey({ input: { id: slot.id } }),
 					api.core.slot.list.queryKey(),
 				]);
 				toast.success({
 					title: "Session updated successfully!",
 				});
-				router.push(`/slots/${slotId}` as "/");
+				router.push(`/slots/${slot.id}` as "/");
 			},
 		}),
 	);
@@ -153,21 +134,21 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 	const isSaving = reschedule.isPending || update.isPending;
 
 	const handleSave = async () => {
-		if (!teacherId || !lessonId || !startTime || !expectedEndTime) return;
+		if (!teacherId) return;
 
 		try {
 			if (timeChanged) {
 				await reschedule.mutateAsync({
-					id: slotId,
+					id: slot.id,
 					startTime,
 					expectedEndTime,
 				});
 			}
 
 			await update.mutateAsync({
-				id: slotId,
+				id: slot.id,
 				teacherId,
-				lessonId,
+				lessonId: slot.lessonId,
 				schedulerId: adminSchedulerId,
 			});
 		} catch (error) {
@@ -178,30 +159,29 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 		}
 	};
 
+	const isCheckDisabled = !teacherId;
+	const dateWithTime = startTime;
+
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Preview Changes</CardTitle>
 				<CardDescription>Review the details before saving.</CardDescription>
 				<CardAction>
-					<Badge variant={isComplete ? "success" : "warning"}>
-						{isComplete ? "Ready to save" : "Incomplete"}
+					<Badge variant={teacherId ? "success" : "warning"}>
+						{teacherId ? "Ready to save" : "Incomplete"}
 					</Badge>
 				</CardAction>
 			</CardHeader>
 			<CardContent>
 				<ItemGroup className="grid grid-cols-2">
 					<SummaryRow icon={<UserRoundIcon />} label="Student">
-						{studentId ? (
-							<FetchUser
-								id={studentId}
-								isPending={<Skeleton className="h-4 w-24" />}
-							>
-								{(user) => user.name}
-							</FetchUser>
-						) : (
-							<NotSelected />
-						)}
+						<FetchUser
+							id={slot.studentId}
+							isPending={<Skeleton className="h-4 w-24" />}
+						>
+							{(user) => user.name}
+						</FetchUser>
 					</SummaryRow>
 					<SummaryRow icon={<GraduationCapIcon />} label="Teacher">
 						{teacherId ? (
@@ -228,22 +208,22 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 						)}
 					</SummaryRow>
 					<SummaryRow icon={<BookOpenIcon />} label="Lesson">
-						{lessonId ? (
-							<FetchLesson
-								id={lessonId}
-								isPending={<Skeleton className="h-4 w-24" />}
-							>
-								{(lesson) => lesson.name}
-							</FetchLesson>
-						) : (
-							<NotSelected />
-						)}
+						<FetchLesson
+							id={slot.lessonId}
+							isPending={<Skeleton className="h-4 w-24" />}
+						>
+							{(lesson) => lesson.name}
+						</FetchLesson>
 					</SummaryRow>
 					<SummaryRow icon={<CalendarDaysIcon />} label="Date">
-						{formattedDate ?? <NotSelected />}
+						{date.toLocaleDateString("en-US", {
+							weekday: "long",
+							day: "numeric",
+							month: "long",
+						})}
 					</SummaryRow>
 					<SummaryRow icon={<ClockIcon />} label="Time">
-						<span>{selectedTime}</span>
+						<span>{time}</span>
 						<Badge variant="secondary">{duration} mins</Badge>
 					</SummaryRow>
 				</ItemGroup>
@@ -290,7 +270,7 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 								mutate={(mutate) => (
 									<DropdownMenuItem
 										onSelect={() => {
-											if (!teacherId || !date) return;
+											if (!teacherId) return;
 											mutate({
 												id: teacherId,
 												date: dateWithTime,
@@ -327,12 +307,12 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 									<DropdownMenuItem
 										disabled={isCheckDisabled}
 										onSelect={() => {
-											if (!teacherId || !date) return;
+											if (!teacherId) return;
 											mutate({
 												teacherId,
 												date: dateWithTime,
 												period: duration,
-												excludeSlotId: slotId,
+												excludeSlotId: slot.id,
 											});
 										}}
 									>
@@ -342,7 +322,7 @@ export function EditPreviewCard({ slotId }: { slotId: string }) {
 							/>
 						</DropdownMenuContent>
 					</DropdownMenu>
-					<Button disabled={!isComplete || isSaving} onClick={handleSave}>
+					<Button disabled={!teacherId || isSaving} onClick={handleSave}>
 						{isSaving ? <Spinner /> : <CalendarCheckIcon />}
 						Save
 					</Button>

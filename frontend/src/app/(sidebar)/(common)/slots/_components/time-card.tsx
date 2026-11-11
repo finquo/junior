@@ -33,15 +33,35 @@ import type { API_Returns } from "@/lib/api";
 export function TimeCard({
 	availability,
 	unavailable,
+	duration: durationProp,
+	date: dateProp,
+	time: timeProp,
+	onTimeChange,
 }: {
 	availability?: Availability | null;
 	unavailable?: API_Returns["core"]["slot"]["check"]["unavailable"];
+	duration?: number;
+	date?: Date | null;
+	time?: string;
+	onTimeChange?: (time: string) => void;
 }) {
-	const [duration] = useQueryState("duration", parseAsInteger.withDefault(25));
-	const [date] = useQueryState("date", parseAsIsoDate);
-	const [selectedTime, setSelectedTime] = useQueryState("time", {
+	const [urlDuration] = useQueryState(
+		"duration",
+		parseAsInteger.withDefault(25),
+	);
+	const [urlDate] = useQueryState("date", parseAsIsoDate);
+	const [urlTime, setUrlTime] = useQueryState("time", {
 		defaultValue: "10:00",
 	});
+
+	const duration = durationProp ?? urlDuration;
+	const date = dateProp !== undefined ? dateProp : urlDate;
+	const selectedTime = timeProp ?? urlTime;
+
+	const setSelectedTime = (time: string) => {
+		if (onTimeChange) return onTimeChange(time);
+		setUrlTime(time);
+	};
 
 	const upperLimit = "17:00";
 	const lowerLimit = "09:00";
