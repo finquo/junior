@@ -11,7 +11,6 @@ import {
 	PinIcon,
 	UserIcon,
 	UserXIcon,
-	VideoOffIcon,
 } from "lucide-react";
 import type { ReactElement } from "react";
 import { Frame } from "@/components/reui/frame";
@@ -26,16 +25,29 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FetchUser } from "@/hooks/user";
 import { cn } from "@/lib/utils";
 import {
+	isGuestId,
 	isVoiceOn,
 	participantName,
-	participantRole,
 	roleLabel,
 	type SessionUser,
 } from "./utils";
 
-function RemoteUserMenu({ user }: { user: SessionUser }) {
+export type TileMenu = {
+	pinned: boolean;
+	moderator: boolean;
+	onPin: () => void;
+	onMute: () => void;
+	onRemove: () => void;
+};
+
+function RemoteUserMenu({ user, menu }: { user: SessionUser; menu: TileMenu }) {
+	const name = participantName(user);
+	const pinLabel = menu.pinned ? "Unpin" : "Pin";
+	const muteDisabled = !isVoiceOn(user);
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -43,32 +55,88 @@ function RemoteUserMenu({ user }: { user: SessionUser }) {
 					variant="secondary"
 					size="icon-sm"
 					className="absolute top-2 right-2"
-					aria-label={`Actions for ${participantName(user)}`}
+					aria-label={`Actions for ${name}`}
 				>
 					<EllipsisIcon />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>{participantName(user)}</DropdownMenuLabel>
-				<DropdownMenuItem>
-					<MicOffIcon />
-					Mute
-				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<VideoOffIcon />
-					Stop video
-				</DropdownMenuItem>
-				<DropdownMenuItem>
+				<DropdownMenuLabel>{name}</DropdownMenuLabel>
+				<DropdownMenuItem onSelect={menu.onPin}>
 					<PinIcon />
-					Pin
+					{pinLabel}
 				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem variant="destructive">
-					<UserXIcon />
-					Remove
-				</DropdownMenuItem>
+				{menu.moderator && (
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem disabled={muteDisabled} onSelect={menu.onMute}>
+							<MicOffIcon />
+							Mute
+						</DropdownMenuItem>
+						<DropdownMenuItem variant="destructive" onSelect={menu.onRemove}>
+							<UserXIcon />
+							Remove
+						</DropdownMenuItem>
+					</>
+				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
+	);
+}
+
+function TileLabels({
+	name,
+	role,
+	inline,
+}: {
+	name: string;
+	role: string;
+	inline: boolean;
+}) {
+	return (
+		<span
+			className={
+				inline ? "flex items-center gap-1.5" : "flex flex-col items-start gap-1"
+			}
+		>
+			<span className="font-medium text-sm">{name}</span>
+			<span
+				className={
+					inline ? "text-muted-foreground" : "text-muted-foreground text-xs"
+				}
+			>
+				{roleLabel(role)}
+			</span>
+		</span>
+	);
+}
+
+function TileLabel({
+	user,
+	role,
+	inline = false,
+}: {
+	user: SessionUser;
+	role?: string;
+	inline?: boolean;
+}) {
+	const name = participantName(user);
+	const fallback = (
+		<TileLabels name={name} role={role ?? "guest"} inline={inline} />
+	);
+
+	if (!user.userIdentity || isGuestId(user.userIdentity)) return fallback;
+
+	return (
+		<FetchUser id={user.userIdentity} isPending={fallback} notFound={fallback}>
+			{(dbUser) => (
+				<TileLabels
+					name={dbUser.name}
+					role={role ?? dbUser.role}
+					inline={inline}
+				/>
+			)}
+		</FetchUser>
 	);
 }
 
@@ -77,10 +145,10 @@ export function VideoTile({
 	className,
 	voiceOn,
 	videoOn,
-	role: roleProp,
+	role,
 	avatar,
-	menu = false,
-	mirror = false,
+	menu,
+	self = false,
 	children,
 }: {
 	user: SessionUser;
@@ -89,14 +157,12 @@ export function VideoTile({
 	videoOn?: boolean;
 	role?: string;
 	avatar?: string;
-	menu?: boolean;
-	mirror?: boolean;
+	menu?: TileMenu;
+	self?: boolean;
 	children?: ReactElement;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
 	const video = videoOn ?? user.bVideoOn;
-	const role = roleProp ?? participantRole(user) ?? "guest";
-	const roleName = roleLabel(role);
 	const name = participantName(user);
 
 	return (
@@ -104,7 +170,7 @@ export function VideoTile({
 			{children}
 			<div className="relative aspect-video">
 				<VideoPlayerContainerComponent
-					style={{ transform: mirror ? "scaleX(-1)" : undefined }}
+					style={{ transform: self ? "scaleX(-1)" : undefined }}
 				>
 					<VideoPlayerComponent user={user} />
 				</VideoPlayerContainerComponent>
@@ -117,20 +183,15 @@ export function VideoTile({
 									<UserIcon />
 								</AvatarFallback>
 							</Avatar>
-							<div className="flex flex-col items-start gap-1">
-								<span className="font-medium text-sm">{name}</span>
-								<span className="text-muted-foreground text-xs">
-									{roleName}
-								</span>
-							</div>
+							<TileLabel user={user} role={role} />
 						</div>
 					</div>
 				)}
 				<Badge variant="secondary" className="absolute bottom-2 left-2 gap-1.5">
 					{voice ? <MicIcon /> : <MicOffIcon />}
-					{video && name}
+					{video && !self && <TileLabel user={user} role={role} inline />}
 				</Badge>
-				{menu && <RemoteUserMenu user={user} />}
+				{menu && <RemoteUserMenu user={user} menu={menu} />}
 			</div>
 		</Frame>
 	);

@@ -15,23 +15,33 @@ export function timingSafeEqual(a: string, b: string) {
 }
 
 export async function generateZoomToken(
-	data: {
-		id: string;
-		user?: string;
-	},
-	role: "host" | "guest",
-) {
+	id: string,
+	role: "guest",
+): Promise<string>;
+
+export async function generateZoomToken(
+	id: string,
+	role: "host" | "user",
+	user: string,
+): Promise<string>;
+
+export async function generateZoomToken(
+	id: string,
+	role: "host" | "user" | "guest",
+	user?: string,
+): Promise<string> {
 	const iat = Math.round(Date.now() / 1000) - 30;
 	const exp = iat + 60 * 60 * 2;
+	const userId = user ?? `guest-${crypto.randomUUID()}`;
 
 	return sign(
 		{
 			app_key: process.env.ZOOM_SDK_KEY,
-			tpc: data.id,
-			session_key: data.id,
+			tpc: id,
+			session_key: id,
 			role_type: role === "host" ? 1 : 0,
-			user_key: data.user,
-			user_identity: data.user,
+			user_key: userId,
+			user_identity: userId,
 			cloud_recording_option: 1,
 			version: 1,
 			iat,

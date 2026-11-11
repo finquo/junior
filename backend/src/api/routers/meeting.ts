@@ -13,8 +13,6 @@ import { MapRole } from "@/utils/role";
 import { getZoomAPI } from "@/zoom/api";
 import { generateZoomToken } from "@/zoom/jwt";
 
-const endRecordingBeforeStopping = true;
-
 const JOIN_WINDOW = 10 * 60 * 1000;
 
 const DEMO_ID = "demo";
@@ -32,13 +30,7 @@ export const meetingRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(
-						{
-							id: DEMO_ID,
-							user: crypto.randomUUID(),
-						},
-						"guest",
-					),
+					token: await generateZoomToken(DEMO_ID, "guest"),
 				} as const;
 			}
 
@@ -85,13 +77,7 @@ export const meetingRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(
-					{
-						id: slot.id,
-						user: crypto.randomUUID(),
-					},
-					"guest",
-				),
+				token: await generateZoomToken(slot.id, "guest"),
 			} as const;
 		}),
 	join: getRolesProcedure([
@@ -111,8 +97,8 @@ export const meetingRouter = {
 				admin: "host",
 				scheduler: "host",
 				teacher: "host",
-				student: "guest",
-				qa_auditor: "guest",
+				student: "user",
+				qa_auditor: "user",
 			} as const);
 
 			// Authenticated demo sandbox. Remove this branch before deploying.
@@ -124,13 +110,7 @@ export const meetingRouter = {
 					session: DEMO_ID,
 					startTime: new Date(now),
 					endTime: new Date(now + 2 * 60 * 60 * 1000),
-					token: await generateZoomToken(
-						{
-							id: DEMO_ID,
-							user: context.user.id,
-						},
-						role,
-					),
+					token: await generateZoomToken(DEMO_ID, role, context.user.id),
 				} as const;
 			}
 
@@ -195,13 +175,7 @@ export const meetingRouter = {
 				session: slot.id,
 				startTime,
 				endTime,
-				token: await generateZoomToken(
-					{
-						id: slot.id,
-						user: context.user.id,
-					},
-					role,
-				),
+				token: await generateZoomToken(slot.id, role, context.user.id),
 			} as const;
 		}),
 	end: getRolesProcedure(["admin", "scheduler"])

@@ -32,7 +32,7 @@ assert(
 process.env.ZOOM_SDK_KEY = "test-sdk-key";
 process.env.ZOOM_SDK_SECRET = "test-sdk-secret";
 
-const token = await generateZoomToken("session-test");
+const token = await generateZoomToken("session-test", "guest");
 const [header, payload, signature] = token.split(".");
 
 const expectedSignature = createHmac("sha256", process.env.ZOOM_SDK_SECRET)

@@ -167,6 +167,7 @@ export function VideoChat({
 	const [virtualBackgroundEnabled, setVirtualBackgroundEnabled] =
 		useState(virtualBackground);
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+	const [pinnedUserId, setPinnedUserId] = useState<number | null>(null);
 	const myUserIdRef = useRef<string | undefined>(undefined);
 	const onEndRef = useRef(onEnd);
 	const endMeetingMutation = useMutation(
@@ -380,8 +381,14 @@ export function VideoChat({
 		return <Loader />;
 	}
 
+	const moderator = Boolean(myself?.isHost || myself?.isManager);
+
 	const others = participants
 		.filter((participant) => participant.userId !== myself?.userId)
+		.sort(
+			(a, b) =>
+				Number(b.userId === pinnedUserId) - Number(a.userId === pinnedUserId),
+		)
 		.slice(0, MAX_REMOTE_TILES);
 
 	const remoteScreenShareUsers = screenShareUsers.filter(
@@ -407,6 +414,15 @@ export function VideoChat({
 		]);
 	};
 
+	const releaseMedia = async () => {
+		const client = ZoomVideo.createClient();
+		const stream = client.getMediaStream();
+
+		if (isScreensharing) await stopScreenshare().catch(() => undefined);
+		if (isVideoOn) await stream.stopVideo().catch(() => undefined);
+		if (isCapturingAudio) await stream.stopAudio().catch(() => undefined);
+	};
+
 	const endMeeting = async () => {
 		if (slotId && ["admin", "scheduler"].includes(role)) {
 			await endMeetingMutation
@@ -414,9 +430,48 @@ export function VideoChat({
 				.catch(() => undefined);
 		}
 
+		await releaseMedia();
 		await ZoomVideo.createClient().leave(true);
 		if (onEnd) onEnd();
 		else onLeave();
+	};
+
+	const togglePin = (userId: number) => {
+		setPinnedUserId((current) => (current === userId ? null : userId));
+	};
+
+	const muteParticipant = async (userId: number) => {
+		try {
+			const result = await ZoomVideo.createClient()
+				.getMediaStream()
+				.muteAudio(userId);
+			if (result) throw result;
+			toast.info({ title: "Participant muted" });
+		} catch (error) {
+			toast.error({
+				title: "Could not mute participant",
+				description: sdkErrorDescription(error),
+			});
+		}
+	};
+
+	const removeParticipant = async (userId: number) => {
+		try {
+			const result = await ZoomVideo.createClient().removeUser(userId);
+			if (result) throw result;
+			toast.info({ title: "Participant removed" });
+		} catch (error) {
+			toast.error({
+				title: "Could not remove participant",
+				description: sdkErrorDescription(error),
+			});
+		}
+	};
+
+	const leaveMeeting = async () => {
+		await releaseMedia();
+		await ZoomVideo.createClient().leave();
+		onLeave();
 	};
 
 	const toggleMicrophone = async () => {
@@ -689,7 +744,13 @@ export function VideoChat({
 							key={participant.userId}
 							user={participant}
 							avatar={participant.avatar}
-							menu
+							menu={{
+								pinned: pinnedUserId === participant.userId,
+								moderator,
+								onPin: () => togglePin(participant.userId),
+								onMute: () => void muteParticipant(participant.userId),
+								onRemove: () => void removeParticipant(participant.userId),
+							}}
 						/>
 					))}
 
@@ -710,7 +771,7 @@ export function VideoChat({
 							videoOn={isVideoOn}
 							role={role}
 							avatar={avatar}
-							mirror
+							self
 							className="group min-w-64 shadow-lg"
 						>
 							<div className="animatein hidden group-hover:block">
@@ -856,7 +917,7 @@ export function VideoChat({
 								videoOn={isVideoOn}
 								role={role}
 								avatar={avatar}
-								mirror
+								self
 								className="aspect-video"
 							/>
 						)}
@@ -950,7 +1011,10 @@ export function VideoChat({
 						</AlertDialogHeader>
 						<AlertDialogFooter>
 							<AlertDialogCancel>Stay</AlertDialogCancel>
-							<AlertDialogAction variant="destructive" onClick={onLeave}>
+							<AlertDialogAction
+								variant="destructive"
+								onClick={() => void leaveMeeting()}
+							>
 								Leave
 							</AlertDialogAction>
 						</AlertDialogFooter>

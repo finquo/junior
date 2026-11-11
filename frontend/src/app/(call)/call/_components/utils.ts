@@ -11,8 +11,14 @@ export function participantName(participant: Participant) {
 	return participant.displayName || "Guest";
 }
 
+export function isGuestId(id: string | undefined) {
+	return Boolean(id?.startsWith("guest-"));
+}
+
 export function participantRole(participant: Participant) {
-	return participant.userIdentity || participant.userKey;
+	if (isGuestId(participant.userIdentity)) return "guest";
+
+	return undefined;
 }
 
 export function roleLabel(role: string) {
