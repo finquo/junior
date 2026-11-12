@@ -90,6 +90,11 @@
 	background: var(--success);
 	border-color: var(--success);
 }
+.warning {
+	color: var(--warning-foreground);
+	background: var(--warning);
+	border-color: var(--warning);
+}
 /* A disabled outlined button keeps its shape and fades only its label, so it still reads as a button that is off, not as plain text. */
 .secondary:disabled,
 .danger:disabled {
@@ -107,6 +112,12 @@
 	background: color-mix(in oklab, var(--success) 55%, var(--surface-muted));
 	border-color: var(--success);
 }
+.warning:disabled {
+	opacity: 1;
+	color: var(--warning-foreground);
+	background: color-mix(in oklab, var(--warning) 55%, var(--surface-muted));
+	border-color: var(--warning);
+}
 .ghost:disabled {
 	opacity: 1;
 	color: var(--text-muted);
@@ -122,6 +133,10 @@
 	}
 	.success:hover:not(:disabled) {
 		background: color-mix(in oklab, var(--success) 90%, var(--background));
+		box-shadow: var(--shadow-resting);
+	}
+	.warning:hover:not(:disabled) {
+		background: color-mix(in oklab, var(--warning) 90%, var(--background));
 		box-shadow: var(--shadow-resting);
 	}
 	.ghost:hover:not(:disabled) {
@@ -144,6 +159,9 @@
 }
 .success:active:not(:disabled) {
 	background: color-mix(in oklab, var(--success) 84%, var(--background));
+}
+.warning:active:not(:disabled) {
+	background: color-mix(in oklab, var(--warning) 84%, var(--background));
 }
 .danger:active:not(:disabled) {
 	border-color: var(--danger);

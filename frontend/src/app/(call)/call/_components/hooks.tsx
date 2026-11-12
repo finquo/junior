@@ -11,6 +11,7 @@ import {
 	useSessionUsers,
 	useVideoState,
 } from "@zoom/videosdk-react";
+import { MessageSquareDotIcon, MessagesSquareIcon } from "lucide-react";
 import {
 	createContext,
 	type ReactNode,
@@ -20,8 +21,10 @@ import {
 	useState,
 } from "react";
 import { sileo as toast } from "sileo";
+import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 import { api } from "@/hooks/api";
 import { useJoinPreferences } from "./call-preferences";
+import { parseQuizAnswerMessage, parseQuizMessage } from "./quiz-message";
 import { sdkErrorDescription, VIRTUAL_BACKGROUND } from "./utils";
 
 type ZoomClient = ReturnType<typeof ZoomVideo.createClient>;
@@ -56,6 +59,7 @@ function useChat(
 	userName: string,
 ) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [unread, setUnread] = useState(0);
 	const myUserId = myself?.userId;
 
 	useEffect(() => {
@@ -92,6 +96,20 @@ function useChat(
 					text: payload.message,
 				},
 			]);
+
+			const quiz = parseQuizMessage(payload.message);
+			const answer = parseQuizAnswerMessage(payload.message);
+
+			sonnerToast.info(payload.sender.name, {
+				icon: <MessageSquareDotIcon />,
+				description: quiz
+					? "sent a quiz"
+					: answer
+						? "submitted quiz answers"
+						: payload.message,
+			});
+
+			setUnread((count) => count + 1);
 		}
 
 		client.on("chat-on-message", handleChatMessage);
@@ -114,7 +132,9 @@ function useChat(
 		]);
 	};
 
-	return { messages, sendChat };
+	const markChatRead = () => setUnread(0);
+
+	return { messages, unread, markChatRead, sendChat };
 }
 
 function useRecording(client: ZoomClient, connected: boolean) {
@@ -785,7 +805,12 @@ export function CallProvider({
 }: CallSetup & { children: ReactNode }) {
 	const value = useCallState(setup);
 
-	return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
+	return (
+		<CallContext.Provider value={value}>
+			{children}
+			<SonnerToaster position="bottom-left" />
+		</CallContext.Provider>
+	);
 }
 
 export function useCall() {

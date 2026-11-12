@@ -25,6 +25,7 @@ export type ButtonVariant =
 	| "primary"
 	| "secondary"
 	| "success"
+	| "warning"
 	| "ghost"
 	| "danger";
 export type ButtonSize = "sm" | "md" | "lg";

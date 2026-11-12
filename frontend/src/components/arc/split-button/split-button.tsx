@@ -1,6 +1,5 @@
 "use client";
 
-import * as DropdownPrimitive from "@radix-ui/react-dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import type { TargetAndTransition } from "motion/react";
 import {
@@ -10,6 +9,7 @@ import {
 	useMotionValue,
 	useReducedMotion,
 } from "motion/react";
+import { DropdownMenu as DropdownPrimitive } from "radix-ui";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import {
 	isValidElement,

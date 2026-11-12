@@ -103,6 +103,7 @@ const chatSchema = z.object({
 export function ChatDrawer({ children }: { children: React.ReactElement }) {
 	const {
 		messages,
+		markChatRead,
 		participants,
 		myself,
 		slotId,
@@ -125,7 +126,11 @@ export function ChatDrawer({ children }: { children: React.ReactElement }) {
 	});
 
 	return (
-		<Drawer>
+		<Drawer
+			onOpenChange={(open) => {
+				if (open) markChatRead();
+			}}
+		>
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>

@@ -49,16 +49,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import {
-	ItemActions,
-	ItemContent,
-	ItemMedia,
-	ItemTitle,
-} from "@/components/ui/item";
-import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { ChatDrawer } from "./chat-drawer";
 import { CallProvider, useCall, useDraggable } from "./hooks";
@@ -339,110 +329,7 @@ function CallView({
 									<MoveIcon />
 								</Button>
 							}
-						>
-							<div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-hover:grid-rows-[1fr]">
-								<div className="min-h-0 overflow-hidden opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
-									<FieldGroup className="gap-1.5 p-1.5">
-										<FieldLabel htmlFor="tile-microphone-switch">
-											<Field className="h-10" orientation="horizontal">
-												<ItemMedia variant="icon">
-													{call.audioPending ? (
-														<Spinner />
-													) : call.isAudioOn ? (
-														<MicIcon />
-													) : (
-														<MicOffIcon />
-													)}
-												</ItemMedia>
-												<ItemContent>
-													<ItemTitle>Microphone</ItemTitle>
-												</ItemContent>
-												<ItemActions>
-													<Switch
-														id="tile-microphone-switch"
-														aria-label="Microphone"
-														checked={call.isAudioOn}
-														disabled={call.audioPending}
-														onCheckedChange={() => call.toggleMicrophone()}
-													/>
-												</ItemActions>
-											</Field>
-										</FieldLabel>
-										<FieldLabel htmlFor="tile-camera-switch">
-											<Field className="h-10" orientation="horizontal">
-												<ItemMedia variant="icon">
-													{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-												</ItemMedia>
-												<ItemContent>
-													<ItemTitle>Camera</ItemTitle>
-												</ItemContent>
-												<ItemActions>
-													<Switch
-														id="tile-camera-switch"
-														aria-label="Camera"
-														checked={call.isVideoOn}
-														onCheckedChange={(checked) =>
-															void call.setCameraOn(checked)
-														}
-													/>
-												</ItemActions>
-											</Field>
-										</FieldLabel>
-										<FieldLabel htmlFor="tile-background-switch">
-											<Field className="h-10" orientation="horizontal">
-												<ItemMedia variant="icon">
-													{call.backgroundEnabled ? (
-														<ImageIcon />
-													) : (
-														<ImageOffIcon />
-													)}
-												</ItemMedia>
-												<ItemContent>
-													<ItemTitle>Background</ItemTitle>
-												</ItemContent>
-												<ItemActions>
-													<Switch
-														id="tile-background-switch"
-														aria-label="Virtual background"
-														checked={call.backgroundEnabled}
-														disabled={
-															!call.isVideoOn || !call.backgroundSupported
-														}
-														onCheckedChange={(checked) =>
-															void call.setVirtualBackgroundOn(checked)
-														}
-													/>
-												</ItemActions>
-											</Field>
-										</FieldLabel>
-										<FieldLabel htmlFor="tile-flip-camera">
-											<Field className="h-10" orientation="horizontal">
-												<ItemMedia variant="icon">
-													<SwitchCameraIcon />
-												</ItemMedia>
-												<ItemContent>
-													<ItemTitle>Flip camera</ItemTitle>
-												</ItemContent>
-												<ItemActions>
-													<Button
-														id="tile-flip-camera"
-														type="button"
-														size="icon-sm"
-														variant="ghost"
-														aria-label="Flip camera"
-														disabled={!call.isVideoOn}
-														onClick={() => void call.flipCamera()}
-													>
-														<SwitchCameraIcon />
-													</Button>
-												</ItemActions>
-											</Field>
-										</FieldLabel>
-									</FieldGroup>
-									<Separator />
-								</div>
-							</div>
-						</VideoTile>
+						/>
 					)}
 				</div>
 
@@ -489,7 +376,10 @@ function CallView({
 						</ArcButton>
 					)}
 					<ChatDrawer>
-						<ArcButton size="lg" variant="secondary">
+						<ArcButton
+							size="lg"
+							variant={call.unread > 0 ? "warning" : "secondary"}
+						>
 							<MessageSquareIcon />
 							Chat
 						</ArcButton>
