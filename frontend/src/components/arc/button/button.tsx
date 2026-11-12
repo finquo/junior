@@ -21,7 +21,12 @@ import {
 import { motionTokens } from "../lib/motion-tokens";
 import styles from "./button.module.css";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "success"
+	| "ghost"
+	| "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonProps

@@ -332,11 +332,20 @@ function useCamera(
 
 	const setVirtualBackgroundOn = async (next: boolean) => {
 		try {
-			if (isVideoOn) {
+			if (next && !isVideoOn) {
+				// Turning the background on with the camera off starts both together.
 				await client
 					.getMediaStream()
-					.updateVirtualBackgroundImage(next ? VIRTUAL_BACKGROUND : undefined);
+					.startVideo({ virtualBackground: { imageUrl: VIRTUAL_BACKGROUND } });
+				void setCamera(true);
+				setBackgroundEnabled(true);
+				toast.success({ title: "Camera on" });
+				return;
 			}
+
+			await client
+				.getMediaStream()
+				.updateVirtualBackgroundImage(next ? VIRTUAL_BACKGROUND : undefined);
 		} catch (error) {
 			toast.error({
 				title: "Could not change background",
@@ -365,26 +374,38 @@ function useScreenshareControl() {
 
 	const [screensharePending, setScreensharePending] = useState(false);
 
+	// startScreenshare only opens the picker, so pending stays until the
+	// share actually starts (or the fallback timeout clears it on cancel).
+	useEffect(() => {
+		if (isScreensharing && screensharePending) {
+			setScreensharePending(false);
+		}
+	}, [isScreensharing, screensharePending]);
+
 	const toggleScreenshare = async () => {
 		if (screensharePending) return;
+
+		if (isScreensharing) {
+			setScreensharePending(true);
+
+			try {
+				await stopScreenshare();
+				toast.info({ title: "Screen sharing stopped" });
+			} catch {
+				toast.error({ title: "Could not stop screen sharing" });
+			} finally {
+				setScreensharePending(false);
+			}
+			return;
+		}
 
 		setScreensharePending(true);
 
 		try {
-			if (isScreensharing) {
-				await stopScreenshare();
-				toast.info({ title: "Screen sharing stopped" });
-			} else {
-				await startScreenshare();
-				toast.success({ title: "Screen sharing started" });
-			}
+			startScreenshare();
+			window.setTimeout(() => setScreensharePending(false), 60_000);
 		} catch {
-			toast.error({
-				title: isScreensharing
-					? "Could not stop screen sharing"
-					: "Could not start screen sharing",
-			});
-		} finally {
+			toast.error({ title: "Could not start screen sharing" });
 			setScreensharePending(false);
 		}
 	};
@@ -396,6 +417,75 @@ function useScreenshareControl() {
 		stopScreenshare,
 		toggleScreenshare,
 	};
+}
+
+function useMicLevel(connected: boolean, active: boolean) {
+	const [level, setLevel] = useState(0);
+
+	useEffect(() => {
+		if (!connected || !active) {
+			setLevel(0);
+			return;
+		}
+
+		let stream: MediaStream | null = null;
+		let context: AudioContext | null = null;
+		let frame = 0;
+		let cancelled = false;
+
+		navigator.mediaDevices
+			.getUserMedia({ audio: true })
+			.then((microphone) => {
+				if (cancelled) {
+					microphone.getTracks().forEach((track) => {
+						track.stop();
+					});
+					return;
+				}
+
+				stream = microphone;
+				context = new AudioContext();
+				const source = context.createMediaStreamSource(microphone);
+				const analyser = context.createAnalyser();
+				analyser.fftSize = 512;
+				source.connect(analyser);
+
+				const data = new Uint8Array(analyser.frequencyBinCount);
+				let previous = 0;
+
+				const tick = () => {
+					analyser.getByteTimeDomainData(data);
+
+					let sum = 0;
+					for (const value of data) {
+						const wave = (value - 128) / 128;
+						sum += wave * wave;
+					}
+					const level = Math.sqrt(sum / data.length);
+
+					// Quantise, so consumers re-render only on visible change.
+					if (Math.abs(level - previous) > 0.015) {
+						previous = level;
+						setLevel(Math.min(1, level * 8));
+					}
+
+					frame = requestAnimationFrame(tick);
+				};
+				tick();
+			})
+			.catch(() => undefined);
+
+		return () => {
+			cancelled = true;
+			cancelAnimationFrame(frame);
+			stream?.getTracks().forEach((track) => {
+				track.stop();
+			});
+			void context?.close();
+		};
+	}, [connected, active]);
+
+	return level;
 }
 
 function useModeration(client: ZoomClient) {
@@ -487,6 +577,7 @@ function useCallState({
 	const microphone = useMicrophone(client);
 	const camera = useCamera(client, connected, isInSession, virtualBackground);
 	const screenshare = useScreenshareControl();
+	const micLevel = useMicLevel(connected, microphone.isAudioOn);
 	const moderation = useModeration(client);
 
 	const endMeetingMutation = useMutation(
@@ -518,6 +609,50 @@ function useCallState({
 			client.off("connection-change", handleConnectionChange);
 		};
 	}, [client, onEnd]);
+
+	const micDevices = connected
+		? (() => {
+				try {
+					return client.getMediaStream().getMicList();
+				} catch {
+					return [];
+				}
+			})()
+		: [];
+	const cameraDevices = connected
+		? (() => {
+				try {
+					return client.getMediaStream().getCameraList();
+				} catch {
+					return [];
+				}
+			})()
+		: [];
+
+	const switchMicrophone = async (deviceId: string) => {
+		try {
+			const result = await client.getMediaStream().switchMicrophone(deviceId);
+			if (result) throw result;
+			toast.success({ title: "Microphone switched" });
+		} catch (error) {
+			toast.error({
+				title: "Could not switch microphone",
+				description: sdkErrorDescription(error),
+			});
+		}
+	};
+
+	const switchCamera = async (deviceId: string) => {
+		try {
+			await client.getMediaStream().switchCamera(deviceId);
+			toast.success({ title: "Camera switched" });
+		} catch (error) {
+			toast.error({
+				title: "Could not switch camera",
+				description: sdkErrorDescription(error),
+			});
+		}
+	};
 
 	const releaseMedia = async () => {
 		const stream = client.getMediaStream();
@@ -562,9 +697,14 @@ function useCallState({
 		...chat,
 		...recording,
 		...microphone,
+		micLevel,
 		...camera,
 		...screenshare,
 		...moderation,
+		micDevices,
+		cameraDevices,
+		switchMicrophone,
+		switchCamera,
 		leaveMeeting,
 		endMeeting,
 	};

@@ -226,6 +226,70 @@
 .destructive[data-highlighted] {
 	background: color-mix(in oklab, var(--danger) 8%, var(--surface));
 }
+/* Success state */
+.success {
+	border-color: var(--success);
+	background: var(--success);
+}
+.success .primary,
+.success .trigger {
+	background: var(--success);
+	color: var(--success-foreground);
+}
+.success .trigger {
+	border-left-color: color-mix(
+		in oklab,
+		var(--success-foreground) 18%,
+		var(--success)
+	);
+}
+@media (hover: hover) and (pointer: fine) {
+	.success .primary:hover:not(:disabled),
+	.success .trigger:hover:not(:disabled) {
+		background: color-mix(in oklab, var(--success) 90%, var(--background));
+	}
+}
+.success .primary:active:not(:disabled),
+.success .trigger:active:not(:disabled),
+.success .trigger[data-state="open"] {
+	background: color-mix(in oklab, var(--success) 84%, var(--background));
+}
+.success .primary:disabled,
+.success .trigger:disabled {
+	cursor: not-allowed;
+	opacity: 0.52;
+}
+/* Sizes mirror the Button sizes, so both read as the same control in a row. */
+.lg {
+	border-radius: var(--radius-control);
+	overflow: hidden;
+}
+.lg .primary,
+.lg .trigger {
+	min-height: var(--control-height-lg);
+	border-radius: 0;
+}
+.lg .primary {
+	min-width: 0;
+	padding-inline: var(--space-5);
+	font-size: var(--text-sm);
+}
+.lg .trigger {
+	width: 38px;
+	border-left-color: color-mix(
+		in oklab,
+		var(--background) 18%,
+		var(--foreground)
+	);
+}
+.secondary.lg .primary,
+.secondary.lg .trigger {
+	background: var(--surface);
+	color: var(--foreground);
+}
+.secondary.lg .trigger {
+	border-left-color: var(--border-subtle);
+}
 @keyframes menu-exit {
 	to {
 		--menu-exit: 1;

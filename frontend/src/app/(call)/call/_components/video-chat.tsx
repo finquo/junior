@@ -67,11 +67,7 @@ import { ParticipantsDrawer } from "./participants-drawer";
 import { MAX_REMOTE_TILES, type SessionUser } from "./utils";
 import { VideoTile } from "./video-tile";
 
-const activeClass =
-	"!border-success !bg-success !text-success-foreground hover:!bg-success/90";
-
-const splitClass =
-	"[&>div]:!overflow-hidden [&>div]:!rounded-[var(--radius-control)] [&>div>button]:!min-h-[var(--control-height-lg)] [&>div>button]:!rounded-none [&>div>button]:!text-sm [&>div>button:first-child]:!min-w-0 [&>div>button:first-child]:!px-5";
+const SPEAKING_LEVEL = 0.04;
 
 export function VideoChat({
 	session,
@@ -228,6 +224,33 @@ function CallView({
 	);
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
 	const hasDetails = Boolean(call.slotId && canViewDetails);
+	const speaking = call.micLevel > SPEAKING_LEVEL;
+
+	const microphoneActions = call.micDevices.length
+		? call.micDevices.map((device) => ({
+				label: device.label || "Default microphone",
+				onSelect: () => void call.switchMicrophone(device.deviceId),
+			}))
+		: [{ label: "No microphone found", disabled: true }];
+
+	const cameraActions = [
+		{
+			label: "Flip camera",
+			icon: <SwitchCameraIcon />,
+			onSelect: () => void call.flipCamera(),
+		},
+		...(call.cameraDevices.length
+			? call.cameraDevices.map((device) => ({
+					label: device.label || "Default camera",
+					onSelect: () => void call.switchCamera(device.deviceId),
+				}))
+			: [{ label: "No camera found", disabled: true }]),
+		{
+			label: call.backgroundEnabled ? "Background off" : "Background on",
+			icon: call.backgroundEnabled ? <ImageOffIcon /> : <ImageIcon />,
+			onSelect: () => void call.setVirtualBackgroundOn(!call.backgroundEnabled),
+		},
+	];
 	const sharingParticipants = call.participants.filter(
 		(participant) =>
 			participant.userId !== call.myself?.userId &&
@@ -423,37 +446,32 @@ function CallView({
 					)}
 				</div>
 
-				<div
-					className={cn(
-						"absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2",
-						splitClass,
-					)}
-				>
-					<ArcButton
+				<div className="absolute bottom-8 left-1/2 z-10 flex w-screen -translate-x-1/2 flex-wrap justify-center gap-2 px-2">
+					<SplitButton
+						label={call.isAudioOn ? "Microphone on" : "Microphone off"}
+						icon={call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
+						variant={call.isAudioOn ? "success" : "secondary"}
 						size="lg"
-						variant="secondary"
-						loading={call.audioPending}
-						className={call.isAudioOn ? activeClass : undefined}
+						style={{
+							boxShadow: speaking
+								? `0 0 ${8 + Math.round(call.micLevel * 20)}px var(--success)`
+								: undefined,
+						}}
 						onClick={() => void call.toggleMicrophone()}
-					>
-						{call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
-						{call.isAudioOn ? "Microphone on" : "Microphone off"}
-					</ArcButton>
-					<ArcButton
+						actions={microphoneActions}
+					/>
+					<SplitButton
+						label={call.isVideoOn ? "Camera on" : "Camera off"}
+						icon={call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+						variant={call.isVideoOn ? "success" : "secondary"}
 						size="lg"
-						variant="secondary"
-						loading={call.cameraPending}
-						className={call.isVideoOn ? activeClass : undefined}
 						onClick={() => void call.setCameraOn(!call.isVideoOn)}
-					>
-						{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-						{call.isVideoOn ? "Camera on" : "Camera off"}
-					</ArcButton>
+						actions={cameraActions}
+					/>
 					<ArcButton
 						size="lg"
-						variant="secondary"
+						variant={call.isScreensharing ? "success" : "secondary"}
 						loading={call.screensharePending}
-						className={call.isScreensharing ? activeClass : undefined}
 						onClick={() => void call.toggleScreenshare()}
 					>
 						{call.isScreensharing ? <MonitorDot /> : <MonitorOff />}
@@ -462,9 +480,8 @@ function CallView({
 					{canRecord && (
 						<ArcButton
 							size="lg"
-							variant="secondary"
+							variant={call.isRecording ? "success" : "secondary"}
 							loading={call.recordingPending}
-							className={call.isRecording ? activeClass : undefined}
 							onClick={() => void call.toggleRecording()}
 						>
 							{call.isRecording ? <CctvIcon /> : <CctvOffIcon />}
@@ -482,6 +499,7 @@ function CallView({
 							label="Participants"
 							icon={<UsersIcon />}
 							variant="secondary"
+							size="lg"
 							onClick={() => setDrawer("participants")}
 							actions={[
 								{

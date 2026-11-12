@@ -34,7 +34,9 @@ export interface SplitButtonProps {
 	onClick?: () => void;
 	disabled?: boolean;
 	icon?: ReactNode;
-	variant?: "primary" | "secondary";
+	variant?: "primary" | "secondary" | "success";
+	size?: "sm" | "md" | "lg";
+	style?: CSSProperties;
 }
 
 const rest: TargetAndTransition = {
@@ -228,6 +230,8 @@ export function SplitButton({
 	disabled,
 	icon,
 	variant = "primary",
+	size,
+	style,
 }: SplitButtonProps) {
 	const reduced = useReducedMotion() ?? false;
 	const contentRef = useRef<HTMLSpanElement>(null);
@@ -239,9 +243,12 @@ export function SplitButton({
 				className={[
 					styles.group,
 					variant === "secondary" ? styles.secondary : "",
+					variant === "success" ? styles.success : "",
+					size ? styles[size] : "",
 				]
 					.filter(Boolean)
 					.join(" ")}
+				style={style}
 			>
 				<button
 					className={styles.primary}
