@@ -19,7 +19,6 @@
 			"next": "^16.3.4",
 			"typescript": "^6.0.3",
 			"varlock": "1.21.0",
-			"wrangler": "^4.139.0",
 			"zod": "^4.5.4"
 		}
 	},
@@ -44,10 +43,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.12",
 		"@types/node": "catalog:",
-		"@varlock/cloudflare-integration": "^1.6.0",
 		"rolldown": "1.2.7",
 		"skills": "^1.7.2",
-		"typeflare": "^0.0.5",
 		"typescript": "catalog:",
 		"varlock": "catalog:",
 		"vite-plus": "0.3.1"

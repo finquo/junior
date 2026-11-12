@@ -15,7 +15,7 @@ jobs:
         environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         env:
             ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
-            DOMAIN_NAME: ${{ github.ref == 'refs/heads/main' && 'finquo.ai' || 'dev.finquo.ai' }}
+            DOMAIN_NAME: ${{ github.ref == 'refs/heads/main' && 'app.finquo.ai' || 'dev.finquo.ai' }}
 
         steps:
             - name: Print basic info

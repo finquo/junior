@@ -5,8 +5,7 @@
 	"scripts": {
 		"dev": "next dev --port 4000",
 		"start": "next dev --port 4000",
-		"construct": "open-next build --config-path open-next.aws.config.ts",
-		"compile": "opennextjs-cloudflare build --skipWranglerConfigCheck",
+		"construct": "open-next build",
 		"build": "varlock codegen && next build",
 		"check": "tsc --noEmit",
 		"preview": "bun run --env-file=../.env .next/standalone/frontend/server.js",
@@ -44,7 +43,6 @@
 		"backend": "workspace:*",
 		"better-auth": "catalog:",
 		"class-variance-authority": "^0.7.1",
-		"cloudflare": "^4.5.0",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"cn": "^0.3.2",
@@ -74,7 +72,6 @@
 	},
 	"devDependencies": {
 		"@opennextjs/aws": "^4.1.6",
-		"@opennextjs/cloudflare": "^1.20.9",
 		"@tailwindcss/postcss": "^4.3.3",
 		"@tanstack/react-query-devtools": "^5.102.8",
 		"@types/node": "catalog:",
