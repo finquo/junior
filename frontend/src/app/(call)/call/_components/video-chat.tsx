@@ -17,6 +17,7 @@ import {
 	MicOffIcon,
 	MonitorDot,
 	MonitorOff,
+	MoveIcon,
 	PhoneOffIcon,
 	SwitchCameraIcon,
 	UsersIcon,
@@ -60,10 +61,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { ChatDrawer } from "./chat-drawer";
-import { CallProvider, useCall } from "./hooks";
+import { CallProvider, useCall, useDraggable } from "./hooks";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
-import { MAX_REMOTE_TILES } from "./utils";
+import { MAX_REMOTE_TILES, type SessionUser } from "./utils";
 import { VideoTile } from "./video-tile";
 
 const activeClass =
@@ -135,6 +136,48 @@ export function VideoChat({
 	);
 }
 
+function DragHandle({
+	handleProps,
+}: {
+	handleProps: ReturnType<typeof useDraggable>["handleProps"];
+}) {
+	return (
+		<Button
+			type="button"
+			size="icon-sm"
+			variant="secondary"
+			aria-label="Move tile"
+			className="absolute top-2 right-2 cursor-grab touch-none opacity-0 transition-opacity duration-200 ease-out active:cursor-grabbing group-hover:opacity-100"
+			{...handleProps}
+		>
+			<MoveIcon />
+		</Button>
+	);
+}
+
+function FloatingTile({ participant }: { participant: SessionUser }) {
+	const drag = useDraggable();
+
+	return (
+		<div
+			ref={drag.ref}
+			className="absolute z-10"
+			style={
+				drag.position
+					? { left: drag.position.left, top: drag.position.top }
+					: { left: 16, bottom: 16 }
+			}
+		>
+			<VideoTile
+				user={participant}
+				avatar={participant.avatar}
+				className="group aspect-video min-w-64 shadow-lg"
+				handle={<DragHandle handleProps={drag.handleProps} />}
+			/>
+		</div>
+	);
+}
+
 function CallView({
 	avatar,
 	canViewDetails,
@@ -148,6 +191,7 @@ function CallView({
 }) {
 	const call = useCall();
 	const [drawer, setDrawer] = useState<"participants" | "details" | null>(null);
+	const selfDrag = useDraggable();
 
 	if (call.isError) {
 		return (
@@ -212,18 +256,10 @@ function CallView({
 					</Frame>
 				)}
 
-				{isRemoteSharing && (
-					<div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
-						{sharingParticipants.map((participant) => (
-							<VideoTile
-								key={participant.userId}
-								user={participant}
-								avatar={participant.avatar}
-								className="aspect-video min-w-64 shadow-lg"
-							/>
-						))}
-					</div>
-				)}
+				{isRemoteSharing &&
+					sharingParticipants.map((participant) => (
+						<FloatingTile key={participant.userId} participant={participant} />
+					))}
 
 				{!isRemoteSharing &&
 					others.map((participant) => (
@@ -241,7 +277,15 @@ function CallView({
 						/>
 					))}
 
-				<div className="absolute right-4 bottom-4 z-10 flex flex-col gap-2">
+				<div
+					ref={selfDrag.ref}
+					className="absolute z-10 flex flex-col gap-2"
+					style={
+						selfDrag.position
+							? { left: selfDrag.position.left, top: selfDrag.position.top }
+							: { right: 16, top: "50%" }
+					}
+				>
 					<Frame
 						className={cn(
 							"call-screenshare w-64 overflow-hidden p-0 shadow-lg",
@@ -260,106 +304,120 @@ function CallView({
 							avatar={avatar}
 							self
 							className="group min-w-64 shadow-lg"
+							handle={
+								<Button
+									type="button"
+									size="icon-sm"
+									variant="secondary"
+									aria-label="Move camera"
+									className="absolute top-2 right-2 cursor-grab touch-none opacity-0 transition-opacity duration-200 ease-out active:cursor-grabbing group-hover:opacity-100"
+									{...selfDrag.handleProps}
+								>
+									<MoveIcon />
+								</Button>
+							}
 						>
-							<div className="animatein hidden group-hover:block">
-								<FieldGroup className="gap-1.5 p-1.5">
-									<FieldLabel htmlFor="tile-microphone-switch">
-										<Field className="h-10" orientation="horizontal">
-											<ItemMedia variant="icon">
-												{call.audioPending ? (
-													<Spinner />
-												) : call.isAudioOn ? (
-													<MicIcon />
-												) : (
-													<MicOffIcon />
-												)}
-											</ItemMedia>
-											<ItemContent>
-												<ItemTitle>Microphone</ItemTitle>
-											</ItemContent>
-											<ItemActions>
-												<Switch
-													id="tile-microphone-switch"
-													aria-label="Microphone"
-													checked={call.isAudioOn}
-													disabled={call.audioPending}
-													onCheckedChange={() => call.toggleMicrophone()}
-												/>
-											</ItemActions>
-										</Field>
-									</FieldLabel>
-									<FieldLabel htmlFor="tile-camera-switch">
-										<Field className="h-10" orientation="horizontal">
-											<ItemMedia variant="icon">
-												{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-											</ItemMedia>
-											<ItemContent>
-												<ItemTitle>Camera</ItemTitle>
-											</ItemContent>
-											<ItemActions>
-												<Switch
-													id="tile-camera-switch"
-													aria-label="Camera"
-													checked={call.isVideoOn}
-													onCheckedChange={(checked) =>
-														void call.setCameraOn(checked)
-													}
-												/>
-											</ItemActions>
-										</Field>
-									</FieldLabel>
-									<FieldLabel htmlFor="tile-background-switch">
-										<Field className="h-10" orientation="horizontal">
-											<ItemMedia variant="icon">
-												{call.backgroundEnabled ? (
-													<ImageIcon />
-												) : (
-													<ImageOffIcon />
-												)}
-											</ItemMedia>
-											<ItemContent>
-												<ItemTitle>Background</ItemTitle>
-											</ItemContent>
-											<ItemActions>
-												<Switch
-													id="tile-background-switch"
-													aria-label="Virtual background"
-													checked={call.backgroundEnabled}
-													disabled={
-														!call.isVideoOn || !call.backgroundSupported
-													}
-													onCheckedChange={(checked) =>
-														void call.setVirtualBackgroundOn(checked)
-													}
-												/>
-											</ItemActions>
-										</Field>
-									</FieldLabel>
-									<FieldLabel htmlFor="tile-flip-camera">
-										<Field className="h-10" orientation="horizontal">
-											<ItemMedia variant="icon">
-												<SwitchCameraIcon />
-											</ItemMedia>
-											<ItemContent>
-												<ItemTitle>Flip camera</ItemTitle>
-											</ItemContent>
-											<ItemActions>
-												<Button
-													id="tile-flip-camera"
-													type="button"
-													size="icon-sm"
-													variant="ghost"
-													aria-label="Flip camera"
-													disabled={!call.isVideoOn}
-													onClick={() => void call.flipCamera()}
-												>
+							<div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-hover:grid-rows-[1fr]">
+								<div className="min-h-0 overflow-hidden opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
+									<FieldGroup className="gap-1.5 p-1.5">
+										<FieldLabel htmlFor="tile-microphone-switch">
+											<Field className="h-10" orientation="horizontal">
+												<ItemMedia variant="icon">
+													{call.audioPending ? (
+														<Spinner />
+													) : call.isAudioOn ? (
+														<MicIcon />
+													) : (
+														<MicOffIcon />
+													)}
+												</ItemMedia>
+												<ItemContent>
+													<ItemTitle>Microphone</ItemTitle>
+												</ItemContent>
+												<ItemActions>
+													<Switch
+														id="tile-microphone-switch"
+														aria-label="Microphone"
+														checked={call.isAudioOn}
+														disabled={call.audioPending}
+														onCheckedChange={() => call.toggleMicrophone()}
+													/>
+												</ItemActions>
+											</Field>
+										</FieldLabel>
+										<FieldLabel htmlFor="tile-camera-switch">
+											<Field className="h-10" orientation="horizontal">
+												<ItemMedia variant="icon">
+													{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+												</ItemMedia>
+												<ItemContent>
+													<ItemTitle>Camera</ItemTitle>
+												</ItemContent>
+												<ItemActions>
+													<Switch
+														id="tile-camera-switch"
+														aria-label="Camera"
+														checked={call.isVideoOn}
+														onCheckedChange={(checked) =>
+															void call.setCameraOn(checked)
+														}
+													/>
+												</ItemActions>
+											</Field>
+										</FieldLabel>
+										<FieldLabel htmlFor="tile-background-switch">
+											<Field className="h-10" orientation="horizontal">
+												<ItemMedia variant="icon">
+													{call.backgroundEnabled ? (
+														<ImageIcon />
+													) : (
+														<ImageOffIcon />
+													)}
+												</ItemMedia>
+												<ItemContent>
+													<ItemTitle>Background</ItemTitle>
+												</ItemContent>
+												<ItemActions>
+													<Switch
+														id="tile-background-switch"
+														aria-label="Virtual background"
+														checked={call.backgroundEnabled}
+														disabled={
+															!call.isVideoOn || !call.backgroundSupported
+														}
+														onCheckedChange={(checked) =>
+															void call.setVirtualBackgroundOn(checked)
+														}
+													/>
+												</ItemActions>
+											</Field>
+										</FieldLabel>
+										<FieldLabel htmlFor="tile-flip-camera">
+											<Field className="h-10" orientation="horizontal">
+												<ItemMedia variant="icon">
 													<SwitchCameraIcon />
-												</Button>
-											</ItemActions>
-										</Field>
-									</FieldLabel>
-								</FieldGroup>
-								<Separator />
+												</ItemMedia>
+												<ItemContent>
+													<ItemTitle>Flip camera</ItemTitle>
+												</ItemContent>
+												<ItemActions>
+													<Button
+														id="tile-flip-camera"
+														type="button"
+														size="icon-sm"
+														variant="ghost"
+														aria-label="Flip camera"
+														disabled={!call.isVideoOn}
+														onClick={() => void call.flipCamera()}
+													>
+														<SwitchCameraIcon />
+													</Button>
+												</ItemActions>
+											</Field>
+										</FieldLabel>
+									</FieldGroup>
+									<Separator />
+								</div>
 							</div>
 						</VideoTile>
 					)}

@@ -16,6 +16,7 @@ import {
 	type ReactNode,
 	useContext,
 	useEffect,
+	useRef,
 	useState,
 } from "react";
 import { sileo as toast } from "sileo";
@@ -566,6 +567,71 @@ function useCallState({
 		...moderation,
 		leaveMeeting,
 		endMeeting,
+	};
+}
+
+export function useDraggable() {
+	const ref = useRef<HTMLDivElement>(null);
+	const [position, setPosition] = useState<{
+		left: number;
+		top: number;
+	} | null>(null);
+	const drag = useRef<{
+		x: number;
+		y: number;
+		origin: { left: number; top: number };
+		width: number;
+		height: number;
+		bounds: DOMRect;
+	} | null>(null);
+
+	const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+		if (event.button !== 0) return;
+
+		const node = ref.current;
+		const parent = node?.offsetParent;
+		if (!node || !(parent instanceof HTMLElement)) return;
+
+		const rect = node.getBoundingClientRect();
+		const bounds = parent.getBoundingClientRect();
+
+		drag.current = {
+			x: event.clientX,
+			y: event.clientY,
+			origin: { left: rect.left - bounds.left, top: rect.top - bounds.top },
+			width: rect.width,
+			height: rect.height,
+			bounds,
+		};
+		event.currentTarget.setPointerCapture(event.pointerId);
+	};
+
+	const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+		const current = drag.current;
+		if (!current) return;
+
+		const left = current.origin.left + event.clientX - current.x;
+		const top = current.origin.top + event.clientY - current.y;
+
+		setPosition({
+			left: Math.min(Math.max(left, 0), current.bounds.width - current.width),
+			top: Math.min(Math.max(top, 0), current.bounds.height - current.height),
+		});
+	};
+
+	const onPointerUp = () => {
+		drag.current = null;
+	};
+
+	return {
+		ref,
+		position,
+		handleProps: {
+			onPointerDown,
+			onPointerMove,
+			onPointerUp,
+			onPointerCancel: onPointerUp,
+		},
 	};
 }
 

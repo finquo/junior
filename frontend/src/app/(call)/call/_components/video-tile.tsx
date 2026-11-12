@@ -12,7 +12,7 @@ import {
 	UserIcon,
 	UserXIcon,
 } from "lucide-react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { Frame } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, ColorBadge } from "@/components/ui/badge";
@@ -161,6 +161,7 @@ export function VideoTile({
 	avatar,
 	menu,
 	self = false,
+	handle,
 	children,
 }: {
 	user: SessionUser;
@@ -171,6 +172,7 @@ export function VideoTile({
 	avatar?: string;
 	menu?: TileMenu;
 	self?: boolean;
+	handle?: ReactNode;
 	children?: ReactElement;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
@@ -179,7 +181,6 @@ export function VideoTile({
 
 	return (
 		<Frame className={cn("overflow-hidden p-0", className)}>
-			{children}
 			<div className="relative aspect-video">
 				<VideoPlayerContainerComponent
 					style={{ transform: self ? "scaleX(-1)" : undefined }}
@@ -204,7 +205,9 @@ export function VideoTile({
 					{video && !self && <TileLabel user={user} role={role} inline />}
 				</Badge>
 				{menu && <RemoteUserMenu user={user} menu={menu} />}
+				{handle}
 			</div>
+			{children}
 		</Frame>
 	);
 }
