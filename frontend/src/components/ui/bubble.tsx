@@ -1,6 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
-import { Slot } from "radix-ui";
 import type * as React from "react";
 
 function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
@@ -14,24 +13,19 @@ function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const bubbleVariants = cva(
-	"group/bubble relative flex w-fit min-w-0 max-w-[80%] flex-col gap-1 data-[variant=ghost]:max-w-full data-[align=end]:self-end group-data-[align=end]/message:self-end",
+	"group/bubble relative flex w-fit min-w-5 max-w-[80%] flex-col gap-1 overflow-hidden rounded-md border border-transparent p-2 data-[variant=ghost]:max-w-full data-[align=end]:self-end group-data-[align=end]/message:self-end",
 	{
 		variants: {
 			variant: {
-				default:
-					"*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80",
-				secondary:
-					"*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
-				muted:
-					"*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]",
+				default: "bg-primary text-primary-foreground",
+				secondary: "bg-secondary text-secondary-foreground",
+				muted: "bg-muted",
 				tinted:
-					"*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]",
-				outline:
-					"*:data-[slot=bubble-content]:border-border *:data-[slot=bubble-content]:bg-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30",
-				ghost:
-					"border-none *:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50",
+					"bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] text-foreground dark:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)]",
+				outline: "border-border bg-background",
+				ghost: "rounded-none border-none bg-transparent p-0",
 				destructive:
-					"*:data-[slot=bubble-content]:bg-destructive/10 *:data-[slot=bubble-content]:text-destructive dark:*:data-[slot=bubble-content]:bg-destructive/20 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30",
+					"bg-destructive/10 text-destructive dark:bg-destructive/20",
 			},
 		},
 		defaultVariants: {
@@ -61,21 +55,34 @@ function Bubble({
 }
 
 function BubbleContent({
-	asChild = false,
 	className,
+	children,
 	...props
-}: React.ComponentProps<"div"> & {
-	asChild?: boolean;
-}) {
-	const Comp = asChild ? Slot.Root : "div";
+}: React.ComponentProps<"div">) {
+	const isBlock = typeof children !== "string" && children != null;
 
 	return (
-		<Comp
+		<div
 			data-slot="bubble-content"
-			className={cn(
-				"wrap-break-word w-fit min-w-5 max-w-full overflow-hidden rounded-3xl border border-transparent px-4 py-1.5 text-sm leading-relaxed group-data-[align=end]/bubble:self-end [button,a]:outline-none [button,a]:transition-colors [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3 [button,a]:focus-visible:ring-ring/30 [button]:text-left",
-				className,
+			className={cn("wrap-break-word text-sm leading-relaxed", className)}
+			{...props}
+		>
+			{isBlock ? (
+				<div className="mt-1 w-full rounded-sm bg-muted p-2 text-foreground">
+					{children}
+				</div>
+			) : (
+				<div className="px-2">{children}</div>
 			)}
+		</div>
+	);
+}
+
+function BubbleHeader({ className, ...props }: React.ComponentProps<"div">) {
+	return (
+		<div
+			data-slot="bubble-header"
+			className={cn("flex items-center gap-1 pr-1", className)}
 			{...props}
 		/>
 	);
@@ -121,4 +128,4 @@ function BubbleReactions({
 	);
 }
 
-export { Bubble, BubbleContent, BubbleGroup, BubbleReactions };
+export { Bubble, BubbleContent, BubbleGroup, BubbleHeader, BubbleReactions };

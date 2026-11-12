@@ -185,11 +185,13 @@ export function QuizList({
 	lessonId,
 	editable,
 	children,
+	selector,
 }: {
 	quiz: Quiz[];
 	lessonId: string;
 	editable?: boolean;
 	children?: (question: Quiz) => React.ReactNode;
+	selector?: (question: Quiz) => React.ReactNode;
 }) {
 	if (quiz.length === 0) {
 		return (
@@ -215,26 +217,34 @@ export function QuizList({
 		<Accordion type="multiple" defaultValue={expandedItems}>
 			{quiz.map((question, index) => (
 				<AccordionItem key={question.id} value={question.id}>
-					<AccordionTrigger className="decoration-0">
+					<AccordionTrigger
+						secondary={
+							editable ? (
+								<RenderWhenRole role={["admin", "scheduler"]}>
+									<ButtonGroup>
+										<EditQuizDialog lessonId={lessonId} quiz={question}>
+											<Button variant="outline" size="sm">
+												<PenIcon />
+												Edit
+											</Button>
+										</EditQuizDialog>
+										<DeleteQuizButton
+											lessonId={lessonId}
+											quizId={question.id}
+										/>
+									</ButtonGroup>
+								</RenderWhenRole>
+							) : (
+								selector?.(question)
+							)
+						}
+						className="decoration-0"
+					>
 						<Badge className="min-w-16 capitalize">{question.type}</Badge>
 						{index + 1}. {question.question}
 					</AccordionTrigger>
 					<AccordionContent className="space-y-2">
 						{children?.(question)}
-
-						{editable && (
-							<RenderWhenRole role={["admin", "scheduler"]}>
-								<ButtonGroup>
-									<EditQuizDialog lessonId={lessonId} quiz={question}>
-										<Button variant="outline" size="sm">
-											<PenIcon />
-											Edit
-										</Button>
-									</EditQuizDialog>
-									<DeleteQuizButton lessonId={lessonId} quizId={question.id} />
-								</ButtonGroup>
-							</RenderWhenRole>
-						)}
 
 						{question.type === "choices" && (
 							<ItemGroup>

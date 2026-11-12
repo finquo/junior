@@ -6,7 +6,12 @@ import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bubble, BubbleContent } from "@/components/ui/bubble";
+import {
+	Bubble,
+	BubbleContent,
+	BubbleGroup,
+	BubbleHeader,
+} from "@/components/ui/bubble";
 import {
 	Drawer,
 	DrawerContent,
@@ -42,6 +47,11 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { RenderWhenRole } from "@/hooks/role";
 import { type GetFormZod, getInitials } from "@/lib/utils";
 import {
@@ -123,35 +133,21 @@ export function ChatDrawer({
 										const isMine = message.senderId === myUserId;
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
+
+										const role = roles?.get(message.senderId);
 										const quiz = parseQuizMessage(message.text);
 										const answer = parseQuizAnswerMessage(message.text);
-										const role = roles?.get(message.senderId);
-										const isLastOfGroup =
-											messages[index + 1]?.senderId !== message.senderId;
+
 										const showDetails =
+											!isMine &&
 											messages[index - 1]?.senderId !== message.senderId;
-										const details = (
-											<MessageHeader
-												className={cn(align === "end" && "text-right")}
-											>
-												{message.senderName} · {role ?? "guest"}
-											</MessageHeader>
-										);
-										const avatar = (
-											<Avatar size="sm">
-												<AvatarFallback>
-													{getInitials(message.senderName)}
-												</AvatarFallback>
-											</Avatar>
-										);
+
 										const bubble = quiz ? (
 											<QuizMessageCard message={quiz} onSend={onSend} />
 										) : answer ? (
 											<QuizAnswerCard message={answer} />
 										) : (
-											<Bubble align={align} variant={variant}>
-												<BubbleContent>{message.text}</BubbleContent>
-											</Bubble>
+											message.text
 										);
 
 										return (
@@ -161,9 +157,26 @@ export function ChatDrawer({
 											>
 												<Message align={align}>
 													<MessageContent>
-														{!isMine && showDetails && details}
-														{bubble}
-														{!isMine && isLastOfGroup && avatar}
+														<Bubble align={align} variant={variant}>
+															{showDetails && (
+																<BubbleHeader>
+																	<Tooltip>
+																		<TooltipTrigger className="flex items-center gap-1">
+																			<Avatar size="sm">
+																				<AvatarFallback>
+																					{getInitials(message.senderName)}
+																				</AvatarFallback>
+																			</Avatar>
+																			{message.senderName}
+																		</TooltipTrigger>
+																		<TooltipContent>
+																			{role ?? "guest"}
+																		</TooltipContent>
+																	</Tooltip>
+																</BubbleHeader>
+															)}
+															<BubbleContent>{bubble}</BubbleContent>
+														</Bubble>
 													</MessageContent>
 												</Message>
 											</MessageScrollerItem>

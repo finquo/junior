@@ -9,6 +9,10 @@ import {
 	UpdateLessonSchema,
 } from "@/db/zod";
 import { db } from "@/services";
+import { DEMO_QUIZ } from "./quiz";
+
+// Demo sandbox for chat testing. Remove this branch before deploying.
+const DEMO_ID = "demo";
 
 export const lessonRouter = {
 	list: getRolesProcedure([
@@ -36,6 +40,20 @@ export const lessonRouter = {
 	])
 		.input(SelectLessonSchema.pick({ id: true }))
 		.handler(async ({ input }) => {
+			if (input.id === DEMO_ID)
+				return {
+					id: DEMO_ID,
+					name: "Demo Lesson",
+					description: "Demo lesson for chat testing.",
+					language: "en-IN",
+					program: null,
+					programInfo: null,
+					quiz: DEMO_QUIZ,
+					period: "01:00:00",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				} as const;
+
 			return await tryAPI(
 				"db-core-get-lesson",
 				db.query.lesson.findFirst({

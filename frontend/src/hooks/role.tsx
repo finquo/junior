@@ -30,14 +30,14 @@ export function RenderWhenRole({
 }) {
 	const { data } = useAuth();
 
-	if (!data?.role) return <>{fallback}</>;
+	if (!data?.role) return fallback;
 
 	const roles = Array.isArray(role) ? role : [role];
 	if (roles.includes(data.role as Role)) {
-		return <>{children}</>;
+		return children;
 	}
 
-	return <>{fallback}</>;
+	return fallback;
 }
 
 export function useHasRole(role: Role | Role[]): boolean {

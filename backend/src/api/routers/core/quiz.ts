@@ -7,9 +7,35 @@ import {
 	publicProcedure,
 	tryAPI,
 } from "@/api/procedure";
-import { anwserZod, quizSubmitZod, quizZod } from "@/config/quiz";
+import { anwserZod, type Quiz, quizSubmitZod, quizZod } from "@/config/quiz";
 import { schema } from "@/db";
 import { db } from "@/services";
+
+// Demo sandbox for chat testing. Remove this branch before deploying.
+const DEMO_ID = "demo";
+
+export const DEMO_QUIZ: Quiz[] = [
+	{
+		id: "demo-options",
+		question: "Which of these is a prime number?",
+		type: "options",
+		options: ["4", "6", "7", "9"],
+		anwser: "7",
+	},
+	{
+		id: "demo-choices",
+		question: "Select all even numbers.",
+		type: "choices",
+		choices: ["2", "3", "4", "5"],
+		anwser: ["2", "4"],
+	},
+	{
+		id: "demo-text",
+		question: "What is the capital of India?",
+		type: "text",
+		anwser: "New Delhi",
+	},
+];
 
 export const quizRouter = {
 	get: publicProcedure
@@ -20,6 +46,11 @@ export const quizRouter = {
 			}),
 		)
 		.handler(async ({ input }) => {
+			if (input.lessonId === DEMO_ID)
+				return DEMO_QUIZ.filter((question) =>
+					input.quizIds.includes(question.id),
+				).map(({ anwser: _anwser, ...question }) => question);
+
 			const lesson = await tryAPI(
 				"db-core-quiz-lesson",
 				db.query.lesson.findFirst({

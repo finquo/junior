@@ -5,6 +5,7 @@ import type { QuizAnswerMessage, QuizMessage } from "backend/config";
 import { quizAnswerMessageZod, quizMessageZod } from "backend/config";
 import { CheckIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import {
 	Item,
 	ItemContent,
@@ -20,6 +21,10 @@ import {
 	QuestionnaireError,
 	QuestionnaireInput,
 	QuestionnaireItem,
+	QuestionnaireNext,
+	QuestionnairePrevious,
+	QuestionnaireProgress,
+	QuestionnaireSkip,
 	QuestionnaireSubmit,
 	QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
@@ -60,16 +65,19 @@ export function QuizMessageCard({
 
 	if (isPending) return <Skeleton className="h-24 w-full" />;
 
+	if (!questions)
+		return (
+			<Alert>
+				<AlertTitle>Questions not found</AlertTitle>
+			</Alert>
+		);
+
 	return (
 		<RenderWhenRole
 			role="student"
-			fallback={<QuizReadonly questions={questions ?? []} />}
+			fallback={<QuizReadonly questions={questions} />}
 		>
-			<QuizAnswer
-				message={message}
-				questions={questions ?? []}
-				onSend={onSend}
-			/>
+			<QuizAnswer message={message} questions={questions} onSend={onSend} />
 		</RenderWhenRole>
 	);
 }
@@ -93,7 +101,8 @@ type QuizQuestion = {
 
 function QuizReadonly({ questions }: { questions: QuizQuestion[] }) {
 	return (
-		<Questionnaire items={questions.map((question) => ({ name: question.id }))}>
+		<Questionnaire items={questions.map((q) => ({ name: q.id }))}>
+			<QuestionnaireProgress />
 			{questions.map((question) => {
 				const choices =
 					question.type === "choices"
@@ -104,7 +113,7 @@ function QuizReadonly({ questions }: { questions: QuizQuestion[] }) {
 				const isText = question.type === "text";
 
 				return (
-					<QuestionnaireItem key={question.id} name={question.id} disabled>
+					<QuestionnaireItem key={question.id} name={question.id}>
 						<QuestionnaireTitle>{question.question}</QuestionnaireTitle>
 						<QuestionnaireChoices>
 							{choices.map((choice) => (
@@ -123,6 +132,12 @@ function QuizReadonly({ questions }: { questions: QuizQuestion[] }) {
 					</QuestionnaireItem>
 				);
 			})}
+			<QuestionnaireActions>
+				<QuestionnairePrevious />
+				<QuestionnaireSkip />
+				<QuestionnaireNext />
+				<QuestionnaireSubmit disabled />
+			</QuestionnaireActions>
 		</Questionnaire>
 	);
 }
@@ -181,12 +196,10 @@ function QuizAnswer({
 
 	return (
 		<Questionnaire
-			items={questions.map((question) => ({
-				name: question.id,
-				required: true,
-			}))}
+			items={questions.map((q) => ({ name: q.id }))}
 			onSubmit={handleSubmit}
 		>
+			<QuestionnaireProgress />
 			{questions.map((question) => {
 				const choices =
 					question.type === "choices"
@@ -200,7 +213,6 @@ function QuizAnswer({
 					<QuestionnaireItem
 						key={question.id}
 						name={question.id}
-						required
 						multiple={question.type === "choices"}
 					>
 						<QuestionnaireTitle>{question.question}</QuestionnaireTitle>
@@ -210,16 +222,22 @@ function QuizAnswer({
 									{choice}
 								</QuestionnaireChoice>
 							))}
-							{isText && <QuestionnaireInput aria-label={question.question} />}
+							{isText && (
+								<QuestionnaireInput
+									placeholder="Type your anwser"
+									aria-label={question.question}
+								/>
+							)}
 						</QuestionnaireChoices>
 						<QuestionnaireError />
 					</QuestionnaireItem>
 				);
 			})}
 			<QuestionnaireActions>
-				<QuestionnaireSubmit disabled={submit.isPending}>
-					Submit
-				</QuestionnaireSubmit>
+				<QuestionnairePrevious />
+				<QuestionnaireNext />
+				<QuestionnaireSkip />
+				<QuestionnaireSubmit disabled={submit.isPending} />
 			</QuestionnaireActions>
 		</Questionnaire>
 	);

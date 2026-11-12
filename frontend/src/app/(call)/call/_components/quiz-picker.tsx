@@ -25,6 +25,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/hooks/api";
+
 export function QuizPicker({
 	slotId,
 	onSend,
@@ -83,8 +84,10 @@ export function QuizPicker({
 								Choose the questions to send to the student in this session.
 							</DialogDescription>
 						</DialogHeader>
-						<QuizList quiz={questions} lessonId={lessonId ?? ""}>
-							{(question) => (
+						<QuizList
+							quiz={questions}
+							lessonId={lessonId ?? ""}
+							selector={(question) => (
 								<Checkbox
 									id={question.id}
 									aria-label={question.question}
@@ -92,7 +95,7 @@ export function QuizPicker({
 									onCheckedChange={(checked) => toggle(question.id, !!checked)}
 								/>
 							)}
-						</QuizList>
+						/>
 						<DialogFooter>
 							<DialogClose asChild>
 								<Button variant="outline">Close</Button>
