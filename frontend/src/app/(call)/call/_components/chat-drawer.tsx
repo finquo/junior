@@ -45,6 +45,7 @@ import {
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import { type GetFormZod, getInitials } from "@/lib/utils";
+import { useCall } from "./hooks";
 import {
 	parseQuizAnswerMessage,
 	parseQuizMessage,
@@ -53,14 +54,6 @@ import {
 } from "./quiz-message";
 import { QuizPicker } from "./quiz-picker";
 import { isGuestId, roleLabel } from "./utils";
-
-export type ChatMessage = {
-	id: string;
-	senderId: string;
-	senderIdentity?: string;
-	senderName: string;
-	text: string;
-};
 
 function SenderLabel({
 	name,
@@ -107,19 +100,15 @@ const chatSchema = z.object({
 	text: z.string().trim().min(1).max(1000),
 });
 
-export function ChatDrawer({
-	children,
-	messages,
-	myUserId,
-	slotId,
-	onSend,
-}: {
-	children: React.ReactElement;
-	messages: ChatMessage[];
-	myUserId?: string;
-	slotId?: string;
-	onSend: (text: string) => void;
-}) {
+export function ChatDrawer({ children }: { children: React.ReactElement }) {
+	const {
+		messages,
+		participants,
+		myself,
+		slotId,
+		sendChat: onSend,
+	} = useCall();
+	const myUserId = myself?.userId.toString();
 	const formRef = useRef<HTMLFormElement>(null);
 
 	const form = useForm({
@@ -168,6 +157,10 @@ export function ChatDrawer({
 
 										const quiz = parseQuizMessage(message.text);
 										const answer = parseQuizAnswerMessage(message.text);
+										const identity = participants.find(
+											(participant) =>
+												participant.userId.toString() === message.senderId,
+										)?.userIdentity;
 
 										const showDetails =
 											!isMine &&
@@ -193,7 +186,7 @@ export function ChatDrawer({
 																<BubbleHeader>
 																	<ChatSender
 																		name={message.senderName}
-																		identity={message.senderIdentity}
+																		identity={identity}
 																	/>
 																</BubbleHeader>
 															)}

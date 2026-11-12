@@ -1,18 +1,9 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import ZoomVideo, { ConnectionState, RecordingStatus } from "@zoom/videosdk";
 import {
 	LocalScreenShareComponent,
 	ScreenShareContainerComponent,
 	ScreenSharePlayerComponent,
-	useAudioState,
-	useMyself,
-	useScreenShareUsers,
-	useScreenshare,
-	useSession,
-	useSessionUsers,
-	useVideoState,
 } from "@zoom/videosdk-react";
 import {
 	CctvIcon,
@@ -32,13 +23,10 @@ import {
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { sileo as toast } from "sileo";
+import { useState } from "react";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
-import {
-	ExpandingButtonGroup,
-	type ExpandingButtonGroupItem,
-} from "@/components/arc/expanding-button-group/expanding-button-group";
+import { Button as ArcButton } from "@/components/arc/button/button";
+import { SplitButton } from "@/components/arc/split-button/split-button";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -51,6 +39,7 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
+	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,36 +48,29 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
 	ItemActions,
 	ItemContent,
-	ItemDescription,
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { api } from "@/hooks/api";
 import { cn } from "@/lib/utils";
-import { useJoinPreferences } from "./call-preferences";
-import { ChatDrawer, type ChatMessage } from "./chat-drawer";
+import { ChatDrawer } from "./chat-drawer";
+import { CallProvider, useCall } from "./hooks";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
-import {
-	MAX_REMOTE_TILES,
-	sdkErrorDescription,
-	VIRTUAL_BACKGROUND,
-} from "./utils";
+import { MAX_REMOTE_TILES } from "./utils";
 import { VideoTile } from "./video-tile";
+
+const activeClass =
+	"!border-success !bg-success !text-success-foreground hover:!bg-success/90";
+
+const splitClass =
+	"[&>div]:!overflow-hidden [&>div]:!rounded-[var(--radius-control)] [&>div>button]:!min-h-[var(--control-height-lg)] [&>div>button]:!rounded-none [&>div>button]:!text-sm [&>div>button:first-child]:!min-w-0 [&>div>button:first-child]:!px-5";
 
 export function VideoChat({
 	session,
@@ -127,247 +109,54 @@ export function VideoChat({
 	onLeave: () => void;
 	onEnd?: () => void;
 }) {
-	const [joinOptions] = useState(() => ({
-		disableVideo,
-		disableAudio,
-		virtualBackground,
-		videoOptions: { cameraId: cameraId ?? undefined },
-		audioOptions: {
-			microphoneId: microphoneId ?? undefined,
-			speakerId: speakerId ?? undefined,
-		},
-	}));
-	const { isError, isInSession, error } = useSession(
-		session,
-		token,
-		userName,
-		undefined,
-		undefined,
-		joinOptions,
+	return (
+		<CallProvider
+			session={session}
+			token={token}
+			userName={userName}
+			slotId={slotId}
+			role={role}
+			disableVideo={disableVideo}
+			disableAudio={disableAudio}
+			virtualBackground={virtualBackground}
+			cameraId={cameraId}
+			microphoneId={microphoneId}
+			speakerId={speakerId}
+			onLeave={onLeave}
+			onEnd={onEnd}
+		>
+			<CallView
+				avatar={avatar}
+				canViewDetails={canViewDetails}
+				canEndMeeting={canEndMeeting}
+				canRecord={canRecord}
+			/>
+		</CallProvider>
 	);
-	const { setCamera, setMic } = useJoinPreferences();
-	const participants = useSessionUsers();
-	const myself = useMyself();
-	const { isVideoOn } = useVideoState();
-	const { isAudioMuted, isCapturingAudio } = useAudioState();
-	const { ScreenshareRef, startScreenshare, stopScreenshare, isScreensharing } =
-		useScreenshare();
-	const screenShareUsers = useScreenShareUsers();
+}
 
-	const [recordingStatus, setRecordingStatus] = useState(
-		RecordingStatus.Stopped,
-	);
-	const [recordingPending, setRecordingPending] = useState(false);
-	const [audioPending, setAudioPending] = useState(false);
-	const [overlay, setOverlay] = useState<
-		"participants" | "details" | "camera" | "end" | "leave" | null
-	>(null);
-	const [virtualBackgroundEnabled, setVirtualBackgroundEnabled] =
-		useState(virtualBackground);
-	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-	const [pinnedUserId, setPinnedUserId] = useState<number | null>(null);
-	const myUserIdRef = useRef<string | undefined>(undefined);
-	const participantsRef = useRef(participants);
-	const onEndRef = useRef(onEnd);
-	const endMeetingMutation = useMutation(
-		api.meeting.end.mutationOptions({
-			onError: (error) =>
-				toast.error({
-					title: "Could not mark meeting as ended",
-					description: error.message,
-				}),
-		}),
-	);
+function CallView({
+	avatar,
+	canViewDetails,
+	canEndMeeting,
+	canRecord,
+}: {
+	avatar?: string;
+	canViewDetails: boolean;
+	canEndMeeting: boolean;
+	canRecord: boolean;
+}) {
+	const call = useCall();
+	const [drawer, setDrawer] = useState<"participants" | "details" | null>(null);
 
-	// A participant list containing ourselves means the join is already live,
-	// even if startAudio/startVideo are still resolving.
-	const connected = isInSession || participants.length > 0;
-	const isRecording =
-		recordingStatus === RecordingStatus.Recording ||
-		recordingStatus === RecordingStatus.Paused;
-	const isAudioOn = isCapturingAudio && !isAudioMuted;
-
-	const startRecording = useCallback(async () => {
-		setRecordingPending(true);
-
-		try {
-			const recording = ZoomVideo.createClient().getRecordingClient();
-
-			const status = recording.getCloudRecordingStatus();
-
-			if (
-				status === RecordingStatus.Recording ||
-				status === RecordingStatus.Paused
-			) {
-				setRecordingStatus(status);
-				return;
-			}
-
-			const result = await recording.startCloudRecording();
-			if (result instanceof Error) throw result;
-
-			setRecordingStatus(RecordingStatus.Recording);
-			toast.success({ title: "Recording started" });
-		} catch (error) {
-			toast.error({
-				title: "Could not start recording",
-				description: sdkErrorDescription(error),
-			});
-		} finally {
-			setRecordingPending(false);
-		}
-	}, []);
-
-	const stopRecording = useCallback(async () => {
-		setRecordingPending(true);
-
-		try {
-			const recording = ZoomVideo.createClient().getRecordingClient();
-
-			if (recording.getCloudRecordingStatus() === RecordingStatus.Stopped) {
-				setRecordingStatus(RecordingStatus.Stopped);
-				return;
-			}
-
-			const result = await recording.stopCloudRecording();
-			if (result instanceof Error) throw result;
-
-			setRecordingStatus(RecordingStatus.Stopped);
-			toast.info({ title: "Recording stopped" });
-		} catch (error) {
-			toast.error({
-				title: "Could not stop recording",
-				description: sdkErrorDescription(error),
-			});
-		} finally {
-			setRecordingPending(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		onEndRef.current = onEnd;
-	}, [onEnd]);
-
-	useEffect(() => {
-		myUserIdRef.current = myself?.userId.toString();
-	}, [myself?.userId]);
-
-	useEffect(() => {
-		participantsRef.current = participants;
-	}, [participants]);
-
-	useEffect(() => {
-		if (!connected) return;
-
-		const client = ZoomVideo.createClient();
-		const chat = client.getChatClient();
-
-		function handleChatMessage(payload: {
-			message: string;
-			sender: { userId: number; name: string };
-		}) {
-			const senderId = payload.sender.userId.toString();
-			if (senderId === myUserIdRef.current) return;
-
-			setChatMessages((previous) => [
-				...previous,
-				{
-					id: crypto.randomUUID(),
-					senderId,
-					senderIdentity: participantsRef.current.find(
-						(participant) => participant.userId === payload.sender.userId,
-					)?.userIdentity,
-					senderName: payload.sender.name,
-					text: payload.message,
-				},
-			]);
-		}
-
-		client.on("chat-on-message", handleChatMessage);
-		setChatMessages(
-			chat.getHistory().map((item) => ({
-				id: crypto.randomUUID(),
-				senderId: item.sender.userId.toString(),
-				senderIdentity: participantsRef.current.find(
-					(participant) => participant.userId === item.sender.userId,
-				)?.userIdentity,
-				senderName: item.sender.name,
-				text: item.message ?? "",
-			})),
-		);
-
-		return () => {
-			client.off("chat-on-message", handleChatMessage);
-		};
-	}, [connected]);
-
-	useEffect(() => {
-		if (!connected || !isVideoOn || !virtualBackgroundEnabled) return;
-
-		ZoomVideo.createClient()
-			.getMediaStream()
-			.updateVirtualBackgroundImage(VIRTUAL_BACKGROUND)
-			.catch((error: unknown) =>
-				toast.error({
-					title: "Could not apply virtual background",
-					description: sdkErrorDescription(error),
-				}),
-			);
-	}, [connected, isVideoOn, virtualBackgroundEnabled]);
-
-	useEffect(() => {
-		const client = ZoomVideo.createClient();
-
-		function handleConnectionChange(payload: {
-			state: ConnectionState;
-			reason?: string;
-		}) {
-			if (
-				payload.state === ConnectionState.Closed &&
-				payload.reason === "ended by host"
-			) {
-				onEndRef.current?.();
-			}
-		}
-
-		client.on("connection-change", handleConnectionChange);
-
-		return () => {
-			client.off("connection-change", handleConnectionChange);
-		};
-	}, []);
-
-	useEffect(() => {
-		if (!connected) return;
-
-		const client = ZoomVideo.createClient();
-
-		try {
-			const recording = client.getRecordingClient();
-
-			function handleRecordingChange(status: RecordingStatus) {
-				setRecordingStatus(status);
-			}
-
-			setRecordingStatus(recording.getCloudRecordingStatus());
-			client.on("recording-change", handleRecordingChange);
-
-			return () => {
-				client.off("recording-change", handleRecordingChange);
-			};
-		} catch {
-			return;
-		}
-	}, [connected]);
-
-	if (isError) {
+	if (call.isError) {
 		return (
 			<Container>
 				<Card>
 					<CardHeader>
 						<CardTitle>Unable to join the session</CardTitle>
 						<CardDescription>
-							{error?.reason ??
+							{call.error?.reason ??
 								"Something went wrong while joining the meeting."}
 						</CardDescription>
 					</CardHeader>
@@ -377,330 +166,29 @@ export function VideoChat({
 		);
 	}
 
-	if (!connected) {
+	if (!call.connected) {
 		return <Loader />;
 	}
 
-	const moderator = Boolean(myself?.isHost || myself?.isManager);
-
-	const others = participants
-		.filter((participant) => participant.userId !== myself?.userId)
+	const others = call.participants
+		.filter((participant) => participant.userId !== call.myself?.userId)
 		.sort(
 			(a, b) =>
-				Number(b.userId === pinnedUserId) - Number(a.userId === pinnedUserId),
+				Number(b.userId === call.pinnedUserId) -
+				Number(a.userId === call.pinnedUserId),
 		)
 		.slice(0, MAX_REMOTE_TILES);
 
-	const remoteScreenShareUsers = screenShareUsers.filter(
-		(userId) => userId !== myself?.userId,
+	const remoteScreenShareUsers = call.screenShareUsers.filter(
+		(userId) => userId !== call.myself?.userId,
 	);
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
-	const sharingParticipants = participants.filter(
+	const hasDetails = Boolean(call.slotId && canViewDetails);
+	const sharingParticipants = call.participants.filter(
 		(participant) =>
-			participant.userId !== myself?.userId &&
+			participant.userId !== call.myself?.userId &&
 			remoteScreenShareUsers.includes(participant.userId),
 	);
-
-	const sendChat = (text: string) => {
-		void ZoomVideo.createClient().getChatClient().sendToAll(text);
-		setChatMessages((previous) => [
-			...previous,
-			{
-				id: crypto.randomUUID(),
-				senderId: myself?.userId.toString() ?? "",
-				senderName: myself?.displayName ?? userName,
-				text,
-			},
-		]);
-	};
-
-	const releaseMedia = async () => {
-		const client = ZoomVideo.createClient();
-		const stream = client.getMediaStream();
-
-		if (isScreensharing) await stopScreenshare().catch(() => undefined);
-		if (isVideoOn) await stream.stopVideo().catch(() => undefined);
-		if (isCapturingAudio) await stream.stopAudio().catch(() => undefined);
-	};
-
-	const endMeeting = async () => {
-		if (slotId && ["admin", "scheduler"].includes(role)) {
-			await endMeetingMutation
-				.mutateAsync({ id: slotId })
-				.catch(() => undefined);
-		}
-
-		await releaseMedia();
-		await ZoomVideo.createClient().leave(true);
-		if (onEnd) onEnd();
-		else onLeave();
-	};
-
-	const togglePin = (userId: number) => {
-		setPinnedUserId((current) => (current === userId ? null : userId));
-	};
-
-	const muteParticipant = async (userId: number) => {
-		try {
-			const result = await ZoomVideo.createClient()
-				.getMediaStream()
-				.muteAudio(userId);
-			if (result) throw result;
-			toast.info({ title: "Participant muted" });
-		} catch (error) {
-			toast.error({
-				title: "Could not mute participant",
-				description: sdkErrorDescription(error),
-			});
-		}
-	};
-
-	const removeParticipant = async (userId: number) => {
-		try {
-			const result = await ZoomVideo.createClient().removeUser(userId);
-			if (result) throw result;
-			toast.info({ title: "Participant removed" });
-		} catch (error) {
-			toast.error({
-				title: "Could not remove participant",
-				description: sdkErrorDescription(error),
-			});
-		}
-	};
-
-	const leaveMeeting = async () => {
-		await releaseMedia();
-		await ZoomVideo.createClient().leave();
-		onLeave();
-	};
-
-	const toggleMicrophone = async () => {
-		if (audioPending) return;
-
-		setAudioPending(true);
-
-		const stream = ZoomVideo.createClient().getMediaStream();
-
-		try {
-			if (!isCapturingAudio) {
-				const result = await stream.startAudio();
-				if (result) throw result;
-				void setMic(true);
-				toast.success({ title: "Microphone on" });
-				return;
-			}
-
-			if (isAudioMuted) {
-				const result = await stream.unmuteAudio();
-				if (result) throw result;
-				void setMic(true);
-				toast.success({ title: "Microphone on" });
-				return;
-			}
-
-			const result = await stream.muteAudio();
-			if (result) throw result;
-			void setMic(false);
-			toast.info({ title: "Microphone off" });
-		} catch (error) {
-			toast.error({
-				title: "Could not change microphone",
-				description: sdkErrorDescription(error),
-			});
-		} finally {
-			setAudioPending(false);
-		}
-	};
-
-	const setCameraOn = async (next: boolean) => {
-		const stream = ZoomVideo.createClient().getMediaStream();
-
-		try {
-			if (next) {
-				await stream.startVideo(
-					virtualBackgroundEnabled
-						? { virtualBackground: { imageUrl: VIRTUAL_BACKGROUND } }
-						: undefined,
-				);
-			} else {
-				await stream.stopVideo();
-			}
-		} catch (error) {
-			toast.error({
-				title: "Could not change camera",
-				description: sdkErrorDescription(error),
-			});
-			return;
-		}
-
-		void setCamera(next);
-		if (next) toast.success({ title: "Camera on" });
-		else toast.info({ title: "Camera off" });
-	};
-
-	const flipCamera = async () => {
-		const stream = ZoomVideo.createClient().getMediaStream();
-		const cameras = stream.getCameraList();
-		const index = cameras.findIndex(
-			(camera) => camera.deviceId === stream.getActiveCamera(),
-		);
-		const next = cameras[(index + 1) % cameras.length];
-
-		if (!next) {
-			toast.error({ title: "No other camera found" });
-			return;
-		}
-
-		try {
-			await stream.switchCamera(next.deviceId);
-			toast.success({ title: "Camera switched" });
-		} catch (error) {
-			toast.error({
-				title: "Could not switch camera",
-				description: sdkErrorDescription(error),
-			});
-		}
-	};
-
-	const setVirtualBackgroundOn = async (next: boolean) => {
-		try {
-			if (isVideoOn) {
-				await ZoomVideo.createClient()
-					.getMediaStream()
-					.updateVirtualBackgroundImage(next ? VIRTUAL_BACKGROUND : undefined);
-			}
-		} catch (error) {
-			toast.error({
-				title: "Could not change background",
-				description: sdkErrorDescription(error),
-			});
-			return;
-		}
-
-		setVirtualBackgroundEnabled(next);
-	};
-
-	const cameraStatus = isVideoOn ? "On" : "Off";
-	const virtualBackgroundSupported =
-		isInSession &&
-		ZoomVideo.createClient().getMediaStream().isSupportVirtualBackground();
-
-	const toggleScreenshare = async () => {
-		if (isScreensharing) {
-			await stopScreenshare();
-			toast.info({ title: "Screen sharing stopped" });
-			return;
-		}
-
-		try {
-			await startScreenshare();
-			toast.success({ title: "Screen sharing started" });
-		} catch {
-			toast.error({ title: "Could not start screen sharing" });
-		}
-	};
-
-	const toggleRecording = async () => {
-		if (recordingPending) return;
-
-		if (isRecording) await stopRecording();
-		else await startRecording();
-	};
-
-	const callActions: ExpandingButtonGroupItem[] = [
-		{
-			id: "microphone",
-			label: isAudioOn ? "Mute" : "Unmute",
-			icon: audioPending ? (
-				<Spinner />
-			) : isAudioOn ? (
-				<MicIcon />
-			) : (
-				<MicOffIcon />
-			),
-			disabled: audioPending,
-			onSelect: toggleMicrophone,
-		},
-		{
-			id: "camera",
-			label: isVideoOn ? "Camera off" : "Camera on",
-			icon: isVideoOn ? <VideoIcon /> : <VideoOffIcon />,
-			onSelect: () => void setCameraOn(!isVideoOn),
-		},
-		{
-			id: "screenshare",
-			label: isScreensharing ? "Stop sharing" : "Share screen",
-			icon: isScreensharing ? <MonitorDot /> : <MonitorOff />,
-			onSelect: toggleScreenshare,
-		},
-	];
-
-	if (canRecord) {
-		callActions.push({
-			id: "recording",
-			label: isRecording ? "Stop recording" : "Start recording",
-			icon: recordingPending ? (
-				<Spinner />
-			) : isRecording ? (
-				<CctvIcon />
-			) : (
-				<CctvOffIcon />
-			),
-			tone: isRecording ? "danger" : "neutral",
-			disabled: recordingPending,
-			onSelect: toggleRecording,
-		});
-	}
-
-	callActions.push({
-		id: "chat",
-		label: "Chat",
-		icon: <MessageSquareIcon />,
-		wrap: (button) => (
-			<ChatDrawer
-				messages={chatMessages}
-				myUserId={myself?.userId.toString()}
-				slotId={slotId}
-				onSend={sendChat}
-			>
-				{button}
-			</ChatDrawer>
-		),
-	});
-
-	callActions.push({
-		id: "participants",
-		label: "Participants",
-		icon: <UsersIcon />,
-		onSelect: () => setOverlay("participants"),
-	});
-
-	if (slotId && canViewDetails) {
-		callActions.push({
-			id: "details",
-			label: "Meeting details",
-			icon: <InfoIcon />,
-			onSelect: () => setOverlay("details"),
-		});
-	}
-
-	if (canEndMeeting) {
-		callActions.push({
-			id: "end",
-			label: "End for all",
-			icon: <PhoneOffIcon />,
-			tone: "danger",
-			onSelect: () => setOverlay("end"),
-		});
-	}
-
-	callActions.push({
-		id: "leave",
-		label: "Leave",
-		icon: <LogOutIcon />,
-		tone: "danger",
-		onSelect: () => setOverlay("leave"),
-	});
 
 	return (
 		<div className="h-full min-h-64 p-2">
@@ -744,11 +232,11 @@ export function VideoChat({
 							user={participant}
 							avatar={participant.avatar}
 							menu={{
-								pinned: pinnedUserId === participant.userId,
-								moderator,
-								onPin: () => togglePin(participant.userId),
-								onMute: () => void muteParticipant(participant.userId),
-								onRemove: () => void removeParticipant(participant.userId),
+								pinned: call.pinnedUserId === participant.userId,
+								moderator: call.moderator,
+								onPin: () => call.togglePin(participant.userId),
+								onMute: () => void call.muteParticipant(participant.userId),
+								onRemove: () => void call.removeParticipant(participant.userId),
 							}}
 						/>
 					))}
@@ -757,18 +245,18 @@ export function VideoChat({
 					<Frame
 						className={cn(
 							"call-screenshare w-64 overflow-hidden p-0 shadow-lg",
-							!isScreensharing && "hidden",
+							!call.isScreensharing && "hidden",
 						)}
 					>
-						<LocalScreenShareComponent ref={ScreenshareRef} />
+						<LocalScreenShareComponent ref={call.ScreenshareRef} />
 					</Frame>
 
-					{myself && (
+					{call.myself && (
 						<VideoTile
-							user={myself}
-							voiceOn={isAudioOn}
-							videoOn={isVideoOn}
-							role={role}
+							user={call.myself}
+							voiceOn={call.isAudioOn}
+							videoOn={call.isVideoOn}
+							role={call.role}
 							avatar={avatar}
 							self
 							className="group min-w-64 shadow-lg"
@@ -778,9 +266,9 @@ export function VideoChat({
 									<FieldLabel htmlFor="tile-microphone-switch">
 										<Field className="h-10" orientation="horizontal">
 											<ItemMedia variant="icon">
-												{audioPending ? (
+												{call.audioPending ? (
 													<Spinner />
-												) : isAudioOn ? (
+												) : call.isAudioOn ? (
 													<MicIcon />
 												) : (
 													<MicOffIcon />
@@ -793,9 +281,9 @@ export function VideoChat({
 												<Switch
 													id="tile-microphone-switch"
 													aria-label="Microphone"
-													checked={isAudioOn}
-													disabled={audioPending}
-													onCheckedChange={() => toggleMicrophone()}
+													checked={call.isAudioOn}
+													disabled={call.audioPending}
+													onCheckedChange={() => call.toggleMicrophone()}
 												/>
 											</ItemActions>
 										</Field>
@@ -803,7 +291,7 @@ export function VideoChat({
 									<FieldLabel htmlFor="tile-camera-switch">
 										<Field className="h-10" orientation="horizontal">
 											<ItemMedia variant="icon">
-												{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+												{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
 											</ItemMedia>
 											<ItemContent>
 												<ItemTitle>Camera</ItemTitle>
@@ -812,9 +300,9 @@ export function VideoChat({
 												<Switch
 													id="tile-camera-switch"
 													aria-label="Camera"
-													checked={isVideoOn}
+													checked={call.isVideoOn}
 													onCheckedChange={(checked) =>
-														void setCameraOn(checked)
+														void call.setCameraOn(checked)
 													}
 												/>
 											</ItemActions>
@@ -823,7 +311,7 @@ export function VideoChat({
 									<FieldLabel htmlFor="tile-background-switch">
 										<Field className="h-10" orientation="horizontal">
 											<ItemMedia variant="icon">
-												{virtualBackgroundEnabled ? (
+												{call.backgroundEnabled ? (
 													<ImageIcon />
 												) : (
 													<ImageOffIcon />
@@ -836,10 +324,12 @@ export function VideoChat({
 												<Switch
 													id="tile-background-switch"
 													aria-label="Virtual background"
-													checked={virtualBackgroundEnabled}
-													disabled={!isVideoOn || !virtualBackgroundSupported}
+													checked={call.backgroundEnabled}
+													disabled={
+														!call.isVideoOn || !call.backgroundSupported
+													}
 													onCheckedChange={(checked) =>
-														void setVirtualBackgroundOn(checked)
+														void call.setVirtualBackgroundOn(checked)
 													}
 												/>
 											</ItemActions>
@@ -860,8 +350,8 @@ export function VideoChat({
 													size="icon-sm"
 													variant="ghost"
 													aria-label="Flip camera"
-													disabled={!isVideoOn}
-													onClick={() => void flipCamera()}
+													disabled={!call.isVideoOn}
+													onClick={() => void call.flipCamera()}
 												>
 													<SwitchCameraIcon />
 												</Button>
@@ -875,150 +365,152 @@ export function VideoChat({
 					)}
 				</div>
 
-				<div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
-					<ExpandingButtonGroup
-						label="Call actions"
-						defaultExpanded={null}
-						items={callActions}
-						className="shadow-lg"
-					/>
-				</div>
-
-				<ParticipantsDrawer
-					participants={participants}
-					open={overlay === "participants"}
-					onOpenChange={(open) => setOverlay(open ? "participants" : null)}
-				/>
-
-				{slotId && canViewDetails && (
-					<MeetingDetails
-						slotId={slotId}
-						open={overlay === "details"}
-						onOpenChange={(open) => setOverlay(open ? "details" : null)}
-					/>
-				)}
-
-				<Dialog
-					open={overlay === "camera"}
-					onOpenChange={(open) => setOverlay(open ? "camera" : null)}
+				<div
+					className={cn(
+						"absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2",
+						splitClass,
+					)}
 				>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Camera</DialogTitle>
-							<DialogDescription>
-								Your camera is currently {cameraStatus}.
-							</DialogDescription>
-						</DialogHeader>
-						{myself && (
-							<VideoTile
-								user={myself}
-								voiceOn={isAudioOn}
-								videoOn={isVideoOn}
-								role={role}
-								avatar={avatar}
-								self
-								className="aspect-video"
-							/>
-						)}
-						<FieldGroup>
-							<FieldLabel htmlFor="camera-switch">
-								<Field orientation="horizontal" className="items-start">
-									<ItemMedia variant="icon">
-										{isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-									</ItemMedia>
-									<ItemContent>
-										<ItemTitle>Camera</ItemTitle>
-									</ItemContent>
-									<ItemActions>
-										<Switch
-											id="camera-switch"
-											aria-label="Camera"
-											checked={isVideoOn}
-											onCheckedChange={(checked) => void setCameraOn(checked)}
-										/>
-									</ItemActions>
-								</Field>
-							</FieldLabel>
-							<FieldLabel htmlFor="virtual-background-switch">
-								<Field orientation="horizontal" className="items-start">
-									<ItemMedia variant="icon">
-										{virtualBackgroundEnabled ? (
-											<ImageIcon />
-										) : (
-											<ImageOffIcon />
-										)}
-									</ItemMedia>
-									<ItemContent>
-										<ItemTitle>Virtual background</ItemTitle>
-										<ItemDescription>
-											Replace your background with the banner.
-										</ItemDescription>
-									</ItemContent>
-									<ItemActions>
-										<Switch
-											id="virtual-background-switch"
-											aria-label="Virtual background"
-											checked={virtualBackgroundEnabled}
-											disabled={!isVideoOn || !virtualBackgroundSupported}
-											onCheckedChange={(checked) =>
-												void setVirtualBackgroundOn(checked)
-											}
-										/>
-									</ItemActions>
-								</Field>
-							</FieldLabel>
-						</FieldGroup>
-					</DialogContent>
-				</Dialog>
-
-				{canEndMeeting && (
-					<AlertDialog
-						open={overlay === "end"}
-						onOpenChange={(open) => setOverlay(open ? "end" : null)}
+					<ArcButton
+						size="lg"
+						variant="secondary"
+						loading={call.audioPending}
+						className={call.isAudioOn ? activeClass : undefined}
+						onClick={() => void call.toggleMicrophone()}
 					>
+						{call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
+						{call.isAudioOn ? "Microphone on" : "Microphone off"}
+					</ArcButton>
+					<ArcButton
+						size="lg"
+						variant="secondary"
+						loading={call.cameraPending}
+						className={call.isVideoOn ? activeClass : undefined}
+						onClick={() => void call.setCameraOn(!call.isVideoOn)}
+					>
+						{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+						{call.isVideoOn ? "Camera on" : "Camera off"}
+					</ArcButton>
+					<ArcButton
+						size="lg"
+						variant="secondary"
+						loading={call.screensharePending}
+						className={call.isScreensharing ? activeClass : undefined}
+						onClick={() => void call.toggleScreenshare()}
+					>
+						{call.isScreensharing ? <MonitorDot /> : <MonitorOff />}
+						{call.isScreensharing ? "Screen sharing on" : "Screen sharing off"}
+					</ArcButton>
+					{canRecord && (
+						<ArcButton
+							size="lg"
+							variant="secondary"
+							loading={call.recordingPending}
+							className={call.isRecording ? activeClass : undefined}
+							onClick={() => void call.toggleRecording()}
+						>
+							{call.isRecording ? <CctvIcon /> : <CctvOffIcon />}
+							{call.isRecording ? "Recording on" : "Recording off"}
+						</ArcButton>
+					)}
+					<ChatDrawer>
+						<ArcButton size="lg" variant="secondary">
+							<MessageSquareIcon />
+							Chat
+						</ArcButton>
+					</ChatDrawer>
+					{hasDetails && (
+						<SplitButton
+							label="Participants"
+							icon={<UsersIcon />}
+							variant="secondary"
+							onClick={() => setDrawer("participants")}
+							actions={[
+								{
+									label: "Meeting details",
+									icon: <InfoIcon />,
+									onSelect: () => setDrawer("details"),
+								},
+							]}
+						/>
+					)}
+					{!hasDetails && (
+						<ArcButton
+							size="lg"
+							variant="secondary"
+							onClick={() => setDrawer("participants")}
+						>
+							<UsersIcon />
+							Participants
+						</ArcButton>
+					)}
+					{canEndMeeting && (
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<ArcButton size="lg" variant="danger">
+									<PhoneOffIcon />
+									End for all
+								</ArcButton>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>End meeting for all?</AlertDialogTitle>
+									<AlertDialogDescription>
+										Everyone will be disconnected immediately. This cannot be
+										undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction
+										variant="destructive"
+										onClick={() => void call.endMeeting()}
+									>
+										End meeting
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					)}
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<ArcButton size="lg" variant="danger">
+								<LogOutIcon />
+								Leave
+							</ArcButton>
+						</AlertDialogTrigger>
 						<AlertDialogContent>
 							<AlertDialogHeader>
-								<AlertDialogTitle>End meeting for all?</AlertDialogTitle>
+								<AlertDialogTitle>Leave the meeting?</AlertDialogTitle>
 								<AlertDialogDescription>
-									Everyone will be disconnected immediately. This cannot be
-									undone.
+									You can rejoin while the meeting is still live.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter>
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogCancel>Stay</AlertDialogCancel>
 								<AlertDialogAction
 									variant="destructive"
-									onClick={() => void endMeeting()}
+									onClick={() => void call.leaveMeeting()}
 								>
-									End meeting
+									Leave
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
 					</AlertDialog>
-				)}
+				</div>
 
-				<AlertDialog
-					open={overlay === "leave"}
-					onOpenChange={(open) => setOverlay(open ? "leave" : null)}
-				>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Leave the meeting?</AlertDialogTitle>
-							<AlertDialogDescription>
-								You can rejoin while the meeting is still live.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Stay</AlertDialogCancel>
-							<AlertDialogAction
-								variant="destructive"
-								onClick={() => void leaveMeeting()}
-							>
-								Leave
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
+				<ParticipantsDrawer
+					open={drawer === "participants"}
+					onOpenChange={(open) => setDrawer(open ? "participants" : null)}
+				/>
+
+				{call.slotId && canViewDetails && (
+					<MeetingDetails
+						slotId={call.slotId}
+						open={drawer === "details"}
+						onOpenChange={(open) => setDrawer(open ? "details" : null)}
+					/>
+				)}
 			</FramePanel>
 		</div>
 	);

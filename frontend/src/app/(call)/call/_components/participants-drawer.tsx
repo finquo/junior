@@ -1,8 +1,7 @@
 "use client";
 
 import type { Participant } from "@zoom/videosdk";
-import { MicIcon, MicOffIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { MicIcon, MicOffIcon, UserXIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import {
 	DrawerHeader,
 	DrawerInner,
 	DrawerTitle,
-	DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
 	Item,
@@ -26,6 +24,7 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { getInitials } from "@/lib/utils";
+import { useCall } from "./hooks";
 import { ParticipantRole } from "./video-tile";
 
 function isVoiceOn(participant: Participant) {
@@ -57,19 +56,22 @@ const invite = async () => {
 };
 
 export function ParticipantsDrawer({
-	participants,
-	children,
 	open,
 	onOpenChange,
 }: {
-	participants: Participant[];
-	children?: ReactNode;
-	open?: boolean;
-	onOpenChange?: (open: boolean) => void;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 }) {
+	const {
+		participants,
+		moderator,
+		myself,
+		muteParticipant,
+		removeParticipant,
+	} = useCall();
+
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
-			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>Participants</DrawerTitle>
@@ -101,6 +103,31 @@ export function ParticipantsDrawer({
 											<MicOffIcon aria-label="Voice off" />
 										)}
 										<ParticipantRole user={participant} />
+										{moderator && participant.userId !== myself?.userId && (
+											<>
+												<Button
+													size="icon-sm"
+													variant="outline"
+													aria-label="Mute"
+													disabled={!voiceOn}
+													onClick={() =>
+														void muteParticipant(participant.userId)
+													}
+												>
+													<MicOffIcon />
+												</Button>
+												<Button
+													size="icon-sm"
+													variant="destructive"
+													aria-label="Remove"
+													onClick={() =>
+														void removeParticipant(participant.userId)
+													}
+												>
+													<UserXIcon />
+												</Button>
+											</>
+										)}
 									</ItemActions>
 								</Item>
 							);

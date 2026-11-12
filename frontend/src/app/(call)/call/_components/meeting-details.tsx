@@ -22,7 +22,6 @@ import {
 	DrawerHeader,
 	DrawerInner,
 	DrawerTitle,
-	DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
 	Item,
@@ -277,18 +276,15 @@ function DetailsBody({ slotId }: { slotId: string }) {
 
 export function MeetingDetails({
 	slotId,
-	children,
 	open,
 	onOpenChange,
 }: {
 	slotId: string;
-	children?: ReactNode;
-	open?: boolean;
-	onOpenChange?: (open: boolean) => void;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 }) {
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
-			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>Meeting details</DrawerTitle>
