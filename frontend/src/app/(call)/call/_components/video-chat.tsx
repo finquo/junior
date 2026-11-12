@@ -85,8 +85,6 @@ import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
 import {
 	MAX_REMOTE_TILES,
-	participantRole,
-	roleLabel,
 	sdkErrorDescription,
 	VIRTUAL_BACKGROUND,
 } from "./utils";
@@ -169,6 +167,7 @@ export function VideoChat({
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const [pinnedUserId, setPinnedUserId] = useState<number | null>(null);
 	const myUserIdRef = useRef<string | undefined>(undefined);
+	const participantsRef = useRef(participants);
 	const onEndRef = useRef(onEnd);
 	const endMeetingMutation = useMutation(
 		api.meeting.end.mutationOptions({
@@ -179,15 +178,6 @@ export function VideoChat({
 				}),
 		}),
 	);
-
-	const chatRoles = new Map(
-		participants.map((participant) => [
-			participant.userId.toString(),
-			roleLabel(participantRole(participant) ?? "guest"),
-		]),
-	);
-	const myChatId = myself?.userId.toString() ?? myUserIdRef.current;
-	if (myChatId) chatRoles.set(myChatId, roleLabel(role));
 
 	// A participant list containing ourselves means the join is already live,
 	// even if startAudio/startVideo are still resolving.
@@ -263,6 +253,10 @@ export function VideoChat({
 	}, [myself?.userId]);
 
 	useEffect(() => {
+		participantsRef.current = participants;
+	}, [participants]);
+
+	useEffect(() => {
 		if (!connected) return;
 
 		const client = ZoomVideo.createClient();
@@ -280,6 +274,9 @@ export function VideoChat({
 				{
 					id: crypto.randomUUID(),
 					senderId,
+					senderIdentity: participantsRef.current.find(
+						(participant) => participant.userId === payload.sender.userId,
+					)?.userIdentity,
 					senderName: payload.sender.name,
 					text: payload.message,
 				},
@@ -291,6 +288,9 @@ export function VideoChat({
 			chat.getHistory().map((item) => ({
 				id: crypto.randomUUID(),
 				senderId: item.sender.userId.toString(),
+				senderIdentity: participantsRef.current.find(
+					(participant) => participant.userId === item.sender.userId,
+				)?.userIdentity,
 				senderName: item.sender.name,
 				text: item.message ?? "",
 			})),
@@ -660,7 +660,6 @@ export function VideoChat({
 			<ChatDrawer
 				messages={chatMessages}
 				myUserId={myself?.userId.toString()}
-				roles={chatRoles}
 				slotId={slotId}
 				onSend={sendChat}
 			>

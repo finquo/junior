@@ -1,17 +1,11 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { cn } from "cn";
 import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-	Bubble,
-	BubbleContent,
-	BubbleGroup,
-	BubbleHeader,
-} from "@/components/ui/bubble";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bubble, BubbleContent, BubbleHeader } from "@/components/ui/bubble";
 import {
 	Drawer,
 	DrawerContent,
@@ -34,11 +28,7 @@ import {
 	InputGroupButton,
 	InputGroupTextarea,
 } from "@/components/ui/input-group";
-import {
-	Message,
-	MessageContent,
-	MessageHeader,
-} from "@/components/ui/message";
+import { Message, MessageContent } from "@/components/ui/message";
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -53,6 +43,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RenderWhenRole } from "@/hooks/role";
+import { FetchUser } from "@/hooks/user";
 import { type GetFormZod, getInitials } from "@/lib/utils";
 import {
 	parseQuizAnswerMessage,
@@ -61,13 +52,56 @@ import {
 	QuizMessageCard,
 } from "./quiz-message";
 import { QuizPicker } from "./quiz-picker";
+import { isGuestId, roleLabel } from "./utils";
 
 export type ChatMessage = {
 	id: string;
 	senderId: string;
+	senderIdentity?: string;
 	senderName: string;
 	text: string;
 };
+
+function SenderLabel({
+	name,
+	userRole,
+	image,
+}: {
+	name: string;
+	userRole: string;
+	image?: string | null;
+}) {
+	return (
+		<Tooltip>
+			<TooltipTrigger className="flex items-center gap-1">
+				<Avatar size="sm">
+					<AvatarImage src={image ?? undefined} alt={name} />
+					<AvatarFallback>{getInitials(name)}</AvatarFallback>
+				</Avatar>
+				{name}
+			</TooltipTrigger>
+			<TooltipContent>{roleLabel(userRole)}</TooltipContent>
+		</Tooltip>
+	);
+}
+
+function ChatSender({ name, identity }: { name: string; identity?: string }) {
+	const fallback = <SenderLabel name={name} userRole="guest" />;
+
+	if (!identity || isGuestId(identity)) return fallback;
+
+	return (
+		<FetchUser id={identity} isPending={fallback} notFound={fallback}>
+			{(dbUser) => (
+				<SenderLabel
+					name={dbUser.name}
+					userRole={dbUser.role}
+					image={dbUser.image}
+				/>
+			)}
+		</FetchUser>
+	);
+}
 
 const chatSchema = z.object({
 	text: z.string().trim().min(1).max(1000),
@@ -77,14 +111,12 @@ export function ChatDrawer({
 	children,
 	messages,
 	myUserId,
-	roles,
 	slotId,
 	onSend,
 }: {
 	children: React.ReactElement;
 	messages: ChatMessage[];
 	myUserId?: string;
-	roles?: Map<string, string>;
 	slotId?: string;
 	onSend: (text: string) => void;
 }) {
@@ -134,7 +166,6 @@ export function ChatDrawer({
 										const align = isMine ? "end" : "start";
 										const variant = isMine ? "muted" : "default";
 
-										const role = roles?.get(message.senderId);
 										const quiz = parseQuizMessage(message.text);
 										const answer = parseQuizAnswerMessage(message.text);
 
@@ -160,19 +191,10 @@ export function ChatDrawer({
 														<Bubble align={align} variant={variant}>
 															{showDetails && (
 																<BubbleHeader>
-																	<Tooltip>
-																		<TooltipTrigger className="flex items-center gap-1">
-																			<Avatar size="sm">
-																				<AvatarFallback>
-																					{getInitials(message.senderName)}
-																				</AvatarFallback>
-																			</Avatar>
-																			{message.senderName}
-																		</TooltipTrigger>
-																		<TooltipContent>
-																			{role ?? "guest"}
-																		</TooltipContent>
-																	</Tooltip>
+																	<ChatSender
+																		name={message.senderName}
+																		identity={message.senderIdentity}
+																	/>
 																</BubbleHeader>
 															)}
 															<BubbleContent>{bubble}</BubbleContent>
