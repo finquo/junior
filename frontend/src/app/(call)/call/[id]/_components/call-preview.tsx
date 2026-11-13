@@ -1,7 +1,11 @@
 "use client";
 
 import type ZoomVideoSDK from "@zoom/videosdk";
-import type { LocalAudioTrack, LocalVideoTrack } from "@zoom/videosdk";
+import type {
+	LocalAudioTrack,
+	LocalVideoTrack,
+	VideoPlayer,
+} from "@zoom/videosdk";
 import { MicIcon, VideoOffIcon, Volume2Icon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
@@ -34,6 +38,24 @@ import {
 const DEFAULT_DEVICE = "default";
 const LEVEL_POLL_MS = 100;
 const SPEAKER_TEST_MS = 5000;
+const MAX_RECORD_MS = 10_000;
+
+// The SDK registers the video-player web components; React 19 needs the
+// intrinsic elements declared to render them.
+declare module "react" {
+	namespace JSX {
+		interface IntrinsicElements {
+			"video-player": React.DetailedHTMLProps<
+				React.HTMLAttributes<HTMLElement>,
+				HTMLElement
+			>;
+			"video-player-container": React.DetailedHTMLProps<
+				React.HTMLAttributes<HTMLElement>,
+				HTMLElement
+			>;
+		}
+	}
+}
 
 type DeviceList = Array<{ label: string; deviceId: string }>;
 
@@ -105,40 +127,131 @@ function DeviceSelect({
 function MicrophoneItem({ preview }: { preview: CallPreviewState }) {
 	const [state, setState] = useState<"idle" | "recording" | "playing">("idle");
 	const [testLevel, setTestLevel] = useState(0);
-	const testerRef =
-		useRef<ReturnType<LocalAudioTrack["testMicrophone"]>>(undefined);
+	const streamRef = useRef<MediaStream | undefined>(undefined);
+	const recorderRef = useRef<MediaRecorder | undefined>(undefined);
+	const playerRef = useRef<HTMLAudioElement | undefined>(undefined);
+	const audioCtxRef = useRef<AudioContext | undefined>(undefined);
+	const timerRef = useRef<number | undefined>(undefined);
+	const pollRef = useRef<number | undefined>(undefined);
 	const track = preview.audioTrack;
 
-	useEffect(() => {
-		return () => {
-			testerRef.current?.destroy();
-		};
+	const cleanup = useCallback(() => {
+		window.clearTimeout(timerRef.current);
+		window.clearInterval(pollRef.current);
+		recorderRef.current = undefined;
+		playerRef.current?.pause();
+		playerRef.current = undefined;
+		streamRef.current?.getTracks().forEach((streamTrack) => {
+			streamTrack.stop();
+		});
+		streamRef.current = undefined;
+		void audioCtxRef.current?.close();
+		audioCtxRef.current = undefined;
+		setTestLevel(0);
 	}, []);
 
+	useEffect(() => cleanup, [cleanup]);
+
 	const reset = () => {
-		testerRef.current?.destroy();
-		testerRef.current = undefined;
+		cleanup();
 		setState("idle");
-		setTestLevel(0);
+	};
+
+	// Plays the finished recording through the selected speaker (setSinkId on
+	// the audio element; falls back to the system default when it fails).
+	const playRecording = (blob: Blob) => {
+		const player = new Audio(URL.createObjectURL(blob));
+		playerRef.current = player;
+
+		const finish = () => {
+			reset();
+		};
+
+		player.onended = finish;
+		player.onerror = () => {
+			toast.error({ title: "Could not play the recording" });
+			finish();
+		};
+
+		const speakerId = preview.speakerId;
+		if (speakerId && "setSinkId" in player) {
+			player.setSinkId(speakerId).catch(() => {
+				// fall back to the system default output
+			});
+		}
+
+		setState("playing");
+		void player.play().catch(() => {
+			toast.error({ title: "Could not play the recording" });
+			finish();
+		});
+	};
+
+	const startRecording = async () => {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: preview.microphoneId
+					? { deviceId: { exact: preview.microphoneId } }
+					: true,
+			});
+			streamRef.current = stream;
+
+			// Live level meter while recording, same slot the tester filled.
+			const ctx = new AudioContext();
+			audioCtxRef.current = ctx;
+			const analyser = ctx.createAnalyser();
+			ctx.createMediaStreamSource(stream).connect(analyser);
+			const bins = new Uint8Array(analyser.frequencyBinCount);
+			pollRef.current = window.setInterval(() => {
+				analyser.getByteFrequencyData(bins);
+				let sum = 0;
+				for (const bin of bins) sum += bin;
+				setTestLevel(Math.round(sum / bins.length));
+			}, LEVEL_POLL_MS);
+
+			const chunks: Blob[] = [];
+			const recorder = new MediaRecorder(stream);
+			recorderRef.current = recorder;
+			recorder.ondataavailable = (event) => {
+				if (event.data.size) chunks.push(event.data);
+			};
+			recorder.onstop = () => {
+				window.clearInterval(pollRef.current);
+				const blob = new Blob(chunks, { type: recorder.mimeType });
+				if (!blob.size) {
+					toast.error({ title: "Nothing was recorded" });
+					reset();
+					return;
+				}
+				playRecording(blob);
+			};
+
+			recorder.start();
+			setState("recording");
+			timerRef.current = window.setTimeout(() => {
+				if (recorder.state !== "inactive") recorder.stop();
+			}, MAX_RECORD_MS);
+		} catch (error) {
+			toast.error({
+				title: "Could not record the microphone",
+				description: sdkErrorDescription(error),
+			});
+			reset();
+		}
 	};
 
 	const onClick = () => {
-		if (!track) return;
+		if (state === "recording") {
+			recorderRef.current?.stop();
+			return;
+		}
 
-		if (state !== "idle") {
-			testerRef.current?.stopRecording();
+		if (state === "playing") {
 			reset();
 			return;
 		}
 
-		testerRef.current = track.testMicrophone({
-			speakerId: preview.speakerId ?? undefined,
-			recordAndPlay: true,
-			onAnalyseFrequency: setTestLevel,
-			onStartRecording: () => setState("recording"),
-			onStartPlayRecording: () => setState("playing"),
-			onStopPlayRecording: reset,
-		});
+		void startRecording();
 	};
 
 	const level = state === "idle" ? preview.micLevel : testLevel;
@@ -275,10 +388,10 @@ export function useCallPreview() {
 	const [audioTrack, setAudioTrack] = useState<LocalAudioTrack | undefined>(
 		undefined,
 	);
-	const [speakerTrack, setSpeakerTrack] = useState<
-		LocalAudioTrack | undefined
-	>(undefined);
-	const videoRef = useRef<HTMLVideoElement | null>(null);
+	const [speakerTrack, setSpeakerTrack] = useState<LocalAudioTrack | undefined>(
+		undefined,
+	);
+	const videoRef = useRef<VideoPlayer | null>(null);
 	const videoTrackRef = useRef<LocalVideoTrack | undefined>(undefined);
 	const zoomRef = useRef<typeof ZoomVideoSDK | undefined>(undefined);
 
@@ -456,13 +569,15 @@ export function CallPreviewPanel({ preview }: { preview: CallPreviewState }) {
 		<FieldGroup className="gap-3">
 			<Frame className="relative aspect-video overflow-hidden p-0">
 				{preview.camera ? (
-					<video
-						ref={preview.videoRef}
-						muted
-						playsInline
-						className="size-full object-cover"
+					<video-player-container
+						className="size-full"
 						style={{ transform: "scaleX(-1)" }}
-					/>
+					>
+						<video-player
+							ref={preview.videoRef}
+							className="size-full object-cover"
+						/>
+					</video-player-container>
 				) : (
 					<div className="flex size-full items-center justify-center gap-3 bg-muted">
 						<Avatar size="lg">

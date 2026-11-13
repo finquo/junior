@@ -29,7 +29,13 @@ export function useJoinPreferences() {
 		speakerId: preferences.speakerId,
 		setCamera: (camera: boolean) => setPreferences({ camera }),
 		setMic: (mic: boolean) => setPreferences({ mic }),
-		setCompanion: (companion: boolean) => setPreferences({ companion }),
+		// Companion mode joins without camera or microphone, so turning it on
+		// switches the other media preferences off with it.
+		setCompanion: (companion: boolean) => {
+			setPreferences({ companion });
+			if (companion)
+				setPreferences({ camera: false, mic: false, virtualBackground: false });
+		},
 		setVirtualBackground: (virtualBackground: boolean) =>
 			setPreferences({ virtualBackground }),
 		setCameraId: (cameraId: string | null) => setPreferences({ cameraId }),
