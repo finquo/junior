@@ -2,55 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { langFlag, langName } from "language-emoji";
-import { BookOpenIcon, ClockIcon, LanguagesIcon } from "lucide-react";
+import { BookOpenIcon } from "lucide-react";
 import { formatTimeString } from "utils";
+import { Alert } from "@/components/arc/alert/alert";
+import { Badge } from "@/components/arc/badge/badge";
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/arc/card/card";
+import { EmptyState } from "@/components/arc/empty-state/empty-state";
+import { Stepper } from "@/components/arc/stepper/stepper";
 import Loader from "@/components/loader";
-import {
-	Frame,
-	FrameActions,
-	FrameDescription,
-	FrameHeader,
-	FramePanel,
-	FrameTitle,
-} from "@/components/reui/frame";
-import {
-	Timeline,
-	TimelineContent,
-	TimelineDate,
-	TimelineHeader,
-	TimelineIndicator,
-	TimelineItem,
-	TimelineSeparator,
-} from "@/components/reui/timeline";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge, ColorBadge } from "@/components/ui/badge";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
-import {
-	Item,
-	ItemActions,
-	ItemContent,
-	ItemDescription,
-	ItemTitle,
-} from "@/components/ui/item";
 import { api } from "@/hooks/api";
-
-function getStatus(
-	lesson: { id: string; attended: boolean },
-	nextLessonId: string | undefined,
-): {
-	label: string;
-	variant: "success" | "info" | "outline";
-} {
-	if (lesson.attended) return { label: "Attended", variant: "success" };
-	if (lesson.id === nextLessonId) return { label: "Up next", variant: "info" };
-	return { label: "Upcoming", variant: "outline" };
-}
 
 export default function Page() {
 	const {
@@ -63,9 +30,8 @@ export default function Page() {
 
 	if (isError) {
 		return (
-			<Alert variant="destructive">
-				<AlertTitle>Lessons Unavailable</AlertTitle>
-				<AlertDescription>Your lessons could not be loaded.</AlertDescription>
+			<Alert tone="danger" title="Lessons Unavailable">
+				Your lessons could not be loaded.
 			</Alert>
 		);
 	}
@@ -75,76 +41,43 @@ export default function Page() {
 	const activeStep = nextLesson ? nextLesson.position - 1 : lessons.length;
 
 	return (
-		<Frame>
-			<FrameHeader>
-				<FrameTitle>Your Lessons</FrameTitle>
-				<FrameDescription>
-					The lessons in your program, in order
-				</FrameDescription>
-				<FrameActions>
-					<Badge variant="secondary">
+		<Card>
+			<CardHeader>
+				<CardTitle>Your Lessons</CardTitle>
+				<CardDescription>The lessons in your program, in order</CardDescription>
+				<CardAction>
+					<Badge tone="neutral">
 						{attendedCount} of {lessons.length} attended
 					</Badge>
-				</FrameActions>
-			</FrameHeader>
-			<FramePanel>
+				</CardAction>
+			</CardHeader>
+			<CardContent>
 				{lessons.length > 0 ? (
-					<Timeline defaultValue={activeStep}>
-						{lessons.map((lesson) => {
-							const status = getStatus(lesson, nextLesson?.id);
-							return (
-								<TimelineItem key={lesson.id} step={lesson.position}>
-									<TimelineIndicator />
-									<TimelineSeparator />
-									<TimelineHeader>
-										<TimelineDate>Lesson {lesson.position}</TimelineDate>
-									</TimelineHeader>
-									<TimelineContent>
-										<Item variant="muted">
-											<ItemContent>
-												<ItemTitle>{lesson.name}</ItemTitle>
-												{lesson.description && (
-													<ItemDescription>
-														{lesson.description}
-													</ItemDescription>
-												)}
-												<ItemDescription className="space-x-2">
-													<Badge variant="secondary">
-														<LanguagesIcon />
-														{langFlag(lesson.language)}{" "}
-														{langName(lesson.language)}
-													</Badge>
-													{lesson.period && (
-														<Badge variant="secondary">
-															<ClockIcon />
-															{formatTimeString(lesson.period)}
-														</Badge>
-													)}
-												</ItemDescription>
-											</ItemContent>
-											<ItemActions>
-												<ColorBadge>{status.label}</ColorBadge>
-											</ItemActions>
-										</Item>
-									</TimelineContent>
-								</TimelineItem>
-							);
-						})}
-					</Timeline>
+					<Stepper
+						orientation="vertical"
+						label="Lesson progress"
+						completeLabel="All lessons attended"
+						current={activeStep}
+						steps={lessons.map((lesson) => ({
+							id: lesson.id,
+							label: `Lesson ${lesson.position}: ${lesson.name}`,
+							description: [
+								lesson.description,
+								`${langFlag(lesson.language)} ${langName(lesson.language)}`,
+								lesson.period ? formatTimeString(lesson.period) : undefined,
+							]
+								.filter(Boolean)
+								.join(" · "),
+						}))}
+					/>
 				) : (
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<BookOpenIcon />
-							</EmptyMedia>
-							<EmptyTitle>No lessons yet</EmptyTitle>
-							<EmptyDescription>
-								Lessons will appear here once your program is set up.
-							</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
+					<EmptyState
+						icon={<BookOpenIcon />}
+						title="No lessons yet"
+						description="Lessons will appear here once your program is set up."
+					/>
 				)}
-			</FramePanel>
-		</Frame>
+			</CardContent>
+		</Card>
 	);
 }

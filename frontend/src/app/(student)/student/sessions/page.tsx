@@ -10,27 +10,19 @@ import {
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
-import Link from "next/link";
-import Loader from "@/components/loader";
+import { Alert } from "@/components/arc/alert/alert";
+import type { BadgeTone } from "@/components/arc/badge/badge";
+import { Badge } from "@/components/arc/badge/badge";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import {
-	Frame,
-	FrameActions,
-	FrameDescription,
-	FrameHeader,
-	FramePanel,
-	FrameTitle,
-} from "@/components/reui/frame";
-import { getSlotStatusBadgeVariant } from "@/components/slot-details";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/arc/card/card";
+import { EmptyState } from "@/components/arc/empty-state/empty-state";
 import {
 	Item,
 	ItemActions,
@@ -39,8 +31,9 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/ui/item";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@/components/arc/item/item";
+import { Skeleton } from "@/components/arc/skeleton/skeleton";
+import Loader from "@/components/loader";
 import { api } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
 import { FetchUser } from "@/hooks/user";
@@ -48,6 +41,14 @@ import type { API_Returns } from "@/lib/api";
 import { snakeToTitleCase } from "@/lib/utils";
 
 type SlotRecord = API_Returns["student"]["getSlots"][number];
+
+const statusTone: Record<string, BadgeTone> = {
+	scheduled: "info",
+	started: "success",
+	rescheduled: "warning",
+	request_reschedule: "danger",
+	attended: "neutral",
+};
 
 function SessionRow({ slot }: { slot: SlotRecord }) {
 	return (
@@ -59,7 +60,7 @@ function SessionRow({ slot }: { slot: SlotRecord }) {
 				<ItemTitle>
 					<FetchLesson
 						id={slot.lessonId}
-						isPending={<Skeleton className="h-4 w-24" />}
+						isPending={<Skeleton lines={1} />}
 						notFound={<span>Untitled session</span>}
 					>
 						{(lesson) => <span>{lesson.name}</span>}
@@ -71,7 +72,7 @@ function SessionRow({ slot }: { slot: SlotRecord }) {
 				</ItemDescription>
 			</ItemContent>
 			<ItemActions>
-				<Badge variant={getSlotStatusBadgeVariant(slot.status)}>
+				<Badge tone={statusTone[slot.status] ?? "neutral"}>
 					{snakeToTitleCase(slot.status)}
 				</Badge>
 			</ItemActions>
@@ -90,9 +91,8 @@ export default function Page() {
 
 	if (isError) {
 		return (
-			<Alert variant="destructive">
-				<AlertTitle>Sessions Unavailable</AlertTitle>
-				<AlertDescription>Your sessions could not be loaded.</AlertDescription>
+			<Alert tone="danger" title="Sessions Unavailable">
+				Your sessions could not be loaded.
 			</Alert>
 		);
 	}
@@ -113,163 +113,153 @@ export default function Page() {
 	const next = upcoming[0];
 
 	return (
-		<Frame spacing="sm" className="lg:min-h-96 lg:flex-row">
-			<FramePanel>
-				<FrameHeader>
-					<FrameTitle>Next Session</FrameTitle>
-					<FrameDescription>Your next booked slot</FrameDescription>
+		<div className="flex flex-col gap-4">
+			<Card>
+				<CardHeader>
+					<CardTitle>Next Session</CardTitle>
+					<CardDescription>Your next booked slot</CardDescription>
 					{next && (
-						<FrameActions>
-							<Badge variant={getSlotStatusBadgeVariant(next.status)}>
+						<CardAction>
+							<Badge tone={statusTone[next.status] ?? "neutral"}>
 								{snakeToTitleCase(next.status)}
 							</Badge>
-						</FrameActions>
+						</CardAction>
 					)}
-				</FrameHeader>
-				{next ? (
-					<ItemGroup>
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<CalendarClockIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>
-									{format(new Date(next.startTime), "EEEE, MMMM d")}
-								</ItemTitle>
-								<ItemDescription>
-									{format(new Date(next.startTime), "p")} –{" "}
-									{format(new Date(next.expectedEndTime), "p")} ·{" "}
-									{formatDistanceToNow(new Date(next.startTime), {
-										addSuffix: true,
-									})}
-								</ItemDescription>
-							</ItemContent>
-						</Item>
+				</CardHeader>
+				<CardContent>
+					{next ? (
+						<ItemGroup>
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<CalendarClockIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>
+										{format(new Date(next.startTime), "EEEE, MMMM d")}
+									</ItemTitle>
+									<ItemDescription>
+										{format(new Date(next.startTime), "p")} –{" "}
+										{format(new Date(next.expectedEndTime), "p")} ·{" "}
+										{formatDistanceToNow(new Date(next.startTime), {
+											addSuffix: true,
+										})}
+									</ItemDescription>
+								</ItemContent>
+							</Item>
 
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<BookOpenIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>Lesson</ItemTitle>
-								<FetchLesson
-									id={next.lessonId}
-									isPending={<Skeleton className="h-4 w-24" />}
-									notFound={<ItemDescription>Untitled session</ItemDescription>}
-								>
-									{(lesson) => <ItemDescription>{lesson.name}</ItemDescription>}
-								</FetchLesson>
-							</ItemContent>
-						</Item>
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<BookOpenIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>Lesson</ItemTitle>
+									<FetchLesson
+										id={next.lessonId}
+										isPending={<Skeleton lines={1} />}
+										notFound={
+											<ItemDescription>Untitled session</ItemDescription>
+										}
+									>
+										{(lesson) => (
+											<ItemDescription>{lesson.name}</ItemDescription>
+										)}
+									</FetchLesson>
+								</ItemContent>
+							</Item>
 
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<UserRoundIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>Teacher</ItemTitle>
-								<FetchUser
-									id={next.teacherId}
-									isPending={<Skeleton className="h-4 w-24" />}
-									notFound={<ItemDescription>Not assigned</ItemDescription>}
-								>
-									{(teacher) => (
-										<ItemDescription>{teacher.name}</ItemDescription>
-									)}
-								</FetchUser>
-							</ItemContent>
-						</Item>
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<UserRoundIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>Teacher</ItemTitle>
+									<FetchUser
+										id={next.teacherId}
+										isPending={<Skeleton lines={1} />}
+										notFound={<ItemDescription>Not assigned</ItemDescription>}
+									>
+										{(teacher) => (
+											<ItemDescription>{teacher.name}</ItemDescription>
+										)}
+									</FetchUser>
+								</ItemContent>
+							</Item>
 
-						<Item variant="outline">
-							<ItemMedia variant="icon">
-								<VideoIcon />
-							</ItemMedia>
-							<ItemContent>
-								<ItemTitle>Open Call</ItemTitle>
-								<ItemDescription>
-									Joins the in-built call, or redirects to the external tool the
-									session uses.
-								</ItemDescription>
-							</ItemContent>
-							<ItemActions>
-								<Button asChild>
-									<Link
+							<Item variant="outline">
+								<ItemMedia variant="icon">
+									<VideoIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>Open Call</ItemTitle>
+									<ItemDescription>
+										Joins the in-built call, or redirects to the external tool
+										the session uses.
+									</ItemDescription>
+								</ItemContent>
+								<ItemActions>
+									<ArcButton
+										link={`/call/${next.id}`}
 										target="_blank"
 										rel="noopener noreferrer"
-										href={`/call/${next.id}` as "/"}
 									>
 										Open Call
-									</Link>
-								</Button>
-							</ItemActions>
-						</Item>
-					</ItemGroup>
-				) : (
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<CalendarClockIcon />
-							</EmptyMedia>
-							<EmptyTitle>No upcoming session</EmptyTitle>
-							<EmptyDescription>
-								You have no session booked right now.
-							</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
-				)}
-			</FramePanel>
+									</ArcButton>
+								</ItemActions>
+							</Item>
+						</ItemGroup>
+					) : (
+						<EmptyState
+							icon={<CalendarClockIcon />}
+							title="No upcoming session"
+							description="You have no session booked right now."
+						/>
+					)}
+				</CardContent>
+			</Card>
 
-			<FramePanel>
-				<FrameHeader>
-					<FrameTitle>Upcoming Sessions</FrameTitle>
-					<FrameDescription>Slots booked from now on</FrameDescription>
-				</FrameHeader>
-				{upcoming.length > 0 ? (
-					<ItemGroup>
-						{upcoming.map((slot) => (
-							<SessionRow key={slot.id} slot={slot} />
-						))}
-					</ItemGroup>
-				) : (
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<CalendarChevronsRightIcon />
-							</EmptyMedia>
-							<EmptyTitle>Nothing scheduled</EmptyTitle>
-							<EmptyDescription>
-								New bookings from your scheduler will show up here.
-							</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
-				)}
-			</FramePanel>
+			<Card>
+				<CardHeader>
+					<CardTitle>Upcoming Sessions</CardTitle>
+					<CardDescription>Slots booked from now on</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{upcoming.length > 0 ? (
+						<ItemGroup>
+							{upcoming.map((slot) => (
+								<SessionRow key={slot.id} slot={slot} />
+							))}
+						</ItemGroup>
+					) : (
+						<EmptyState
+							icon={<CalendarChevronsRightIcon />}
+							title="Nothing scheduled"
+							description="New bookings from your scheduler will show up here."
+						/>
+					)}
+				</CardContent>
+			</Card>
 
-			<FramePanel>
-				<FrameHeader>
-					<FrameTitle>Past Sessions</FrameTitle>
-					<FrameDescription>Sessions that have already ended</FrameDescription>
-				</FrameHeader>
-				{past.length > 0 ? (
-					<ItemGroup>
-						{past.map((slot) => (
-							<SessionRow key={slot.id} slot={slot} />
-						))}
-					</ItemGroup>
-				) : (
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<CalendarFoldIcon />
-							</EmptyMedia>
-							<EmptyTitle>No past sessions</EmptyTitle>
-							<EmptyDescription>
-								Sessions you complete will show up here.
-							</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
-				)}
-			</FramePanel>
-		</Frame>
+			<Card>
+				<CardHeader>
+					<CardTitle>Past Sessions</CardTitle>
+					<CardDescription>Sessions that have already ended</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{past.length > 0 ? (
+						<ItemGroup>
+							{past.map((slot) => (
+								<SessionRow key={slot.id} slot={slot} />
+							))}
+						</ItemGroup>
+					) : (
+						<EmptyState
+							icon={<CalendarFoldIcon />}
+							title="No past sessions"
+							description="Sessions you complete will show up here."
+						/>
+					)}
+				</CardContent>
+			</Card>
+		</div>
 	);
 }

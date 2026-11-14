@@ -26,6 +26,7 @@
 		"@beui": "https://beui.dev/r/{name}.json",
 		"@diceui": "https://diceui.com/r/{style}/{name}.json",
 		"@pdfcn": "https://pdfcn.dev/r/{name}.json",
-		"@uiarc": "https://uiarc.dev/r/{name}.json"
+		"@uiarc": "https://uiarc.dev/r/{name}.json",
+		"@react-bits": "https://reactbits.dev/r/{name}.json"
 	}
 }
