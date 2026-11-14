@@ -2,28 +2,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { QuizMessage } from "backend/config";
-import { BookOpenIcon } from "lucide-react";
 import { useState } from "react";
-import { QuizList } from "@/components/custom/quiz";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button as ArcButton } from "@/components/arc/button/button";
+import { Checkbox } from "@/components/arc/checkbox/checkbox";
 import {
 	Dialog,
 	DialogClose,
 	DialogContent,
-	DialogDescription,
 	DialogFooter,
-	DialogHeader,
-	DialogTitle,
+	DialogInner,
 	DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/arc/dialog/dialog";
+import { QuizList } from "@/components/custom/quiz";
 import { api } from "@/hooks/api";
 
 export function QuizPicker({
@@ -67,64 +57,49 @@ export function QuizPicker({
 	}
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-			<DropdownMenuContent align="start" side="top">
-				<Dialog>
-					<DialogTrigger asChild>
-						<DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-							<BookOpenIcon />
-							Pick a quiz
-						</DropdownMenuItem>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Pick a quiz</DialogTitle>
-							<DialogDescription>
-								Choose the questions to send to the student in this session.
-							</DialogDescription>
-						</DialogHeader>
-						<QuizList
-							quiz={questions}
-							lessonId={lessonId ?? ""}
-							selector={(question) => (
-								<Checkbox
-									id={question.id}
-									aria-label={question.question}
-									checked={selected.includes(question.id)}
-									onCheckedChange={(checked) => toggle(question.id, !!checked)}
-								/>
-							)}
-						/>
-						<DialogFooter>
-							<DialogClose asChild>
-								<Button variant="outline">Close</Button>
-							</DialogClose>
-							<ButtonGroup>
-								<DialogClose asChild>
-									<Button
-										variant="outline"
-										disabled={questions.length === 0}
-										onClick={() =>
-											send(questions.map((question) => question.id))
-										}
-									>
-										Send all
-									</Button>
-								</DialogClose>
-								<DialogClose asChild>
-									<Button
-										disabled={selected.length === 0}
-										onClick={() => send(selected)}
-									>
-										Send
-									</Button>
-								</DialogClose>
-							</ButtonGroup>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<Dialog>
+			<DialogTrigger asChild>{children}</DialogTrigger>
+			<DialogContent
+				title="Pick a quiz"
+				description="Choose the questions to send to the student in this session."
+			>
+				<DialogInner>
+					<QuizList
+						quiz={questions}
+						lessonId={lessonId ?? ""}
+						selector={(question) => (
+							<Checkbox
+								id={question.id}
+								aria-label={question.question}
+								checked={selected.includes(question.id)}
+								onCheckedChange={(checked) => toggle(question.id, !!checked)}
+							/>
+						)}
+					/>
+				</DialogInner>
+				<DialogFooter>
+					<DialogClose asChild>
+						<ArcButton variant="secondary">Close</ArcButton>
+					</DialogClose>
+					<DialogClose asChild>
+						<ArcButton
+							variant="secondary"
+							disabled={questions.length === 0}
+							onClick={() => send(questions.map((question) => question.id))}
+						>
+							Send all
+						</ArcButton>
+					</DialogClose>
+					<DialogClose asChild>
+						<ArcButton
+							disabled={selected.length === 0}
+							onClick={() => send(selected)}
+						>
+							Send
+						</ArcButton>
+					</DialogClose>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }

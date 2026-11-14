@@ -11,7 +11,7 @@ import {
 	useSessionUsers,
 	useVideoState,
 } from "@zoom/videosdk-react";
-import { MessageSquareDotIcon, MessagesSquareIcon } from "lucide-react";
+import { MessageSquareDotIcon } from "lucide-react";
 import {
 	createContext,
 	type ReactNode,

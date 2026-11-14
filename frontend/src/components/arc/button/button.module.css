@@ -180,6 +180,12 @@
 	padding-inline: var(--space-5);
 	font-size: var(--text-sm);
 }
+/* Square icon-only control: no label padding, sized off the compact control height. */
+.icon {
+	padding: 0;
+	min-height: var(--control-height-sm);
+	aspect-ratio: 1;
+}
 .loader {
 	position: absolute;
 	left: 50%;

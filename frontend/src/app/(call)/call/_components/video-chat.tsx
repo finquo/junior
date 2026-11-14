@@ -27,21 +27,17 @@ import {
 import { useState } from "react";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
 import { Button as ArcButton } from "@/components/arc/button/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogFooter,
+	DialogTrigger,
+} from "@/components/arc/dialog/dialog";
 import { SplitButton } from "@/components/arc/split-button/split-button";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -411,58 +407,55 @@ function CallView({
 						</ArcButton>
 					)}
 					{canEndMeeting && (
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
+						<Dialog>
+							<DialogTrigger asChild>
 								<ArcButton size="lg" variant="danger">
 									<PhoneOffIcon />
 									End for all
 								</ArcButton>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>End meeting for all?</AlertDialogTitle>
-									<AlertDialogDescription>
-										Everyone will be disconnected immediately. This cannot be
-										undone.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										variant="destructive"
+							</DialogTrigger>
+							<DialogContent
+								title="End meeting for all?"
+								description="Everyone will be disconnected immediately. This cannot be undone."
+							>
+								<DialogFooter>
+									<DialogClose asChild>
+										<ArcButton variant="secondary">Cancel</ArcButton>
+									</DialogClose>
+									<ArcButton
+										variant="danger"
 										onClick={() => void call.endMeeting()}
 									>
 										End meeting
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+									</ArcButton>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
 					)}
-					<AlertDialog>
-						<AlertDialogTrigger asChild>
+					<Dialog>
+						<DialogTrigger asChild>
 							<ArcButton size="lg" variant="danger">
 								<LogOutIcon />
 								Leave
 							</ArcButton>
-						</AlertDialogTrigger>
-						<AlertDialogContent>
-							<AlertDialogHeader>
-								<AlertDialogTitle>Leave the meeting?</AlertDialogTitle>
-								<AlertDialogDescription>
-									You can rejoin while the meeting is still live.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-								<AlertDialogCancel>Stay</AlertDialogCancel>
-								<AlertDialogAction
-									variant="destructive"
+						</DialogTrigger>
+						<DialogContent
+							title="Leave the meeting?"
+							description="You can rejoin while the meeting is still live."
+						>
+							<DialogFooter>
+								<DialogClose asChild>
+									<ArcButton variant="secondary">Stay</ArcButton>
+								</DialogClose>
+								<ArcButton
+									variant="danger"
 									onClick={() => void call.leaveMeeting()}
 								>
 									Leave
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+								</ArcButton>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
 				</div>
 
 				<ParticipantsDrawer

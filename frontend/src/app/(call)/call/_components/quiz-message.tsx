@@ -5,14 +5,15 @@ import type { QuizAnswerMessage, QuizMessage } from "backend/config";
 import { quizAnswerMessageZod, quizMessageZod } from "backend/config";
 import { CheckIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Alert } from "@/components/arc/alert/alert";
+import { Skeleton } from "@/components/arc/skeleton/skeleton";
 import {
 	Item,
 	ItemContent,
 	ItemDescription,
 	ItemGroup,
 	ItemTitle,
-} from "@/components/ui/item";
+} from "@/components/arc/item/item";
 import {
 	Questionnaire,
 	QuestionnaireActions,
@@ -28,7 +29,6 @@ import {
 	QuestionnaireSubmit,
 	QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
-import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
 
@@ -63,14 +63,9 @@ export function QuizMessageCard({
 		}),
 	);
 
-	if (isPending) return <Skeleton className="h-24 w-full" />;
+	if (isPending) return <Skeleton lines={2} className="w-full" />;
 
-	if (!questions)
-		return (
-			<Alert>
-				<AlertTitle>Questions not found</AlertTitle>
-			</Alert>
-		);
+	if (!questions) return <Alert title="Questions not found" />;
 
 	return (
 		<RenderWhenRole
@@ -261,7 +256,7 @@ export function QuizAnswerCard({ message }: { message: QuizAnswerMessage }) {
 		}),
 	);
 
-	if (isPending) return <Skeleton className="h-16 w-full" />;
+	if (isPending) return <Skeleton lines={1} className="w-full" />;
 
 	const question = questions?.[0];
 	if (!question) return null;

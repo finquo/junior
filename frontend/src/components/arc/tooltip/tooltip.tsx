@@ -1,7 +1,7 @@
 "use client";
 
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import * as TooltipPrimitive from "radix-ui/tooltip";
 import type { ReactElement, ReactNode } from "react";
 import {
 	useEffect,

@@ -3,35 +3,30 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	CalendarClockIcon,
-	CctvIcon,
 	ClockIcon,
 	ExternalLinkIcon,
 	GraduationCapIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ColorBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/arc/alert/alert";
+import { Badge, type BadgeTone } from "@/components/arc/badge/badge";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
-	DrawerDescription,
 	DrawerFooter,
-	DrawerHeader,
 	DrawerInner,
-	DrawerTitle,
-} from "@/components/ui/drawer";
+} from "@/components/arc/drawer/drawer";
 import {
 	Item,
 	ItemContent,
 	ItemDescription,
 	ItemGroup,
 	ItemMedia,
-	ItemSeparator,
 	ItemTitle,
-} from "@/components/ui/item";
+} from "@/components/arc/item/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
@@ -41,15 +36,12 @@ import { snakeToTitleCase } from "@/lib/utils";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
-const statusVariant: Record<
-	string,
-	"info" | "success" | "warning" | "destructive" | "secondary"
-> = {
+const statusTone: Record<string, BadgeTone> = {
 	scheduled: "info",
 	started: "success",
 	rescheduled: "warning",
-	request_reschedule: "destructive",
-	attended: "secondary",
+	request_reschedule: "danger",
+	attended: "neutral",
 };
 
 function formatDateTime(value: Date | string | null | undefined) {
@@ -182,9 +174,9 @@ function DetailsContent({ data }: { data: SlotData }) {
 									<ItemTitle>{lesson.name}</ItemTitle>
 									<ItemDescription>{lesson.description}</ItemDescription>
 								</ItemContent>
-								<ColorBadge variant={statusVariant[data.status] ?? "secondary"}>
+								<Badge tone={statusTone[data.status] ?? "neutral"}>
 									{snakeToTitleCase(data.status)}
-								</ColorBadge>
+								</Badge>
 							</Item>
 						)}
 					</FetchLesson>
@@ -262,11 +254,8 @@ function DetailsBody({ slotId }: { slotId: string }) {
 
 	if (isError || !data) {
 		return (
-			<Alert variant="destructive">
-				<AlertTitle>Meeting details unavailable</AlertTitle>
-				<AlertDescription>
-					The details for this session could not be loaded.
-				</AlertDescription>
+			<Alert tone="danger" title="Meeting details unavailable">
+				The details for this session could not be loaded.
 			</Alert>
 		);
 	}
@@ -285,32 +274,24 @@ export function MeetingDetails({
 }) {
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
-			<DrawerContent>
-				<DrawerHeader>
-					<DrawerTitle>Meeting details</DrawerTitle>
-					<DrawerDescription>
-						Session schedule, lesson, and participants.
-					</DrawerDescription>
-				</DrawerHeader>
-				<DrawerInner className="space-y-2">
-					<Alert>
-						<CctvIcon />
-						<AlertTitle>Recording</AlertTitle>
-						<AlertDescription>
-							This session is automatically recorded
-						</AlertDescription>
+			<DrawerContent
+				title="Meeting details"
+				description="Session schedule, lesson, and participants."
+				bodyClassName="flex flex-col gap-2"
+			>
+				<DrawerInner className="flex flex-col gap-2">
+					<Alert title="Recording">
+						This session is automatically recorded
 					</Alert>
 					<DetailsBody slotId={slotId} />
 				</DrawerInner>
 				<DrawerFooter>
-					<Button asChild>
-						<a href={`/slots/${slotId}`} target="_blank" rel="noreferrer">
-							<ExternalLinkIcon />
-							Open Session Details
-						</a>
-					</Button>
+					<ArcButton link={`/slots/${slotId}`} target="_blank" rel="noreferrer">
+						<ExternalLinkIcon />
+						Open Session Details
+					</ArcButton>
 					<DrawerClose asChild>
-						<Button variant="outline">Close</Button>
+						<ArcButton variant="secondary">Close</ArcButton>
 					</DrawerClose>
 				</DrawerFooter>
 			</DrawerContent>

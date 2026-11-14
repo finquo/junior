@@ -28,7 +28,7 @@ export type ButtonVariant =
 	| "warning"
 	| "ghost"
 	| "danger";
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 export interface ButtonProps
 	extends Omit<
@@ -38,6 +38,10 @@ export interface ButtonProps
 	variant?: ButtonVariant;
 	size?: ButtonSize;
 	loading?: boolean;
+	/** Renders an anchor instead of a button, keeping the same visual states. Still pass onClick for SPA navigation. */
+	link?: string;
+	target?: string;
+	rel?: string;
 }
 
 /** Icon buttons press a little deeper, wide buttons a little less, so every size reads as the same push. */
@@ -103,16 +107,16 @@ function useMorphWidth(
 	reduced: boolean,
 ) {
 	const width = useMotionValue<number | "auto">("auto");
-	const lastKey = useRef(key),
-		armedUntil = useRef(0);
+	const lastKey = useRef(key);
+	const armedUntil = useRef(0);
 	useLayoutEffect(() => {
 		if (lastKey.current === key) return;
 		lastKey.current = key;
 		armedUntil.current = performance.now() + 700;
 	}, [key]);
 	useEffect(() => {
-		const node = content.current,
-			slot = node?.parentElement;
+		const node = content.current;
+		const slot = node?.parentElement;
 		if (!node || !slot || typeof ResizeObserver === "undefined") return;
 		let measured = false;
 		const observer = new ResizeObserver(([entry]) => {
@@ -187,6 +191,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			size = "md",
 			loading = false,
 			disabled,
+			link,
 			children,
 			onClick,
 			...props
@@ -221,9 +226,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 		const classes = [styles.button, styles[variant], styles[size], className]
 			.filter(Boolean)
 			.join(" ");
+		// A link keeps the same visual shell but renders an anchor, so middle-click and browser shortcuts keep working.
+		const Link = (link ? motion.a : motion.button) as typeof motion.button;
+		const linkProps = link ? { href: link } : {};
 
 		return (
-			<motion.button
+			<Link
 				ref={setRefs}
 				tabIndex={props.tabIndex ?? 0}
 				className={classes}
@@ -233,6 +241,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 				variants={pressVariants}
 				whileTap={reduceMotion || anchorsLayer || inert ? undefined : "pressed"}
 				transition={motionTokens.spring.snappy}
+				{...linkProps}
 				{...props}
 				// Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
 				aria-disabled={loading || props["aria-disabled"] || undefined}
@@ -277,7 +286,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 						</AnimatePresence>
 					</span>
 				</motion.span>
-			</motion.button>
+			</Link>
 		);
 	},
 );

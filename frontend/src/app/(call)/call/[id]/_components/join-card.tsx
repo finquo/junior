@@ -14,9 +14,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { sileo as toast } from "sileo";
-import { Countdown } from "@/components/arc/countdown/countdown";
-import { ColorBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/arc/badge/badge";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import {
 	Card,
 	CardAction,
@@ -25,9 +24,12 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
+} from "@/components/arc/card/card";
+import { Countdown } from "@/components/arc/countdown/countdown";
+import { Input } from "@/components/arc/input/input";
+import { Switch } from "@/components/arc/switch/switch";
+import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
 	Item,
 	ItemActions,
@@ -36,9 +38,7 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/ui/item";
-import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
+} from "@/components/arc/item/item";
 import type { useJoinPreferences } from "../../_components/call-preferences";
 import { CallPreviewPanel, type CallPreviewState } from "./call-preview";
 import type { CallMeeting, PreflightState } from "./hooks";
@@ -160,9 +160,9 @@ export function CallJoinCard({
 						: "Join opens 10 minutes before the scheduled start."}
 				</CardDescription>
 				<CardAction>
-					<ColorBadge variant={isLive ? "success" : "info"}>
+					<Badge tone={isLive ? "success" : "info"}>
 						{isLive ? "Live" : "Upcoming"}
-					</ColorBadge>
+					</Badge>
 				</CardAction>
 			</CardHeader>
 			<CardContent className={contentClassName}>
@@ -195,16 +195,14 @@ export function CallJoinCard({
 					)}
 
 					{needsName ? (
-						<Field>
-							<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
-							<Input
-								id="guest-name"
-								value={guestName.name}
-								onChange={(event) => guestName.setName(event.target.value)}
-								placeholder="Enter your name"
-								autoComplete="name"
-							/>
-						</Field>
+						<Input
+							id="guest-name"
+							label="Your name"
+							value={guestName.name}
+							onChange={(event) => guestName.setName(event.target.value)}
+							placeholder="Enter your name"
+							autoComplete="name"
+						/>
 					) : (
 						<Item variant="muted">
 							<ItemMedia variant="icon">
@@ -270,19 +268,14 @@ export function CallJoinCard({
 				{!companionActive && <CallPreviewPanel preview={preview} />}
 			</CardContent>
 			<CardFooter>
-				<Button
+				<ArcButton
+					loading={joining}
 					disabled={!userName || joining || !isLive}
 					onClick={() => void join()}
 				>
-					{joining ? (
-						<Spinner />
-					) : isLive ? (
-						<VideoIcon />
-					) : (
-						<CalendarClockIcon />
-					)}
+					{isLive ? <VideoIcon /> : <CalendarClockIcon />}
 					{isLive ? "Join session" : "Waiting for meeting"}
-				</Button>
+				</ArcButton>
 			</CardFooter>
 		</Card>
 	);

@@ -9,13 +9,12 @@ import {
 	MicIcon,
 	MicOffIcon,
 	PinIcon,
-	UserIcon,
 	UserXIcon,
 } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
+import { Avatar } from "@/components/arc/avatar/avatar";
+import { Badge } from "@/components/arc/badge/badge";
 import { Frame } from "@/components/reui/frame";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -141,13 +140,13 @@ function TileLabel({
 }
 
 export function ParticipantRole({ user }: { user: SessionUser }) {
-	const fallback = <ColorBadge>{roleLabel("guest")}</ColorBadge>;
+	const fallback = <Badge>{roleLabel("guest")}</Badge>;
 
 	if (!user.userIdentity || isGuestId(user.userIdentity)) return fallback;
 
 	return (
 		<FetchUser id={user.userIdentity} isPending={fallback} notFound={fallback}>
-			{(dbUser) => <ColorBadge>{roleLabel(dbUser.role)}</ColorBadge>}
+			{(dbUser) => <Badge>{roleLabel(dbUser.role)}</Badge>}
 		</FetchUser>
 	);
 }
@@ -190,18 +189,17 @@ export function VideoTile({
 				{!video && (
 					<div className="absolute inset-0">
 						<div className="flex size-full flex-row items-center justify-center gap-3">
-							<Avatar size="lg">
-								<AvatarImage src={avatar} alt={name} />
-								<AvatarFallback>
-									<UserIcon />
-								</AvatarFallback>
-							</Avatar>
+							<Avatar name={name} src={avatar} size="lg" />
 							<TileLabel user={user} role={role} />
 						</div>
 					</div>
 				)}
-				<Badge variant="secondary" className="absolute bottom-2 left-2 gap-1.5">
-					{voice ? <MicIcon /> : <MicOffIcon />}
+				<Badge
+					tone="neutral"
+					pill
+					icon={voice ? <MicIcon /> : <MicOffIcon />}
+					className="absolute bottom-2 left-2"
+				>
 					{video && !self && <TileLabel user={user} role={role} inline />}
 				</Badge>
 				{menu && <RemoteUserMenu user={user} menu={menu} />}

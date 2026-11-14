@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import { useAuth } from "@/hooks/auth";
 
 export function CallAuthButton() {
+	const router = useRouter();
 	const { data, isPending } = useAuth();
 
 	if (isPending) {
@@ -13,15 +14,15 @@ export function CallAuthButton() {
 
 	if (!data) {
 		return (
-			<Button asChild variant="outline">
-				<Link href="/login">Login</Link>
-			</Button>
+			<ArcButton variant="secondary" onClick={() => router.push("/login")}>
+				Login
+			</ArcButton>
 		);
 	}
 
 	return (
-		<Button asChild variant="outline">
-			<Link href="/me">Go to my profile</Link>
-		</Button>
+		<ArcButton variant="secondary" onClick={() => router.push("/me")}>
+			Go to my profile
+		</ArcButton>
 	);
 }

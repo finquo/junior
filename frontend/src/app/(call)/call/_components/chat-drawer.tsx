@@ -4,17 +4,13 @@ import { useForm } from "@tanstack/react-form";
 import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bubble, BubbleContent, BubbleHeader } from "@/components/ui/bubble";
+import { Avatar } from "@/components/arc/avatar/avatar";
 import {
 	Drawer,
 	DrawerContent,
-	DrawerDescription,
-	DrawerHeader,
-	DrawerInner,
-	DrawerTitle,
 	DrawerTrigger,
-} from "@/components/ui/drawer";
+} from "@/components/arc/drawer/drawer";
+import { Bubble, BubbleContent, BubbleHeader } from "@/components/ui/bubble";
 import {
 	Empty,
 	EmptyDescription,
@@ -43,8 +39,9 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RenderWhenRole } from "@/hooks/role";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { FetchUser } from "@/hooks/user";
-import { type GetFormZod, getInitials } from "@/lib/utils";
+import type { GetFormZod } from "@/lib/utils";
 import { useCall } from "./hooks";
 import {
 	parseQuizAnswerMessage,
@@ -67,10 +64,7 @@ function SenderLabel({
 	return (
 		<Tooltip>
 			<TooltipTrigger className="flex items-center gap-1">
-				<Avatar size="sm">
-					<AvatarImage src={image ?? undefined} alt={name} />
-					<AvatarFallback>{getInitials(name)}</AvatarFallback>
-				</Avatar>
+				<Avatar name={name} src={image ?? undefined} size="sm" />
 				{name}
 			</TooltipTrigger>
 			<TooltipContent>{roleLabel(userRole)}</TooltipContent>
@@ -111,6 +105,9 @@ export function ChatDrawer({ children }: { children: React.ReactElement }) {
 	} = useCall();
 	const myUserId = myself?.userId.toString();
 	const formRef = useRef<HTMLFormElement>(null);
+	const isMobile = useIsMobile();
+	const side = isMobile ? "bottom" : "right";
+	const heightStyle = isMobile ? { height: "min(32rem, 70dvh)" } : undefined;
 
 	const form = useForm({
 		defaultValues: {} as z.infer<typeof chatSchema>,
@@ -132,82 +129,80 @@ export function ChatDrawer({ children }: { children: React.ReactElement }) {
 			}}
 		>
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
-			<DrawerContent>
-				<DrawerHeader>
-					<DrawerTitle>Chat</DrawerTitle>
-					<DrawerDescription>
-						Messages are visible to everyone in this session.
-					</DrawerDescription>
-				</DrawerHeader>
-				<DrawerInner>
-					{messages.length === 0 && (
-						<Empty>
-							<EmptyHeader>
-								<EmptyMedia variant="icon">
-									<MessageCircleDashedIcon />
-								</EmptyMedia>
-								<EmptyTitle>No messages yet</EmptyTitle>
-								<EmptyDescription>Say hello to everyone.</EmptyDescription>
-							</EmptyHeader>
-						</Empty>
-					)}
-					<MessageScrollerProvider autoScroll>
-						<MessageScroller>
-							<MessageScrollerViewport>
-								<MessageScrollerContent className="gap-2">
-									{messages.map((message, index) => {
-										const isMine = message.senderId === myUserId;
-										const align = isMine ? "end" : "start";
-										const variant = isMine ? "muted" : "default";
+			<DrawerContent
+				title="Chat"
+				description="Messages are visible to everyone in this session."
+				side={side}
+				style={heightStyle}
+				bodyClassName="flex flex-col gap-2"
+			>
+				{messages.length === 0 && (
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<MessageCircleDashedIcon />
+							</EmptyMedia>
+							<EmptyTitle>No messages yet</EmptyTitle>
+							<EmptyDescription>Say hello to everyone.</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				)}
+				<MessageScrollerProvider autoScroll>
+					<MessageScroller className="flex-1">
+						<MessageScrollerViewport>
+							<MessageScrollerContent className="gap-2">
+								{messages.map((message, index) => {
+									const isMine = message.senderId === myUserId;
+									const align = isMine ? "end" : "start";
+									const variant = isMine ? "muted" : "default";
 
-										const quiz = parseQuizMessage(message.text);
-										const answer = parseQuizAnswerMessage(message.text);
-										const identity = participants.find(
-											(participant) =>
-												participant.userId.toString() === message.senderId,
-										)?.userIdentity;
+									const quiz = parseQuizMessage(message.text);
+									const answer = parseQuizAnswerMessage(message.text);
+									const identity = participants.find(
+										(participant) =>
+											participant.userId.toString() === message.senderId,
+									)?.userIdentity;
 
-										const showDetails =
-											!isMine &&
-											messages[index - 1]?.senderId !== message.senderId;
+									const showDetails =
+										!isMine &&
+										messages[index - 1]?.senderId !== message.senderId;
 
-										const bubble = quiz ? (
-											<QuizMessageCard message={quiz} onSend={onSend} />
-										) : answer ? (
-											<QuizAnswerCard message={answer} />
-										) : (
-											message.text
-										);
+									const bubble = quiz ? (
+										<QuizMessageCard message={quiz} onSend={onSend} />
+									) : answer ? (
+										<QuizAnswerCard message={answer} />
+									) : (
+										message.text
+									);
 
-										return (
-											<MessageScrollerItem
-												key={message.id}
-												messageId={message.id}
-											>
-												<Message align={align}>
-													<MessageContent>
-														<Bubble align={align} variant={variant}>
-															{showDetails && (
-																<BubbleHeader>
-																	<ChatSender
-																		name={message.senderName}
-																		identity={identity}
-																	/>
-																</BubbleHeader>
-															)}
-															<BubbleContent>{bubble}</BubbleContent>
-														</Bubble>
-													</MessageContent>
-												</Message>
-											</MessageScrollerItem>
-										);
-									})}
-								</MessageScrollerContent>
-							</MessageScrollerViewport>
-							<MessageScrollerButton />
-						</MessageScroller>
-					</MessageScrollerProvider>
-				</DrawerInner>
+									return (
+										<MessageScrollerItem
+											key={message.id}
+											messageId={message.id}
+										>
+											<Message align={align}>
+												<MessageContent>
+													<Bubble align={align} variant={variant}>
+														{showDetails && (
+															<BubbleHeader>
+																<ChatSender
+																	name={message.senderName}
+																	identity={identity}
+																/>
+															</BubbleHeader>
+														)}
+														<BubbleContent>{bubble}</BubbleContent>
+													</Bubble>
+												</MessageContent>
+											</Message>
+										</MessageScrollerItem>
+									);
+								})}
+							</MessageScrollerContent>
+						</MessageScrollerViewport>
+						<MessageScrollerButton />
+					</MessageScroller>
+				</MessageScrollerProvider>
 				<form
 					ref={formRef}
 					onSubmit={(event) => {

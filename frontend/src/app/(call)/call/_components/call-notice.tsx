@@ -2,9 +2,8 @@
 
 import { RefreshCwIcon } from "lucide-react";
 import { useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { Alert } from "@/components/arc/alert/alert";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import {
 	Card,
 	CardContent,
@@ -12,7 +11,7 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
+} from "@/components/arc/card/card";
 import { CallAuthButton } from "./call-auth-button";
 
 export type CallNoticeStatus = "not_found" | "upcoming" | "ended" | "error";
@@ -72,27 +71,22 @@ export function CallNotice({
 			</CardHeader>
 			<CardContent>
 				{error ? (
-					<Alert variant="destructive">
-						<AlertTitle>{error.name || "Error"}</AlertTitle>
-						<AlertDescription>{error.message}</AlertDescription>
+					<Alert tone="danger" title={error.name || "Error"}>
+						{error.message}
 					</Alert>
 				) : (
-					<Alert>
-						<AlertTitle>{notice.alert}</AlertTitle>
-					</Alert>
+					<Alert title={notice.alert} />
 				)}
 			</CardContent>
-			<CardFooter className="justify-end">
-				<ButtonGroup>
-					<Button
-						variant="outline"
-						onClick={onRefresh ?? (() => window.location.reload())}
-					>
-						<RefreshCwIcon />
-						Refresh
-					</Button>
-					<CallAuthButton />
-				</ButtonGroup>
+			<CardFooter style={{ justifyContent: "flex-end" }}>
+				<ArcButton
+					variant="secondary"
+					onClick={onRefresh ?? (() => window.location.reload())}
+				>
+					<RefreshCwIcon />
+					Refresh
+				</ArcButton>
+				<CallAuthButton />
 			</CardFooter>
 		</Card>
 	);

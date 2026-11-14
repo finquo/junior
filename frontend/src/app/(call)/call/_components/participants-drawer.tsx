@@ -3,18 +3,15 @@
 import type { Participant } from "@zoom/videosdk";
 import { MicIcon, MicOffIcon, UserXIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/arc/avatar/avatar";
+import { Button as ArcButton } from "@/components/arc/button/button";
 import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
-	DrawerDescription,
 	DrawerFooter,
-	DrawerHeader,
 	DrawerInner,
-	DrawerTitle,
-} from "@/components/ui/drawer";
+} from "@/components/arc/drawer/drawer";
 import {
 	Item,
 	ItemActions,
@@ -22,8 +19,8 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/ui/item";
-import { getInitials } from "@/lib/utils";
+} from "@/components/arc/item/item";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCall } from "./hooks";
 import { ParticipantRole } from "./video-tile";
 
@@ -69,16 +66,16 @@ export function ParticipantsDrawer({
 		muteParticipant,
 		removeParticipant,
 	} = useCall();
+	const isMobile = useIsMobile();
+	const side = isMobile ? "bottom" : "right";
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
-			<DrawerContent>
-				<DrawerHeader>
-					<DrawerTitle>Participants</DrawerTitle>
-					<DrawerDescription>
-						Everyone currently connected to this session.
-					</DrawerDescription>
-				</DrawerHeader>
+			<DrawerContent
+				title="Participants"
+				description="Everyone currently connected to this session."
+				side={side}
+			>
 				<DrawerInner>
 					<ItemGroup>
 						{participants.map((participant) => {
@@ -87,11 +84,7 @@ export function ParticipantsDrawer({
 							return (
 								<Item key={participant.userId} variant="outline">
 									<ItemMedia>
-										<Avatar size="sm">
-											<AvatarFallback>
-												{getInitials(participantName(participant))}
-											</AvatarFallback>
-										</Avatar>
+										<Avatar name={participantName(participant)} size="sm" />
 									</ItemMedia>
 									<ItemContent>
 										<ItemTitle>{participantName(participant)}</ItemTitle>
@@ -105,9 +98,9 @@ export function ParticipantsDrawer({
 										<ParticipantRole user={participant} />
 										{moderator && participant.userId !== myself?.userId && (
 											<>
-												<Button
-													size="icon-sm"
-													variant="outline"
+												<ArcButton
+													size="icon"
+													variant="secondary"
 													aria-label="Mute"
 													disabled={!voiceOn}
 													onClick={() =>
@@ -115,17 +108,17 @@ export function ParticipantsDrawer({
 													}
 												>
 													<MicOffIcon />
-												</Button>
-												<Button
-													size="icon-sm"
-													variant="destructive"
+												</ArcButton>
+												<ArcButton
+													size="icon"
+													variant="danger"
 													aria-label="Remove"
 													onClick={() =>
 														void removeParticipant(participant.userId)
 													}
 												>
 													<UserXIcon />
-												</Button>
+												</ArcButton>
 											</>
 										)}
 									</ItemActions>
@@ -135,9 +128,9 @@ export function ParticipantsDrawer({
 					</ItemGroup>
 				</DrawerInner>
 				<DrawerFooter>
-					<Button onClick={() => void invite()}>Invite</Button>
+					<ArcButton onClick={() => void invite()}>Invite</ArcButton>
 					<DrawerClose asChild>
-						<Button variant="outline">Close</Button>
+						<ArcButton variant="secondary">Close</ArcButton>
 					</DrawerClose>
 				</DrawerFooter>
 			</DrawerContent>
