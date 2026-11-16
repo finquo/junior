@@ -744,10 +744,18 @@ export function useDraggable() {
 		height: number;
 		bounds: DOMRect;
 	} | null>(null);
+	const pending = useRef<{
+		x: number;
+		y: number;
+		timer: ReturnType<typeof setTimeout>;
+	} | null>(null);
 
-	const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
-		if (event.button !== 0) return;
-
+	const begin = (
+		element: HTMLElement,
+		clientX: number,
+		clientY: number,
+		pointerId: number,
+	) => {
 		const node = ref.current;
 		const parent = node?.offsetParent;
 		if (!node || !(parent instanceof HTMLElement)) return;
@@ -756,14 +764,65 @@ export function useDraggable() {
 		const bounds = parent.getBoundingClientRect();
 
 		drag.current = {
-			x: event.clientX,
-			y: event.clientY,
+			x: clientX,
+			y: clientY,
 			origin: { left: rect.left - bounds.left, top: rect.top - bounds.top },
 			width: rect.width,
 			height: rect.height,
 			bounds,
 		};
-		event.currentTarget.setPointerCapture(event.pointerId);
+		try {
+			element.setPointerCapture(pointerId);
+		} catch {
+			// The pointer may already be gone; dragging still works while it stays over the element.
+		}
+	};
+
+	const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+		if (event.button !== 0) return;
+
+		begin(event.currentTarget, event.clientX, event.clientY, event.pointerId);
+	};
+
+	// The whole element is the handle: mouse/pen drags immediately, touch requires a
+	// long press so swipes and scrolls that start on the tile are not hijacked.
+	const onElementPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+		if (event.button !== 0) return;
+
+		if (event.pointerType !== "touch") {
+			begin(event.currentTarget, event.clientX, event.clientY, event.pointerId);
+			return;
+		}
+
+		const { clientX, clientY, pointerId, currentTarget } = event;
+		const timer = setTimeout(() => {
+			pending.current = null;
+			begin(currentTarget, clientX, clientY, pointerId);
+			navigator.vibrate?.(10);
+		}, 350);
+		pending.current = { x: clientX, y: clientY, timer };
+	};
+
+	const cancelPending = () => {
+		if (!pending.current) return;
+		clearTimeout(pending.current.timer);
+		pending.current = null;
+	};
+
+	const onElementPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+		if (pending.current) {
+			const moved =
+				Math.abs(event.clientX - pending.current.x) +
+				Math.abs(event.clientY - pending.current.y);
+			// A finger that starts scrolling or swiping cancels the long press.
+			if (moved > 12) cancelPending();
+		}
+		onPointerMove(event);
+	};
+
+	const onElementPointerUp = () => {
+		cancelPending();
+		onPointerUp();
 	};
 
 	const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
@@ -791,6 +850,12 @@ export function useDraggable() {
 			onPointerMove,
 			onPointerUp,
 			onPointerCancel: onPointerUp,
+		},
+		dragProps: {
+			onPointerDown: onElementPointerDown,
+			onPointerMove: onElementPointerMove,
+			onPointerUp: onElementPointerUp,
+			onPointerCancel: onElementPointerUp,
 		},
 	};
 }

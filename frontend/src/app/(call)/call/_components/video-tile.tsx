@@ -11,7 +11,7 @@ import {
 	PinIcon,
 	UserXIcon,
 } from "lucide-react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Avatar } from "@/components/arc/avatar/avatar";
 import { Badge } from "@/components/arc/badge/badge";
 import { Frame } from "@/components/reui/frame";
@@ -160,7 +160,6 @@ export function VideoTile({
 	avatar,
 	menu,
 	self = false,
-	handle,
 	children,
 }: {
 	user: SessionUser;
@@ -171,7 +170,6 @@ export function VideoTile({
 	avatar?: string;
 	menu?: TileMenu;
 	self?: boolean;
-	handle?: ReactNode;
 	children?: ReactElement;
 }) {
 	const voice = voiceOn ?? isVoiceOn(user);
@@ -198,12 +196,11 @@ export function VideoTile({
 					tone="neutral"
 					pill
 					icon={voice ? <MicIcon /> : <MicOffIcon />}
-					className="absolute bottom-2 left-2"
+					className="absolute bottom-4 left-2"
 				>
 					{video && !self && <TileLabel user={user} role={role} inline />}
 				</Badge>
 				{menu && <RemoteUserMenu user={user} menu={menu} />}
-				{handle}
 			</div>
 			{children}
 		</Frame>

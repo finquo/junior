@@ -6,7 +6,6 @@ import { quizAnswerMessageZod, quizMessageZod } from "backend/config";
 import { CheckIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
 import { Alert } from "@/components/arc/alert/alert";
-import { Skeleton } from "@/components/arc/skeleton/skeleton";
 import {
 	Item,
 	ItemContent,
@@ -14,6 +13,7 @@ import {
 	ItemGroup,
 	ItemTitle,
 } from "@/components/arc/item/item";
+import { Skeleton } from "@/components/arc/skeleton/skeleton";
 import {
 	Questionnaire,
 	QuestionnaireActions,
@@ -129,7 +129,7 @@ function QuizReadonly({ questions }: { questions: QuizQuestion[] }) {
 			})}
 			<QuestionnaireActions>
 				<QuestionnairePrevious />
-				<QuestionnaireSkip />
+				<QuestionnaireSkip onSubmit={(e) => e.preventDefault()} />
 				<QuestionnaireNext />
 				<QuestionnaireSubmit disabled />
 			</QuestionnaireActions>

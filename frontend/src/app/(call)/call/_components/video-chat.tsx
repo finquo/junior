@@ -18,7 +18,6 @@ import {
 	MonitorDot,
 	MonitorOff,
 	MoonIcon,
-	MoveIcon,
 	PhoneOffIcon,
 	SunIcon,
 	SwitchCameraIcon,
@@ -41,7 +40,6 @@ import { SplitButton } from "@/components/arc/split-button/split-button";
 import { Container } from "@/components/container";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
-import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardDescription,
@@ -54,6 +52,7 @@ import { ChatDrawer } from "./chat-drawer";
 import { CallProvider, useCall, useDraggable } from "./hooks";
 import { MeetingDetails } from "./meeting-details";
 import { ParticipantsDrawer } from "./participants-drawer";
+import { QuizPopup } from "./quiz-popup";
 import { MAX_REMOTE_TILES, type SessionUser } from "./utils";
 import { VideoTile } from "./video-tile";
 
@@ -122,32 +121,14 @@ export function VideoChat({
 	);
 }
 
-function DragHandle({
-	handleProps,
-}: {
-	handleProps: ReturnType<typeof useDraggable>["handleProps"];
-}) {
-	return (
-		<Button
-			type="button"
-			size="icon-sm"
-			variant="secondary"
-			aria-label="Move tile"
-			className="absolute top-2 right-2 cursor-grab touch-none opacity-0 transition-opacity duration-200 ease-out active:cursor-grabbing group-hover:opacity-100"
-			{...handleProps}
-		>
-			<MoveIcon />
-		</Button>
-	);
-}
-
 function FloatingTile({ participant }: { participant: SessionUser }) {
 	const drag = useDraggable();
 
 	return (
 		<div
 			ref={drag.ref}
-			className="absolute z-10"
+			className="absolute z-10 cursor-grab touch-none active:cursor-grabbing"
+			{...drag.dragProps}
 			style={
 				drag.position
 					? { left: drag.position.left, top: drag.position.top }
@@ -157,8 +138,7 @@ function FloatingTile({ participant }: { participant: SessionUser }) {
 			<VideoTile
 				user={participant}
 				avatar={participant.avatar}
-				className="group aspect-video min-w-64 shadow-lg"
-				handle={<DragHandle handleProps={drag.handleProps} />}
+				className="aspect-video min-w-64 shadow-lg"
 			/>
 		</div>
 	);
@@ -261,12 +241,17 @@ function CallView({
 		<div className="h-full min-h-64 p-2">
 			<FramePanel
 				className={cn(
-					"relative grid h-full min-h-0 content-center gap-2 overflow-hidden border-none",
-					isRemoteSharing
-						? "grid-cols-1"
-						: others.length > 1
-							? "grid-cols-2"
-							: "grid-cols-1",
+					"relative h-full min-h-0 gap-2 border-none",
+					isMobile
+						? "justify-center-safe flex flex-col overflow-y-auto"
+						: cn(
+								"grid content-center overflow-hidden",
+								isRemoteSharing
+									? "grid-cols-1"
+									: others.length > 1
+										? "grid-cols-2"
+										: "grid-cols-1",
+							),
 				)}
 			>
 				{isRemoteSharing && (
@@ -302,7 +287,8 @@ function CallView({
 
 				<div
 					ref={selfDrag.ref}
-					className="absolute z-10 flex flex-col gap-2"
+					className="absolute z-10 flex cursor-grab touch-none flex-col gap-2 active:cursor-grabbing"
+					{...selfDrag.dragProps}
 					style={
 						selfDrag.position
 							? { left: selfDrag.position.left, top: selfDrag.position.top }
@@ -326,19 +312,7 @@ function CallView({
 							role={call.role}
 							avatar={avatar}
 							self
-							className="group min-w-64 shadow-lg"
-							handle={
-								<Button
-									type="button"
-									size="icon-sm"
-									variant="secondary"
-									aria-label="Move camera"
-									className="absolute top-2 right-2 cursor-grab touch-none opacity-0 transition-opacity duration-200 ease-out active:cursor-grabbing group-hover:opacity-100"
-									{...selfDrag.handleProps}
-								>
-									<MoveIcon />
-								</Button>
-							}
+							className="min-w-64 shadow-lg"
 						/>
 					)}
 				</div>
@@ -469,6 +443,8 @@ function CallView({
 					open={drawer === "participants"}
 					onOpenChange={(open) => setDrawer(open ? "participants" : null)}
 				/>
+
+				<QuizPopup />
 
 				{call.slotId && canViewDetails && (
 					<MeetingDetails
