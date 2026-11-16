@@ -339,7 +339,7 @@ function SpeakerItem({ preview }: { preview: CallPreviewState }) {
 					disabled={!track}
 					onClick={onClick}
 				>
-					{playing ? "Stop" : "Play test sound"}
+					{playing ? "Stop Speaking" : "Play test sound"}
 				</ArcButton>
 			</ItemActions>
 			<DeviceSelect

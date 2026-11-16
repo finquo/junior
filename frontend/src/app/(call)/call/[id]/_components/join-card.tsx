@@ -1,6 +1,7 @@
 "use client";
 
 import type { User } from "better-auth";
+import { cn } from "cn";
 import {
 	CalendarClockIcon,
 	ImageIcon,
@@ -27,9 +28,6 @@ import {
 } from "@/components/arc/card/card";
 import { Countdown } from "@/components/arc/countdown/countdown";
 import { Input } from "@/components/arc/input/input";
-import { Switch } from "@/components/arc/switch/switch";
-import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
 import {
 	Item,
 	ItemActions,
@@ -39,6 +37,9 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/arc/item/item";
+import { Switch } from "@/components/arc/switch/switch";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import type { useJoinPreferences } from "../../_components/call-preferences";
 import { CallPreviewPanel, type CallPreviewState } from "./call-preview";
 import type { CallMeeting, PreflightState } from "./hooks";
@@ -74,7 +75,10 @@ function JoinPreference({
 }) {
 	return (
 		<FieldLabel htmlFor={id}>
-			<Field orientation="horizontal" className="items-start">
+			<Field
+				orientation="horizontal"
+				className={description ? "items-start" : undefined}
+			>
 				<ItemMedia variant="icon">{icon}</ItemMedia>
 				<ItemContent>
 					<ItemTitle>{label}</ItemTitle>
@@ -123,9 +127,6 @@ export function CallJoinCard({
 	const needsName = !authName;
 	const canJoinAsCompanion = higherRole;
 	const companionActive = !!(canJoinAsCompanion && companion);
-	const contentClassName = companionActive
-		? "grid gap-4"
-		: "grid gap-4 md:grid-cols-2";
 
 	const { join, joining } = useJoin({
 		preflight,
@@ -165,8 +166,10 @@ export function CallJoinCard({
 					</Badge>
 				</CardAction>
 			</CardHeader>
-			<CardContent className={contentClassName}>
-				<ItemGroup className="gap-2">
+			<CardContent
+				className={cn("grid gap-4", !companionActive ? "md:grid-cols-2" : "")}
+			>
+				<ItemGroup>
 					<Item variant="muted" size="sm">
 						<ItemMedia variant="icon">
 							<CalendarClockIcon />
@@ -228,44 +231,51 @@ export function CallJoinCard({
 							id="join-companion"
 							icon={<MonitorSmartphoneIcon />}
 							label="Join as companion"
-							description="Join without camera or microphone, then share your screen from this device."
 							checked={companion}
 							onCheckedChange={preferences.setCompanion}
 						/>
 					)}
 
-					<div className="flex gap-2">
-						<JoinPreference
-							id="join-video"
-							icon={camera ? <VideoIcon /> : <VideoOffIcon />}
-							label="Camera"
-							checked={camera}
-							disabled={companionActive}
-							onCheckedChange={toggleCamera}
-						/>
-						{canJoinAsCompanion && (
+					{!companion && (
+						<div className="flex flex-wrap gap-2 lg:flex-nowrap">
 							<JoinPreference
-								id="join-background"
-								icon={<ImageIcon />}
-								label="Virtual background"
-								checked={virtualBackground}
-								disabled={!camera || companionActive}
-								onCheckedChange={preferences.setVirtualBackground}
+								id="join-video"
+								icon={camera ? <VideoIcon /> : <VideoOffIcon />}
+								label="Camera"
+								checked={camera}
+								disabled={companionActive}
+								onCheckedChange={toggleCamera}
 							/>
-						)}
-					</div>
+							{canJoinAsCompanion && (
+								<JoinPreference
+									id="join-background"
+									icon={<ImageIcon />}
+									label="Virtual background"
+									checked={virtualBackground}
+									disabled={!camera || companionActive}
+									onCheckedChange={preferences.setVirtualBackground}
+								/>
+							)}
+						</div>
+					)}
 
-					<JoinPreference
-						id="join-audio"
-						icon={mic ? <MicIcon /> : <MicOffIcon />}
-						label="Microphone"
-						checked={mic}
-						disabled={companionActive}
-						onCheckedChange={toggleMic}
-					/>
+					{!companion && (
+						<JoinPreference
+							id="join-audio"
+							icon={mic ? <MicIcon /> : <MicOffIcon />}
+							label="Microphone"
+							checked={mic}
+							disabled={companionActive}
+							onCheckedChange={toggleMic}
+						/>
+					)}
 				</ItemGroup>
 
-				{!companionActive && <CallPreviewPanel preview={preview} />}
+				{!companionActive && (
+					<div className="hidden md:block">
+						<CallPreviewPanel preview={preview} />
+					</div>
+				)}
 			</CardContent>
 			<CardFooter>
 				<ArcButton

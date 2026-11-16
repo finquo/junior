@@ -51,6 +51,9 @@ const DrawerContext = createContext<{
 export function Drawer({
 	open: openProp,
 	defaultOpen = false,
+	// Non-modal: the overlay blocks outside clicks while open, and skipping Radix's body
+	// pointer-events lock avoids its cross-root capture race that leaves the page unclickable.
+	modal = false,
 	onOpenChange,
 	...props
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
@@ -79,7 +82,12 @@ export function Drawer({
 	);
 	return (
 		<DrawerContext.Provider value={value}>
-			<DialogPrimitive.Root {...props} open={open} onOpenChange={setOpen} />
+			<DialogPrimitive.Root
+				{...props}
+				modal={modal}
+				open={open}
+				onOpenChange={setOpen}
+			/>
 		</DrawerContext.Provider>
 	);
 }
@@ -425,6 +433,11 @@ export function DrawerContent({
 								event.detail.originalEvent.timeStamp < drawer.openedAt.current
 							)
 								event.preventDefault();
+						}}
+						// Non-modal: focus returning to the opener (a menu closing, the trigger refocusing) must not dismiss the drawer.
+						onFocusOutside={(event) => {
+							props.onFocusOutside?.(event);
+							event.preventDefault();
 						}}
 					>
 						<motion.div

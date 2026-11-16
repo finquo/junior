@@ -9,6 +9,7 @@ import {
 	UserRoundIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { getRangeTime } from "utils";
 import { Alert } from "@/components/arc/alert/alert";
 import { Badge, type BadgeTone } from "@/components/arc/badge/badge";
 import { Button as ArcButton } from "@/components/arc/button/button";
@@ -132,10 +133,7 @@ function ParticipantRow({
 }
 
 function DetailsContent({ data }: { data: SlotData }) {
-	const start = new Date(data.startTime);
-	const durationMinutes = Math.round(
-		(new Date(data.expectedEndTime).getTime() - start.getTime()) / 60_000,
-	);
+	const duration = getRangeTime(data.startTime, data.expectedEndTime);
 
 	return (
 		<>
@@ -185,7 +183,7 @@ function DetailsContent({ data }: { data: SlotData }) {
 				<DetailRow
 					icon={<CalendarClockIcon />}
 					label="Start time"
-					value={formatDateTime(start)}
+					value={formatDateTime(data.startTime)}
 				/>
 				<DetailRow
 					icon={<ClockIcon />}
@@ -197,11 +195,7 @@ function DetailsContent({ data }: { data: SlotData }) {
 					label="Actual end"
 					value={formatDateTime(data.endTime)}
 				/>
-				<DetailRow
-					icon={<ClockIcon />}
-					label="Duration"
-					value={`${durationMinutes} minutes`}
-				/>
+				<DetailRow icon={<ClockIcon />} label="Duration" value={duration} />
 			</ItemGroup>
 			<ItemGroup>
 				<ParticipantRow label="Student" userId={data.studentId} />

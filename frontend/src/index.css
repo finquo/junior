@@ -10,7 +10,7 @@
 :root {
 	--card: oklch(1 0 0);
 	--card-foreground: oklch(0.148 0.004 228.8);
-	--popover: oklch(1 0 0);
+	--popover: oklch(0.995 0.001 228.8);
 	--popover-foreground: oklch(0.148 0.004 228.8);
 	--primary: oklch(0.852 0.199 91.936);
 	--primary-foreground: oklch(0.421 0.095 57.708);
@@ -55,7 +55,7 @@
 	--focus-ring: #6b97ff;
 	--tint: rgb(0 0 0 / 0.08);
 	--tint-hover: rgb(0 0 0 / 0.065);
-	--background: oklch(1 0 0);
+	--background: oklch(0.955 0.003 228.8);
 	--foreground: oklch(0.148 0.004 228.8);
 }
 

@@ -94,7 +94,15 @@ const chatSchema = z.object({
 	text: z.string().trim().min(1).max(1000),
 });
 
-export function ChatDrawer({ children }: { children: React.ReactElement }) {
+export function ChatDrawer({
+	children,
+	open,
+	onOpenChange,
+}: {
+	children?: React.ReactElement;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+}) {
 	const {
 		messages,
 		markChatRead,
@@ -124,11 +132,13 @@ export function ChatDrawer({ children }: { children: React.ReactElement }) {
 
 	return (
 		<Drawer
-			onOpenChange={(open) => {
-				if (open) markChatRead();
+			open={open}
+			onOpenChange={(next) => {
+				if (next) markChatRead();
+				onOpenChange?.(next);
 			}}
 		>
-			<DrawerTrigger asChild>{children}</DrawerTrigger>
+			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
 			<DrawerContent
 				title="Chat"
 				description="Messages are visible to everyone in this session."

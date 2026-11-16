@@ -56,6 +56,13 @@
 	flex: none;
 	place-items: center;
 }
+/* Phones: icons shrink with the compact control, matching Button. */
+@media (max-width: 767px) {
+	.mainIcon svg {
+		width: 18px;
+		height: 18px;
+	}
+}
 .iconPhase {
 	grid-area: 1 / 1;
 	display: inline-flex;

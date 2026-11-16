@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
 	LocalScreenShareComponent,
@@ -17,13 +17,16 @@ import {
 	MicOffIcon,
 	MonitorDot,
 	MonitorOff,
+	MoonIcon,
 	MoveIcon,
 	PhoneOffIcon,
+	SunIcon,
 	SwitchCameraIcon,
 	UsersIcon,
 	VideoIcon,
 	VideoOffIcon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
 import { Button as ArcButton } from "@/components/arc/button/button";
@@ -45,6 +48,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ChatDrawer } from "./chat-drawer";
 import { CallProvider, useCall, useDraggable } from "./hooks";
@@ -172,7 +176,12 @@ function CallView({
 	canRecord: boolean;
 }) {
 	const call = useCall();
-	const [drawer, setDrawer] = useState<"participants" | "details" | null>(null);
+	const { resolvedTheme, setTheme } = useTheme();
+	const isMobile = useIsMobile();
+	const controlSize = isMobile ? "sm" : "lg";
+	const [drawer, setDrawer] = useState<
+		"participants" | "details" | "chat" | null
+	>(null);
 	const selfDrag = useDraggable();
 
 	if (call.isError) {
@@ -211,6 +220,11 @@ function CallView({
 	const isRemoteSharing = remoteScreenShareUsers.length > 0;
 	const hasDetails = Boolean(call.slotId && canViewDetails);
 	const speaking = call.micLevel > SPEAKING_LEVEL;
+	const themeAction = {
+		label: resolvedTheme === "light" ? "Dark theme" : "Light theme",
+		icon: resolvedTheme === "light" ? <MoonIcon /> : <SunIcon />,
+		onSelect: () => setTheme(resolvedTheme === "light" ? "dark" : "light"),
+	};
 
 	const microphoneActions = call.micDevices.length
 		? call.micDevices.map((device) => ({
@@ -334,7 +348,7 @@ function CallView({
 						label={call.isAudioOn ? "Microphone on" : "Microphone off"}
 						icon={call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
 						variant={call.isAudioOn ? "success" : "secondary"}
-						size="lg"
+						size={controlSize}
 						style={{
 							boxShadow: speaking
 								? `0 0 ${8 + Math.round(call.micLevel * 20)}px var(--success)`
@@ -347,12 +361,12 @@ function CallView({
 						label={call.isVideoOn ? "Camera on" : "Camera off"}
 						icon={call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
 						variant={call.isVideoOn ? "success" : "secondary"}
-						size="lg"
+						size={controlSize}
 						onClick={() => void call.setCameraOn(!call.isVideoOn)}
 						actions={cameraActions}
 					/>
 					<ArcButton
-						size="lg"
+						size={controlSize}
 						variant={call.isScreensharing ? "success" : "secondary"}
 						loading={call.screensharePending}
 						onClick={() => void call.toggleScreenshare()}
@@ -362,7 +376,7 @@ function CallView({
 					</ArcButton>
 					{canRecord && (
 						<ArcButton
-							size="lg"
+							size={controlSize}
 							variant={call.isRecording ? "success" : "secondary"}
 							loading={call.recordingPending}
 							onClick={() => void call.toggleRecording()}
@@ -371,45 +385,38 @@ function CallView({
 							{call.isRecording ? "Recording on" : "Recording off"}
 						</ArcButton>
 					)}
-					<ChatDrawer>
-						<ArcButton
-							size="lg"
-							variant={call.unread > 0 ? "warning" : "secondary"}
-						>
-							<MessageSquareIcon />
-							Chat
-						</ArcButton>
-					</ChatDrawer>
-					{hasDetails && (
-						<SplitButton
-							label="Participants"
-							icon={<UsersIcon />}
-							variant="secondary"
-							size="lg"
-							onClick={() => setDrawer("participants")}
-							actions={[
-								{
-									label: "Meeting details",
-									icon: <InfoIcon />,
-									onSelect: () => setDrawer("details"),
-								},
-							]}
-						/>
-					)}
-					{!hasDetails && (
-						<ArcButton
-							size="lg"
-							variant="secondary"
-							onClick={() => setDrawer("participants")}
-						>
-							<UsersIcon />
-							Participants
-						</ArcButton>
-					)}
+					<SplitButton
+						label="Chat"
+						icon={<MessageSquareIcon />}
+						variant="secondary"
+						size={controlSize}
+						onClick={() => setDrawer("chat")}
+						actions={[
+							{
+								label: "Participants",
+								icon: <UsersIcon />,
+								onSelect: () => setDrawer("participants"),
+							},
+							...(hasDetails
+								? [
+										{
+											label: "Meeting details",
+											icon: <InfoIcon />,
+											onSelect: () => setDrawer("details"),
+										},
+									]
+								: []),
+							themeAction,
+						]}
+					/>
+					<ChatDrawer
+						open={drawer === "chat"}
+						onOpenChange={(open) => setDrawer(open ? "chat" : null)}
+					/>
 					{canEndMeeting && (
 						<Dialog>
 							<DialogTrigger asChild>
-								<ArcButton size="lg" variant="danger">
+								<ArcButton size={controlSize} variant="danger">
 									<PhoneOffIcon />
 									End for all
 								</ArcButton>
@@ -434,7 +441,7 @@ function CallView({
 					)}
 					<Dialog>
 						<DialogTrigger asChild>
-							<ArcButton size="lg" variant="danger">
+							<ArcButton size={controlSize} variant="danger">
 								<LogOutIcon />
 								Leave
 							</ArcButton>

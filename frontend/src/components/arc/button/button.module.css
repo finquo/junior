@@ -65,6 +65,13 @@
 .labelPhase svg {
 	flex: none;
 }
+/* Phones: icons shrink with the compact control, so the label stays the leader. */
+@media (max-width: 767px) {
+	.button .labelPhase svg {
+		width: 18px;
+		height: 18px;
+	}
+}
 .primary {
 	color: var(--background);
 	background: var(--foreground);

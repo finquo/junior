@@ -18,6 +18,11 @@
 .outline { border-color: var(--border); background: var(--surface); }
 .secondary { border-color: var(--border); background: var(--surface-muted); }
 .muted { background: color-mix(in oklab, var(--surface-muted) 50%, transparent); }
+/* Inputs draw with --border-strong; rows match that weight in light mode so hairlines still read on the grey page. */
+:global(:root:not([data-theme="dark"])) .outline,
+:global(:root:not([data-theme="dark"])) .secondary {
+	border-color: var(--border-strong);
+}
 
 .sm { gap: var(--space-3); padding: var(--space-3); }
 .xs { gap: var(--space-2); padding: var(--space-2); }
