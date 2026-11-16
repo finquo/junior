@@ -1,5 +1,6 @@
 import {
 	type DefaultError,
+	type MutationStatus,
 	type UseMutationOptions,
 	type UseMutationResult,
 	useMutation,
@@ -12,15 +13,28 @@ export const MutationButton = <
 	TOnMutateResult = unknown,
 >({
 	api,
+	children,
+	wrapper = (children) => <>{children}</>,
 	success,
 	onSuccess,
 	...props
 }: {
 	api: UseMutationOptions<TData, TError, TVariables, TOnMutateResult>;
+	wrapper?: (
+		children: React.ReactNode,
+		mutate: UseMutationResult<
+			TData,
+			TError,
+			TVariables,
+			TOnMutateResult
+		>["mutate"],
+		state: MutationStatus,
+	) => React.ReactNode;
 	isSuccess?: React.ReactNode;
 	isPending?: React.ReactNode;
 	isError?: React.ReactNode;
-	mutate: (
+	children?: React.ReactNode;
+	mutate?: (
 		mutate: UseMutationResult<
 			TData,
 			TError,
@@ -39,17 +53,23 @@ export const MutationButton = <
 	) => React.ReactNode;
 	onSuccess?: (data: TData) => Promise<void> | void;
 }) => {
-	const { isError, isPending, isSuccess, mutate } = useMutation({
+	const { isError, isPending, isSuccess, mutate, status } = useMutation({
 		onSuccess,
 		...api,
 	});
 
-	if ((success || isSuccess) && props.isSuccess) return props.isSuccess;
+	if ((success || isSuccess) && props.isSuccess)
+		return wrapper(props.isSuccess, mutate, status);
 
-	if (isPending && props.isPending) return props.isPending;
+	if (isPending && props.isPending)
+		return wrapper(props.isPending, mutate, status);
 
-	if (isError && props.reTry) return props.reTry(mutate);
-	if (isError && props.isError) return props.isError;
+	if (isError && props.reTry)
+		return wrapper(props.reTry(mutate), mutate, status);
 
-	return props.mutate(mutate);
+	if (isError && props.isError) return wrapper(props.isError, mutate, status);
+
+	if (props.mutate) return wrapper(props.mutate(mutate), mutate, status);
+
+	return wrapper(children, mutate, status);
 };

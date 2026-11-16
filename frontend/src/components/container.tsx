@@ -16,7 +16,9 @@ export const Container = ({
 				containerClassName,
 			)}
 		>
-			<div className={cn("sm:min-w-sm md:min-w-md", className)}>{children}</div>
+			<div className={cn("min-w-xs sm:min-w-sm md:min-w-md", className)}>
+				{children}
+			</div>
 		</div>
 	);
 };
