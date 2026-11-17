@@ -1,6 +1,6 @@
 "use client";
 
-import { Questionnaire as QuestionnairePrimitive } from "@shadcn/react/questionnaire";
+import { Questionnaire as QuestionnairePrimitive } from "@animate-ui/react/primitives/questionnaire";
 import { cn } from "cn";
 import { CheckIcon } from "lucide-react";
 import type * as React from "react";

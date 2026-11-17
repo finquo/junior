@@ -1,9 +1,9 @@
 "use client";
 
+import { Drawer as DrawerPrimitive } from "@animate-ui/react/primitives/radix-ui/drawer";
 import { cn } from "cn";
 import { Slot } from "radix-ui";
 import * as React from "react";
-import { Drawer as DrawerPrimitive } from "vaul";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type DrawerDirection = "top" | "bottom" | "left" | "right";
@@ -74,7 +74,7 @@ function DrawerOverlay({
 		<DrawerPrimitive.Overlay
 			data-slot="drawer-overlay"
 			className={cn(
-				"data-open:fade-in-0 data-closed:fade-out-0 fixed inset-0 z-50 bg-black/30 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-sm",
+				"fixed inset-0 z-50 bg-black/30 supports-backdrop-filter:backdrop-blur-sm",
 				className,
 			)}
 			{...props}
