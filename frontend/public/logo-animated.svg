@@ -1,0 +1,57 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { overflow: visible; }
+@keyframes kf_Vector_621_transform_0 {
+  0% {
+    transform: translateX(153.074px) translateY(161.092px) translate(-52.574px, -61.092px) rotate(0rad) translate(52.574px, 61.092px) rotate(3.124rad) scaleX(1) scaleY(1) skewX(0rad);
+  }
+  25.16% {
+    transform: translateX(153.074px) translateY(161.092px) translate(-52.574px, -61.092px) rotate(1.571rad) translate(52.574px, 61.092px) rotate(3.124rad) scaleX(1) scaleY(1) skewX(0rad);
+  }
+  50% {
+    transform: translateX(153.074px) translateY(161.092px) translate(-52.574px, -61.092px) rotate(3.142rad) translate(52.574px, 61.092px) rotate(3.124rad) scaleX(1) scaleY(1) skewX(0rad);
+  }
+  75.12% {
+    transform: translateX(153.074px) translateY(161.092px) translate(-52.574px, -61.092px) rotate(4.712rad) translate(52.574px, 61.092px) rotate(3.124rad) scaleX(1) scaleY(1) skewX(0rad);
+  }
+  100% {
+    transform: translateX(153.074px) translateY(161.092px) translate(-52.574px, -61.092px) rotate(6.266rad) translate(52.574px, 61.092px) rotate(3.124rad) scaleX(1) scaleY(1) skewX(0rad);
+  }
+}
+#Vector_621 {
+  transform-origin: 0 0;
+  animation: kf_Vector_621_transform_0 1.5s linear infinite;
+}
+@keyframes kf_Vector_transform_0 {
+  0% {
+    transform: translateX(182.979px) translateY(181px) translate(-82.763px, -81.5px) rotate(0rad) translate(82.763px, 81.5px) rotate(-3.142rad) skewX(0rad);
+  }
+  25% {
+    transform: translateX(182.979px) translateY(181px) translate(-82.763px, -81.5px) rotate(-1.571rad) translate(82.763px, 81.5px) rotate(-3.142rad) skewX(0rad);
+  }
+  50.14% {
+    transform: translateX(182.979px) translateY(181px) translate(-82.763px, -81.5px) rotate(-3.142rad) translate(82.763px, 81.5px) rotate(-3.142rad) skewX(0rad);
+  }
+  75% {
+    transform: translateX(182.979px) translateY(181px) translate(-82.763px, -81.5px) rotate(-4.712rad) translate(82.763px, 81.5px) rotate(-3.142rad) skewX(0rad);
+  }
+  100% {
+    transform: translateX(182.979px) translateY(181px) translate(-82.763px, -81.5px) rotate(-6.266rad) translate(82.763px, 81.5px) rotate(-3.142rad) skewX(0rad);
+  }
+}
+#Vector {
+  transform-origin: 0 0;
+  animation: kf_Vector_transform_0 1.5s linear infinite;
+}
+</style>
+<g id="_3">
+<path id="Vector_621" transform="translate(153.074 161.092) rotate(179)" d="M50.5405 0.0108286C41.8887 0.053181 43.5613 8.75838 36.2533 42.7056C32.849 53.9464 -0.866206 46.5114 0.0170488 61.2125C-0.572268 72.3045 34.9438 73.653 35.3302 80.0847C39.334 86.3251 38.8179 123.222 50.2512 124C63.8994 123.738 61.7189 87.4425 67.6061 79.2983C70.4807 74.0768 105.022 72.9946 102.907 60.38C102.129 47.4403 73.2421 51.8092 69.2787 46.4883C60.2107 39.5938 65.074 -0.757491 50.5405 0.0108286Z" fill="#FCAE26"/>
+<g id="Vector" transform="matrix(-1 0 0 -1 182.979 181)">
+<path d="M129.546 11C129.546 17.0751 124.621 22 118.546 22C112.471 22 107.546 17.0751 107.546 11C107.546 4.92487 112.471 0 118.546 0C124.621 0 129.546 4.92487 129.546 11Z" id="Vector_bg_0" fill="#F8721F">
+</path>
+<path d="M138.546 150C138.546 157.18 132.726 163 125.546 163C118.367 163 112.546 157.18 112.546 150C112.546 142.82 118.367 137 125.546 137C132.726 137 138.546 142.82 138.546 150Z" fill="#3B68FC"/>
+<path d="M140.772 119.53C140.576 119.836 140.377 120.141 140.175 120.444C139.701 121.446 139.458 122.576 139.513 123.761C139.692 127.623 142.969 130.608 146.83 130.428C148.755 130.339 150.462 129.48 151.668 128.163C151.819 127.934 151.969 127.705 152.118 127.475C152.404 127.032 152.686 126.587 152.964 126.139C169.389 99.6519 170.253 64.9988 152.311 37.0107C150.081 33.5321 147.637 30.2746 145.005 27.2442C144.989 27.2249 144.972 27.2057 144.956 27.1867C142.342 24.2097 137.836 24.7423 135.494 26.5303C132.421 28.8763 131.964 33.7295 134.533 36.6584C136.793 39.2355 138.889 42.0133 140.795 44.9869C155.683 68.2106 154.901 96.9881 141.165 118.91C141.035 119.118 140.904 119.324 140.772 119.53Z" fill="#714ADE"/>
+<path d="M46.394 140.607C46.7021 140.799 47.0119 140.99 47.3234 141.178C48.181 141.881 48.8834 142.799 49.3401 143.894C50.828 147.462 49.1417 151.561 45.5735 153.049C43.795 153.79 41.8847 153.743 40.2315 153.068C39.9973 152.926 39.7638 152.783 39.5311 152.638C39.0828 152.36 38.6375 152.078 38.1952 151.792C12.0264 134.864 -3.56293 103.903 0.697836 70.9325C1.2274 66.8346 2.04573 62.8447 3.12955 58.9806C3.13631 58.956 3.14316 58.9316 3.15013 58.9073C4.24077 55.099 8.54236 53.6549 11.4237 54.2706C15.2043 55.0786 17.6917 59.2709 16.621 63.0165C15.6789 66.3123 14.9706 69.7195 14.5179 73.2226C10.9824 100.581 23.9866 126.265 45.7735 140.214C45.9795 140.346 46.1863 140.477 46.394 140.607Z" fill="#09B1BB"/>
+</g>
+</g>
+</svg>

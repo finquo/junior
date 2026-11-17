@@ -1,13 +1,11 @@
-import { Loader2 } from "lucide-react";
-
 export default function Loader() {
 	return (
 		<div className="flex h-full items-center justify-center">
-			<Loader2
-				className="animate-spin"
+			<img
 				data-slot="spinner"
 				role="status"
 				aria-label="Loading"
+				src={"/logo-animated.svg"}
 			/>
 		</div>
 	);
