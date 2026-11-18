@@ -2,13 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import {
-	ExternalLinkIcon,
-	MoreHorizontalIcon,
-	PenIcon,
-	PlusIcon,
-	UserIcon,
-} from "lucide-react";
+import { MoreHorizontalIcon, PenIcon, PlusIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
@@ -40,8 +34,8 @@ import {
 } from "@/components/ui/drawer";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -71,26 +65,18 @@ function SchedulerActions({ scheduler }: { scheduler: SchedulerRecord }) {
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/schedulers/${scheduler.id}` as "/"}>
-								<ExternalLinkIcon />
-								View Profile
-							</Link>
-						</Button>
-					</DropdownMenuItem>
 					<DrawerTrigger asChild>
-						<DropdownMenuItem>
+						<DropdownMenuActionItem>
 							<UserIcon />
 							Quick Preview
-						</DropdownMenuItem>
+						</DropdownMenuActionItem>
 					</DrawerTrigger>
 					<RenderWhenRole role="admin">
 						<UserEditDrawer userId={scheduler.id} userData={scheduler.user}>
-							<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+							<DropdownMenuActionItem>
 								<PenIcon />
 								Edit User
-							</DropdownMenuItem>
+							</DropdownMenuActionItem>
 						</UserEditDrawer>
 					</RenderWhenRole>
 				</DropdownMenuContent>
@@ -151,8 +137,8 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 				const scheduler = row.original;
 				const user = scheduler.user;
 				return (
-					<Drawer>
-						<DrawerTrigger asChild>
+					<Button variant="link" asChild className="h-auto p-0">
+						<Link href={`/schedulers/${scheduler.id}` as "/"}>
 							<Item>
 								<ItemMedia>
 									<Avatar size="sm">
@@ -173,35 +159,8 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 									)}
 								</ItemContent>
 							</Item>
-						</DrawerTrigger>
-						<DrawerContent>
-							<DrawerHeader>
-								<DrawerTitle>{user?.name ?? "Scheduler Profile"}</DrawerTitle>
-								{user?.email && (
-									<DrawerDescription>{user.email}</DrawerDescription>
-								)}
-								{user?.phoneNumber && (
-									<DrawerDescription>{user.phoneNumber}</DrawerDescription>
-								)}
-							</DrawerHeader>
-							<DrawerInner>{user && <ProfileCard user={user} />}</DrawerInner>
-							<DrawerFooter>
-								<CopyButton
-									text={() => scheduler.id}
-									label="Scheduler ID"
-									variant="outline"
-								/>
-								<Button asChild>
-									<Link href={`/schedulers/${scheduler.id}` as "/"}>
-										View Full Profile
-									</Link>
-								</Button>
-								<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
-							</DrawerFooter>
-						</DrawerContent>
-					</Drawer>
+						</Link>
+					</Button>
 				);
 			},
 		}),
@@ -215,17 +174,9 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/schedulers/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Scheduler ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/schedulers/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -253,11 +204,9 @@ const columns: ColumnDef<DataTableFeatures, SchedulerRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <SchedulerActions scheduler={row.original} />,
 		}),
 	]);

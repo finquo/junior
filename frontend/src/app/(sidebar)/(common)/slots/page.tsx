@@ -10,11 +10,10 @@ import {
 	VideoIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getRelateTime } from "utils";
+import { getRangeTime } from "utils";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
-import { ProfileCard } from "@/components/profile";
 import {
 	Frame,
 	FrameActions,
@@ -28,27 +27,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
-	Drawer,
-	DrawerClose,
-	DrawerContent,
-	DrawerDescription,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerInner,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import {
 	Item,
 	ItemContent,
@@ -90,10 +73,6 @@ function UserCellSkeleton() {
 	);
 }
 
-function UserInlineSkeleton() {
-	return <Skeleton className="h-4 w-20" />;
-}
-
 function SlotActions({ slot }: { slot: SlotRecord }) {
 	return (
 		<DropdownMenu>
@@ -104,39 +83,31 @@ function SlotActions({ slot }: { slot: SlotRecord }) {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href="/" as={`/slots/${slot.id}`}>
-							<ExternalLinkIcon />
-							View Session
-						</Link>
-					</Button>
+					<Link href={`/slots/${slot.id}` as "/"}>
+						<ExternalLinkIcon />
+						View Session
+					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
-							<VideoIcon />
-							Open Call
-						</a>
-					</Button>
+					<a href={`/call/${slot.id}`} target="_blank" rel="noreferrer">
+						<VideoIcon />
+						Open Call
+					</a>
 				</DropdownMenuItem>
 				{slot.studentId && (
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href="/" as={`/students/${slot.studentId}`}>
-								<UserIcon />
-								View Student
-							</Link>
-						</Button>
+						<Link href={`/students/${slot.studentId}` as "/"}>
+							<UserIcon />
+							View Student
+						</Link>
 					</DropdownMenuItem>
 				)}
 				{slot.teacherId && (
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href="/" as={`/teachers/${slot.teacherId}`}>
-								<UserIcon />
-								View Teacher
-							</Link>
-						</Button>
+						<Link href={`/teachers/${slot.teacherId}` as "/"}>
+							<UserIcon />
+							View Teacher
+						</Link>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
@@ -159,8 +130,8 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				return (
 					<FetchUser id={studentId} isPending={<UserCellSkeleton />}>
 						{(user) => (
-							<Drawer>
-								<DrawerTrigger asChild>
+							<Button variant="link" asChild className="h-auto p-0">
+								<Link href={`/students/${studentId}` as "/"}>
 									<Item>
 										<ItemMedia>
 											<Avatar size="sm">
@@ -176,27 +147,8 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 											<ItemDescription>{user.email}</ItemDescription>
 										</ItemContent>
 									</Item>
-								</DrawerTrigger>
-								<DrawerContent>
-									<DrawerHeader>
-										<DrawerTitle>{user.name}</DrawerTitle>
-										<DrawerDescription>{user.email}</DrawerDescription>
-									</DrawerHeader>
-									<DrawerInner>
-										<ProfileCard user={user} />
-									</DrawerInner>
-									<DrawerFooter>
-										<Button asChild>
-											<Link href="/" as={`/students/${studentId}`}>
-												View Student Profile
-											</Link>
-										</Button>
-										<DrawerClose asChild>
-											<Button variant="outline">Close</Button>
-										</DrawerClose>
-									</DrawerFooter>
-								</DrawerContent>
-							</Drawer>
+								</Link>
+							</Button>
 						)}
 					</FetchUser>
 				);
@@ -213,8 +165,8 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				return (
 					<FetchUser id={teacherId} isPending={<UserCellSkeleton />}>
 						{(user) => (
-							<Drawer>
-								<DrawerTrigger asChild>
+							<Button variant="link" asChild className="h-auto p-0">
+								<Link href={`/teachers/${teacherId}` as "/"}>
 									<Item>
 										<ItemMedia>
 											<Avatar size="sm">
@@ -230,27 +182,8 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 											<ItemDescription>{user.email}</ItemDescription>
 										</ItemContent>
 									</Item>
-								</DrawerTrigger>
-								<DrawerContent>
-									<DrawerHeader>
-										<DrawerTitle>{user.name}</DrawerTitle>
-										<DrawerDescription>{user.email}</DrawerDescription>
-									</DrawerHeader>
-									<DrawerInner>
-										<ProfileCard user={user} />
-									</DrawerInner>
-									<DrawerFooter>
-										<Button asChild>
-											<Link href="/" as={`/teachers/${teacherId}`}>
-												View Teacher Profile
-											</Link>
-										</Button>
-										<DrawerClose asChild>
-											<Button variant="outline">Close</Button>
-										</DrawerClose>
-									</DrawerFooter>
-								</DrawerContent>
-							</Drawer>
+								</Link>
+							</Button>
 						)}
 					</FetchUser>
 				);
@@ -265,43 +198,33 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 					return <Badge variant="outline">Not Assigned</Badge>;
 				}
 				return (
-					<HoverCard>
-						<HoverCardTrigger asChild>
-							<Button variant="link" asChild>
-								<Link href={`/schedulers/${schedulerId}` as "/"}>
-									<FetchUser
-										id={schedulerId}
-										isPending={<UserInlineSkeleton />}
-									>
-										{(scheduler) => scheduler.name}
-									</FetchUser>
-								</Link>
-							</Button>
-						</HoverCardTrigger>
-						<HoverCardContent>
-							<FetchUser id={schedulerId} isPending={<UserCellSkeleton />}>
-								{(scheduler) => (
-									<Item>
-										<ItemMedia>
-											<Avatar size="sm">
-												<AvatarImage
-													src={scheduler.image ?? undefined}
-													alt={scheduler.name}
-												/>
-												<AvatarFallback>
-													{scheduler.name?.[0] ?? "S"}
-												</AvatarFallback>
-											</Avatar>
-										</ItemMedia>
-										<ItemContent>
-											<ItemTitle>{scheduler.name}</ItemTitle>
-											<ItemDescription>{scheduler.email}</ItemDescription>
-										</ItemContent>
-									</Item>
-								)}
-							</FetchUser>
-						</HoverCardContent>
-					</HoverCard>
+					<Button variant="link" asChild className="h-auto p-0">
+						<Link href={`/schedulers/${schedulerId}` as "/"}>
+							<Item>
+								<FetchUser id={schedulerId} isPending={<UserCellSkeleton />}>
+									{(user) => (
+										<>
+											<ItemMedia>
+												<Avatar size="sm">
+													<AvatarImage
+														src={user.image ?? undefined}
+														alt={user.name}
+													/>
+													<AvatarFallback>
+														{user.name?.[0] ?? "S"}
+													</AvatarFallback>
+												</Avatar>
+											</ItemMedia>
+											<ItemContent>
+												<ItemTitle>{user.name}</ItemTitle>
+												<ItemDescription>{user.email}</ItemDescription>
+											</ItemContent>
+										</>
+									)}
+								</FetchUser>
+							</Item>
+						</Link>
+					</Button>
 				);
 			},
 		}),
@@ -345,13 +268,13 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
 		}),
 		columnHelper.display({
-			id: "time",
-			header: "Time",
-			cell: ({ row }) => {
-				const start = new Date(row.original.startTime);
-				const end = new Date(row.original.expectedEndTime);
-				return `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-			},
+			id: "duration",
+			header: "Duration",
+			cell: ({ row }) =>
+				getRangeTime(
+					new Date(row.original.startTime),
+					new Date(row.original.expectedEndTime),
+				),
 		}),
 		columnHelper.accessor("meetingLink", {
 			id: "meetingLink",
@@ -374,15 +297,13 @@ const columns: ColumnDef<DataTableFeatures, SlotRecord>[] =
 				<DataTableColumnHeader column={column} label="Created" />
 			),
 			enableSorting: true,
-			cell: ({ getValue }) => `${getRelateTime(new Date(getValue()))} ago`,
+			cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <SlotActions slot={row.original} />,
 		}),
 	]);

@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getLanguageName, getRelateTime } from "utils";
-import { CopyButton } from "@/components/copy";
+
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
-import { ProfileCard, TeacherProfile } from "@/components/profile";
+
 import {
 	Frame,
 	FrameActions,
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/drawer";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
@@ -108,35 +109,31 @@ function TeacherActions({ teacher }: { teacher: TeacherRecord }) {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<Button asChild>
-						<Link href={`/teachers/${teacher.id}` as "/"}>
-							<ExternalLinkIcon />
-							View Profile
-						</Link>
-					</Button>
+					<Link href={`/teachers/${teacher.id}` as "/"}>
+						<ExternalLinkIcon />
+						View Profile
+					</Link>
 				</DropdownMenuItem>
 				<EditTeacherDrawer teacher={teacher}>
-					<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+					<DropdownMenuActionItem>
 						<PenIcon />
 						Edit Teacher
-					</DropdownMenuItem>
+					</DropdownMenuActionItem>
 				</EditTeacherDrawer>
 				<RenderWhenRole role="admin">
 					<UserEditDrawer userId={teacher.id} userData={teacher.user}>
-						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+						<DropdownMenuActionItem>
 							<PenIcon />
 							Edit User
-						</DropdownMenuItem>
+						</DropdownMenuActionItem>
 					</UserEditDrawer>
 				</RenderWhenRole>
 				{teacher.supervisorId && (
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/schedulers/${teacher.supervisorId}` as "/"}>
-								<UserIcon />
-								View Supervisor
-							</Link>
-						</Button>
+						<Link href={`/schedulers/${teacher.supervisorId}` as "/"}>
+							<UserIcon />
+							View Supervisor
+						</Link>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
@@ -163,8 +160,8 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 			cell: ({ row }) => {
 				const user = row.original.user;
 				return (
-					<Drawer>
-						<DrawerTrigger asChild>
+					<Button variant="link" asChild className="h-auto p-0">
+						<Link href={`/teachers/${row.original.id}` as "/"}>
 							<Item>
 								<ItemMedia>
 									<Avatar size="sm">
@@ -185,38 +182,8 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 									)}
 								</ItemContent>
 							</Item>
-						</DrawerTrigger>
-						<DrawerContent>
-							<DrawerHeader>
-								<DrawerTitle>{user?.name ?? "Teacher"}</DrawerTitle>
-								{user?.email && (
-									<DrawerDescription>{user.email}</DrawerDescription>
-								)}
-								{user?.phoneNumber && (
-									<DrawerDescription>{user.phoneNumber}</DrawerDescription>
-								)}
-							</DrawerHeader>
-							<DrawerInner>
-								{user && <ProfileCard user={user} />}
-								<TeacherProfile teacher={row.original} />
-							</DrawerInner>
-							<DrawerFooter>
-								<CopyButton
-									text={() => row.original.id}
-									label="Teacher ID"
-									variant="outline"
-								/>
-								<Button asChild>
-									<Link href={`/teachers/${row.original.id}` as "/"}>
-										View Full Profile
-									</Link>
-								</Button>
-								<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
-							</DrawerFooter>
-						</DrawerContent>
-					</Drawer>
+						</Link>
+					</Button>
 				);
 			},
 		}),
@@ -230,17 +197,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/teachers/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Teacher ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/teachers/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -418,11 +377,9 @@ const columns: ColumnDef<DataTableFeatures, TeacherRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <TeacherActions teacher={row.original} />,
 		}),
 	]);
@@ -439,7 +396,11 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "createdAt", desc: true }],
 			pagination: { pageIndex: 0, pageSize: 10 },
-			columnVisibility: { id: false },
+			columnVisibility: {
+				id: false,
+				experience: false,
+				languages: false,
+			},
 		},
 		getRowId: (row) => row.id,
 	});

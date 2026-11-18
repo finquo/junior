@@ -65,8 +65,15 @@ const columns: ColumnDef<DataTableFeatures, FeedbackRecord>[] =
 			enableColumnFilter: true,
 			enableSorting: true,
 			meta: { label: "From", placeholder: "Search users...", variant: "text" },
-			cell: ({ row }) =>
-				row.original.user?.name ?? <Badge variant="outline">Anonymous</Badge>,
+			cell: ({ row }) => {
+				const user = row.original.user;
+				if (!user) return <Badge variant="outline">Anonymous</Badge>;
+				return (
+					<Button variant="link" asChild>
+						<Link href={`/users/${user.id}` as "/"}>{user.name}</Link>
+					</Button>
+				);
+			},
 		}),
 		columnHelper.accessor("content", {
 			id: "content",
@@ -80,10 +87,14 @@ const columns: ColumnDef<DataTableFeatures, FeedbackRecord>[] =
 				placeholder: "Search feedback...",
 				variant: "text",
 			},
-			cell: ({ getValue }) => (
-				<span className="line-clamp-2 max-w-md whitespace-normal">
-					{getValue()}
-				</span>
+			cell: ({ row }) => (
+				<Button variant="link" asChild>
+					<Link href={`/feedbacks/${row.original.id}` as "/"}>
+						<span className="line-clamp-2 max-w-md whitespace-normal">
+							{row.original.content}
+						</span>
+					</Link>
+				</Button>
 			),
 		}),
 		columnHelper.accessor("type", {
@@ -132,11 +143,9 @@ const columns: ColumnDef<DataTableFeatures, FeedbackRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => (
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
@@ -146,12 +155,10 @@ const columns: ColumnDef<DataTableFeatures, FeedbackRecord>[] =
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem asChild>
-							<Button variant="link" asChild>
-								<Link href={`/feedbacks/${row.id}` as "/"}>
-									<ExternalLinkIcon />
-									View Feedback
-								</Link>
-							</Button>
+							<Link href={`/feedbacks/${row.original.id}` as "/"}>
+								<ExternalLinkIcon />
+								View Feedback
+							</Link>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

@@ -88,11 +88,10 @@ const columns: ColumnDef<DataTableFeatures, LibraryRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
+			header: "Actions",
 			size: 44,
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => (
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>

@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
-import { CopyButton } from "@/components/copy";
+
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { FetchProgram } from "@/components/program";
 import {
 	Frame,
 	FrameActions,
@@ -29,6 +30,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { DrawerTrigger } from "@/components/ui/drawer";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
@@ -61,18 +63,16 @@ function MaterialActions({ material }: { material: MaterialRecord }) {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/materials/${material.id}` as "/"}>
-								<ExternalLinkIcon />
-								View Material
-							</Link>
-						</Button>
+						<Link href={`/materials/${material.id}` as "/"}>
+							<ExternalLinkIcon />
+							View Material
+						</Link>
 					</DropdownMenuItem>
 					<DrawerTrigger asChild>
-						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+						<DropdownMenuActionItem>
 							<PenIcon />
 							Edit Material
-						</DropdownMenuItem>
+						</DropdownMenuActionItem>
 					</DrawerTrigger>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -117,6 +117,31 @@ const columns: ColumnDef<DataTableFeatures, MaterialRecord>[] =
 							{student.user?.name}
 						</Link>
 					</Button>
+				);
+			},
+		}),
+		columnHelper.display({
+			id: "program",
+			header: () => "Program",
+			enableSorting: false,
+			cell: ({ row }) => {
+				const student = row.original.student;
+				const programId =
+					student && "program" in student ? student.program : null;
+				if (!programId) return <Badge variant="outline">Not Assigned</Badge>;
+				return (
+					<FetchProgram
+						id={programId as string}
+						isPending={<Skeleton className="h-4 w-24" />}
+					>
+						{(program) => (
+							<Button variant="link" asChild>
+								<Link href={`/programs/${program.id}` as "/"}>
+									{program.name}
+								</Link>
+							</Button>
+						)}
+					</FetchProgram>
 				);
 			},
 		}),
@@ -176,17 +201,9 @@ const columns: ColumnDef<DataTableFeatures, MaterialRecord>[] =
 			cell: ({ getValue }) => {
 				const id = getValue();
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/materials/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Material ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/materials/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -200,11 +217,9 @@ const columns: ColumnDef<DataTableFeatures, MaterialRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <MaterialActions material={row.original} />,
 		}),
 	]);

@@ -293,7 +293,7 @@ columnHelper.display({
   header: "Actions",
   enableSorting: false,
   enableHiding: false,
-  meta: { align: "right" },
+
   cell: ({ row }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

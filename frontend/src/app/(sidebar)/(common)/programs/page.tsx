@@ -29,6 +29,7 @@ import {
 	FramePanel,
 	FrameTitle,
 } from "@/components/reui/frame";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/drawer";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
@@ -124,41 +126,35 @@ function ProgramActions({ program }: { program: ProgramRecord }) {
 						<MoreHorizontalIcon />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent>
+				<DropdownMenuContent align="end">
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/programs/${program.id}` as "/"}>
-								<ExternalLinkIcon />
-								View Program Page
-							</Link>
-						</Button>
+						<Link href={`/programs/${program.id}` as "/"}>
+							<ExternalLinkIcon />
+							View Program Page
+						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/programs/${program.id}/edit` as "/"}>
-								<PenIcon />
-								Edit Program
-							</Link>
-						</Button>
+						<Link href={`/programs/${program.id}/edit` as "/"}>
+							<PenIcon />
+							Edit Program
+						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link
-								href={{
-									pathname: "/lessons/new",
-									query: { programId: program.id },
-								}}
-							>
-								<BookOpenIcon />
-								Create Lesson
-							</Link>
-						</Button>
+						<Link
+							href={{
+								pathname: "/lessons/new",
+								query: { programId: program.id },
+							}}
+						>
+							<BookOpenIcon />
+							Create Lesson
+						</Link>
 					</DropdownMenuItem>
 					<DrawerTrigger asChild>
-						<DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+						<DropdownMenuActionItem>
 							<ScanEyeIcon />
 							Quick View
-						</DropdownMenuItem>
+						</DropdownMenuActionItem>
 					</DrawerTrigger>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -176,7 +172,6 @@ const priceColumns = (Object.keys(Countries) as CountryCodes[]).map((code) =>
 			<DataTableColumnHeader column={column} label={`Price (${code})`} />
 		),
 		enableSorting: true,
-		meta: { align: "right" },
 		cell: ({ getValue }) => formatPrice(code, getValue() ?? 0),
 	}),
 );
@@ -198,17 +193,16 @@ const columns: ColumnDef<DataTableFeatures, ProgramRecord>[] =
 			cell: ({ row }) => {
 				const program = row.original;
 				return (
-					<Drawer>
-						<DrawerTrigger asChild>
+					<Button variant="link" asChild className="h-auto p-0">
+						<Link href={`/programs/${program.id}` as "/"}>
 							<Item>
 								<ItemContent>
 									<ItemTitle>{program.name}</ItemTitle>
 									<ItemDescription>{program.description}</ItemDescription>
 								</ItemContent>
 							</Item>
-						</DrawerTrigger>
-						<ProgramDrawer program={program} />
-					</Drawer>
+						</Link>
+					</Button>
 				);
 			},
 		}),
@@ -222,17 +216,9 @@ const columns: ColumnDef<DataTableFeatures, ProgramRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/programs/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Program ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/programs/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -244,16 +230,26 @@ const columns: ColumnDef<DataTableFeatures, ProgramRecord>[] =
 			enableColumnFilter: true,
 			enableSorting: true,
 			meta: { label: "Lessons", variant: "number", unit: "lessons" },
-			cell: ({ getValue }) => getValue(),
+			cell: ({ getValue }) => <Badge>{getValue()}</Badge>,
 		}),
+		columnHelper.accessor(
+			(row) => (row as { materials?: unknown[] }).materials?.length ?? 0,
+			{
+				id: "materials",
+				header: ({ column }) => (
+					<DataTableColumnHeader column={column} label="Materials" />
+				),
+				enableSorting: true,
+				meta: { label: "Materials" },
+				cell: ({ getValue }) => getValue(),
+			},
+		),
 		...priceColumns,
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <ProgramActions program={row.original} />,
 		}),
 	]);
@@ -270,7 +266,7 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "name", desc: false }],
 			pagination: { pageIndex: 0, pageSize: 10 },
-			columnVisibility: { id: false },
+			columnVisibility: { id: false, materials: false },
 		},
 		getRowId: (row) => row.id,
 	});

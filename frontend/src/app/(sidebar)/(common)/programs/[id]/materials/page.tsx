@@ -1,8 +1,13 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	MoreHorizontalIcon,
+	PlusIcon,
+	Trash2Icon,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { sileo as toast } from "sileo";
@@ -18,53 +23,99 @@ import {
 	FrameTitle,
 } from "@/components/reui/frame";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import {
+	DropdownMenu,
+	DropdownMenuActionItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
+import { MutationButton } from "@/hooks/button";
 import { FetchLesson } from "@/hooks/lesson";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { AddProgramMaterialDialog } from "./_components/add-material-dialog";
 
-type ProgramMaterialRecord = API_Returns["core"]["program"]["materials"][number];
+type ProgramMaterialRecord =
+	API_Returns["core"]["program"]["materials"][number];
 
-function DeleteMaterialButton({
+function DeleteMaterialDialog({
 	programId,
 	materialId,
+	children,
 }: {
 	programId: string;
 	materialId: string;
+	children: React.ReactElement;
 }) {
-	const { mutate, isPending } = useMutation(
-		api.core.program.removeMaterial.mutationOptions({
-			onSuccess: () => {
-				refetchAPIs([
-					api.core.program.materials.queryKey({ input: { id: programId } }),
-					api.core.program.get.queryKey({ input: { id: programId } }),
-				]);
-				toast.success({ title: "Material deleted" });
-			},
-		}),
-	);
-
 	return (
-		<Button
-			variant="destructive"
-			size="icon-sm"
-			aria-label="Delete material"
-			disabled={isPending}
-			onClick={() => mutate({ id: programId, materialId })}
-		>
-			{isPending ? <Spinner /> : <Trash2Icon />}
-		</Button>
+		<AlertDialog>
+			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Delete material?</AlertDialogTitle>
+					<AlertDialogDescription>
+						This will remove the material from this program. This cannot be
+						undone.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<MutationButton
+						api={api.core.program.removeMaterial.mutationOptions({
+							onSuccess: () => {
+								refetchAPIs([
+									api.core.program.materials.queryKey({
+										input: { id: programId },
+									}),
+									api.core.program.get.queryKey({ input: { id: programId } }),
+								]);
+								toast.success({ title: "Material deleted" });
+							},
+						})}
+						mutate={(mutate) => (
+							<AlertDialogAction
+								variant="destructive"
+								onClick={() => mutate({ id: programId, materialId })}
+							>
+								<Trash2Icon />
+								Delete
+							</AlertDialogAction>
+						)}
+						isPending={
+							<AlertDialogAction variant="destructive" disabled>
+								<Spinner />
+								Deleting
+							</AlertDialogAction>
+						}
+					/>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	);
 }
 
-const columnHelper = createColumnHelper<DataTableFeatures, ProgramMaterialRecord>();
+const columnHelper = createColumnHelper<
+	DataTableFeatures,
+	ProgramMaterialRecord
+>();
 
 const createColumns = (programId: string) =>
 	columnHelper.columns([
@@ -89,7 +140,10 @@ const createColumns = (programId: string) =>
 			cell: ({ getValue }) =>
 				getValue().map((lessonId) => (
 					<Badge key={lessonId} variant="outline">
-						<FetchLesson id={lessonId} isPending={<Skeleton className="h-4 w-24" />}>
+						<FetchLesson
+							id={lessonId}
+							isPending={<Skeleton className="h-4 w-24" />}
+						>
 							{(lesson) => lesson.name}
 						</FetchLesson>
 					</Badge>
@@ -106,13 +160,28 @@ const createColumns = (programId: string) =>
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => (
-				<DeleteMaterialButton programId={programId} materialId={row.original.id} />
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<MoreHorizontalIcon />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DeleteMaterialDialog
+							programId={programId}
+							materialId={row.original.id}
+						>
+							<DropdownMenuActionItem variant="destructive">
+								<Trash2Icon />
+								Delete Material
+							</DropdownMenuActionItem>
+						</DeleteMaterialDialog>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			),
 		}),
 	]);

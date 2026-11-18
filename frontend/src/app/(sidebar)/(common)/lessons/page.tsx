@@ -19,6 +19,7 @@ import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { FetchProgram } from "@/components/program";
 import {
 	Frame,
 	FrameActions,
@@ -27,7 +28,7 @@ import {
 	FramePanel,
 	FrameTitle,
 } from "@/components/reui/frame";
-import { Badge } from "@/components/ui/badge";
+import { Badge, ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -43,6 +44,7 @@ import {
 } from "@/components/ui/drawer";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
@@ -53,6 +55,7 @@ import {
 	ItemDescription,
 	ItemTitle,
 } from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/hooks/api";
@@ -78,26 +81,24 @@ function LessonActions({ lesson }: { lesson: LessonRecord }) {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href="/" as={`/lessons/${lesson.id}`}>
-								<ExternalLinkIcon />
-								View Lesson Page
-							</Link>
-						</Button>
+						<Link href={`/lessons/${lesson.id}` as "/"}>
+							<ExternalLinkIcon />
+							View Lesson Page
+						</Link>
 					</DropdownMenuItem>
 					<DrawerTrigger asChild>
-						<DropdownMenuItem>
+						<DropdownMenuActionItem>
 							<PenIcon />
-							Edit Lesson
-						</DropdownMenuItem>
+							Quick View
+						</DropdownMenuActionItem>
 					</DrawerTrigger>
 				</DropdownMenuContent>
 			</DropdownMenu>
 
 			<DrawerContent>
 				<DrawerHeader>
-					<DrawerTitle>Edit Lesson</DrawerTitle>
-					<DrawerDescription>Edit details for {lesson.name}</DrawerDescription>
+					<DrawerTitle>{lesson.name}</DrawerTitle>
+					<DrawerDescription>Lesson details</DrawerDescription>
 				</DrawerHeader>
 				<DrawerInner>
 					<Table>
@@ -106,7 +107,7 @@ function LessonActions({ lesson }: { lesson: LessonRecord }) {
 								<TableCell className="font-medium">Lesson ID</TableCell>
 								<TableCell>
 									<Button variant="link" asChild>
-										<Link href="/" as={`/lessons/${lesson.id}`}>
+										<Link href={`/lessons/${lesson.id}` as "/"}>
 											{lesson.id}
 										</Link>
 									</Button>
@@ -130,9 +131,7 @@ function LessonActions({ lesson }: { lesson: LessonRecord }) {
 						variant="outline"
 					/>
 					<Button asChild>
-						<Link href="/" as={`/lessons/${lesson.id}`}>
-							Open Full Page
-						</Link>
+						<Link href={`/lessons/${lesson.id}` as "/"}>Open Full Page</Link>
 					</Button>
 					<DrawerClose asChild>
 						<Button variant="outline">Close</Button>
@@ -162,8 +161,8 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			cell: ({ row }) => {
 				const lesson = row.original;
 				return (
-					<Drawer>
-						<DrawerTrigger asChild>
+					<Button variant="link" asChild className="h-auto p-0">
+						<Link href={`/lessons/${lesson.id}` as "/"}>
 							<Item>
 								<ItemContent>
 									<ItemTitle>{lesson.name}</ItemTitle>
@@ -172,77 +171,8 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 									)}
 								</ItemContent>
 							</Item>
-						</DrawerTrigger>
-						<DrawerContent>
-							<DrawerHeader>
-								<DrawerTitle>{lesson.name}</DrawerTitle>
-								{lesson.description && (
-									<DrawerDescription>{lesson.description}</DrawerDescription>
-								)}
-							</DrawerHeader>
-							<DrawerInner>
-								<Table>
-									<TableBody>
-										<TableRow>
-											<TableCell className="font-medium">Lesson ID</TableCell>
-											<TableCell>
-												<Button variant="link" asChild>
-													<Link href="/" as={`/lessons/${lesson.id}`}>
-														{lesson.id}
-													</Link>
-												</Button>
-											</TableCell>
-										</TableRow>
-										<TableRow>
-											<TableCell className="font-medium">Language</TableCell>
-											<TableCell>
-												<Badge variant="secondary">
-													{getLanguageName(lesson.language)}
-												</Badge>
-											</TableCell>
-										</TableRow>
-										{lesson.period && (
-											<TableRow>
-												<TableCell className="font-medium">Duration</TableCell>
-												<TableCell>
-													{getDurationFromInterval(lesson.period)} mins
-												</TableCell>
-											</TableRow>
-										)}
-										<TableRow>
-											<TableCell className="font-medium">Created</TableCell>
-											<TableCell>
-												{new Date(lesson.createdAt).toLocaleDateString()}
-											</TableCell>
-										</TableRow>
-										<TableRow>
-											<TableCell className="font-medium">
-												Last Updated
-											</TableCell>
-											<TableCell>
-												{new Date(lesson.updatedAt).toLocaleDateString()}
-											</TableCell>
-										</TableRow>
-									</TableBody>
-								</Table>
-							</DrawerInner>
-							<DrawerFooter>
-								<CopyButton
-									text={() => lesson.id}
-									label="Lesson ID"
-									variant="outline"
-								/>
-								<Button asChild>
-									<Link href="/" as={`/lessons/${lesson.id}`}>
-										Open Page
-									</Link>
-								</Button>
-								<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
-							</DrawerFooter>
-						</DrawerContent>
-					</Drawer>
+						</Link>
+					</Button>
 				);
 			},
 		}),
@@ -256,19 +186,39 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href="/" as={`/lessons/${id}`}>
-								{id}
-							</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Lesson ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/lessons/${id}` as "/"}>{id}</Link>
+					</Button>
+				);
+			},
+		}),
+		columnHelper.accessor("program", {
+			id: "program",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} label="Program" />
+			),
+			enableSorting: false,
+			cell: ({ row }) => {
+				const programId = row.original.program;
+				return (
+					<Item>
+						<ItemContent>
+							<ItemTitle>
+								<FetchProgram
+									id={programId}
+									isPending={<Skeleton className="h-4 w-24" />}
+								>
+									{(program) => (
+										<Button variant="link" asChild className="h-auto p-0">
+											<Link href={`/programs/${programId}` as "/"}>
+												{program.name}
+											</Link>
+										</Button>
+									)}
+								</FetchProgram>
+							</ItemTitle>
+						</ItemContent>
+					</Item>
 				);
 			},
 		}),
@@ -287,7 +237,7 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 			cell: ({ getValue }) => {
 				const code = getValue();
 				if (!code) return null;
-				return <Badge variant="outline">{getLanguageName(code)}</Badge>;
+				return <ColorBadge>{getLanguageName(code)}</ColorBadge>;
 			},
 		}),
 		columnHelper.accessor("period", {
@@ -317,11 +267,9 @@ const columns: ColumnDef<DataTableFeatures, LessonRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <LessonActions lesson={row.original} />,
 		}),
 	]);

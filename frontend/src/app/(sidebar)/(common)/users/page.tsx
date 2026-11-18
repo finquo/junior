@@ -5,12 +5,10 @@ import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { getRelateTime } from "utils";
-import { CopyButton } from "@/components/copy";
 import { UserActions } from "@/components/custom/user-actions";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
-import { ProfileCard } from "@/components/profile";
 import {
 	Frame,
 	FrameActions,
@@ -24,18 +22,6 @@ import { ColorBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import {
-	Drawer,
-	DrawerClose,
-	DrawerContent,
-	DrawerDescription,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerInner,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
-import { FieldGroup } from "@/components/ui/field";
-import {
 	Item,
 	ItemContent,
 	ItemDescription,
@@ -43,11 +29,6 @@ import {
 	ItemTitle,
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { api } from "@/hooks/api";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
@@ -61,11 +42,6 @@ const roleFilterOptions = rolesObject.map((item) => ({
 	label: item.label ?? item.value,
 	value: item.value,
 }));
-
-const statusFilterOptions = [
-	{ label: "Active", value: "active" },
-	{ label: "Banned", value: "banned" },
-];
 
 const columnHelper = createColumnHelper<DataTableFeatures, UserRecord>();
 
@@ -94,63 +70,38 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								? `/schedulers/${member.id}`
 								: null;
 
-				return (
-					<Drawer>
-						<DrawerTrigger asChild>
-							<Item>
-								<ItemMedia>
-									<Avatar size="sm">
-										<AvatarImage
-											src={member.image ?? undefined}
-											alt={member.name}
-										/>
-										<AvatarFallback>{member.name?.[0] ?? "U"}</AvatarFallback>
-									</Avatar>
-								</ItemMedia>
-								<ItemContent>
-									<ItemTitle>{member.name}</ItemTitle>
-									{member.email && (
-										<ItemDescription>{member.email}</ItemDescription>
-									)}
-									{member.phoneNumber && (
-										<ItemDescription>{member.phoneNumber}</ItemDescription>
-									)}
-								</ItemContent>
-							</Item>
-						</DrawerTrigger>
-						<DrawerContent>
-							<DrawerHeader>
-								<DrawerTitle>{member.name}</DrawerTitle>
-								{member.email && (
-									<DrawerDescription>{member.email}</DrawerDescription>
-								)}
-								{member.phoneNumber && (
-									<DrawerDescription>{member.phoneNumber}</DrawerDescription>
-								)}
-							</DrawerHeader>
-							<DrawerInner>
-								<ProfileCard user={member} />
-							</DrawerInner>
-							<DrawerFooter>
-								<CopyButton
-									text={() => member.id}
-									label="User ID"
-									variant="outline"
+				const content = (
+					<Item>
+						<ItemMedia>
+							<Avatar size="sm">
+								<AvatarImage
+									src={member.image ?? undefined}
+									alt={member.name}
 								/>
-								{roleProfilePath && (
-									<Button asChild>
-										<Link href={roleProfilePath as "/"}>
-											View {snakeToTitleCase(member.role)} Profile
-										</Link>
-									</Button>
-								)}
-								<DrawerClose asChild>
-									<Button variant="outline">Close</Button>
-								</DrawerClose>
-							</DrawerFooter>
-						</DrawerContent>
-					</Drawer>
+								<AvatarFallback>{member.name?.[0] ?? "U"}</AvatarFallback>
+							</Avatar>
+						</ItemMedia>
+						<ItemContent>
+							<ItemTitle>{member.name}</ItemTitle>
+							{member.email && (
+								<ItemDescription>{member.email}</ItemDescription>
+							)}
+							{member.phoneNumber && (
+								<ItemDescription>{member.phoneNumber}</ItemDescription>
+							)}
+						</ItemContent>
+					</Item>
 				);
+
+				if (roleProfilePath) {
+					return (
+						<Button variant="link" asChild className="h-auto p-0">
+							<Link href={roleProfilePath as "/"}>{content}</Link>
+						</Button>
+					);
+				}
+
+				return content;
 			},
 		}),
 		columnHelper.accessor("id", {
@@ -172,23 +123,15 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 								? `/schedulers/${id}`
 								: null;
 
-				return (
-					<ButtonGroup>
-						{path ? (
-							<Button variant="link" asChild>
-								<Link href={path as "/"}>{id}</Link>
-							</Button>
-						) : (
-							<ButtonGroupText>{id}</ButtonGroupText>
-						)}
-						<CopyButton
-							text={() => id}
-							label="User ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
-				);
+				if (path) {
+					return (
+						<Button variant="link" asChild>
+							<Link href={path as "/"}>{id}</Link>
+						</Button>
+					);
+				}
+
+				return <ButtonGroupText>{id}</ButtonGroupText>;
 			},
 		}),
 		columnHelper.accessor("email", {
@@ -224,43 +167,6 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 				);
 			},
 		}),
-		columnHelper.accessor((row) => (row.banned ? "banned" : "active"), {
-			id: "status",
-			header: ({ column }) => (
-				<DataTableColumnHeader column={column} label="Status" />
-			),
-			enableColumnFilter: true,
-			enableSorting: true,
-			meta: {
-				label: "Status",
-				variant: "multiSelect",
-				options: statusFilterOptions,
-			},
-			cell: ({ row }) => {
-				const member = row.original;
-				if (member.banned) {
-					return (
-						<Tooltip>
-							<TooltipTrigger>
-								<ColorBadge variant="destructive">Banned</ColorBadge>
-							</TooltipTrigger>
-							<TooltipContent>
-								<FieldGroup>
-									{member.banReason && <span>Reason: {member.banReason}</span>}
-									<span>
-										Expires:{" "}
-										{member.banExpires
-											? `${getRelateTime(new Date(member.banExpires))} ago`
-											: "Never"}
-									</span>
-								</FieldGroup>
-							</TooltipContent>
-						</Tooltip>
-					);
-				}
-				return <ColorBadge variant="success">Active</ColorBadge>;
-			},
-		}),
 		columnHelper.accessor("createdAt", {
 			id: "createdAt",
 			header: ({ column }) => (
@@ -275,11 +181,9 @@ const columns: ColumnDef<DataTableFeatures, UserRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <UserActions user={row.original} />,
 		}),
 	]);

@@ -2,16 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { PaymentMethodLabels } from "backend/config";
 import { format } from "date-fns";
 import {
-	ArrowLeftIcon,
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
 	PenIcon,
 	PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { PaymentMethodLabels } from "backend/config";
 import { getCurrencySymbol, getRelateTime } from "utils";
 import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
@@ -57,31 +56,19 @@ function PaymentActions({ payment }: { payment: PaymentRecord }) {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href={`/payments/${payment.id}` as "/"}>
-							<ExternalLinkIcon />
-							View Payment
-						</Link>
-					</Button>
+					<Link href={`/payments/${payment.id}` as "/"}>
+						<ExternalLinkIcon />
+						View Payment
+					</Link>
 				</DropdownMenuItem>
 				<RenderWhenRole role="admin">
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/payments/${payment.id}/edit` as "/"}>
-								<PenIcon />
-								Edit Payment
-							</Link>
-						</Button>
+						<Link href={`/payments/${payment.id}/edit` as "/"}>
+							<PenIcon />
+							Edit Payment
+						</Link>
 					</DropdownMenuItem>
 				</RenderWhenRole>
-				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href={`/students/${payment.studentId}` as "/"}>
-							<ArrowLeftIcon />
-							View Student
-						</Link>
-					</Button>
-				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -101,17 +88,9 @@ const columns: ColumnDef<DataTableFeatures, PaymentRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/payments/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Payment ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/payments/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -205,11 +184,9 @@ const columns: ColumnDef<DataTableFeatures, PaymentRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <PaymentActions payment={row.original} />,
 		}),
 	]);

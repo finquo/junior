@@ -7,16 +7,13 @@ import {
 	MoreHorizontalIcon,
 	PenIcon,
 	PlusIcon,
-	UserIcon,
 	WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { Countries, getLanguageName, getRelateTime } from "utils";
-import { CopyButton } from "@/components/copy";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
-import { ProfileCard, StudentProfile } from "@/components/profile";
 import { ProgramLink } from "@/components/program";
 import {
 	Frame,
@@ -31,19 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
-	Drawer,
-	DrawerAction,
-	DrawerClose,
-	DrawerContent,
-	DrawerDescription,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerInner,
-	DrawerTitle,
-	DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
@@ -106,47 +92,33 @@ function StudentActions({ student }: { student: StudentRecord }) {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href={`/students/${student.id}` as "/"}>
-							<ExternalLinkIcon />
-							View Profile
-						</Link>
-					</Button>
+					<Link href={`/students/${student.id}` as "/"}>
+						<ExternalLinkIcon />
+						View Profile
+					</Link>
 				</DropdownMenuItem>
 				<RenderWhenRole role="admin">
 					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/students/${student.id}/payments` as "/"}>
-								<WalletIcon />
-								Payments
-							</Link>
-						</Button>
+						<Link href={`/students/${student.id}/payments` as "/"}>
+							<WalletIcon />
+							Payments
+						</Link>
 					</DropdownMenuItem>
 				</RenderWhenRole>
 				<EditStudentDrawer student={student}>
-					<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+					<DropdownMenuActionItem>
 						<PenIcon />
 						Edit Student
-					</DropdownMenuItem>
+					</DropdownMenuActionItem>
 				</EditStudentDrawer>
 				<RenderWhenRole role={["admin", "scheduler"]}>
 					<UserEditDrawer userId={student.id}>
-						<DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+						<DropdownMenuActionItem>
 							<PenIcon />
 							Edit User
-						</DropdownMenuItem>
+						</DropdownMenuActionItem>
 					</UserEditDrawer>
 				</RenderWhenRole>
-				{student.supervisorId && (
-					<DropdownMenuItem asChild>
-						<Button variant="link" asChild>
-							<Link href={`/schedulers/${student.supervisorId}` as "/"}>
-								<UserIcon />
-								View Supervisor
-							</Link>
-						</Button>
-					</DropdownMenuItem>
-				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -171,8 +143,8 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 			cell: ({ row }) => (
 				<FetchUser id={row.original.id} isPending={<UserCellSkeleton />}>
 					{(user) => (
-						<Drawer>
-							<DrawerTrigger asChild>
+						<Button variant="link" asChild className="h-auto p-0">
+							<Link href={`/students/${row.original.id}` as "/"}>
 								<Item>
 									<ItemMedia>
 										<Avatar size="sm">
@@ -191,38 +163,8 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 										)}
 									</ItemContent>
 								</Item>
-							</DrawerTrigger>
-							<DrawerContent>
-								<DrawerHeader>
-									<DrawerTitle>{user.name}</DrawerTitle>
-									<DrawerDescription>{user.email}</DrawerDescription>
-									{user.phoneNumber && (
-										<DrawerDescription>{user.phoneNumber}</DrawerDescription>
-									)}
-									<DrawerAction>
-										<CopyButton
-											text={() => row.original.id}
-											label="Student ID"
-											variant="outline"
-										/>
-									</DrawerAction>
-								</DrawerHeader>
-								<DrawerInner>
-									<ProfileCard user={user} />
-									<StudentProfile student={row.original} />
-								</DrawerInner>
-								<DrawerFooter>
-									<Button asChild>
-										<Link href={`/students/${row.original.id}` as "/"}>
-											View Full Profile
-										</Link>
-									</Button>
-									<DrawerClose asChild>
-										<Button variant="outline">Close</Button>
-									</DrawerClose>
-								</DrawerFooter>
-							</DrawerContent>
-						</Drawer>
+							</Link>
+						</Button>
 					)}
 				</FetchUser>
 			),
@@ -237,17 +179,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 				const id = getValue();
 				if (!id) return null;
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/students/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Student ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/students/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -406,11 +340,9 @@ const columns: ColumnDef<DataTableFeatures, StudentRecord>[] =
 		}),
 		columnHelper.display({
 			id: "actions",
-			header: () => null,
-			size: 44,
+			header: "Actions",
 			enableSorting: false,
 			enableHiding: false,
-			meta: { align: "right" },
 			cell: ({ row }) => <StudentActions student={row.original} />,
 		}),
 	]);
@@ -427,7 +359,13 @@ export default function Page() {
 		initialState: {
 			sorting: [{ id: "createdAt", desc: true }],
 			pagination: { pageIndex: 0, pageSize: 10 },
-			columnVisibility: { id: false },
+			columnVisibility: {
+				id: false,
+				schooling: false,
+				grade: false,
+				currency: false,
+				languages: false,
+			},
 		},
 		getRowId: (row) => row.id,
 	});

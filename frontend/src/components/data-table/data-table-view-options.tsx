@@ -37,10 +37,7 @@ export function DataTableViewOptions<TData extends RowData>({
 		() =>
 			table
 				.getAllColumns()
-				.filter(
-					(column) =>
-						typeof column.accessorFn !== "undefined" && column.getCanHide(),
-				),
+				.filter((column) => column.getCanHide() && column.id !== "actions"),
 		[table],
 	);
 
