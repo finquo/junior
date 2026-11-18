@@ -1,8 +1,13 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { ExternalLinkIcon, TrashIcon, VideoIcon } from "lucide-react";
+import {
+	ExternalLinkIcon,
+	MoreHorizontalIcon,
+	TrashIcon,
+	VideoIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { sileo as toast } from "sileo";
 import { CopyButton } from "@/components/copy";
@@ -31,8 +36,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import {
+	DropdownMenu,
+	DropdownMenuActionItem,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
+import { MutationButton } from "@/hooks/button";
 import { RenderWhenRole } from "@/hooks/role";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
@@ -59,17 +72,9 @@ const columns: ColumnDef<DataTableFeatures, LibraryRecord>[] =
 			cell: ({ getValue }) => {
 				const id = getValue();
 				return (
-					<ButtonGroup>
-						<Button variant="link" asChild>
-							<Link href={`/medias/${id}` as "/"}>{id}</Link>
-						</Button>
-						<CopyButton
-							text={() => id}
-							label="Session ID"
-							variant="ghost"
-							size="icon-sm"
-						/>
-					</ButtonGroup>
+					<Button variant="link" asChild>
+						<Link href={`/medias/${id}` as "/"}>{id}</Link>
+					</Button>
 				);
 			},
 		}),
@@ -89,62 +94,90 @@ const columns: ColumnDef<DataTableFeatures, LibraryRecord>[] =
 			enableHiding: false,
 			meta: { align: "right" },
 			cell: ({ row }) => (
-				<ButtonGroup>
-					<Button variant="outline" size="icon-sm" asChild>
-						<Link href={`/medias/${row.original.slotId}` as "/"}>
-							<ExternalLinkIcon />
-						</Link>
-					</Button>
-					<Button variant="outline" size="icon-sm" asChild>
-						<Link href={`/slots/${row.original.slotId}/media` as "/"}>
-							<VideoIcon />
-						</Link>
-					</Button>
-					<DeleteSlotButton slotId={row.original.slotId} />
-				</ButtonGroup>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<MoreHorizontalIcon />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem asChild>
+							<Link href={`/medias/${row.original.slotId}` as "/"}>
+								<ExternalLinkIcon />
+								Open Media
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href={`/slots/${row.original.slotId}/media` as "/"}>
+								<VideoIcon />
+								Open Slot
+							</Link>
+						</DropdownMenuItem>
+						<CopyButton text={() => row.id} label="Slot ID" showText asChild>
+							<DropdownMenuActionItem />
+						</CopyButton>
+						<RenderWhenRole role={["admin", "scheduler"]}>
+							<DeleteSlotButton slotId={row.id}>
+								<DropdownMenuActionItem variant="destructive">
+									<TrashIcon />
+									Delete Media
+								</DropdownMenuActionItem>
+							</DeleteSlotButton>
+						</RenderWhenRole>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			),
 		}),
 	]);
 
-function DeleteSlotButton({ slotId }: { slotId: string }) {
-	const { mutate, isPending } = useMutation(
-		api.media.library.deleteSlot.mutationOptions({
-			onSuccess: ({ deleted }) => {
-				refetchAPIs([api.media.library.list.queryKey()]);
-				toast.success({ title: `Deleted ${deleted} files for ${slotId}` });
-			},
-		}),
-	);
-
+function DeleteSlotButton({
+	slotId,
+	children,
+}: {
+	slotId: string;
+	children: React.ReactElement;
+}) {
 	return (
-		<RenderWhenRole role={["admin", "scheduler"]}>
-			<AlertDialog>
-				<AlertDialogTrigger asChild>
-					<Button variant="outline" size="icon-sm" disabled={isPending}>
-						{isPending ? <Spinner /> : <TrashIcon />}
-					</Button>
-				</AlertDialogTrigger>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete all files for {slotId}?</AlertDialogTitle>
-						<AlertDialogDescription>
-							Every recording, audio, chunk, transcript, and summary under this
-							session will be removed. This cannot be undone.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							variant="destructive"
-							onClick={() => mutate({ id: slotId })}
-						>
-							<TrashIcon />
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</RenderWhenRole>
+		<AlertDialog>
+			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Delete all files for {slotId}?</AlertDialogTitle>
+					<AlertDialogDescription>
+						Every recording, audio, chunk, transcript, and summary under this
+						session will be removed. This cannot be undone.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<MutationButton
+						api={api.media.library.deleteSlot.mutationOptions({
+							onSuccess: ({ deleted }) => {
+								refetchAPIs([api.media.library.list.queryKey()]);
+								toast.success({
+									title: `Deleted ${deleted} files for ${slotId}`,
+								});
+							},
+						})}
+						mutate={(mutate) => (
+							<AlertDialogAction
+								variant="destructive"
+								onClick={() => mutate({ id: slotId })}
+							>
+								<TrashIcon />
+								Delete
+							</AlertDialogAction>
+						)}
+						isPending={
+							<AlertDialogAction variant="destructive">
+								<TrashIcon />
+								Deleting
+							</AlertDialogAction>
+						}
+					/>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	);
 }
 

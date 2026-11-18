@@ -20,12 +20,13 @@ This guide establishes the architecture, conventions, and rules for building dat
 - **Design System**: shadcn/ui components backed by Radix UI (`@radix-ui/*`) and Tailwind CSS
   - Container: `Frame`, `FrameHeader`, `FrameTitle`, `FrameDescription`, `FrameActions`, `FramePanel` from `@/components/reui/frame`
   - Drawers: `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerInner`, `DrawerFooter`, `DrawerClose` from `@/components/ui/drawer`
-  - Dropdown Menus: `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator` from `@/components/ui/dropdown-menu`
+  - Dropdown Menus: `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuActionItem`, `DropdownMenuSeparator` from `@/components/ui/dropdown-menu`
   - Item UI: `Item`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription` from `@/components/ui/item`
   - Hover Card: `HoverCard`, `HoverCardTrigger`, `HoverCardContent` from `@/components/ui/hover-card`
   - Tooltips: `Tooltip`, `TooltipTrigger`, `TooltipContent` from `@/components/ui/tooltip`
   - Buttons & Groups: `Button`, `ButtonGroup` from `@/components/ui/button` & `@/components/ui/button-group`
   - Copy Action: `<CopyButton />` from `@/components/copy`
+  - Mutation UI: `<MutationButton />` from `@/hooks/button` for dialog/confirm mutation actions
   - Skeletons & Loaders: `<Skeleton />` from `@/components/ui/skeleton`, `<Spinner />` from `@/components/ui/spinner`
   - Avatars & Badges: `@/components/ui/avatar`, `@/components/ui/badge`
 - **User & Entity Resolution**: `<FetchUser />` (`@/hooks/user`), Better Auth (`@/hooks/auth`), and `<ProfileCard />` (`@/components/profile`)
@@ -233,9 +234,20 @@ Do **not** use arbitrary `<div className="flex flex-col gap-4 p-4">` inside draw
     </a>
   </Button>
   ```
-- **CopyButton Utility**: Always use `<CopyButton text={() => id} label="..." />` from `@/components/copy`. Never re-implement clipboard copying.
-- **Entity ID Cell Pattern**: Pair link and copy button neatly inside a `<ButtonGroup>`:
+- **CopyButton Utility**: Always use `<CopyButton text={() => id} label="..." />` from `@/components/copy`. Never re-implement clipboard copying. It supports `asChild` (slot into a custom element) and `showText` (renders “Copy/Copied {label}” text), which is the preferred way to place a copy action inside a dropdown menu row:
   ```tsx
+  <CopyButton text={() => row.id} label="Slot ID" showText asChild>
+    <DropdownMenuActionItem />
+  </CopyButton>
+  ```
+- **Entity ID Cell Pattern**: Keep ID/data cells focused. Pair a link and copy button in a `<ButtonGroup>` only when quick inline copy is needed; if copy is already available in the row actions menu, prefer a simple link-only cell to avoid duplicating the same action:
+  ```tsx
+  // Link-only cell when copy lives in the actions menu
+  <Button variant="link" asChild>
+    <Link href={`/medias/${id}` as "/"}>{id}</Link>
+  </Button>
+
+  // Inline copy when the cell needs it
   <ButtonGroup>
     <Button variant="link" asChild>
       <Link href={`/students/${id}` as "/"}>{id}</Link>
@@ -265,20 +277,99 @@ For foreign key references (`supervisorId`, `mentorId`, `teacherId`), use `<Hove
 - If present: render a link button wrapping `<FetchUser isPending={<UserInlineSkeleton />}>`, and inside `<HoverCardContent className="w-64">` render `<Item>` with `<UserCellSkeleton />`.
 
 ### G. Row Action Menus (`"actions"` column)
-Every table must include an `"actions"` column on the far right (`enableSorting: false`, `enableHiding: false`):
+Every table must include an `"actions"` column on the far right (`enableSorting: false`, `enableHiding: false`). Prefer a single labeled `DropdownMenu` for row actions (especially when there are 3+ actions) instead of scattering multiple inline icon buttons across the row.
+
+- **Trigger**: use one `DropdownMenuTrigger asChild` with `<Button variant="outline" size="icon-sm"><MoreHorizontalIcon /></Button>`.
+- **Navigation**: use `<DropdownMenuItem asChild><Link href={... as "/"}>…</Link></DropdownMenuItem>` with an icon and text label (not icon-only).
+- **Copy**: use `<CopyButton asChild showText>` slotted into `<DropdownMenuActionItem />` so copy lives as a normal menu row without triggering dropdown primitives.
+- **Non-primitive actions**: use `DropdownMenuActionItem` (plain button item) for actions that must not behave like a Radix menu item (e.g. when slotted as a dialog trigger or hosting custom click behavior).
+- **Destructive confirms from menus**: make the dialog/confirm component accept a `children: React.ReactElement` trigger and render it with `<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>` (or `DrawerTrigger asChild`), so the trigger can be a `DropdownMenuActionItem` passed in. Do not hardcode the trigger button inside the dialog component.
+- **Role-gating**: wrap only the gated menu item(s) with `<RenderWhenRole>` inside the menu content when needed.
+- **Avoid duplication**: if an action (like copy) is in the actions menu, don’t repeat it in the ID/data cell unless there’s a clear reason.
+
 ```tsx
 columnHelper.display({
   id: "actions",
   header: "Actions",
   enableSorting: false,
   enableHiding: false,
-  cell: ({ row }) => <RecordActions record={row.original} />,
-})
+  meta: { align: "right" },
+  cell: ({ row }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon-sm">
+          <MoreHorizontalIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/medias/${row.original.slotId}` as "/"}>
+            <ExternalLinkIcon />
+            Open Media
+          </Link>
+        </DropdownMenuItem>
+        <CopyButton text={() => row.id} label="Slot ID" showText asChild>
+          <DropdownMenuActionItem />
+        </CopyButton>
+        <RenderWhenRole role={["admin", "scheduler"]}>
+          <DeleteRecordDialog recordId={row.id}>
+            <DropdownMenuActionItem variant="destructive">
+              <TrashIcon />
+              Delete
+            </DropdownMenuActionItem>
+          </DeleteRecordDialog>
+        </RenderWhenRole>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+}),
 ```
-Include:
-1. Direct navigation link (`<ExternalLinkIcon />` or `<UserIcon />`) wrapped with `<Button variant="link" asChild>`.
-2. Edit / Quick View Drawer wrapped with `<DrawerTrigger asChild>`.
-3. Quick copy ID action via `<CopyButton />`.
+
+```tsx
+function DeleteRecordDialog({
+  recordId,
+  children,
+}: {
+  recordId: string;
+  children: React.ReactElement;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+      <AlertDialogContent>
+        {/* ... */}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <MutationButton
+            api={api.some.delete.mutationOptions({
+              onSuccess: () => {
+                refetchAPIs([api.some.list.queryKey()]);
+              },
+            })}
+            mutate={(mutate) => (
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() => mutate({ id: recordId })}
+              >
+                <TrashIcon />
+                Delete
+              </AlertDialogAction>
+            )}
+            isPending={
+              <AlertDialogAction variant="destructive" disabled>
+                <Spinner />
+                Deleting
+              </AlertDialogAction>
+            }
+          />
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+```
+
+> When triggering a drawer from a dropdown item (instead of a dialog), keep the drawer trigger declarative and prevent menu event collision with `onSelect={(e) => e.preventDefault()}` on the `DropdownMenuItem` (see section 3.C). For destructive confirms, prefer an `AlertDialog` with a composable trigger child as shown above.
 
 ---
 
@@ -340,7 +431,7 @@ Before completing any data table, verify every item:
 - [ ] **Static Columns**: `columnHelper` and `columns` declared outside the React component (no `useMemo`).
 - [ ] **Next.js Links**: All dynamic links cast using `as "/"` (no `as any`, no `as={...}`).
 - [ ] **Link Buttons**: All links use `<Button variant="link" asChild><Link href={...}>...</Link></Button>`.
-- [ ] **Copy Button**: IDs and clipboard actions reuse `<CopyButton text={() => id} label="..." />` from `@/components/copy`.
+- [ ] **Copy Button**: IDs and clipboard actions reuse `<CopyButton />` from `@/components/copy` (never re-implement clipboard). In dropdown menus use `asChild showText` slotted into `<DropdownMenuActionItem />`.
 - [ ] **No Full-Page Loader**: Table is always mounted with `{ data = [], isPending } = useQuery(...)`.
 - [ ] **Pending Spinner**: `<Spinner />` icon button rendered inside `<FrameActions>` `<ButtonGroup>` when `isPending` is true.
 - [ ] **Skeletons**: `<FetchUser>` uses custom `<Skeleton />` loaders (`UserCellSkeleton`, `UserInlineSkeleton`) for `isPending`.
@@ -348,6 +439,8 @@ Before completing any data table, verify every item:
 - [ ] **Clean Cells**: Null or empty values return `null` (never `"-"` or `"—"`).
 - [ ] **Foreign Keys**: Null foreign keys render `<Badge variant="outline">Not Assigned</Badge>`; populated keys use `<HoverCard>`.
 - [ ] **Frame Primitives**: Uses `<FrameTitle>`, `<FrameDescription>`, `<FrameActions>`, and `<FramePanel>` without arbitrary Tailwind class overrides.
-- [ ] **Actions Column**: Row dropdown menu provides navigation, drawer edit trigger, and copy actions.
+- [ ] **Actions Column**: Row actions use a labeled `DropdownMenu` (`MoreHorizontalIcon` trigger) with `DropdownMenuItem asChild` links, `DropdownMenuActionItem` for non-primitive actions, and copy via `CopyButton asChild showText`.
+- [ ] **Composable Triggers**: Dialog/confirm components triggered from menus accept `children` and render `<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>` (no hardcoded trigger button inside).
+- [ ] **No Duplicate Actions**: Don’t repeat the same action in an ID/data cell and the actions menu unless necessary.
 - [ ] **Clean Exports**: Only `export default function Page()` is exported.
 - [ ] **Type Check**: Passed `bun run check` with **0 errors**.

@@ -137,31 +137,27 @@ const columns: ColumnDef<DataTableFeatures, FeedbackRecord>[] =
 			enableSorting: false,
 			enableHiding: false,
 			meta: { align: "right" },
-			cell: ({ row }) => <FeedbackActions feedback={row.original} />,
+			cell: ({ row }) => (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="outline" size="icon-sm">
+							<MoreHorizontalIcon />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem asChild>
+							<Button variant="link" asChild>
+								<Link href={`/feedbacks/${row.id}` as "/"}>
+									<ExternalLinkIcon />
+									View Feedback
+								</Link>
+							</Button>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			),
 		}),
 	]);
-
-function FeedbackActions({ feedback }: { feedback: FeedbackRecord }) {
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size="icon-sm">
-					<MoreHorizontalIcon />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuItem asChild>
-					<Button variant="link" asChild>
-						<Link href={`/feedbacks/${feedback.id}` as "/"}>
-							<ExternalLinkIcon />
-							View Feedback
-						</Link>
-					</Button>
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	);
-}
 
 export default function Page() {
 	const { data = [], isPending } = useQuery(api.feedback.list.queryOptions());
