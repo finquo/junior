@@ -8,6 +8,7 @@ import {
 	FolderOpenIcon,
 	GraduationCapIcon,
 	ListIcon,
+	MessageSquareWarningIcon,
 	PackageIcon,
 	PlusIcon,
 	ScanEyeIcon,
@@ -213,6 +214,23 @@ export function SidebarConfig({
 									icon: <ListIcon />,
 									title: "Show List",
 									url: "/medias",
+								},
+							],
+						},
+						{
+							title: "Feedbacks",
+							url: "/feedbacks",
+							icon: <MessageSquareWarningIcon />,
+							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Create New",
+									url: "/feedbacks/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/feedbacks",
 								},
 							],
 						},

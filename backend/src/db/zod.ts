@@ -182,6 +182,19 @@ export const UpdateMaterialSchema = createUpdateSchema(
 export const SelectPaymentSchema = createSelectSchema(schema.payment);
 export const InsertPaymentSchema = createInsertSchema(schema.payment);
 
+// Feedback
+export const FeedbackTypeZod = z.enum(schema.feedbackTypes);
+export const FeedbackStatusZod = z.enum(schema.feedbackStatuses);
+export const SelectFeedbackSchema = createSelectSchema(schema.feedback);
+export const InsertFeedbackSchema = createInsertSchema(
+	schema.feedback,
+).safeExtend({
+	content: z.string().min(1).max(2000),
+	type: FeedbackTypeZod,
+	ref: z.string().regex(/^[a-z_]+:[^:]+$/).nullish(),
+	userId: z.string().nullable().optional(),
+});
+
 const updateZod = <T extends ZodObject<{ id: ZodString } & ZodRawShape>>(
 	schema: T,
 ) =>

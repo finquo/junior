@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClockIcon } from "lucide-react";
+import { CalendarClockIcon, MessageSquarePlusIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Button as ArcButton } from "@/components/arc/button/button";
 import {
@@ -11,6 +11,7 @@ import {
 	CardTitle,
 } from "@/components/arc/card/card";
 import { Container } from "@/components/container";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
 import { useHasRole } from "@/hooks/role";
 import { CallAuthButton } from "../../_components/call-auth-button";
 
@@ -34,6 +35,14 @@ export default function Page() {
 					</CardDescription>
 				</CardHeader>
 				<CardFooter style={{ justifyContent: "flex-end" }}>
+					{id && (
+						<FeedbackDialog type="join" reference={`slot:${id}`}>
+							<ArcButton variant="secondary">
+								<MessageSquarePlusIcon />
+								Report an issue
+							</ArcButton>
+						</FeedbackDialog>
+					)}
 					{canViewSlot && id && (
 						<ArcButton onClick={() => router.push(`/slots/${id}`)}>
 							<CalendarClockIcon />

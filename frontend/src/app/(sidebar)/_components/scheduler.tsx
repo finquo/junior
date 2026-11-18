@@ -7,6 +7,7 @@ import {
 	ComponentIcon,
 	GraduationCapIcon,
 	ListIcon,
+	MessageSquareWarningIcon,
 	PackageIcon,
 	PlusIcon,
 	UserPenIcon,
@@ -145,6 +146,23 @@ export function SidebarConfig({
 								api: api.sidebar.slots.queryOptions(),
 								getLink: (id) => `/slots/${id}`,
 							},
+						},
+						{
+							title: "Feedbacks",
+							url: "/feedbacks",
+							icon: <MessageSquareWarningIcon />,
+							subItems: [
+								{
+									icon: <PlusIcon />,
+									title: "Create New",
+									url: "/feedbacks/new",
+								},
+								{
+									icon: <ListIcon />,
+									title: "Show List",
+									url: "/feedbacks",
+								},
+							],
 						},
 					]}
 				/>

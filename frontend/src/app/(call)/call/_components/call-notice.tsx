@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCwIcon } from "lucide-react";
+import { MessageSquarePlusIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect } from "react";
 import { Alert } from "@/components/arc/alert/alert";
 import { Button as ArcButton } from "@/components/arc/button/button";
@@ -12,6 +12,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/arc/card/card";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
 import { CallAuthButton } from "./call-auth-button";
 
 export type CallNoticeStatus = "not_found" | "upcoming" | "ended" | "error";
@@ -49,10 +50,12 @@ export function CallNotice({
 	status,
 	onRefresh,
 	error,
+	reference,
 }: {
 	status: CallNoticeStatus;
 	onRefresh?: () => void;
 	error?: Error | null;
+	reference?: string;
 }) {
 	const notice = notices[status];
 
@@ -79,6 +82,14 @@ export function CallNotice({
 				)}
 			</CardContent>
 			<CardFooter style={{ justifyContent: "flex-end" }}>
+				{reference && (
+					<FeedbackDialog type="join" reference={reference}>
+						<ArcButton variant="secondary">
+							<MessageSquarePlusIcon />
+							Report an issue
+						</ArcButton>
+					</FeedbackDialog>
+				)}
 				<ArcButton
 					variant="secondary"
 					onClick={onRefresh ?? (() => window.location.reload())}

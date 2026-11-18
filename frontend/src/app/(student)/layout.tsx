@@ -89,11 +89,13 @@ export default function Layout({
 			<StudentDock />
 			<div className="fixed -z-10 h-screen w-screen">
 				<Aurora
-					colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-					amplitude={1.05}
+					colorStops={["#3b68fc", "#09b1bb", "#714ade"]}
+					// colorStops={["#09b1bb", "#fdae27", "#f8721f"]}
+					// colorStops={["#714ade", "#09b1bb", "#f8721f"]}
+					amplitude={1}
 					blend={0.5}
-					height={0.53}
-					speed={1.65}
+					height={0.5}
+					speed={2}
 					glow={0.3}
 					scale={1.15}
 					brightness={1}

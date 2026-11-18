@@ -30,7 +30,12 @@ function Joined({ id }: { id: string }) {
 	if (isError || !data) {
 		return (
 			<Container>
-				<CallNotice status="error" error={error} onRefresh={refetch} />
+				<CallNotice
+					status="error"
+					error={error}
+					onRefresh={refetch}
+					reference={`slot:${id}`}
+				/>
 			</Container>
 		);
 	}
@@ -38,7 +43,11 @@ function Joined({ id }: { id: string }) {
 	if (data.status !== "live") {
 		return (
 			<Container>
-				<CallNotice status={data.status} onRefresh={refetch} />
+				<CallNotice
+					status={data.status}
+					onRefresh={refetch}
+					reference={`slot:${id}`}
+				/>
 			</Container>
 		);
 	}

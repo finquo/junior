@@ -5,6 +5,7 @@ import { cn } from "cn";
 import {
 	CalendarClockIcon,
 	ImageIcon,
+	MessageSquarePlusIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorSmartphoneIcon,
@@ -38,6 +39,7 @@ import {
 	ItemTitle,
 } from "@/components/arc/item/item";
 import { Switch } from "@/components/arc/switch/switch";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import type { useJoinPreferences } from "../../_components/call-preferences";
@@ -278,6 +280,12 @@ export function CallJoinCard({
 				)}
 			</CardContent>
 			<CardFooter>
+				<FeedbackDialog type="join" reference={`slot:${id}`}>
+					<ArcButton variant="secondary">
+						<MessageSquarePlusIcon />
+						Report an issue
+					</ArcButton>
+				</FeedbackDialog>
 				<ArcButton
 					loading={joining}
 					disabled={!userName || joining || !isLive}

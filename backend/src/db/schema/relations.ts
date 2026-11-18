@@ -105,6 +105,12 @@ const relations = defineRelations(schema, (r) => ({
 			to: r.scheduler.id,
 		}),
 	},
+	feedback: {
+		user: r.one.user({
+			from: r.feedback.userId,
+			to: r.user.id,
+		}),
+	},
 	lesson: {
 		slots: r.many.slot(),
 		answers: r.many.answer(),

@@ -13,6 +13,7 @@ import {
 	InfoIcon,
 	LogOutIcon,
 	MessageSquareIcon,
+	MessageSquarePlusIcon,
 	MicIcon,
 	MicOffIcon,
 	MonitorDot,
@@ -38,6 +39,7 @@ import {
 } from "@/components/arc/dialog/dialog";
 import { SplitButton } from "@/components/arc/split-button/split-button";
 import { Container } from "@/components/container";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import {
@@ -162,6 +164,7 @@ function CallView({
 	const [drawer, setDrawer] = useState<
 		"participants" | "details" | "chat" | null
 	>(null);
+	const [feedbackOpen, setFeedbackOpen] = useState(false);
 	const selfDrag = useDraggable();
 
 	if (call.isError) {
@@ -380,12 +383,23 @@ function CallView({
 										},
 									]
 								: []),
+							{
+								label: "Send feedback",
+								icon: <MessageSquarePlusIcon />,
+								onSelect: () => setFeedbackOpen(true),
+							},
 							themeAction,
 						]}
 					/>
 					<ChatDrawer
 						open={drawer === "chat"}
 						onOpenChange={(open) => setDrawer(open ? "chat" : null)}
+					/>
+					<FeedbackDialog
+						open={feedbackOpen}
+						onOpenChange={setFeedbackOpen}
+						type="media"
+						reference={call.slotId ? `slot:${call.slotId}` : undefined}
 					/>
 					{canEndMeeting && (
 						<Dialog>

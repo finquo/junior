@@ -34,6 +34,7 @@ export function CallGate({ id }: { id: string }) {
 						status="error"
 						error={preflight.error}
 						onRefresh={preflight.refetch}
+						reference={`slot:${id}`}
 					/>
 				</FramePanel>
 			</Frame>
@@ -43,7 +44,13 @@ export function CallGate({ id }: { id: string }) {
 	const meeting = preflight.meeting;
 
 	if (meeting.status === "not_found" || meeting.status === "ended") {
-		return <CallNotice status={meeting.status} onRefresh={preflight.refetch} />;
+		return (
+			<CallNotice
+				status={meeting.status}
+				onRefresh={preflight.refetch}
+				reference={`slot:${id}`}
+			/>
+		);
 	}
 
 	return (

@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./feedback";
 export * from "./lesson";
 export * from "./material";
 export * from "./program";
