@@ -13,6 +13,7 @@ import {
 	SidebarGroup,
 	SidebarGroupLabel,
 	SidebarMenu,
+	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
@@ -85,25 +86,20 @@ export function NavMain({ title, items }: NavMainType) {
 							asChild
 						>
 							<SidebarMenuItem>
-								<CollapsibleTrigger asChild>
-									<SidebarMenuButton tooltip={item.title}>
-										{expandable ? (
-											label
-										) : (
-											<Link
-												href={item.url as "/"}
-												className="flex items-center"
-											>
-												{label}
-											</Link>
-										)}
-										{expandable && (
-											<span className="ml-auto">
-												<ChevronRightIcon className="transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-											</span>
-										)}
-									</SidebarMenuButton>
-								</CollapsibleTrigger>
+								<SidebarMenuButton
+									asChild
+									tooltip={item.title}
+									isActive={Boolean(item.isActive)}
+								>
+									<Link href={item.url as "/"}>{label}</Link>
+								</SidebarMenuButton>
+								{expandable && (
+									<CollapsibleTrigger asChild>
+										<SidebarMenuAction className="top-0! right-0! size-8! justify-center rounded-xl transition-transform duration-200 group-data-open/collapsible:rotate-90">
+											<ChevronRightIcon />
+										</SidebarMenuAction>
+									</CollapsibleTrigger>
+								)}
 								<CollapsibleContent>
 									<SidebarMenuSub>
 										{item.subItems?.map((subItem) => (
