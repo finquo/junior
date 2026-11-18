@@ -1,14 +1,12 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { KeyRoundIcon } from "lucide-react";
 import { z } from "zod";
 import {
 	AlertDialogCancel,
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogMedia,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -53,9 +51,6 @@ export function ResetPasswordForm({
 			}}
 		>
 			<AlertDialogHeader>
-				<AlertDialogMedia>
-					<KeyRoundIcon />
-				</AlertDialogMedia>
 				<AlertDialogTitle>Reset password for {userName}?</AlertDialogTitle>
 				<AlertDialogDescription>
 					Enter a new password for this user. The default is 1234567890.

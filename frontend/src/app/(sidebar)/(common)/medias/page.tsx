@@ -25,7 +25,6 @@ import {
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogMedia,
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -127,9 +126,6 @@ function DeleteSlotButton({ slotId }: { slotId: string }) {
 				</AlertDialogTrigger>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogMedia>
-							<TrashIcon />
-						</AlertDialogMedia>
 						<AlertDialogTitle>Delete all files for {slotId}?</AlertDialogTitle>
 						<AlertDialogDescription>
 							Every recording, audio, chunk, transcript, and summary under this

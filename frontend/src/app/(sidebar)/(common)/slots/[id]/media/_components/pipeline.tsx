@@ -42,7 +42,6 @@ import {
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogMedia,
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -182,9 +181,6 @@ function DeleteButton({
 				</AlertDialogTrigger>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogMedia>
-							<TrashIcon />
-						</AlertDialogMedia>
 						<AlertDialogTitle>Delete {label}?</AlertDialogTitle>
 						<AlertDialogDescription>
 							{path} will be removed from the bucket. This cannot be undone.
@@ -243,9 +239,6 @@ function DeleteChunksButton({
 				</AlertDialogTrigger>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogMedia>
-							<TrashIcon />
-						</AlertDialogMedia>
 						<AlertDialogTitle>{label}?</AlertDialogTitle>
 						<AlertDialogDescription>
 							All files in this group for this recording will be removed. This

@@ -22,7 +22,6 @@ import {
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogMedia,
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -139,9 +138,6 @@ export function UserActions({ user }: { user: UserRecord }) {
 
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogMedia>
-							<TrashIcon />
-						</AlertDialogMedia>
 						<AlertDialogTitle>Delete {user.name}?</AlertDialogTitle>
 						<AlertDialogDescription>
 							This will permanently remove the user account and cannot be

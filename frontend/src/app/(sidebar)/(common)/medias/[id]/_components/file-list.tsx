@@ -20,7 +20,6 @@ import {
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogMedia,
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -30,7 +29,6 @@ import {
 	AttachmentActions,
 	AttachmentContent,
 	AttachmentDescription,
-	AttachmentGroup,
 	AttachmentMedia,
 	AttachmentTitle,
 } from "@/components/ui/attachment";
@@ -144,9 +142,6 @@ function MediaFile({ path, slotId }: { path: string; slotId: string }) {
 						</AlertDialogTrigger>
 						<AlertDialogContent>
 							<AlertDialogHeader>
-								<AlertDialogMedia>
-									<TrashIcon />
-								</AlertDialogMedia>
 								<AlertDialogTitle>Delete {name}?</AlertDialogTitle>
 								<AlertDialogDescription>
 									{path} will be removed from the bucket. This cannot be undone.
