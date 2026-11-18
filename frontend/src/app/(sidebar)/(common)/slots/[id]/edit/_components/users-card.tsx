@@ -1,5 +1,6 @@
 "use client";
 
+import { UserSelector } from "@/components/custom/user-selector";
 import {
 	Card,
 	CardContent,
@@ -15,10 +16,7 @@ import { FetchLesson } from "@/hooks/lesson";
 import { RenderWhenRole } from "@/hooks/role";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
-import {
-	PeriodSelector,
-	UserSelector,
-} from "../../../_components/selecter";
+import { PeriodSelector } from "../../../_components/selecter";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
@@ -109,7 +107,7 @@ export function EditUsersCard({
 					name="teacherId"
 					label="Teacher"
 					value={teacherId ?? undefined}
-					onChange={onTeacherChange}
+					onChange={(id) => id && onTeacherChange(id)}
 					api={api.core.teacher.list.queryOptions()}
 				/>
 				<RenderWhenRole role={["admin"]}>
@@ -117,7 +115,7 @@ export function EditUsersCard({
 						name="schedulerId"
 						label="Scheduler"
 						value={schedulerId ?? undefined}
-						onChange={onSchedulerChange}
+						onChange={(id) => id && onSchedulerChange(id)}
 						api={api.core.scheduler.list.queryOptions()}
 					/>
 				</RenderWhenRole>

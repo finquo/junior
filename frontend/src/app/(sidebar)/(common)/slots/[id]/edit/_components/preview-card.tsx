@@ -101,8 +101,7 @@ export function EditPreviewCard({
 
 	const timeChanged = Boolean(
 		startTime.getTime() !== new Date(slot.startTime).getTime() ||
-			expectedEndTime.getTime() !==
-				new Date(slot.expectedEndTime).getTime(),
+			expectedEndTime.getTime() !== new Date(slot.expectedEndTime).getTime(),
 	);
 
 	const reschedule = useMutation(

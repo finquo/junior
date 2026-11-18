@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { getDurationFromInterval } from "utils";
+import { UserSelector } from "@/components/custom/user-selector";
 import {
 	Card,
 	CardContent,
@@ -14,7 +15,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
-import { LessonSelector, PeriodSelector, UserSelector } from "./selecter";
+import { LessonSelector, PeriodSelector } from "./selecter";
 
 function StudentProgramField() {
 	const [studentId] = useQueryState("studentId");

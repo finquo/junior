@@ -1,15 +1,9 @@
 "use client";
 
-import {
-	type DefaultError,
-	type QueryKey,
-	type UseQueryOptions,
-	useQuery,
-} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { period } from "backend/config";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
@@ -23,133 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
-import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
-import { getInitials } from "@/lib/utils";
-
-export function UserSelector<
-	TData extends { id: string }[] = { id: string }[],
-	TError = DefaultError,
-	TQueryKey extends QueryKey = QueryKey,
->({
-	name = "user",
-	label = "User",
-	defaultUser,
-	value,
-	onChange,
-	onSelect,
-	api,
-}: {
-	name?: string;
-	label?: string;
-	defaultUser?: string;
-	value?: string;
-	onChange?: (id: string) => void;
-	onSelect?: (item: TData[number]) => void;
-	api: UseQueryOptions<TData, TError, TData, TQueryKey>;
-}) {
-	const [urlUser, setUrlUser] = useQueryState(name);
-	const user = value ?? urlUser;
-
-	const setUser = (id: string) => {
-		if (onChange) return onChange(id);
-		setUrlUser(id);
-	};
-
-	const { data: list, isPending } = useQuery(api);
-
-	useEffect(() => {
-		if (onSelect) {
-			if (!list) return;
-
-			const selectedItem = list.find((item) => item.id === user);
-			if (selectedItem) {
-				onSelect(selectedItem);
-			}
-		}
-	}, [user, list, onSelect]);
-
-	if (isPending) {
-		return (
-			<Field className="w-full min-w-[200px] sm:w-auto">
-				<FieldLabel htmlFor={name}>{label}</FieldLabel>
-				<div className="flex h-9 w-full min-w-[200px] items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs">
-					<Skeleton className="size-5 rounded-full" />
-					<Skeleton className="h-4 w-28" />
-				</div>
-			</Field>
-		);
-	}
-
-	return (
-		<Field className="w-full min-w-[200px] sm:w-auto">
-			<FieldLabel htmlFor={name}>{label}</FieldLabel>
-			<Select
-				defaultValue={defaultUser}
-				value={user}
-				onValueChange={(selectedId) => {
-					if (!selectedId) return;
-					setUser(selectedId);
-				}}
-			>
-				<SelectTrigger id={name} className="w-full min-w-[200px]">
-					<SelectValue
-						placeholder={`Select a ${label}`}
-						children={(item: string) => (
-							<FetchUser
-								id={item}
-								isPending={
-									<span className="flex items-center gap-2">
-										<Skeleton className="size-5 rounded-full" />
-										<Skeleton className="h-4 w-24" />
-									</span>
-								}
-								children={(user) => (
-									<span className="flex items-center gap-2">
-										<Avatar className="size-5">
-											<AvatarImage src={user.image} alt={user.name} />
-											<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-										</Avatar>
-										<span>{user.name}</span>
-									</span>
-								)}
-							/>
-						)}
-					/>
-				</SelectTrigger>
-				<SelectContent alignItemWithTrigger={false}>
-					<SelectGroup>
-						<SelectLabel>Select a {label}</SelectLabel>
-						{(list as { id: string }[] | undefined)?.map((l) => (
-							<SelectItem key={l.id} value={l.id}>
-								<FetchUser
-									id={l.id}
-									isPending={
-										<span className="flex items-center gap-2">
-											<Skeleton className="size-5 rounded-full" />
-											<Skeleton className="h-4 w-24" />
-										</span>
-									}
-									children={(user) => (
-										<span className="flex items-center gap-2">
-											<Avatar className="size-5">
-												<AvatarImage src={user.image} alt={user.name} />
-												<AvatarFallback>
-													{getInitials(user.name)}
-												</AvatarFallback>
-											</Avatar>
-											<span>{user.name}</span>
-										</span>
-									)}
-								/>
-							</SelectItem>
-						))}
-					</SelectGroup>
-				</SelectContent>
-			</Select>
-		</Field>
-	);
-}
 
 export function LessonSelector({
 	defaultLesson,
