@@ -16,7 +16,6 @@ locals {
 			NODE_ENV		= "production"
 			DATABASE_URL		= data.aws_ssm_parameter.database_url.value
 			DATABASE_URL_DIRECT	= data.aws_ssm_parameter.database_url.value
-			MEDIA_BUCKET		= aws_s3_bucket.media.bucket
 		}
 	)
 }
@@ -58,6 +57,27 @@ resource "aws_iam_role_policy" "next_lambda_logs" {
 				Effect		= "Allow"
 				Action		= ["logs:CreateLogStream", "logs:PutLogEvents"]
 				Resource	= "${aws_cloudwatch_log_group.next.arn}:*"
+			}
+		]
+	})
+}
+
+resource "aws_iam_role_policy" "next_lambda_scheduler" {
+	name	= "finquo-junior-next-lambda-scheduler-${var.environment}"
+	role	= aws_iam_role.next_lambda.id
+
+	policy	= jsonencode({
+		Version	= "2012-10-17"
+		Statement	= [
+			{
+				Effect	= "Allow"
+				Action	= ["scheduler:CreateSchedule", "scheduler:DeleteSchedule", "scheduler:UpdateSchedule"]
+				Resource	= "arn:aws:scheduler:ap-south-1:${local.env_json.AWS_ACCOUNT_ID}:schedule/default/slot-reminder-*"
+			},
+			{
+				Effect	= "Allow"
+				Action	= "iam:PassRole"
+				Resource	= aws_iam_role.event_scheduler.arn
 			}
 		]
 	})

@@ -1,0 +1,66 @@
+name: Building & Deploying Event Lambda
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main, development]
+        paths:
+            - "backend/src/event/**/*"
+            - ".github/workflows/event.yml"
+            - "backend/**/*"
+            - "packages/**/*"
+            - "!**/*.md"
+
+jobs:
+    event:
+        name: Building & Deploying Event Lambda
+        environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+        runs-on: ubuntu-latest
+        env:
+            ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+            DOMAIN_NAME: ${{ github.ref == 'refs/heads/main' && 'app.finquo.ai' || 'dev.finquo.ai' }}
+
+        steps:
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+                  vars: ${{ toJSON(vars) }}
+                  exclude: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Set up Bun.js
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: "latest"
+
+            - name: Install dependencies
+              run: bun i
+
+            - name: Build Event Lambda
+              run: bun run --filter backend construct:event
+
+            - name: Package Event Lambda
+              run: |
+                  cd backend/event
+                  zip -qr "$GITHUB_WORKSPACE/event.zip" .
+                  ls -lh "$GITHUB_WORKSPACE/event.zip"
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ap-south-1
+
+            - name: Update Event Lambda code
+              run: |
+                  if ! aws lambda get-function --function-name "finquo-junior-event-${ENVIRONMENT}" >/dev/null 2>&1; then
+                      echo "Event function does not exist yet; deploy.yml will create it with this code."
+                      exit 0
+                  fi
+
+                  aws lambda update-function-code \
+                      --function-name "finquo-junior-event-${ENVIRONMENT}" \
+                      --zip-file "fileb://$GITHUB_WORKSPACE/event.zip"

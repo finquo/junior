@@ -10,3 +10,6 @@ export const MEDIA_BUCKET = `finquo-junior-media-${ENVIRONMENT}`;
 
 export const MEDIA_CONVERT_ROLE_ARN = `arn:aws:iam::${ACCOUNT_ID}:role/finquo-junior-media-convert-${ENVIRONMENT}`;
 export const MEDIA_CONVERT_QUEUE_ARN = `arn:aws:mediaconvert:${AWS_REGION}:${ACCOUNT_ID}:queues/finquo-junior-media-queue-${ENVIRONMENT}`;
+
+export const EVENT_FUNCTION_ARN = `arn:aws:lambda:${AWS_REGION}:${ACCOUNT_ID}:function:finquo-junior-event-${ENVIRONMENT}`;
+export const EVENT_SCHEDULER_ROLE_ARN = `arn:aws:iam::${ACCOUNT_ID}:role/finquo-junior-event-scheduler-${ENVIRONMENT}`;

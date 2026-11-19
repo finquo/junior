@@ -36,7 +36,7 @@ Run from the repo root unless noted.
 - `bun run frontend dev` / `bun run backend dev` - one workspace (`vp run --filter <workspace> <script>`)
 - `bun run check` - typecheck every workspace (`tsc --noEmit`). This is the typecheck; there is no `check-types` script.
 - `bun run biome` - Biome lint/format check (config `biome.json`: tabs, double quotes)
-- `bun run build` / `compile` / `construct` - build all workspaces. `construct` is the production build that CI deploys.
+- `bun run build` / `construct` - build all workspaces. `construct` is the production build that CI deploys.
 - `bun run env:generate` - regenerate Varlock `env.ts` after editing `.env.schema`
 - `bun run hooks:setup` - install git hooks (`vp config`; staged files run `vp check --fix`)
 

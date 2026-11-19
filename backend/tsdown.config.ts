@@ -3,7 +3,8 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig([
 	{
-		entry: ["./src/index.ts", "./src/lambda.ts"],
+		name: "backend",
+		entry: { index: "./src/index.ts" },
 		format: "esm",
 		outDir: "./out",
 		clean: false,
@@ -18,6 +19,7 @@ export default defineConfig([
 		},
 	},
 	{
+		name: "export",
 		entry: {
 			auth: "./src/auth/export.ts",
 			api: "./src/api/export.ts",

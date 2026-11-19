@@ -12,7 +12,7 @@ Stack: Hono app (mounted at `/api`) serving an **oRPC v2 beta** router, **Better
 
 - `bun run dev` - hot Bun server on `:3000`, loads `--env-file=../.env`.
 - `bun run check` - `tsc --noEmit`. This is the backend typecheck; it must pass.
-- `bun run construct` - `varlock codegen && tsdown` (`build`/`compile` are identical). Emits `out/` (worker entries `index`, `lambda`) and `dist/` (package exports). **Run this after any change the frontend imports.**
+- `bun run construct` - `varlock codegen && tsdown`. Emits `out/` (worker entries `index`, `lambda`) and `dist/` (package exports). **Run this after any change the frontend imports.**
 - `bun run db:generate` / `db:migrate` - drizzle-kit. **Off-limits - the developer runs these.**
 - `bun run auth:generate` - regenerates `src/db/auth.test.ts` from `src/services.ts`. Never edit that file by hand.
 - `bun run cf:dev` - `wrangler dev`.

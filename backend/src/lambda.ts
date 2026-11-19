@@ -1,31 +1,15 @@
-import { handle, type LambdaContext, type LambdaEvent } from "@hono/aws-lambda";
-import { Hono } from "hono";
-import { transcribeAudio, transcribeAudioChunk } from "./ai/transcribe";
-import api from "./index";
+import { handleSlotReminder, type SlotReminderEvent } from "./event";
+import { handleMediaEvent, type S3Event } from "./event/media";
 
-type Bindings = {
-	event: LambdaEvent;
-};
-
-const app = new Hono<{ Bindings: Bindings }>();
-
-// app.get("/Hello", (c) => c.text("World"));
-
-app.route("/", api);
-
-const lambdaHandler = handle(app);
-
-export const handler = async (event: any, context: LambdaContext) => {
-	if (event?.Records?.[0]?.eventSource === "aws:s3") {
-		const record = event.Records[0];
-
-		const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
-
-		if (/\/audio-chunks\/\d+\/\d+_audio_\d+\.aac$/.test(key))
-			return transcribeAudioChunk(key);
-
-		return transcribeAudio(key);
+export const handler = async (event: SlotReminderEvent | S3Event) => {
+	if ("Records" in event) {
+		return handleMediaEvent(event);
 	}
 
-	return lambdaHandler(event, context);
+	switch (event.type) {
+		case "slot-reminder":
+			return handleSlotReminder(event);
+		default:
+			console.error("[event] unknown event type", event);
+	}
 };

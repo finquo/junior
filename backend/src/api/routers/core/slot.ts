@@ -6,6 +6,11 @@ import { notifySlotCreated, notifySlotUpdated } from "@/chat/notify";
 import { getAvailabilityForDay, getDaykey, periodZod } from "@/config/time";
 import { schema } from "@/db";
 import { InsertSlotSchema, UpdateSlotSchema } from "@/db/zod";
+import {
+	createSlotReminder,
+	deleteSlotReminder,
+	updateSlotReminder,
+} from "@/event";
 import { db } from "@/services";
 import { appOrigin } from "@/utils/app-url";
 import { MapRole } from "@/utils/role";
@@ -184,6 +189,12 @@ export const slotRouter = {
 				console.error("[core-create-slot-notify]", error);
 			}
 
+			try {
+				await createSlotReminder(slot.id, slot.startTime);
+			} catch (error) {
+				console.error("[core-create-slot-reminder]", error);
+			}
+
 			return created;
 		}),
 	update: getRolesProcedure(["admin", "scheduler"])
@@ -266,7 +277,6 @@ export const slotRouter = {
 
 			if (!slot || !participantChanged) return updated;
 
-			/*
 			try {
 				const lesson = await tryAPI(
 					"db-core-update-slot-lesson",
@@ -307,7 +317,6 @@ export const slotRouter = {
 			} catch (error) {
 				console.error("[core-update-slot-notify]", error);
 			}
-			*/
 
 			return updated;
 		}),
@@ -354,6 +363,12 @@ export const slotRouter = {
 
 			const slot = updated?.[0];
 			if (!slot) return updated;
+
+			try {
+				await updateSlotReminder(id, slot.startTime);
+			} catch (error) {
+				console.error("[core-reschedule-slot-update-reminder]", error);
+			}
 
 			try {
 				const lesson = await tryAPI(
@@ -422,7 +437,7 @@ export const slotRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
-			return await tryAPI(
+			const deleted = await tryAPI(
 				"db-core-delete-slot",
 				db
 					.delete(schema.slot)
@@ -437,6 +452,17 @@ export const slotRouter = {
 					)
 					.returning(),
 			);
+
+			const slot = deleted?.[0];
+			if (slot) {
+				try {
+					await deleteSlotReminder(slot.id);
+				} catch (error) {
+					console.error("[core-delete-slot-delete-reminder]", error);
+				}
+			}
+
+			return deleted;
 		}),
 	checkAvailability: getRolesProcedure(["admin", "scheduler"])
 		.input(

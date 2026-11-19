@@ -1,6 +1,7 @@
 # prod
 dist/
 /build
+/event
 /out/
 
 # dev

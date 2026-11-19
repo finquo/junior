@@ -44,6 +44,15 @@ jobs:
             - name: Build Frontend & Backend
               run: bun run construct
 
+            - name: Build Event Lambda
+              run: bun run --filter backend construct:event
+
+            - name: Package Event Lambda
+              run: |
+                  cd backend/event
+                  zip -qr "$GITHUB_WORKSPACE/event.zip" .
+                  ls -lh "$GITHUB_WORKSPACE/event.zip"
+
             - name: Package OpenNext server
               run: |
                   cd frontend/.open-next/server-functions/default
