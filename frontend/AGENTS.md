@@ -133,7 +133,16 @@ Use primitives instead:
   - Right (desktop default): left edge, vertical (`absolute inset-y-0 left-0 w-4`, `!h-14 !w-1 rounded-full`), centered.
   - Left: right edge, vertical. Bottom (mobile default): top edge, horizontal (`w-full pt-3 pb-1`, `!h-1 !w-12 rounded-full`). Top: bottom edge, horizontal (`order-last w-full pb-3 pt-1`).
   - Handle styling: `bg-muted-foreground/20 hover:bg-muted-foreground/40`.
-- Opening/closing must be declarative: wrap triggers with `<DrawerTrigger asChild>`; never use `useState` booleans. When a drawer is triggered from a dropdown item, prevent menu event collision with `onSelect={(e) => e.preventDefault()}`.
+- Opening/closing must be declarative: wrap triggers with `<DrawerTrigger asChild>` / `<DialogTrigger asChild>` / `<AlertDialogTrigger asChild>`; never use `useState` booleans. When invoking a drawer or dialog from a dropdown menu item, use `DropdownMenuActionItem` as the slotted trigger child (not a plain `DropdownMenuItem`), e.g.:
+  ```tsx
+  <AlertDialogTrigger asChild>
+    <DropdownMenuActionItem variant="destructive">
+      <TrashIcon />
+      Delete Session
+    </DropdownMenuActionItem>
+  </AlertDialogTrigger>
+  ```
+  For drawer triggers composed this way, still prevent menu event collision when needed with `onSelect={(e) => e.preventDefault()}` on the trigger item.
 - Radix Tabs emit `data-state="active"` (not Base UI's `data-active`). Style active triggers with `data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs` (or the line variant), never `data-active:*`.
 - Async selectors that fetch remote data (`UserSelector`, `LessonSelector`, ...) must define a minimum width on the field and trigger (`min-w-[200px] w-full`) and render `<Skeleton />` placeholders while `isPending` so they do not squish or shift.
 

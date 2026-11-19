@@ -41,7 +41,7 @@ export const createSlotReminder = async (slotId: string, startTime: Date) => {
 	await scheduler.send(
 		new CreateScheduleCommand({
 			Name: getName(slotId),
-			ScheduleExpression: `at(${fireAt.toISOString()})`,
+			ScheduleExpression: `at(${fireAt.toISOString().slice(0, 19)})`,
 			FlexibleTimeWindow: { Mode: "OFF" },
 			Target: {
 				Arn: EVENT_FUNCTION_ARN,
@@ -70,7 +70,7 @@ export const updateSlotReminder = async (slotId: string, startTime: Date) => {
 	await scheduler.send(
 		new UpdateScheduleCommand({
 			Name: getName(slotId),
-			ScheduleExpression: `at(${fireAt.toISOString()})`,
+			ScheduleExpression: `at(${fireAt.toISOString().slice(0, 19)})`,
 			FlexibleTimeWindow: { Mode: "OFF" },
 			Target: {
 				Arn: EVENT_FUNCTION_ARN,

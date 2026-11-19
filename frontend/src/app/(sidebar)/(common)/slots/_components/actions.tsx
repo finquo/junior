@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
+	DropdownMenuActionItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
@@ -182,10 +183,10 @@ export function SlotActions({
 					<RenderWhenRole role={["admin", "scheduler"]}>
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<DropdownMenuItem variant="destructive">
+								<DropdownMenuActionItem variant="destructive">
 									<TrashIcon />
 									Delete Session
-								</DropdownMenuItem>
+								</DropdownMenuActionItem>
 							</AlertDialogTrigger>
 							<AlertDialogContent>
 								<AlertDialogHeader>

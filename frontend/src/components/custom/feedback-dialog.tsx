@@ -15,20 +15,13 @@ import {
 	DialogFooter,
 	DialogTrigger,
 } from "@/components/arc/dialog/dialog";
+import { Select } from "@/components/arc/select/select";
 import {
 	Field,
 	FieldError,
 	FieldGroup,
 	FieldLabel,
 } from "@/components/ui/field";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/hooks/api";
 import { useAuth } from "@/hooks/auth";
@@ -91,11 +84,14 @@ export function FeedbackDialog({
 	}
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog modal={false} open={open} onOpenChange={setOpen}>
 			{children && <DialogTrigger asChild>{children}</DialogTrigger>}
 			<DialogContent
 				title="Send feedback"
 				description="Tell us what went wrong, or what we could do better."
+				// Non-modal: focus returning to the opener (the dock menu closing) must not dismiss it,
+				// and skipping Radix's body pointer-events lock avoids leaving the page unclickable.
+				onFocusOutside={(event) => event.preventDefault()}
 			>
 				<form
 					onSubmit={(event) => {
@@ -107,45 +103,21 @@ export function FeedbackDialog({
 					<FieldGroup>
 						<form.Field
 							name="type"
-							children={(field) => {
-								const isInvalid =
-									field.state.meta.isTouched && !field.state.meta.isValid;
-
-								return (
-									<Field data-invalid={isInvalid}>
-										<FieldLabel htmlFor={field.name}>Type</FieldLabel>
-										<Select
-											value={field.state.value}
-											onValueChange={(value) =>
-												field.handleChange(value as FeedbackType)
-											}
-											disabled={addFeedback.isPending}
-										>
-											<SelectTrigger id={field.name} className="w-full">
-												<SelectValue placeholder="Select type" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectGroup>
-													{FeedbackTypeZod.options.map((option) => (
-														<SelectItem key={option} value={option}>
-															{option}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-										{isInvalid && (
-											<FieldError
-												errors={field.state.meta.errors.map((error) =>
-													typeof error === "string"
-														? { message: error }
-														: error,
-												)}
-											/>
-										)}
-									</Field>
-								);
-							}}
+							children={(field) => (
+								<Select
+									label="Type"
+									id={field.name}
+									value={field.state.value}
+									onValueChange={(value) =>
+										field.handleChange(value as FeedbackType)
+									}
+									options={FeedbackTypeZod.options.map((option) => ({
+										value: option,
+										label: option,
+									}))}
+									disabled={addFeedback.isPending}
+								/>
+							)}
 						/>
 						<form.Field
 							name="content"
