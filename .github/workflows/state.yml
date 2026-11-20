@@ -33,10 +33,18 @@ jobs:
             - name: Set up Bun.js
               uses: oven-sh/setup-bun@v2
               with:
-                  bun-version: "latest"
+                  bun-version: "1.4.1"
+
+            - name: Cache Bun install
+              uses: actions/cache@v6
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: bun i
+              run: bun i --frozen-lockfile
 
             - name: Load environment variables as JSON
               id: varlock_json
