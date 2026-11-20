@@ -15,6 +15,8 @@ Finquo ("junior") monorepo: Bun workspaces driven by Vite+ (`vp`). Frontend is N
 - Read official online docs instead of reverse-engineering bundled `node_modules` code.
 - Stay inside the workspace you are editing; treat other workspaces as read-only references.
 - Give small URL/helpers an optional path parameter instead of templating paths at each call site (e.g. `appOrigin(req.url, "/call/" + id)`).
+- When a value varies per environment (deploy origin, API URL, feature flags), present concrete options first — prefer configuring it through the existing env/Varlock setup over inventing runtime inference (host/header sniffing).
+- Think like a human collaborator: when several sensible designs exist, ask with tradeoffs and let the developer choose instead of silently picking one.
 
 ## Agent guides
 

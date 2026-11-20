@@ -14,8 +14,10 @@ const outfitHeading = Outfit({
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
+const metadataBase = new URL(`https://${socials.domain}`);
+
 export const metadata: Metadata = {
-	metadataBase: new URL(socials.website),
+	metadataBase,
 	title: {
 		default: socials.name,
 		template: `%s | ${socials.name}`,
@@ -35,7 +37,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		type: "website",
 		locale: "en_US",
-		url: socials.website,
+		url: metadataBase.origin,
 		siteName: socials.name,
 		title: socials.name,
 		description: socials.description,
