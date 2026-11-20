@@ -39,11 +39,20 @@ export const metadata: Metadata = {
 		siteName: socials.name,
 		title: socials.name,
 		description: socials.description,
+		images: [
+			{
+				url: "/banner-blobs.png",
+				width: 1200,
+				height: 630,
+				alt: socials.name,
+			},
+		],
 	},
 	twitter: {
 		card: "summary_large_image",
 		title: socials.name,
 		description: socials.description,
+		images: ["/banner-blobs.png"],
 	},
 };
 
