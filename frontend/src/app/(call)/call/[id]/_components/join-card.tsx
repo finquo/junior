@@ -15,9 +15,11 @@ import {
 	VideoOffIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
-import { Badge } from "@/components/arc/badge/badge";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardAction,
@@ -26,9 +28,9 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { Countdown } from "@/components/arc/countdown/countdown";
-import { Input } from "@/components/arc/input/input";
+} from "@/components/ui/card";
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
 	Item,
 	ItemActions,
@@ -37,11 +39,9 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Switch } from "@/components/arc/switch/switch";
-import { FeedbackDialog } from "@/components/custom/feedback-dialog";
-import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+} from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import type { useJoinPreferences } from "../../_components/call-preferences";
 import { CallPreviewPanel, type CallPreviewState } from "./call-preview";
 import type { CallMeeting, PreflightState } from "./hooks";
@@ -56,6 +56,67 @@ function formatDateTime(value: Date | string) {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
+}
+
+function formatRemaining(ms: number) {
+	const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+	const days = Math.floor(totalSeconds / 86400);
+	const hours = Math.floor((totalSeconds % 86400) / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+
+	if (days > 0) {
+		return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+	}
+	if (hours > 0) {
+		return `${hours}h ${minutes}m ${seconds}s`;
+	}
+	if (minutes > 0) {
+		return `${minutes}m ${seconds}s`;
+	}
+	return `${seconds}s`;
+}
+
+function JoinCountdown({
+	target,
+	completeLabel,
+	onComplete,
+}: {
+	target: number;
+	completeLabel: string;
+	onComplete: () => void;
+}) {
+	const [now, setNow] = useState(() => Date.now());
+	const completedRef = useRef(false);
+	const remaining = target - now;
+	const complete = remaining <= 0;
+
+	useEffect(() => {
+		if (complete) {
+			return;
+		}
+
+		const timer = window.setInterval(() => {
+			setNow(Date.now());
+		}, 1000);
+
+		return () => window.clearInterval(timer);
+	}, [complete]);
+
+	useEffect(() => {
+		if (!complete || completedRef.current) {
+			return;
+		}
+
+		completedRef.current = true;
+		onComplete();
+	}, [complete, onComplete]);
+
+	if (complete) {
+		return <span>{completeLabel}</span>;
+	}
+
+	return <span>{formatRemaining(remaining)}</span>;
 }
 
 function JoinPreference({
@@ -76,16 +137,18 @@ function JoinPreference({
 	onCheckedChange: (checked: boolean) => void;
 }) {
 	return (
-		<FieldLabel htmlFor={id}>
+		<FieldLabel htmlFor={id} className="w-full">
 			<Field
 				orientation="horizontal"
 				className={description ? "items-start" : undefined}
 			>
 				<ItemMedia variant="icon">{icon}</ItemMedia>
-				<ItemContent>
-					<ItemTitle>{label}</ItemTitle>
-					{description && <ItemDescription>{description}</ItemDescription>}
-				</ItemContent>
+				<FieldContent>
+					<span className="font-medium text-sm leading-snug">{label}</span>
+					{description && (
+						<span className="text-muted-foreground text-sm">{description}</span>
+					)}
+				</FieldContent>
 				<ItemActions>
 					<Switch
 						id={id}
@@ -163,7 +226,7 @@ export function CallJoinCard({
 						: "Join opens 10 minutes before the scheduled start."}
 				</CardDescription>
 				<CardAction>
-					<Badge tone={isLive ? "success" : "info"}>
+					<Badge variant={isLive ? "success" : "info"}>
 						{isLive ? "Live" : "Upcoming"}
 					</Badge>
 				</CardAction>
@@ -189,25 +252,28 @@ export function CallJoinCard({
 						<Item variant="muted" size="sm">
 							<ItemContent>
 								<ItemDescription>Join opens in</ItemDescription>
-								<Countdown
-									target={joinOpensAt}
-									label="Time until you can join"
-									completeLabel="Join open"
-									onComplete={() => void preflight.refetch()}
-								/>
+								<ItemTitle>
+									<JoinCountdown
+										target={joinOpensAt}
+										completeLabel="Join open"
+										onComplete={() => void preflight.refetch()}
+									/>
+								</ItemTitle>
 							</ItemContent>
 						</Item>
 					)}
 
 					{needsName ? (
-						<Input
-							id="guest-name"
-							label="Your name"
-							value={guestName.name}
-							onChange={(event) => guestName.setName(event.target.value)}
-							placeholder="Enter your name"
-							autoComplete="name"
-						/>
+						<Field>
+							<FieldLabel htmlFor="guest-name">Your name</FieldLabel>
+							<Input
+								id="guest-name"
+								value={guestName.name}
+								onChange={(event) => guestName.setName(event.target.value)}
+								placeholder="Enter your name"
+								autoComplete="name"
+							/>
+						</Field>
 					) : (
 						<Item variant="muted">
 							<ItemMedia variant="icon">
@@ -218,8 +284,8 @@ export function CallJoinCard({
 								<ItemTitle>{authName}</ItemTitle>
 							</ItemContent>
 							<ItemActions>
-								<Button variant={"outline"} size={"sm"} asChild>
-									<Link href={"/user/edit"}>
+								<Button variant="outline" size="sm" asChild>
+									<Link href="/user/edit">
 										<PenIcon />
 										Edit
 									</Link>
@@ -281,19 +347,18 @@ export function CallJoinCard({
 			</CardContent>
 			<CardFooter>
 				<FeedbackDialog type="join" reference={`slot:${id}`}>
-					<ArcButton variant="secondary">
+					<Button variant="secondary">
 						<MessageSquarePlusIcon />
 						Report an issue
-					</ArcButton>
+					</Button>
 				</FeedbackDialog>
-				<ArcButton
-					loading={joining}
+				<Button
 					disabled={!userName || joining || !isLive}
 					onClick={() => void join()}
 				>
-					{isLive ? <VideoIcon /> : <CalendarClockIcon />}
+					{joining ? <Spinner /> : isLive ? <VideoIcon /> : <CalendarClockIcon />}
 					{isLive ? "Join session" : "Waiting for meeting"}
-				</ArcButton>
+				</Button>
 			</CardFooter>
 		</Card>
 	);

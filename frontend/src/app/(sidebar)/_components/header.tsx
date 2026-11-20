@@ -66,7 +66,7 @@ const Bread = () => {
 				<Separator orientation="vertical" className="mx-2 hidden md:block" />
 				<CopyButton
 					size={"icon-sm"}
-					variant={"secondary"}
+					variant={"outline"}
 					className="hidden md:flex"
 					text={() => getClientBaseUrl(pathname)}
 					label="Link"

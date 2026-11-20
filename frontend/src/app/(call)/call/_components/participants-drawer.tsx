@@ -3,15 +3,19 @@
 import type { Participant } from "@zoom/videosdk";
 import { MicIcon, MicOffIcon, UserXIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { Avatar } from "@/components/arc/avatar/avatar";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerFooter,
+	DrawerHeader,
 	DrawerInner,
-} from "@/components/arc/drawer/drawer";
+	DrawerSwipeHandle,
+	DrawerTitle,
+} from "@/components/ui/drawer";
 import {
 	Item,
 	ItemActions,
@@ -19,10 +23,20 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
+} from "@/components/ui/item";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCall } from "./hooks";
 import { ParticipantRole } from "./video-tile";
+
+function getInitials(name: string) {
+	return name
+		.split(" ")
+		.filter(Boolean)
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
+}
 
 function isVoiceOn(participant: Participant) {
 	return participant.audio !== "" && participant.muted === false;
@@ -70,35 +84,41 @@ export function ParticipantsDrawer({
 	const side = isMobile ? "bottom" : "right";
 
 	return (
-		<Drawer open={open} onOpenChange={onOpenChange}>
-			<DrawerContent
-				title="Participants"
-				description="Everyone currently connected to this session."
-				side={side}
-			>
+		<Drawer open={open} onOpenChange={onOpenChange} direction={side}>
+			<DrawerContent>
+				<DrawerSwipeHandle />
+				<DrawerHeader>
+					<DrawerTitle>Participants</DrawerTitle>
+					<DrawerDescription>
+						Everyone currently connected to this session.
+					</DrawerDescription>
+				</DrawerHeader>
 				<DrawerInner>
 					<ItemGroup>
 						{participants.map((participant) => {
 							const voiceOn = isVoiceOn(participant);
+							const name = participantName(participant);
+							const VoiceIcon = voiceOn ? MicIcon : MicOffIcon;
+							const voiceLabel = voiceOn ? "Voice on" : "Voice off";
+							const showActions =
+								moderator && participant.userId !== myself?.userId;
 
 							return (
 								<Item key={participant.userId} variant="outline">
 									<ItemMedia>
-										<Avatar name={participantName(participant)} size="sm" />
+										<Avatar size="sm">
+											<AvatarFallback>{getInitials(name)}</AvatarFallback>
+										</Avatar>
 									</ItemMedia>
 									<ItemContent>
-										<ItemTitle>{participantName(participant)}</ItemTitle>
+										<ItemTitle>{name}</ItemTitle>
 									</ItemContent>
 									<ItemActions>
-										{voiceOn ? (
-											<MicIcon aria-label="Voice on" />
-										) : (
-											<MicOffIcon aria-label="Voice off" />
-										)}
+										<VoiceIcon aria-label={voiceLabel} />
 										<ParticipantRole user={participant} />
-										{moderator && participant.userId !== myself?.userId && (
+										{showActions && (
 											<>
-												<ArcButton
+												<Button
 													size="icon"
 													variant="secondary"
 													aria-label="Mute"
@@ -108,17 +128,17 @@ export function ParticipantsDrawer({
 													}
 												>
 													<MicOffIcon />
-												</ArcButton>
-												<ArcButton
+												</Button>
+												<Button
 													size="icon"
-													variant="danger"
+													variant="destructive"
 													aria-label="Remove"
 													onClick={() =>
 														void removeParticipant(participant.userId)
 													}
 												>
 													<UserXIcon />
-												</ArcButton>
+												</Button>
 											</>
 										)}
 									</ItemActions>
@@ -128,9 +148,9 @@ export function ParticipantsDrawer({
 					</ItemGroup>
 				</DrawerInner>
 				<DrawerFooter>
-					<ArcButton onClick={() => void invite()}>Invite</ArcButton>
+					<Button onClick={() => void invite()}>Invite</Button>
 					<DrawerClose asChild>
-						<ArcButton variant="secondary">Close</ArcButton>
+						<Button variant="outline">Close</Button>
 					</DrawerClose>
 				</DrawerFooter>
 			</DrawerContent>

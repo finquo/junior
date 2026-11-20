@@ -10,10 +10,11 @@ import {
 	UserRoundIcon,
 	VideoIcon,
 } from "lucide-react";
-import { Alert } from "@/components/arc/alert/alert";
-import type { BadgeTone } from "@/components/arc/badge/badge";
-import { Badge } from "@/components/arc/badge/badge";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import Link from "next/link";
+import Loader from "@/components/loader";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardAction,
@@ -21,8 +22,14 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { EmptyState } from "@/components/arc/empty-state/empty-state";
+} from "@/components/ui/card";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import {
 	Item,
 	ItemActions,
@@ -31,9 +38,8 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Skeleton } from "@/components/arc/skeleton/skeleton";
-import Loader from "@/components/loader";
+} from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
 import { FetchUser } from "@/hooks/user";
@@ -42,15 +48,20 @@ import { snakeToTitleCase } from "@/lib/utils";
 
 type SlotRecord = API_Returns["student"]["getSlots"][number];
 
-const statusTone: Record<string, BadgeTone> = {
+const statusVariant: Record<
+	string,
+	"default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info"
+> = {
 	scheduled: "info",
 	started: "success",
 	rescheduled: "warning",
-	request_reschedule: "danger",
-	attended: "neutral",
+	request_reschedule: "destructive",
+	attended: "secondary",
 };
 
 function SessionRow({ slot }: { slot: SlotRecord }) {
+	const badgeVariant = statusVariant[slot.status] ?? "secondary";
+
 	return (
 		<Item variant="outline">
 			<ItemMedia variant="icon">
@@ -60,7 +71,7 @@ function SessionRow({ slot }: { slot: SlotRecord }) {
 				<ItemTitle>
 					<FetchLesson
 						id={slot.lessonId}
-						isPending={<Skeleton lines={1} />}
+						isPending={<Skeleton className="h-4 w-32" />}
 						notFound={<span>Untitled session</span>}
 					>
 						{(lesson) => <span>{lesson.name}</span>}
@@ -72,9 +83,7 @@ function SessionRow({ slot }: { slot: SlotRecord }) {
 				</ItemDescription>
 			</ItemContent>
 			<ItemActions>
-				<Badge tone={statusTone[slot.status] ?? "neutral"}>
-					{snakeToTitleCase(slot.status)}
-				</Badge>
+				<Badge variant={badgeVariant}>{snakeToTitleCase(slot.status)}</Badge>
 			</ItemActions>
 		</Item>
 	);
@@ -91,8 +100,11 @@ export default function Page() {
 
 	if (isError) {
 		return (
-			<Alert tone="danger" title="Sessions Unavailable">
-				Your sessions could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Sessions Unavailable</AlertTitle>
+				<AlertDescription>
+					Your sessions could not be loaded.
+				</AlertDescription>
 			</Alert>
 		);
 	}
@@ -112,19 +124,23 @@ export default function Page() {
 		);
 	const next = upcoming[0];
 
+	const nextBadgeVariant = next
+		? (statusVariant[next.status] ?? "secondary")
+		: "secondary";
+
 	return (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			<Card>
 				<CardHeader>
 					<CardTitle>Next Session</CardTitle>
 					<CardDescription>Your next booked slot</CardDescription>
-					{next && (
+					{next ? (
 						<CardAction>
-							<Badge tone={statusTone[next.status] ?? "neutral"}>
+							<Badge variant={nextBadgeVariant}>
 								{snakeToTitleCase(next.status)}
 							</Badge>
 						</CardAction>
-					)}
+					) : null}
 				</CardHeader>
 				<CardContent>
 					{next ? (
@@ -155,7 +171,7 @@ export default function Page() {
 									<ItemTitle>Lesson</ItemTitle>
 									<FetchLesson
 										id={next.lessonId}
-										isPending={<Skeleton lines={1} />}
+										isPending={<Skeleton className="h-4 w-32" />}
 										notFound={
 											<ItemDescription>Untitled session</ItemDescription>
 										}
@@ -175,7 +191,7 @@ export default function Page() {
 									<ItemTitle>Teacher</ItemTitle>
 									<FetchUser
 										id={next.teacherId}
-										isPending={<Skeleton lines={1} />}
+										isPending={<Skeleton className="h-4 w-32" />}
 										notFound={<ItemDescription>Not assigned</ItemDescription>}
 									>
 										{(teacher) => (
@@ -197,22 +213,30 @@ export default function Page() {
 									</ItemDescription>
 								</ItemContent>
 								<ItemActions>
-									<ArcButton
-										link={`/call/${next.id}`}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										Open Call
-									</ArcButton>
+									<Button asChild>
+										<Link
+											href={`/call/${next.id}` as "/"}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											Open Call
+										</Link>
+									</Button>
 								</ItemActions>
 							</Item>
 						</ItemGroup>
 					) : (
-						<EmptyState
-							icon={<CalendarClockIcon />}
-							title="No upcoming session"
-							description="You have no session booked right now."
-						/>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<CalendarClockIcon />
+								</EmptyMedia>
+								<EmptyTitle>No upcoming session</EmptyTitle>
+								<EmptyDescription>
+									You have no session booked right now.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
 					)}
 				</CardContent>
 			</Card>
@@ -230,11 +254,17 @@ export default function Page() {
 							))}
 						</ItemGroup>
 					) : (
-						<EmptyState
-							icon={<CalendarChevronsRightIcon />}
-							title="Nothing scheduled"
-							description="New bookings from your scheduler will show up here."
-						/>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<CalendarChevronsRightIcon />
+								</EmptyMedia>
+								<EmptyTitle>Nothing scheduled</EmptyTitle>
+								<EmptyDescription>
+									New bookings from your scheduler will show up here.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
 					)}
 				</CardContent>
 			</Card>
@@ -252,11 +282,17 @@ export default function Page() {
 							))}
 						</ItemGroup>
 					) : (
-						<EmptyState
-							icon={<CalendarFoldIcon />}
-							title="No past sessions"
-							description="Sessions you complete will show up here."
-						/>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<CalendarFoldIcon />
+								</EmptyMedia>
+								<EmptyTitle>No past sessions</EmptyTitle>
+								<EmptyDescription>
+									Sessions you complete will show up here.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
 					)}
 				</CardContent>
 			</Card>

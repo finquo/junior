@@ -2,8 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { GraduationCapIcon, PackageIcon } from "lucide-react";
-import { Alert } from "@/components/arc/alert/alert";
-import { Badge } from "@/components/arc/badge/badge";
+import Loader from "@/components/loader";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
 	Card,
 	CardAction,
@@ -11,8 +12,14 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { EmptyState } from "@/components/arc/empty-state/empty-state";
+} from "@/components/ui/card";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import {
 	Item,
 	ItemActions,
@@ -20,8 +27,7 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import Loader from "@/components/loader";
+} from "@/components/ui/item";
 import { api } from "@/hooks/api";
 
 export default function Page() {
@@ -38,8 +44,9 @@ export default function Page() {
 
 	if (isProgramError) {
 		return (
-			<Alert tone="danger" title="Program Unavailable">
-				Your program could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Program Unavailable</AlertTitle>
+				<AlertDescription>Your program could not be loaded.</AlertDescription>
 			</Alert>
 		);
 	}
@@ -48,22 +55,33 @@ export default function Page() {
 
 	if (!program)
 		return (
-			<EmptyState
-				icon={<GraduationCapIcon />}
-				title="No program assigned"
-				description="You will see your program here once one has been assigned to you."
-			/>
+			<Empty>
+				<EmptyHeader>
+					<EmptyMedia variant="icon">
+						<GraduationCapIcon />
+					</EmptyMedia>
+					<EmptyTitle>No program assigned</EmptyTitle>
+					<EmptyDescription>
+						You will see your program here once one has been assigned to you.
+					</EmptyDescription>
+				</EmptyHeader>
+			</Empty>
 		);
+
+	const lessonCountLabel = (count: number) => {
+		if (count === 1) return "lesson";
+		return "lessons";
+	};
 
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>{program.name}</CardTitle>
-				{program.description && (
+				{program.description ? (
 					<CardDescription>{program.description}</CardDescription>
-				)}
+				) : null}
 				<CardAction>
-					<Badge tone="neutral">
+					<Badge variant="secondary">
 						{attendedCount} of {lessons.length} lessons attended
 					</Badge>
 				</CardAction>
@@ -79,9 +97,9 @@ export default function Page() {
 								<ItemTitle>{material.name}</ItemTitle>
 							</ItemContent>
 							<ItemActions>
-								<Badge tone="neutral">
+								<Badge variant="secondary">
 									{material.lessons.length}{" "}
-									{material.lessons.length === 1 ? "lesson" : "lessons"}
+									{lessonCountLabel(material.lessons.length)}
 								</Badge>
 							</ItemActions>
 						</Item>

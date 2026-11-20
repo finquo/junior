@@ -1,20 +1,20 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import Aurora from "@/components/bits/aurora";
+import { Container } from "@/components/container";
+import Loader from "@/components/loader";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { Container } from "@/components/container";
-import Loader from "@/components/loader";
+} from "@/components/ui/card";
 import { useAuth } from "@/hooks/auth";
 import { StudentDock } from "./_components/dock";
-import "@/components/arc/foundation.css";
-import Aurora from "@/components/bits/aurora";
 
 function AuthError({
 	title,
@@ -23,7 +23,6 @@ function AuthError({
 	title: string;
 	description: string;
 }) {
-	const router = useRouter();
 	const pathname = usePathname();
 	const loginHref = `/login?redirect_to=${encodeURIComponent(pathname)}`;
 
@@ -33,20 +32,13 @@ function AuthError({
 				<CardTitle>{title}</CardTitle>
 				<CardDescription>{description}</CardDescription>
 			</CardHeader>
-			<CardFooter style={{ justifyContent: "flex-end" }}>
-				<ArcButton
-					variant="secondary"
-					link="/"
-					onClick={() => router.push("/")}
-				>
-					Go to Home
-				</ArcButton>
-				<ArcButton
-					link={loginHref}
-					onClick={() => router.push(loginHref as "/")}
-				>
-					Go to Login
-				</ArcButton>
+			<CardFooter className="justify-end">
+				<Button asChild variant="secondary">
+					<Link href="/">Go to Home</Link>
+				</Button>
+				<Button asChild>
+					<Link href={loginHref as "/"}>Go to Login</Link>
+				</Button>
 			</CardFooter>
 		</Card>
 	);

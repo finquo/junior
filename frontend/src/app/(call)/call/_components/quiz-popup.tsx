@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import {
 	Dialog,
 	DialogContent,
-	DialogInner,
-} from "@/components/arc/dialog/dialog";
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { RenderWhenRole } from "@/hooks/role";
 import { useCall } from "./hooks";
 import { parseQuizMessage, QuizMessageCard } from "./quiz-message";
@@ -50,13 +52,14 @@ export function QuizPopup() {
 				}}
 			>
 				{quiz && (
-					<DialogContent
-						title="New quiz"
-						description="A quiz was sent in the chat. You can also find it there."
-					>
-						<DialogInner>
-							<QuizMessageCard message={quiz} onSend={sendChat} />
-						</DialogInner>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>New quiz</DialogTitle>
+							<DialogDescription>
+								A quiz was sent in the chat. You can also find it there.
+							</DialogDescription>
+						</DialogHeader>
+						<QuizMessageCard message={quiz} onSend={sendChat} />
 					</DialogContent>
 				)}
 			</Dialog>

@@ -12,9 +12,9 @@ import {
 	UserXIcon,
 } from "lucide-react";
 import type { ReactElement } from "react";
-import { Avatar } from "@/components/arc/avatar/avatar";
-import { Badge } from "@/components/arc/badge/badge";
 import { Frame } from "@/components/reui/frame";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -41,6 +41,16 @@ export type TileMenu = {
 	onMute: () => void;
 	onRemove: () => void;
 };
+
+function getInitials(name: string) {
+	return name
+		.split(" ")
+		.filter(Boolean)
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
+}
 
 function RemoteUserMenu({ user, menu }: { user: SessionUser; menu: TileMenu }) {
 	const name = participantName(user);
@@ -92,20 +102,17 @@ function TileLabels({
 	role: string;
 	inline: boolean;
 }) {
+	const labelClassName = inline
+		? "flex items-center gap-1.5"
+		: "flex flex-col items-start gap-1";
+	const roleClassName = inline
+		? "text-muted-foreground"
+		: "text-muted-foreground text-xs";
+
 	return (
-		<span
-			className={
-				inline ? "flex items-center gap-1.5" : "flex flex-col items-start gap-1"
-			}
-		>
+		<span className={labelClassName}>
 			<span className="font-medium text-sm">{name}</span>
-			<span
-				className={
-					inline ? "text-muted-foreground" : "text-muted-foreground text-xs"
-				}
-			>
-				{roleLabel(role)}
-			</span>
+			<span className={roleClassName}>{roleLabel(role)}</span>
 		</span>
 	);
 }
@@ -175,30 +182,30 @@ export function VideoTile({
 	const voice = voiceOn ?? isVoiceOn(user);
 	const video = videoOn ?? user.bVideoOn;
 	const name = participantName(user);
+	const VoiceIcon = voice ? MicIcon : MicOffIcon;
+	const showInlineLabel = video && !self;
+	const mirrorStyle = self ? { transform: "scaleX(-1)" } : undefined;
 
 	return (
 		<Frame className={cn("overflow-hidden p-0", className)}>
 			<div className="relative aspect-video">
-				<VideoPlayerContainerComponent
-					style={{ transform: self ? "scaleX(-1)" : undefined }}
-				>
+				<VideoPlayerContainerComponent style={mirrorStyle}>
 					<VideoPlayerComponent user={user} />
 				</VideoPlayerContainerComponent>
 				{!video && (
 					<div className="absolute inset-0">
 						<div className="flex size-full flex-row items-center justify-center gap-3">
-							<Avatar name={name} src={avatar} size="lg" />
+							<Avatar size="lg">
+								<AvatarImage src={avatar} alt={name} />
+								<AvatarFallback>{getInitials(name)}</AvatarFallback>
+							</Avatar>
 							<TileLabel user={user} role={role} />
 						</div>
 					</div>
 				)}
-				<Badge
-					tone="neutral"
-					pill
-					icon={voice ? <MicIcon /> : <MicOffIcon />}
-					className="absolute bottom-4 left-2"
-				>
-					{video && !self && <TileLabel user={user} role={role} inline />}
+				<Badge variant="outline" className="absolute bottom-2 left-2">
+					<VoiceIcon />
+					{showInlineLabel && <TileLabel user={user} role={role} inline />}
 				</Badge>
 				{menu && <RemoteUserMenu user={user} menu={menu} />}
 			</div>

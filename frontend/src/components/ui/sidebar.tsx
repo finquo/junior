@@ -260,7 +260,7 @@ function SidebarTrigger({
 		<Button
 			data-sidebar="trigger"
 			data-slot="sidebar-trigger"
-			variant="secondary"
+			variant="default"
 			size="icon-sm"
 			className={cn(className)}
 			onClick={(event) => {

@@ -8,6 +8,7 @@ import {
 import {
 	CctvIcon,
 	CctvOffIcon,
+	ChevronDownIcon,
 	ImageIcon,
 	ImageOffIcon,
 	InfoIcon,
@@ -27,27 +28,38 @@ import {
 	VideoOffIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import type React from "react";
 import { useState } from "react";
 import { ErrorAuthCardFooter } from "@/app/_components/login";
-import { Button as ArcButton } from "@/components/arc/button/button";
-import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogFooter,
-	DialogTrigger,
-} from "@/components/arc/dialog/dialog";
-import { SplitButton } from "@/components/arc/split-button/split-button";
 import { Container } from "@/components/container";
 import { FeedbackDialog } from "@/components/custom/feedback-dialog";
 import Loader from "@/components/loader";
 import { Frame, FramePanel } from "@/components/reui/frame";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
 	Card,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ChatDrawer } from "./chat-drawer";
@@ -209,14 +221,21 @@ function CallView({
 		onSelect: () => setTheme(resolvedTheme === "light" ? "dark" : "light"),
 	};
 
-	const microphoneActions = call.micDevices.length
+	type MenuAction = {
+		label: string;
+		icon?: React.ReactNode;
+		onSelect?: () => void;
+		disabled?: boolean;
+	};
+
+	const microphoneActions: MenuAction[] = call.micDevices.length
 		? call.micDevices.map((device) => ({
 				label: device.label || "Default microphone",
 				onSelect: () => void call.switchMicrophone(device.deviceId),
 			}))
 		: [{ label: "No microphone found", disabled: true }];
 
-	const cameraActions = [
+	const cameraActions: MenuAction[] = [
 		{
 			label: "Flip camera",
 			icon: <SwitchCameraIcon />,
@@ -321,76 +340,157 @@ function CallView({
 				</div>
 
 				<div className="absolute bottom-8 left-1/2 z-10 flex w-screen -translate-x-1/2 flex-wrap justify-center gap-2 px-2">
-					<SplitButton
-						label={call.isAudioOn ? "Microphone on" : "Microphone off"}
-						icon={call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
-						variant={call.isAudioOn ? "success" : "secondary"}
+					<ButtonGroup
+						style={
+							call.isAudioOn
+								? {
+										borderRadius: 30,
+										outlineStyle: "solid",
+										outlineColor: "var(--primary)",
+										outlineOffset: Math.round(call.micLevel * 10),
+									}
+								: undefined
+						}
+					>
+						<Button
+							variant={call.isAudioOn ? "default" : "outline"}
+							size={controlSize}
+							onClick={() => void call.toggleMicrophone()}
+						>
+							{call.isAudioOn ? <MicIcon /> : <MicOffIcon />}
+							{call.isAudioOn ? "Microphone on" : "Microphone off"}
+						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant={call.isAudioOn ? "default" : "outline"}
+									size={controlSize}
+									aria-label={`${call.isAudioOn ? "Microphone on" : "Microphone off"} more actions`}
+								>
+									<ChevronDownIcon />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{microphoneActions.map((action) => (
+									<DropdownMenuItem
+										key={action.label}
+										disabled={action.disabled}
+										onSelect={action.onSelect}
+									>
+										{action.label}
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</ButtonGroup>
+					<ButtonGroup>
+						<Button
+							variant={call.isVideoOn ? "default" : "outline"}
+							size={controlSize}
+							onClick={() => void call.setCameraOn(!call.isVideoOn)}
+						>
+							{call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
+							{call.isVideoOn ? "Camera on" : "Camera off"}
+						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant={call.isVideoOn ? "default" : "outline"}
+									size={controlSize}
+									aria-label={`${call.isVideoOn ? "Camera on" : "Camera off"} more actions`}
+								>
+									<ChevronDownIcon />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{cameraActions.map((action) => (
+									<DropdownMenuItem
+										key={action.label}
+										disabled={action.disabled}
+										onSelect={action.onSelect}
+									>
+										{action.icon}
+										{action.label}
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</ButtonGroup>
+					<Button
 						size={controlSize}
-						style={{
-							boxShadow: speaking
-								? `0 0 ${8 + Math.round(call.micLevel * 20)}px var(--success)`
-								: undefined,
-						}}
-						onClick={() => void call.toggleMicrophone()}
-						actions={microphoneActions}
-					/>
-					<SplitButton
-						label={call.isVideoOn ? "Camera on" : "Camera off"}
-						icon={call.isVideoOn ? <VideoIcon /> : <VideoOffIcon />}
-						variant={call.isVideoOn ? "success" : "secondary"}
-						size={controlSize}
-						onClick={() => void call.setCameraOn(!call.isVideoOn)}
-						actions={cameraActions}
-					/>
-					<ArcButton
-						size={controlSize}
-						variant={call.isScreensharing ? "success" : "secondary"}
-						loading={call.screensharePending}
+						variant={call.isScreensharing ? "default" : "outline"}
+						disabled={call.screensharePending}
+						aria-busy={call.screensharePending || undefined}
 						onClick={() => void call.toggleScreenshare()}
 					>
-						{call.isScreensharing ? <MonitorDot /> : <MonitorOff />}
+						{call.screensharePending ? (
+							<Spinner />
+						) : call.isScreensharing ? (
+							<MonitorDot />
+						) : (
+							<MonitorOff />
+						)}
 						{call.isScreensharing ? "Screen sharing on" : "Screen sharing off"}
-					</ArcButton>
+					</Button>
 					{canRecord && (
-						<ArcButton
+						<Button
 							size={controlSize}
-							variant={call.isRecording ? "success" : "secondary"}
-							loading={call.recordingPending}
+							variant={call.isRecording ? "default" : "outline"}
+							disabled={call.recordingPending}
+							aria-busy={call.recordingPending || undefined}
 							onClick={() => void call.toggleRecording()}
 						>
-							{call.isRecording ? <CctvIcon /> : <CctvOffIcon />}
+							{call.recordingPending ? (
+								<Spinner />
+							) : call.isRecording ? (
+								<CctvIcon />
+							) : (
+								<CctvOffIcon />
+							)}
 							{call.isRecording ? "Recording on" : "Recording off"}
-						</ArcButton>
+						</Button>
 					)}
-					<SplitButton
-						label="Chat"
-						icon={<MessageSquareIcon />}
-						variant="secondary"
-						size={controlSize}
-						onClick={() => setDrawer("chat")}
-						actions={[
-							{
-								label: "Participants",
-								icon: <UsersIcon />,
-								onSelect: () => setDrawer("participants"),
-							},
-							...(hasDetails
-								? [
-										{
-											label: "Meeting details",
-											icon: <InfoIcon />,
-											onSelect: () => setDrawer("details"),
-										},
-									]
-								: []),
-							{
-								label: "Send feedback",
-								icon: <MessageSquarePlusIcon />,
-								onSelect: () => setFeedbackOpen(true),
-							},
-							themeAction,
-						]}
-					/>
+					<ButtonGroup>
+						<Button
+							variant="outline"
+							size={controlSize}
+							onClick={() => setDrawer("chat")}
+						>
+							<MessageSquareIcon />
+							Chat
+						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="outline"
+									size={controlSize}
+									aria-label="Chat more actions"
+								>
+									<ChevronDownIcon />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onSelect={() => setDrawer("participants")}>
+									<UsersIcon />
+									Participants
+								</DropdownMenuItem>
+								{hasDetails && (
+									<DropdownMenuItem onSelect={() => setDrawer("details")}>
+										<InfoIcon />
+										Meeting details
+									</DropdownMenuItem>
+								)}
+								<DropdownMenuItem onSelect={() => setFeedbackOpen(true)}>
+									<MessageSquarePlusIcon />
+									Send feedback
+								</DropdownMenuItem>
+								<DropdownMenuItem onSelect={themeAction.onSelect}>
+									{themeAction.icon}
+									{themeAction.label}
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</ButtonGroup>
 					<ChatDrawer
 						open={drawer === "chat"}
 						onOpenChange={(open) => setDrawer(open ? "chat" : null)}
@@ -404,50 +504,57 @@ function CallView({
 					{canEndMeeting && (
 						<Dialog>
 							<DialogTrigger asChild>
-								<ArcButton size={controlSize} variant="danger">
+								<Button size={controlSize} variant="destructive">
 									<PhoneOffIcon />
 									End for all
-								</ArcButton>
+								</Button>
 							</DialogTrigger>
-							<DialogContent
-								title="End meeting for all?"
-								description="Everyone will be disconnected immediately. This cannot be undone."
-							>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>End meeting for all?</DialogTitle>
+									<DialogDescription>
+										Everyone will be disconnected immediately. This cannot be
+										undone.
+									</DialogDescription>
+								</DialogHeader>
 								<DialogFooter>
 									<DialogClose asChild>
-										<ArcButton variant="secondary">Cancel</ArcButton>
+										<Button variant="outline">Cancel</Button>
 									</DialogClose>
-									<ArcButton
-										variant="danger"
+									<Button
+										variant="destructive"
 										onClick={() => void call.endMeeting()}
 									>
 										End meeting
-									</ArcButton>
+									</Button>
 								</DialogFooter>
 							</DialogContent>
 						</Dialog>
 					)}
 					<Dialog>
 						<DialogTrigger asChild>
-							<ArcButton size={controlSize} variant="danger">
+							<Button size={controlSize} variant="destructive">
 								<LogOutIcon />
 								Leave
-							</ArcButton>
+							</Button>
 						</DialogTrigger>
-						<DialogContent
-							title="Leave the meeting?"
-							description="You can rejoin while the meeting is still live."
-						>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Leave the meeting?</DialogTitle>
+								<DialogDescription>
+									You can rejoin while the meeting is still live.
+								</DialogDescription>
+							</DialogHeader>
 							<DialogFooter>
 								<DialogClose asChild>
-									<ArcButton variant="secondary">Stay</ArcButton>
+									<Button variant="outline">Stay</Button>
 								</DialogClose>
-								<ArcButton
-									variant="danger"
+								<Button
+									variant="destructive"
 									onClick={() => void call.leaveMeeting()}
 								>
 									Leave
-								</ArcButton>
+								</Button>
 							</DialogFooter>
 						</DialogContent>
 					</Dialog>

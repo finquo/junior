@@ -4,13 +4,18 @@ import { useForm } from "@tanstack/react-form";
 import { MessageCircleDashedIcon, PlusIcon, SendIcon } from "lucide-react";
 import { useRef } from "react";
 import { z } from "zod";
-import { Avatar } from "@/components/arc/avatar/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bubble, BubbleContent, BubbleHeader } from "@/components/ui/bubble";
 import {
 	Drawer,
 	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerInner,
+	DrawerSwipeHandle,
+	DrawerTitle,
 	DrawerTrigger,
-} from "@/components/arc/drawer/drawer";
-import { Bubble, BubbleContent, BubbleHeader } from "@/components/ui/bubble";
+} from "@/components/ui/drawer";
 import {
 	Empty,
 	EmptyDescription,
@@ -52,6 +57,16 @@ import {
 import { QuizPicker } from "./quiz-picker";
 import { isGuestId, roleLabel } from "./utils";
 
+function getInitials(name: string) {
+	return name
+		.split(" ")
+		.filter(Boolean)
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
+}
+
 function SenderLabel({
 	name,
 	userRole,
@@ -64,7 +79,10 @@ function SenderLabel({
 	return (
 		<Tooltip>
 			<TooltipTrigger className="flex items-center gap-1">
-				<Avatar name={name} src={image ?? undefined} size="sm" />
+				<Avatar size="sm">
+					<AvatarImage src={image} alt={name} />
+					<AvatarFallback>{getInitials(name)}</AvatarFallback>
+				</Avatar>
 				{name}
 			</TooltipTrigger>
 			<TooltipContent>{roleLabel(userRole)}</TooltipContent>
@@ -137,137 +155,140 @@ export function ChatDrawer({
 				if (next) markChatRead();
 				onOpenChange?.(next);
 			}}
+			direction={side}
 		>
 			{children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
-			<DrawerContent
-				title="Chat"
-				description="Messages are visible to everyone in this session."
-				side={side}
-				style={heightStyle}
-				bodyClassName="flex flex-col gap-2"
-			>
-				{messages.length === 0 && (
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<MessageCircleDashedIcon />
-							</EmptyMedia>
-							<EmptyTitle>No messages yet</EmptyTitle>
-							<EmptyDescription>Say hello to everyone.</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
-				)}
-				<MessageScrollerProvider autoScroll>
-					<MessageScroller className="flex-1">
-						<MessageScrollerViewport>
-							<MessageScrollerContent className="gap-2">
-								{messages.map((message, index) => {
-									const isMine = message.senderId === myUserId;
-									const align = isMine ? "end" : "start";
-									const variant = isMine ? "muted" : "default";
+			<DrawerContent style={heightStyle}>
+				<DrawerSwipeHandle />
+				<DrawerHeader>
+					<DrawerTitle>Chat</DrawerTitle>
+					<DrawerDescription>
+						Messages are visible to everyone in this session.
+					</DrawerDescription>
+				</DrawerHeader>
+				<DrawerInner className="flex flex-col gap-2">
+					{messages.length === 0 && (
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<MessageCircleDashedIcon />
+								</EmptyMedia>
+								<EmptyTitle>No messages yet</EmptyTitle>
+								<EmptyDescription>Say hello to everyone.</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					)}
+					<MessageScrollerProvider autoScroll>
+						<MessageScroller className="flex-1">
+							<MessageScrollerViewport>
+								<MessageScrollerContent className="gap-2">
+									{messages.map((message, index) => {
+										const isMine = message.senderId === myUserId;
+										const align = isMine ? "end" : "start";
+										const variant = isMine ? "muted" : "default";
 
-									const quiz = parseQuizMessage(message.text);
-									const answer = parseQuizAnswerMessage(message.text);
-									const identity = participants.find(
-										(participant) =>
-											participant.userId.toString() === message.senderId,
-									)?.userIdentity;
+										const quiz = parseQuizMessage(message.text);
+										const answer = parseQuizAnswerMessage(message.text);
+										const identity = participants.find(
+											(participant) =>
+												participant.userId.toString() === message.senderId,
+										)?.userIdentity;
 
-									const showDetails =
-										!isMine &&
-										messages[index - 1]?.senderId !== message.senderId;
+										const showDetails =
+											!isMine &&
+											messages[index - 1]?.senderId !== message.senderId;
 
-									const bubble = quiz ? (
-										<QuizMessageCard message={quiz} onSend={onSend} />
-									) : answer ? (
-										<QuizAnswerCard message={answer} />
-									) : (
-										message.text
-									);
-
-									return (
-										<MessageScrollerItem
-											key={message.id}
-											messageId={message.id}
-										>
-											<Message align={align}>
-												<MessageContent>
-													<Bubble align={align} variant={variant}>
-														{showDetails && (
-															<BubbleHeader>
-																<ChatSender
-																	name={message.senderName}
-																	identity={identity}
-																/>
-															</BubbleHeader>
-														)}
-														<BubbleContent>{bubble}</BubbleContent>
-													</Bubble>
-												</MessageContent>
-											</Message>
-										</MessageScrollerItem>
-									);
-								})}
-							</MessageScrollerContent>
-						</MessageScrollerViewport>
-						<MessageScrollerButton />
-					</MessageScroller>
-				</MessageScrollerProvider>
-				<form
-					ref={formRef}
-					onSubmit={(event) => {
-						event.preventDefault();
-						void form.handleSubmit();
-					}}
-				>
-					<form.Field
-						name="text"
-						children={(field) => (
-							<InputGroup>
-								<InputGroupTextarea
-									id={field.name}
-									name={field.name}
-									value={field.state.value ?? ""}
-									onBlur={field.handleBlur}
-									onChange={(event) => field.handleChange(event.target.value)}
-									placeholder="Type a message..."
-									aria-label="Message"
-									onKeyDown={(event) => {
-										if (event.key === "Enter" && !event.shiftKey) {
-											event.preventDefault();
-											formRef.current?.requestSubmit();
+										let bubble: React.ReactNode = message.text;
+										if (quiz) {
+											bubble = <QuizMessageCard message={quiz} onSend={onSend} />;
+										} else if (answer) {
+											bubble = <QuizAnswerCard message={answer} />;
 										}
-									}}
-								/>
-								<InputGroupAddon align="block-end">
-									{slotId && (
-										<RenderWhenRole role={["teacher", "scheduler", "admin"]}>
-											<QuizPicker slotId={slotId} onSend={onSend}>
-												<InputGroupButton
-													type="button"
-													variant="outline"
-													size="icon-sm"
-													aria-label="Add"
-												>
-													<PlusIcon />
-												</InputGroupButton>
-											</QuizPicker>
-										</RenderWhenRole>
-									)}
-									<InputGroupButton
-										type="submit"
-										variant="default"
-										size="icon-sm"
-										className="ml-auto"
-										aria-label="Send"
-									>
-										<SendIcon />
-									</InputGroupButton>
-								</InputGroupAddon>
-							</InputGroup>
-						)}
-					/>
-				</form>
+
+										return (
+											<MessageScrollerItem
+												key={message.id}
+												messageId={message.id}
+											>
+												<Message align={align}>
+													<MessageContent>
+														<Bubble align={align} variant={variant}>
+															{showDetails && (
+																<BubbleHeader>
+																	<ChatSender
+																		name={message.senderName}
+																		identity={identity}
+																	/>
+																</BubbleHeader>
+															)}
+															<BubbleContent>{bubble}</BubbleContent>
+														</Bubble>
+													</MessageContent>
+												</Message>
+											</MessageScrollerItem>
+										);
+									})}
+								</MessageScrollerContent>
+							</MessageScrollerViewport>
+							<MessageScrollerButton />
+						</MessageScroller>
+					</MessageScrollerProvider>
+					<form
+						ref={formRef}
+						onSubmit={(event) => {
+							event.preventDefault();
+							void form.handleSubmit();
+						}}
+					>
+						<form.Field
+							name="text"
+							children={(field) => (
+								<InputGroup>
+									<InputGroupTextarea
+										id={field.name}
+										name={field.name}
+										value={field.state.value ?? ""}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="Type a message..."
+										aria-label="Message"
+										onKeyDown={(event) => {
+											if (event.key === "Enter" && !event.shiftKey) {
+												event.preventDefault();
+												formRef.current?.requestSubmit();
+											}
+										}}
+									/>
+									<InputGroupAddon align="block-end">
+										{slotId && (
+											<RenderWhenRole role={["teacher", "scheduler", "admin"]}>
+												<QuizPicker slotId={slotId} onSend={onSend}>
+													<InputGroupButton
+														type="button"
+														variant="outline"
+														size="icon-sm"
+														aria-label="Add"
+													>
+														<PlusIcon />
+													</InputGroupButton>
+												</QuizPicker>
+											</RenderWhenRole>
+										)}
+										<InputGroupButton
+											type="submit"
+											variant="default"
+											size="icon-sm"
+											className="ml-auto"
+											aria-label="Send"
+										>
+											<SendIcon />
+										</InputGroupButton>
+									</InputGroupAddon>
+								</InputGroup>
+							)}
+						/>
+					</form>
+				</DrawerInner>
 			</DrawerContent>
 		</Drawer>
 	);

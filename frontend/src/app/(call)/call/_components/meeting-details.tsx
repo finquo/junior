@@ -10,16 +10,19 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { getRangeTime } from "utils";
-import { Alert } from "@/components/arc/alert/alert";
-import { Badge, type BadgeTone } from "@/components/arc/badge/badge";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerFooter,
+	DrawerHeader,
 	DrawerInner,
-} from "@/components/arc/drawer/drawer";
+	DrawerTitle,
+} from "@/components/ui/drawer";
 import {
 	Item,
 	ItemContent,
@@ -27,7 +30,7 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
+} from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { FetchLesson } from "@/hooks/lesson";
@@ -37,12 +40,15 @@ import { snakeToTitleCase } from "@/lib/utils";
 
 type SlotData = NonNullable<API_Returns["core"]["slot"]["get"]>;
 
-const statusTone: Record<string, BadgeTone> = {
+const statusVariant: Record<
+	string,
+	"info" | "success" | "warning" | "destructive" | "secondary"
+> = {
 	scheduled: "info",
 	started: "success",
 	rescheduled: "warning",
-	request_reschedule: "danger",
-	attended: "neutral",
+	request_reschedule: "destructive",
+	attended: "secondary",
 };
 
 function formatDateTime(value: Date | string | null | undefined) {
@@ -172,7 +178,7 @@ function DetailsContent({ data }: { data: SlotData }) {
 									<ItemTitle>{lesson.name}</ItemTitle>
 									<ItemDescription>{lesson.description}</ItemDescription>
 								</ItemContent>
-								<Badge tone={statusTone[data.status] ?? "neutral"}>
+								<Badge variant={statusVariant[data.status] ?? "secondary"}>
 									{snakeToTitleCase(data.status)}
 								</Badge>
 							</Item>
@@ -248,8 +254,11 @@ function DetailsBody({ slotId }: { slotId: string }) {
 
 	if (isError || !data) {
 		return (
-			<Alert tone="danger" title="Meeting details unavailable">
-				The details for this session could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Meeting details unavailable</AlertTitle>
+				<AlertDescription>
+					The details for this session could not be loaded.
+				</AlertDescription>
 			</Alert>
 		);
 	}
@@ -268,24 +277,31 @@ export function MeetingDetails({
 }) {
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
-			<DrawerContent
-				title="Meeting details"
-				description="Session schedule, lesson, and participants."
-				bodyClassName="flex flex-col gap-2"
-			>
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle>Meeting details</DrawerTitle>
+					<DrawerDescription>
+						Session schedule, lesson, and participants.
+					</DrawerDescription>
+				</DrawerHeader>
 				<DrawerInner className="flex flex-col gap-2">
-					<Alert title="Recording">
-						This session is automatically recorded
+					<Alert>
+						<AlertTitle>Recording</AlertTitle>
+						<AlertDescription>
+							This session is automatically recorded
+						</AlertDescription>
 					</Alert>
 					<DetailsBody slotId={slotId} />
 				</DrawerInner>
 				<DrawerFooter>
-					<ArcButton link={`/slots/${slotId}`} target="_blank" rel="noreferrer">
-						<ExternalLinkIcon />
-						Open Session Details
-					</ArcButton>
+					<Button asChild>
+						<a href={`/slots/${slotId}`} target="_blank" rel="noreferrer">
+							<ExternalLinkIcon />
+							Open Session Details
+						</a>
+					</Button>
 					<DrawerClose asChild>
-						<ArcButton variant="secondary">Close</ArcButton>
+						<Button variant="outline">Close</Button>
 					</DrawerClose>
 				</DrawerFooter>
 			</DrawerContent>

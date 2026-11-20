@@ -2,8 +2,9 @@
 
 import { MessageSquarePlusIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect } from "react";
-import { Alert } from "@/components/arc/alert/alert";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -11,8 +12,7 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { FeedbackDialog } from "@/components/custom/feedback-dialog";
+} from "@/components/ui/card";
 import { CallAuthButton } from "./call-auth-button";
 
 export type CallNoticeStatus = "not_found" | "upcoming" | "ended" | "error";
@@ -66,6 +66,8 @@ export function CallNotice({
 		return () => clearInterval(interval);
 	}, [onRefresh, status]);
 
+	const refreshAction = onRefresh ?? (() => window.location.reload());
+
 	return (
 		<Card>
 			<CardHeader>
@@ -74,29 +76,29 @@ export function CallNotice({
 			</CardHeader>
 			<CardContent>
 				{error ? (
-					<Alert tone="danger" title={error.name || "Error"}>
-						{error.message}
+					<Alert variant="destructive">
+						<AlertTitle>{error.name || "Error"}</AlertTitle>
+						<AlertDescription>{error.message}</AlertDescription>
 					</Alert>
 				) : (
-					<Alert title={notice.alert} />
+					<Alert>
+						<AlertTitle>{notice.alert}</AlertTitle>
+					</Alert>
 				)}
 			</CardContent>
-			<CardFooter style={{ justifyContent: "flex-end" }}>
+			<CardFooter className="justify-end">
 				{reference && (
 					<FeedbackDialog type="join" reference={reference}>
-						<ArcButton variant="secondary">
+						<Button variant="secondary">
 							<MessageSquarePlusIcon />
 							Report an issue
-						</ArcButton>
+						</Button>
 					</FeedbackDialog>
 				)}
-				<ArcButton
-					variant="secondary"
-					onClick={onRefresh ?? (() => window.location.reload())}
-				>
+				<Button variant="secondary" onClick={refreshAction}>
 					<RefreshCwIcon />
 					Refresh
-				</ArcButton>
+				</Button>
 				<CallAuthButton />
 			</CardFooter>
 		</Card>

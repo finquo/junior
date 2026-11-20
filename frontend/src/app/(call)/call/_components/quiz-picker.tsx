@@ -3,17 +3,19 @@
 import { useQuery } from "@tanstack/react-query";
 import type { QuizMessage } from "backend/config";
 import { useState } from "react";
-import { Button as ArcButton } from "@/components/arc/button/button";
-import { Checkbox } from "@/components/arc/checkbox/checkbox";
+import { QuizList } from "@/components/custom/quiz";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogClose,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
-	DialogInner,
+	DialogHeader,
+	DialogTitle,
 	DialogTrigger,
-} from "@/components/arc/dialog/dialog";
-import { QuizList } from "@/components/custom/quiz";
+} from "@/components/ui/dialog";
 import { api } from "@/hooks/api";
 
 export function QuizPicker({
@@ -51,52 +53,54 @@ export function QuizPicker({
 	}
 
 	function toggle(id: string, checked: boolean) {
-		setSelected((current) =>
-			checked ? [...current, id] : current.filter((value) => value !== id),
-		);
+		setSelected((current) => {
+			if (checked) return [...current, id];
+			return current.filter((value) => value !== id);
+		});
 	}
 
 	return (
 		<Dialog>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent
-				title="Pick a quiz"
-				description="Choose the questions to send to the student in this session."
-			>
-				<DialogInner>
-					<QuizList
-						quiz={questions}
-						lessonId={lessonId ?? ""}
-						selector={(question) => (
-							<Checkbox
-								id={question.id}
-								aria-label={question.question}
-								checked={selected.includes(question.id)}
-								onCheckedChange={(checked) => toggle(question.id, !!checked)}
-							/>
-						)}
-					/>
-				</DialogInner>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Pick a quiz</DialogTitle>
+					<DialogDescription>
+						Choose the questions to send to the student in this session.
+					</DialogDescription>
+				</DialogHeader>
+				<QuizList
+					quiz={questions}
+					lessonId={lessonId ?? ""}
+					selector={(question) => (
+						<Checkbox
+							id={question.id}
+							aria-label={question.question}
+							checked={selected.includes(question.id)}
+							onCheckedChange={(checked) => toggle(question.id, !!checked)}
+						/>
+					)}
+				/>
 				<DialogFooter>
 					<DialogClose asChild>
-						<ArcButton variant="secondary">Close</ArcButton>
+						<Button variant="secondary">Close</Button>
 					</DialogClose>
 					<DialogClose asChild>
-						<ArcButton
+						<Button
 							variant="secondary"
 							disabled={questions.length === 0}
 							onClick={() => send(questions.map((question) => question.id))}
 						>
 							Send all
-						</ArcButton>
+						</Button>
 					</DialogClose>
 					<DialogClose asChild>
-						<ArcButton
+						<Button
 							disabled={selected.length === 0}
 							onClick={() => send(selected)}
 						>
 							Send
-						</ArcButton>
+						</Button>
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>

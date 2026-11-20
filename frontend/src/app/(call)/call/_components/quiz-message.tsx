@@ -5,15 +5,15 @@ import type { QuizAnswerMessage, QuizMessage } from "backend/config";
 import { quizAnswerMessageZod, quizMessageZod } from "backend/config";
 import { CheckIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { Alert } from "@/components/arc/alert/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import {
 	Item,
+	ItemActions,
 	ItemContent,
 	ItemDescription,
 	ItemGroup,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Skeleton } from "@/components/arc/skeleton/skeleton";
+} from "@/components/ui/item";
 import {
 	Questionnaire,
 	QuestionnaireActions,
@@ -29,6 +29,7 @@ import {
 	QuestionnaireSubmit,
 	QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { RenderWhenRole } from "@/hooks/role";
 
@@ -63,9 +64,22 @@ export function QuizMessageCard({
 		}),
 	);
 
-	if (isPending) return <Skeleton lines={2} className="w-full" />;
+	if (isPending) {
+		return (
+			<>
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-2/3" />
+			</>
+		);
+	}
 
-	if (!questions) return <Alert title="Questions not found" />;
+	if (!questions) {
+		return (
+			<Alert>
+				<AlertTitle>Questions not found</AlertTitle>
+			</Alert>
+		);
+	}
 
 	return (
 		<RenderWhenRole
@@ -244,7 +258,11 @@ function AnswerCheck({ chosen, label }: { chosen: boolean; label: string }) {
 			<ItemContent>
 				<ItemTitle>{label}</ItemTitle>
 			</ItemContent>
-			{chosen && <ItemDescription>{<CheckIcon />}</ItemDescription>}
+			{chosen && (
+				<ItemActions>
+					<CheckIcon />
+				</ItemActions>
+			)}
 		</Item>
 	);
 }
@@ -256,7 +274,7 @@ export function QuizAnswerCard({ message }: { message: QuizAnswerMessage }) {
 		}),
 	);
 
-	if (isPending) return <Skeleton lines={1} className="w-full" />;
+	if (isPending) return <Skeleton className="h-4 w-full" />;
 
 	const question = questions?.[0];
 	if (!question) return null;
