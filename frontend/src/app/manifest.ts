@@ -1,25 +1,21 @@
+import { socials } from "@/lib/social";
 import type { MetadataRoute } from "next";
 
 export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
 	return {
-		name: "app",
-		short_name: "app",
-		description: "my pwa app",
+		name: socials.name,
+		short_name: socials.name,
+		description: socials.description,
 		start_url: "/",
 		display: "standalone",
 		background_color: "#ffffff",
 		theme_color: "#000000",
 		icons: [
 			{
-				src: "/favicon/web-app-manifest-192x192.png",
-				sizes: "192x192",
-				type: "image/png",
-			},
-			{
-				src: "/favicon/web-app-manifest-512x512.png",
-				sizes: "512x512",
+				src: "/favicon.png",
+				sizes: "200x200",
 				type: "image/png",
 			},
 		],

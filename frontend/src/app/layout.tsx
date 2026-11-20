@@ -4,6 +4,7 @@ import "@/index.css";
 import type { Metadata } from "next";
 import { DM_Sans, Outfit } from "next/font/google";
 import { Suspense } from "react";
+import { socials } from "@/lib/social";
 import { cn } from "@/lib/utils";
 
 const outfitHeading = Outfit({
@@ -14,8 +15,36 @@ const outfitHeading = Outfit({
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-	title: "app",
-	description: "app",
+	metadataBase: new URL(socials.website),
+	title: {
+		default: socials.name,
+		template: `%s | ${socials.name}`,
+	},
+	description: socials.description,
+	applicationName: socials.name,
+	icons: { icon: "/favicon.png" },
+	keywords: [
+		socials.name,
+		socials.company,
+		"learning management",
+		"students",
+		"teachers",
+		"scheduling",
+	],
+	robots: { index: true, follow: true },
+	openGraph: {
+		type: "website",
+		locale: "en_US",
+		url: socials.website,
+		siteName: socials.name,
+		title: socials.name,
+		description: socials.description,
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: socials.name,
+		description: socials.description,
+	},
 };
 
 export default function RootLayout({
