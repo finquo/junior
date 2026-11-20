@@ -5,26 +5,35 @@ import { type Availability, dayKeys } from "backend/config";
 import { format } from "date-fns";
 import { langFlag, langName } from "language-emoji";
 import { BriefcaseBusinessIcon, PhoneIcon } from "lucide-react";
-import { Alert } from "@/components/arc/alert/alert";
-import { Avatar } from "@/components/arc/avatar/avatar";
-import { Badge } from "@/components/arc/badge/badge";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import Loader from "@/components/loader";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
+} from "@/components/ui/card";
 import {
 	Dialog,
 	DialogClose,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
-	DialogInner,
+	DialogHeader,
+	DialogTitle,
 	DialogTrigger,
-} from "@/components/arc/dialog/dialog";
-import { EmptyState } from "@/components/arc/empty-state/empty-state";
+} from "@/components/ui/dialog";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import {
 	Item,
 	ItemActions,
@@ -33,9 +42,8 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Skeleton } from "@/components/arc/skeleton/skeleton";
-import Loader from "@/components/loader";
+} from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 
 function ExperienceDialog({ mentorId }: { mentorId: string }) {
@@ -47,53 +55,54 @@ function ExperienceDialog({ mentorId }: { mentorId: string }) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<ArcButton variant="secondary" size="sm">
+				<Button variant="secondary" size="sm">
 					Experience
-				</ArcButton>
+				</Button>
 			</DialogTrigger>
-			<DialogContent
-				title="Experience"
-				description="Where your mentor has taught"
-			>
-				<DialogInner>
-					{experiences.length > 0 ? (
-						<ItemGroup>
-							{experiences.map((experience) => (
-								<Item
-									key={`${experience.title}-${experience.startedAt}`}
-									variant="outline"
-								>
-									<ItemMedia variant="icon">
-										<BriefcaseBusinessIcon />
-									</ItemMedia>
-									<ItemContent>
-										<ItemTitle>{experience.title}</ItemTitle>
-										<ItemDescription>
-											{experience.organization} ·{" "}
-											{format(new Date(experience.startedAt), "MMM yyyy")} –{" "}
-											{experience.endedAt
-												? format(new Date(experience.endedAt), "MMM yyyy")
-												: "Present"}
-										</ItemDescription>
-										{experience.description && (
-											<ItemDescription>
-												{experience.description}
-											</ItemDescription>
-										)}
-									</ItemContent>
-								</Item>
-							))}
-						</ItemGroup>
-					) : (
-						<EmptyState
-							title="No experience listed"
-							description="Your mentor has not added any experience yet."
-						/>
-					)}
-				</DialogInner>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Experience</DialogTitle>
+					<DialogDescription>Where your mentor has taught</DialogDescription>
+				</DialogHeader>
+				{experiences.length > 0 ? (
+					<ItemGroup>
+						{experiences.map((experience) => (
+							<Item
+								key={`${experience.title}-${experience.startedAt}`}
+								variant="outline"
+							>
+								<ItemMedia variant="icon">
+									<BriefcaseBusinessIcon />
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>{experience.title}</ItemTitle>
+									<ItemDescription>
+										{experience.organization} ·{" "}
+										{format(new Date(experience.startedAt), "MMM yyyy")} –{" "}
+										{experience.endedAt
+											? format(new Date(experience.endedAt), "MMM yyyy")
+											: "Present"}
+									</ItemDescription>
+									{experience.description ? (
+										<ItemDescription>{experience.description}</ItemDescription>
+									) : null}
+								</ItemContent>
+							</Item>
+						))}
+					</ItemGroup>
+				) : (
+					<Empty>
+						<EmptyHeader>
+							<EmptyTitle>No experience listed</EmptyTitle>
+							<EmptyDescription>
+								Your mentor has not added any experience yet.
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				)}
 				<DialogFooter>
 					<DialogClose asChild>
-						<ArcButton variant="secondary">Close</ArcButton>
+						<Button variant="secondary">Close</Button>
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>
@@ -108,12 +117,15 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 		isError,
 	} = useQuery(api.common.getUser.queryOptions({ input: { id: mentorId } }));
 
-	if (isPending) return <Skeleton lines={4} />;
+	if (isPending) return <Skeleton className="h-40 w-full" />;
 
 	if (isError || !mentor) {
 		return (
-			<Alert tone="danger" title="Mentor Unavailable">
-				Your mentor profile could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Mentor Unavailable</AlertTitle>
+				<AlertDescription>
+					Your mentor profile could not be loaded.
+				</AlertDescription>
 			</Alert>
 		);
 	}
@@ -122,6 +134,7 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 	const availability: Partial<Availability> =
 		mentor.teacherData?.availability ?? {};
 	const availableDays = dayKeys.filter((day) => availability[day]?.enabled);
+	const mentorFallback = mentor.name.trim().charAt(0).toUpperCase() || "M";
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -135,33 +148,32 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 				<CardContent>
 					<Item>
 						<ItemMedia>
-							<Avatar
-								name={mentor.name}
-								src={mentor.image ?? undefined}
-								size="lg"
-							/>
+							<Avatar size="lg">
+								<AvatarImage src={mentor.image} alt={mentor.name} />
+								<AvatarFallback>{mentorFallback}</AvatarFallback>
+							</Avatar>
 						</ItemMedia>
 						<ItemContent>
 							<ItemTitle>
 								<span>{mentor.name}</span>
-								<Badge tone="neutral">Mentor</Badge>
+								<Badge variant="secondary">Mentor</Badge>
 							</ItemTitle>
 							<ItemDescription>{mentor.email}</ItemDescription>
 						</ItemContent>
-						{languages.length > 0 && (
+						{languages.length > 0 ? (
 							<ItemContent>
 								{languages.map((language) => (
-									<Badge key={language} tone="neutral">
+									<Badge key={language} variant="secondary">
 										{langFlag(language)} {langName(language)}
 									</Badge>
 								))}
 							</ItemContent>
-						)}
+						) : null}
 						<ItemActions>
 							<ExperienceDialog mentorId={mentor.id} />
 						</ItemActions>
 					</Item>
-					{mentor.phoneNumber && (
+					{mentor.phoneNumber ? (
 						<Item variant="outline">
 							<ItemMedia variant="icon">
 								<PhoneIcon />
@@ -171,17 +183,15 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 								<ItemDescription>{mentor.phoneNumber}</ItemDescription>
 							</ItemContent>
 							<ItemActions>
-								<ArcButton
-									variant="secondary"
-									size="sm"
-									link={`tel:${mentor.phoneNumber}`}
-								>
-									<PhoneIcon />
-									Call
-								</ArcButton>
+								<Button asChild variant="secondary" size="sm">
+									<a href={`tel:${mentor.phoneNumber}`}>
+										<PhoneIcon />
+										Call
+									</a>
+								</Button>
 							</ItemActions>
 						</Item>
-					)}
+					) : null}
 				</CardContent>
 			</Card>
 
@@ -209,10 +219,14 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 							))}
 						</ItemGroup>
 					) : (
-						<EmptyState
-							title="No availability set"
-							description="Your mentor has not set their availability yet."
-						/>
+						<Empty>
+							<EmptyHeader>
+								<EmptyTitle>No availability set</EmptyTitle>
+								<EmptyDescription>
+									Your mentor has not set their availability yet.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
 					)}
 				</CardContent>
 			</Card>
@@ -223,11 +237,17 @@ function MentorProfile({ mentorId }: { mentorId: string }) {
 function Mentor({ mentorId }: { mentorId: string | null }) {
 	if (!mentorId) {
 		return (
-			<EmptyState
-				icon={<BriefcaseBusinessIcon />}
-				title="No mentor assigned"
-				description="Your mentor will appear here once one has been assigned to you."
-			/>
+			<Empty>
+				<EmptyHeader>
+					<EmptyMedia variant="icon">
+						<BriefcaseBusinessIcon />
+					</EmptyMedia>
+					<EmptyTitle>No mentor assigned</EmptyTitle>
+					<EmptyDescription>
+						Your mentor will appear here once one has been assigned to you.
+					</EmptyDescription>
+				</EmptyHeader>
+			</Empty>
 		);
 	}
 
@@ -245,8 +265,11 @@ export default function Page() {
 
 	if (isError || !student) {
 		return (
-			<Alert tone="danger" title="Profile Unavailable">
-				Your student profile could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Profile Unavailable</AlertTitle>
+				<AlertDescription>
+					Your student profile could not be loaded.
+				</AlertDescription>
 			</Alert>
 		);
 	}

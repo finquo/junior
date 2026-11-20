@@ -3,73 +3,72 @@
 import {
 	BookHeartIcon,
 	BookOpenIcon,
-	BriefcaseBusinessIcon,
 	CalendarClockIcon,
 	GraduationCapIcon,
 	HomeIcon,
 	UserRoundIcon,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { ExpandingButtonGroup } from "@/components/arc/expanding-button-group/expanding-button-group";
+import { usePathname } from "next/navigation";
+import { ExpandingButtonGroup } from "@/components/animate/expanding-button-group";
 import { StudentNavUser } from "./nav-user";
 
 const navItems = [
 	{
 		id: "Home",
 		label: "Home",
-		url: "/student",
+		href: "/student",
 		icon: <HomeIcon />,
 	},
 	{
 		id: "profile",
 		label: "Profile",
-		url: "/student/profile",
+		href: "/student/profile",
 		icon: <UserRoundIcon />,
 	},
 	{
 		id: "mentor",
 		label: "Mentor",
-		url: "/student/mentor",
+		href: "/student/mentor",
 		icon: <BookHeartIcon />,
 	},
 	{
 		id: "program",
 		label: "Program",
-		url: "/student/program",
+		href: "/student/program",
 		icon: <GraduationCapIcon />,
 	},
 	{
 		id: "sessions",
 		label: "Sessions",
-		url: "/student/sessions",
+		href: "/student/sessions",
 		icon: <CalendarClockIcon />,
 	},
 	{
 		id: "lessons",
 		label: "Lessons",
-		url: "/student/lessons",
+		href: "/student/lessons",
 		icon: <BookOpenIcon />,
 	},
 ] as const;
 
 export function StudentDock() {
-	const router = useRouter();
 	const pathname = usePathname();
-	const current = navItems.find((item) => item.url === pathname);
 
 	return (
-		<div className="fixed inset-x-0 bottom-10 z-50 flex items-center justify-center gap-2">
-			<ExpandingButtonGroup
-				label="Student navigation"
-				defaultExpanded={current?.id}
-				items={navItems.map((item) => ({
-					id: item.id,
-					label: item.label,
-					icon: item.icon,
-					onSelect: () => router.push(item.url as "/"),
-				}))}
-			/>
-			<StudentNavUser />
-		</div>
+		<nav
+			aria-label="Student navigation"
+			className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
+		>
+			<div className="flex flex-wrap items-center justify-center gap-2">
+				<ExpandingButtonGroup
+					groupLabel="Student sections"
+					items={navItems.map((item) => ({
+						...item,
+						active: pathname === item.href,
+					}))}
+				/>
+				<StudentNavUser />
+			</div>
+		</nav>
 	);
 }

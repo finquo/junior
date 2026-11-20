@@ -9,19 +9,26 @@ import type {
 import { MicIcon, VideoOffIcon, Volume2Icon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sileo as toast } from "sileo";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import { Frame } from "@/components/reui/frame";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
 	Item,
 	ItemActions,
 	ItemContent,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Progress } from "@/components/arc/progress/progress";
-import { Select } from "@/components/arc/select/select";
-import { Frame } from "@/components/reui/frame";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FieldGroup } from "@/components/ui/field";
+} from "@/components/ui/item";
+import { Progress } from "@/components/ui/progress";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useJoinPreferences } from "../../_components/call-preferences";
 import {
 	sdkErrorDescription,
@@ -94,20 +101,33 @@ function DeviceSelect({
 	value: string;
 	onValueChange: (value: string) => void;
 }) {
+	const control = (
+		<Select value={value} onValueChange={(next) => onValueChange(String(next))}>
+			<SelectTrigger id={id} className="w-full" aria-label={label || undefined}>
+				<SelectValue placeholder="System default" />
+			</SelectTrigger>
+			<SelectContent>
+				<SelectGroup>
+					<SelectItem value={DEFAULT_DEVICE}>System default</SelectItem>
+					{items.map((item) => (
+						<SelectItem key={item.deviceId} value={item.deviceId}>
+							{item.label}
+						</SelectItem>
+					))}
+				</SelectGroup>
+			</SelectContent>
+		</Select>
+	);
+
+	if (!label) {
+		return control;
+	}
+
 	return (
-		<Select
-			id={id}
-			label={label}
-			value={value}
-			onValueChange={onValueChange}
-			options={[
-				{ value: DEFAULT_DEVICE, label: "System default" },
-				...items.map((item) => ({
-					value: item.deviceId,
-					label: item.label,
-				})),
-			]}
-		/>
+		<Field>
+			<FieldLabel htmlFor={id}>{label}</FieldLabel>
+			{control}
+		</Field>
 	);
 }
 
@@ -252,7 +272,7 @@ function MicrophoneItem({ preview }: { preview: CallPreviewState }) {
 				<ItemTitle>Microphone</ItemTitle>
 			</ItemContent>
 			<ItemActions>
-				<ArcButton
+				<Button
 					type="button"
 					variant="secondary"
 					size="sm"
@@ -264,7 +284,7 @@ function MicrophoneItem({ preview }: { preview: CallPreviewState }) {
 						: state === "recording"
 							? "Stop recording"
 							: "Stop playback"}
-				</ArcButton>
+				</Button>
 			</ItemActions>
 			<DeviceSelect
 				id="preview-microphone"
@@ -332,7 +352,7 @@ function SpeakerItem({ preview }: { preview: CallPreviewState }) {
 				<ItemTitle>Speaker</ItemTitle>
 			</ItemContent>
 			<ItemActions>
-				<ArcButton
+				<Button
 					type="button"
 					variant="secondary"
 					size="sm"
@@ -340,7 +360,7 @@ function SpeakerItem({ preview }: { preview: CallPreviewState }) {
 					onClick={onClick}
 				>
 					{playing ? "Stop Speaking" : "Play test sound"}
-				</ArcButton>
+				</Button>
 			</ItemActions>
 			<DeviceSelect
 				id="preview-speaker"

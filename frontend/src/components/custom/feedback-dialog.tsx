@@ -8,20 +8,31 @@ import type React from "react";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
 import type { z } from "zod";
-import { Button } from "@/components/arc/button/button";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
+	DialogHeader,
+	DialogTitle,
 	DialogTrigger,
-} from "@/components/arc/dialog/dialog";
-import { Select } from "@/components/arc/select/select";
+} from "@/components/ui/dialog";
 import {
 	Field,
 	FieldError,
 	FieldGroup,
 	FieldLabel,
 } from "@/components/ui/field";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/hooks/api";
 import { useAuth } from "@/hooks/auth";
@@ -35,12 +46,14 @@ type FeedbackType = z.infer<typeof feedbackSchema>["type"];
 export function FeedbackDialog({
 	type,
 	reference,
+	referId,
 	open: openProp,
 	onOpenChange,
 	children,
 }: {
 	type: FeedbackType;
 	reference?: string;
+	referId?: string;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	children?: React.ReactElement;
@@ -48,6 +61,7 @@ export function FeedbackDialog({
 	const { data: user } = useAuth();
 	const [uncontrolled, setUncontrolled] = useState(false);
 	const open = openProp ?? uncontrolled;
+	const referenceValue = reference ?? referId;
 
 	const addFeedback = useMutation(
 		api.feedback.addFeedback.mutationOptions({
@@ -71,7 +85,7 @@ export function FeedbackDialog({
 			await addFeedback.mutateAsync({
 				content: value.content,
 				type: value.type,
-				ref: reference,
+				ref: referenceValue,
 				userId: user?.id,
 			});
 		},
@@ -83,16 +97,22 @@ export function FeedbackDialog({
 		if (next) form.reset({ type });
 	}
 
+	const submitIcon = addFeedback.isPending ? <Spinner /> : <CheckIcon />;
+
 	return (
 		<Dialog modal={false} open={open} onOpenChange={setOpen}>
 			{children && <DialogTrigger asChild>{children}</DialogTrigger>}
 			<DialogContent
-				title="Send feedback"
-				description="Tell us what went wrong, or what we could do better."
 				// Non-modal: focus returning to the opener (the dock menu closing) must not dismiss it,
 				// and skipping Radix's body pointer-events lock avoids leaving the page unclickable.
 				onFocusOutside={(event) => event.preventDefault()}
 			>
+				<DialogHeader>
+					<DialogTitle>Send feedback</DialogTitle>
+					<DialogDescription>
+						Tell us what went wrong, or what we could do better.
+					</DialogDescription>
+				</DialogHeader>
 				<form
 					onSubmit={(event) => {
 						event.preventDefault();
@@ -103,21 +123,51 @@ export function FeedbackDialog({
 					<FieldGroup>
 						<form.Field
 							name="type"
-							children={(field) => (
-								<Select
-									label="Type"
-									id={field.name}
-									value={field.state.value}
-									onValueChange={(value) =>
-										field.handleChange(value as FeedbackType)
-									}
-									options={FeedbackTypeZod.options.map((option) => ({
-										value: option,
-										label: option,
-									}))}
-									disabled={addFeedback.isPending}
-								/>
-							)}
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Type</FieldLabel>
+										<Select
+											value={field.state.value}
+											onValueChange={(value) =>
+												field.handleChange(value as FeedbackType)
+											}
+										>
+											<SelectTrigger
+												id={field.name}
+												className="w-full min-w-[200px]"
+												aria-invalid={isInvalid}
+												disabled={addFeedback.isPending}
+											>
+												<SelectValue placeholder="Select type">
+													{(value) => String(value)}
+												</SelectValue>
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													{FeedbackTypeZod.options.map((option) => (
+														<SelectItem key={option} value={option}>
+															{option}
+														</SelectItem>
+													))}
+												</SelectGroup>
+											</SelectContent>
+										</Select>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((error) =>
+													typeof error === "string"
+														? { message: error }
+														: error,
+												)}
+											/>
+										)}
+									</Field>
+								);
+							}}
 						/>
 						<form.Field
 							name="content"
@@ -157,14 +207,14 @@ export function FeedbackDialog({
 						<DialogFooter>
 							<Button
 								type="button"
-								variant="secondary"
+								variant="outline"
 								onClick={() => setOpen(false)}
 								disabled={addFeedback.isPending}
 							>
 								Cancel
 							</Button>
-							<Button type="submit" loading={addFeedback.isPending}>
-								<CheckIcon />
+							<Button type="submit" disabled={addFeedback.isPending}>
+								{submitIcon}
 								Send feedback
 							</Button>
 						</DialogFooter>

@@ -1,22 +1,22 @@
 "use client";
 
 import { CalendarClockIcon, MessageSquarePlusIcon } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Container } from "@/components/container";
+import { FeedbackDialog } from "@/components/custom/feedback-dialog";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
-import { Container } from "@/components/container";
-import { FeedbackDialog } from "@/components/custom/feedback-dialog";
+} from "@/components/ui/card";
 import { useHasRole } from "@/hooks/role";
 import { CallAuthButton } from "../../_components/call-auth-button";
 
 export default function Page() {
-	const router = useRouter();
 	const id = useParams<{ id: string }>()?.id;
 	const canViewSlot = useHasRole([
 		"admin",
@@ -34,20 +34,22 @@ export default function Page() {
 						This meeting has been ended for everyone. You can close this window.
 					</CardDescription>
 				</CardHeader>
-				<CardFooter style={{ justifyContent: "flex-end" }}>
+				<CardFooter className="justify-end">
 					{id && (
 						<FeedbackDialog type="join" reference={`slot:${id}`}>
-							<ArcButton variant="secondary">
+							<Button variant="outline">
 								<MessageSquarePlusIcon />
 								Report an issue
-							</ArcButton>
+							</Button>
 						</FeedbackDialog>
 					)}
 					{canViewSlot && id && (
-						<ArcButton onClick={() => router.push(`/slots/${id}`)}>
-							<CalendarClockIcon />
-							View Session Details
-						</ArcButton>
+						<Button variant="outline" asChild>
+							<Link href={`/slots/${id}`}>
+								<CalendarClockIcon />
+								View Session Details
+							</Link>
+						</Button>
 					)}
 					<CallAuthButton />
 				</CardFooter>

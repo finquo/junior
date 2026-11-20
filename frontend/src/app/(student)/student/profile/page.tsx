@@ -12,18 +12,19 @@ import {
 	UserPenIcon,
 	UserRoundIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Alert } from "@/components/arc/alert/alert";
-import { Avatar } from "@/components/arc/avatar/avatar";
-import { Badge } from "@/components/arc/badge/badge";
-import { Button as ArcButton } from "@/components/arc/button/button";
+import Link from "next/link";
+import Loader from "@/components/loader";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/arc/card/card";
+} from "@/components/ui/card";
 import {
 	Item,
 	ItemActions,
@@ -32,16 +33,14 @@ import {
 	ItemGroup,
 	ItemMedia,
 	ItemTitle,
-} from "@/components/arc/item/item";
-import { Skeleton } from "@/components/arc/skeleton/skeleton";
-import Loader from "@/components/loader";
+} from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/hooks/api";
 import { useAuth } from "@/hooks/auth";
 import { FetchUser } from "@/hooks/user";
 import { snakeToTitleCase } from "@/lib/utils";
 
 export default function Page() {
-	const router = useRouter();
 	const { data: user } = useAuth<true>();
 	const {
 		data: student,
@@ -53,14 +52,18 @@ export default function Page() {
 
 	if (isError || !student) {
 		return (
-			<Alert tone="danger" title="Profile Unavailable">
-				Your student profile could not be loaded.
+			<Alert variant="destructive">
+				<AlertTitle>Profile Unavailable</AlertTitle>
+				<AlertDescription>
+					Your student profile could not be loaded.
+				</AlertDescription>
 			</Alert>
 		);
 	}
 
 	const address = student.address;
 	const languages = student.languages ?? [];
+	const userFallback = user.name.trim().charAt(0).toUpperCase() || "U";
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -72,38 +75,31 @@ export default function Page() {
 				<CardContent>
 					<Item>
 						<ItemMedia>
-							<Avatar
-								name={user.name}
-								src={user.image ?? undefined}
-								size="lg"
-							/>
+							<Avatar size="lg">
+								<AvatarImage src={user.image} alt={user.name} />
+								<AvatarFallback>{userFallback}</AvatarFallback>
+							</Avatar>
 						</ItemMedia>
 						<ItemContent>
 							<ItemTitle>
 								<span>{user.name}</span>
-								<Badge tone="neutral">{snakeToTitleCase(user.role)}</Badge>
+								<Badge variant="secondary">{snakeToTitleCase(user.role)}</Badge>
 							</ItemTitle>
 							<ItemDescription>{user.email}</ItemDescription>
 						</ItemContent>
 						<ItemActions>
-							<ArcButton
-								variant="secondary"
-								size="sm"
-								link="/student/edit"
-								onClick={() => router.push("/student/edit")}
-							>
-								<UserPenIcon />
-								Edit Profile
-							</ArcButton>
-							<ArcButton
-								variant="secondary"
-								size="sm"
-								link="/student/edit/account"
-								onClick={() => router.push("/user/edit")}
-							>
-								<PenIcon />
-								Edit Account
-							</ArcButton>
+							<Button asChild variant="secondary" size="sm">
+								<Link href="/student/edit">
+									<UserPenIcon />
+									Edit Profile
+								</Link>
+							</Button>
+							<Button asChild variant="secondary" size="sm">
+								<Link href={"/user/edit" as "/"}>
+									<PenIcon />
+									Edit Account
+								</Link>
+							</Button>
 						</ItemActions>
 					</Item>
 				</CardContent>
@@ -120,21 +116,16 @@ export default function Page() {
 								<ItemTitle>Mentor</ItemTitle>
 								<FetchUser
 									id={student.mentorId}
-									isPending={<Skeleton lines={1} />}
+									isPending={<Skeleton className="h-4 w-24" />}
 									notFound={<ItemDescription>Not assigned</ItemDescription>}
 								>
 									{(mentor) => <ItemDescription>{mentor.name}</ItemDescription>}
 								</FetchUser>
 							</ItemContent>
 							<ItemActions>
-								<ArcButton
-									variant="secondary"
-									size="sm"
-									link="/student/mentor"
-									onClick={() => router.push("/student/mentor")}
-								>
-									View
-								</ArcButton>
+								<Button asChild variant="secondary" size="sm">
+									<Link href="/student/mentor">View</Link>
+								</Button>
 							</ItemActions>
 						</Item>
 
@@ -146,7 +137,7 @@ export default function Page() {
 								<ItemTitle>Supervisor</ItemTitle>
 								<FetchUser
 									id={student.supervisorId}
-									isPending={<Skeleton lines={1} />}
+									isPending={<Skeleton className="h-4 w-24" />}
 									notFound={<ItemDescription>Not assigned</ItemDescription>}
 								>
 									{(supervisor) => (
@@ -156,7 +147,7 @@ export default function Page() {
 							</ItemContent>
 						</Item>
 
-						{student.schooling && (
+						{student.schooling ? (
 							<Item variant="outline">
 								<ItemMedia variant="icon">
 									<GraduationCapIcon />
@@ -168,9 +159,9 @@ export default function Page() {
 									</ItemDescription>
 								</ItemContent>
 							</Item>
-						)}
+						) : null}
 
-						{languages.length > 0 && (
+						{languages.length > 0 ? (
 							<Item variant="outline">
 								<ItemMedia variant="icon">
 									<LanguagesIcon />
@@ -180,15 +171,15 @@ export default function Page() {
 								</ItemContent>
 								<ItemActions>
 									{languages.map((language) => (
-										<Badge key={language} tone="neutral">
+										<Badge key={language} variant="secondary">
 											{langFlag(language)} {langName(language)}
 										</Badge>
 									))}
 								</ItemActions>
 							</Item>
-						)}
+						) : null}
 
-						{address && (
+						{address ? (
 							<Item variant="outline">
 								<ItemMedia variant="icon">
 									<MapPinIcon />
@@ -209,7 +200,7 @@ export default function Page() {
 									</ItemDescription>
 								</ItemContent>
 							</Item>
-						)}
+						) : null}
 
 						<Item variant="outline">
 							<ItemMedia variant="icon">
