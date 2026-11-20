@@ -46,17 +46,8 @@ jobs:
             - name: Install dependencies
               run: bun i --frozen-lockfile
 
-            - name: Restore Vite Task cache
-              id: vite-task-cache
-              uses: actions/cache/restore@v6
-              with:
-                  path: node_modules/.vite/task-cache
-                  key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
-                  restore-keys: |
-                      vite-task-${{ runner.os }}-${{ runner.arch }}-
-
             - name: Build Event Lambda
-              run: bunx vp run --cache --filter backend construct:event
+              run: bun run backend construct:event
 
             - name: Package Event Lambda
               run: |
@@ -81,10 +72,3 @@ jobs:
                   aws lambda update-function-code \
                       --function-name "finquo-junior-event-${ENVIRONMENT}" \
                       --zip-file "fileb://$GITHUB_WORKSPACE/event.zip"
-
-            - name: Save Vite Task cache
-              if: success()
-              uses: actions/cache/save@v6
-              with:
-                  path: node_modules/.vite/task-cache
-                  key: ${{ steps.vite-task-cache.outputs.cache-primary-key }}

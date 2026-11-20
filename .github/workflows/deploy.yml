@@ -49,15 +49,6 @@ jobs:
             - name: Install dependencies
               run: bun i --frozen-lockfile
 
-            - name: Restore Vite Task cache
-              id: vite-task-cache
-              uses: actions/cache/restore@v6
-              with:
-                  path: node_modules/.vite/task-cache
-                  key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
-                  restore-keys: |
-                      vite-task-${{ runner.os }}-${{ runner.arch }}-
-
             - name: Cache Next.js build
               uses: actions/cache@v6
               with:
@@ -66,20 +57,17 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-nextjs-${{ hashFiles('**/bun.lock') }}-
 
-            - name: Build Backend
-              run: bunx vp run --cache --filter backend construct
-
-            - name: Build Frontend
-              run: bunx vp run --filter frontend construct
-
             - name: Build Event Lambda
-              run: bunx vp run --cache --filter backend construct:event
+              run: bun run backend construct:event
 
             - name: Package Event Lambda
               run: |
                   cd backend/event
                   zip -qr "$GITHUB_WORKSPACE/event.zip" .
                   ls -lh "$GITHUB_WORKSPACE/event.zip"
+
+            - name: Build Backend & Frontend
+              run: bun run construct
 
             - name: Package OpenNext server
               run: |
@@ -128,10 +116,3 @@ jobs:
                   aws cloudfront create-invalidation \
                       --distribution-id "$(tofu output -raw cloudfront_distribution_id)" \
                       --paths "/*"
-
-            - name: Save Vite Task cache
-              if: success()
-              uses: actions/cache/save@v6
-              with:
-                  path: node_modules/.vite/task-cache
-                  key: ${{ steps.vite-task-cache.outputs.cache-primary-key }}
