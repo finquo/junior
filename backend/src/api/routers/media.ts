@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 import { summarizeTranscript } from "@/ai/summarize";
 import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
-import { createSplitAudioJob, createToAudioJob } from "@/aws/job";
+import { notifySlotSummary } from "@/chat/notify";
+import { schema } from "@/db";
 import {
 	byNumber,
 	CHUNK_FILE,
@@ -17,9 +18,8 @@ import {
 	mediaStorage,
 	normalizeMediaKey,
 	toMediaPath,
-} from "@/aws/media";
-import { notifySlotSummary } from "@/chat/notify";
-import { schema } from "@/db";
+} from "@/media/config";
+import { createSplitAudioJob, createToAudioJob } from "@/media/convert";
 import { db } from "@/services";
 import { appOrigin } from "@/utils/app-url";
 import { MapRole } from "@/utils/role";

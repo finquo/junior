@@ -1,14 +1,14 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { tryAPI, tryFunc } from "utils";
+import type { SlotParticipant } from "@/config";
+import { schema } from "@/db";
 import {
 	hasZoomVideo,
 	mediaKey,
 	mediaStorage,
 	nextVideoIndex,
 	saveZoomVideo,
-} from "@/aws/media";
-import type { SlotParticipant } from "@/config";
-import { schema } from "@/db";
+} from "@/media/config";
 import { db } from "@/services";
 import { getZoomAPI } from "@/zoom/api";
 import { zoomEvents } from "./webhook";

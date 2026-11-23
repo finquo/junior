@@ -1,9 +1,9 @@
 import { os } from "@orpc/server";
 import { and, desc, eq, inArray, isNotNull, lte } from "drizzle-orm";
 import z from "zod";
-import { mediaStorage } from "@/aws/media";
 import { meetingSummarySchema } from "@/config/summary";
 import { schema } from "@/db";
+import { mediaStorage } from "@/media/config";
 import { db } from "@/services";
 import { getAPI, getError, tryAPI } from "../procedure";
 

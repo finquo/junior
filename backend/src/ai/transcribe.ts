@@ -1,6 +1,6 @@
 import { transcribe } from "ai";
 import { normalizeKey } from "unstorage";
-import { CHUNK_FILE, mediaKey, mediaStorage } from "../aws/media";
+import { CHUNK_FILE, mediaKey, mediaStorage } from "@/media/config";
 import { openrouter } from "./index";
 
 function toSegments(result: {

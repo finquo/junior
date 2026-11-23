@@ -6,9 +6,9 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createStorage } from "unstorage";
-import { bucket } from "./bucket";
-import { MEDIA_BUCKET } from "./config";
-import { s3Driver, toS3Path } from "./s3-driver";
+import { bucket } from "@/aws/bucket";
+import { MEDIA_BUCKET } from "@/aws/config";
+import { s3Driver, toS3Path } from "@/aws/s3-driver";
 
 export const CHUNK_LENGTH_SECONDS = 20 * 60;
 
