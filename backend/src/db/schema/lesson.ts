@@ -1,15 +1,9 @@
 import { sql } from "drizzle-orm";
-import {
-	index,
-	interval,
-	jsonb,
-	pgEnum,
-	pgTable,
-	text,
-} from "drizzle-orm/pg-core";
+import { index, interval, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import type { LanguageCodes } from "utils";
 import type { Anwser, Quiz } from "@/config/quiz";
 import { createdAt, generateId, getId, updatedAt } from "../utils";
+import { answerStatusEnum } from "./common";
 import { program } from "./program";
 import { student } from "./student";
 
@@ -39,16 +33,7 @@ export const lesson = pgTable(
 	],
 );
 
-export const answerStatusEnum = pgEnum("answer_status", [
-	"pending",
-	"answered",
-	"correct",
-	"partially_correct",
-	"wrong",
-	"retake",
-]);
-
-export const answer = pgTable("answer", {
+export const lessonAnwser = pgTable("lesson_anwser", {
 	id: generateId().primaryKey(),
 	studentId: getId().references(() => student.id, { onDelete: "cascade" }),
 

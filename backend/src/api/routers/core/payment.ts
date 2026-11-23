@@ -20,15 +20,15 @@ export const paymentRouter = {
 				"db-core-list-payments-query",
 				db
 					.select()
-					.from(schema.payment)
+					.from(schema.programPayment)
 					.innerJoin(
 						schema.student,
-						eq(schema.payment.studentId, schema.student.id),
+						eq(schema.programPayment.studentId, schema.student.id),
 					)
 					.where(
 						and(
 							input.studentId
-								? eq(schema.payment.studentId, input.studentId)
+								? eq(schema.programPayment.studentId, input.studentId)
 								: undefined,
 							MapRole(context.role, {
 								admin: undefined,
@@ -37,8 +37,8 @@ export const paymentRouter = {
 							}),
 						),
 					)
-					.orderBy(desc(schema.payment.createdAt))
-					.then((rows) => rows.map((row) => row.payment)),
+					.orderBy(desc(schema.programPayment.createdAt))
+					.then((rows) => rows.map((row) => row.program_payment)),
 				[],
 			);
 		}),
@@ -53,14 +53,14 @@ export const paymentRouter = {
 				"db-core-get-payment-query",
 				db
 					.select()
-					.from(schema.payment)
+					.from(schema.programPayment)
 					.innerJoin(
 						schema.student,
-						eq(schema.payment.studentId, schema.student.id),
+						eq(schema.programPayment.studentId, schema.student.id),
 					)
 					.where(
 						and(
-							eq(schema.payment.id, input.id),
+							eq(schema.programPayment.id, input.id),
 							MapRole(context.role, {
 								admin: undefined,
 								financier: undefined,
@@ -71,7 +71,7 @@ export const paymentRouter = {
 					.limit(1),
 			);
 
-			return rows?.[0]?.payment ?? null;
+			return rows?.[0]?.program_payment ?? null;
 		}),
 	create: getRolesProcedure(["admin", "financier"])
 		.input(
@@ -123,7 +123,7 @@ export const paymentRouter = {
 				"db-core-create-payment-query",
 				db.transaction(async (tx) => {
 					const payments = await tx
-						.insert(schema.payment)
+						.insert(schema.programPayment)
 						.values({
 							studentId: student.id,
 							program,
@@ -171,7 +171,7 @@ export const paymentRouter = {
 		.handler(async ({ input }) => {
 			const payment = await tryAPI(
 				"db-core-update-payment-get-payment",
-				db.query.payment.findFirst({
+				db.query.programPayment.findFirst({
 					where: { id: input.id },
 				}),
 			);
@@ -209,14 +209,14 @@ export const paymentRouter = {
 					"db-core-update-payment-query",
 					db.transaction(async (tx) => {
 						const payments = await tx
-							.update(schema.payment)
+							.update(schema.programPayment)
 							.set({
 								amount: newAmount,
 								paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
 								transactionId: input.transactionId ?? undefined,
 								paymentMethod: input.paymentMethod,
 							})
-							.where(eq(schema.payment.id, payment.id))
+							.where(eq(schema.programPayment.id, payment.id))
 							.returning();
 
 						const students = await tx
@@ -242,13 +242,13 @@ export const paymentRouter = {
 			return await tryAPI(
 				"db-core-update-payment-query",
 				db
-					.update(schema.payment)
+					.update(schema.programPayment)
 					.set({
 						paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
 						transactionId: input.transactionId ?? undefined,
 						paymentMethod: input.paymentMethod,
 					})
-					.where(eq(schema.payment.id, payment.id))
+					.where(eq(schema.programPayment.id, payment.id))
 					.returning()
 					.then((payments) => ({
 						payment: payments[0],
@@ -265,7 +265,7 @@ export const paymentRouter = {
 		.handler(async ({ input }) => {
 			const payment = await tryAPI(
 				"db-core-remove-payment-get-payment",
-				db.query.payment.findFirst({
+				db.query.programPayment.findFirst({
 					where: { id: input.id },
 				}),
 			);
@@ -276,8 +276,8 @@ export const paymentRouter = {
 				"db-core-remove-payment-query",
 				db.transaction(async (tx) => {
 					const payments = await tx
-						.delete(schema.payment)
-						.where(eq(schema.payment.id, payment.id))
+						.delete(schema.programPayment)
+						.where(eq(schema.programPayment.id, payment.id))
 						.returning();
 
 					const students = await tx

@@ -10,17 +10,10 @@ import {
 	text,
 } from "drizzle-orm/pg-core";
 import type { CountryCodes, CurrencyCodes, LanguageCodes } from "utils";
-import { PaymentMethods } from "@/config/payment";
 import type { Address, Note, Schooling } from "@/config/profile";
-import {
-	createdAt,
-	generateId,
-	getId,
-	getTempId,
-	getTime,
-	updatedAt,
-} from "../utils";
+import { createdAt, generateId, getId, getTempId, updatedAt } from "../utils";
 import { user } from "./auth";
+import { course } from "./course";
 import { program } from "./program";
 import { scheduler } from "./scheduler";
 import { teacher } from "./teacher";
@@ -53,6 +46,10 @@ export const student = pgTable(
 		program: getTempId().references(() => program.id),
 		attendedLessons: getId().array().default([]),
 
+		course: getTempId().references(() => course.id),
+		attendedModules: getId().array().default([]),
+		watchedVideos: getId().array().default([]),
+
 		currency: char({ length: 3 })
 			.$type<CurrencyCodes>()
 			.$default(() => "INR"),
@@ -74,31 +71,4 @@ export const student = pgTable(
 			sql`${table.grade} >= 1 AND ${table.grade} <= 12`,
 		),
 	],
-);
-
-// payment log
-export const payment = pgTable(
-	"payment",
-	{
-		id: generateId().primaryKey(),
-		studentId: text()
-			.notNull()
-			.references(() => student.id),
-
-		program: text()
-			.notNull()
-			.references(() => program.id),
-		transactionId: text(),
-
-		amount: integer().notNull(),
-		paidAt: getTime(),
-		currency: char({ length: 3 })
-			.$type<CurrencyCodes>()
-			.notNull()
-			.$default(() => "INR"),
-		paymentMethod: text({ enum: PaymentMethods }).notNull(),
-
-		createdAt: createdAt(),
-	},
-	(table) => [check("amount_positive", sql`${table.amount} > 0`)],
 );

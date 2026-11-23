@@ -61,7 +61,7 @@ export const getProcedure = <R extends Role>(role: R) =>
 		});
 	});
 
-export const getRolesProcedure = <R extends Role>(roles: R[]) =>
+export const getRolesProcedure = <R extends Role>(roles: readonly R[]) =>
 	protectedProcedure.use(async ({ context, next }) => {
 		const isAllowed = roles.some((r) => r === context.user.role);
 

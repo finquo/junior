@@ -19,6 +19,7 @@ import { mediaRouter as media } from "./media";
 import { meetingRouter as meeting } from "./meeting";
 import { schedulerRouter as scheduler } from "./scheduler";
 import { sidebarRouter as sidebar } from "./sidebar";
+import { streamRouter as stream } from "./stream";
 import { studentRouter as student } from "./student";
 import { teacherRouter as teacher } from "./teacher";
 
@@ -36,6 +37,7 @@ export const appRouter = {
 	common,
 	meeting,
 	media,
+	stream,
 	feedback,
 	core: {
 		lesson: lessonCore,

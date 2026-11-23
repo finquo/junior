@@ -68,6 +68,7 @@ export const InsertStudentSchema = createInsertSchema(
 	schooling: schoolingZod.optional(),
 	languages: LanguageCodeZod.array().optional(),
 	program: z.string().nullable().optional(),
+	course: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
 	currentAddress: addressZod.nullable().optional(),
@@ -80,6 +81,7 @@ export const SelectStudentSchema = createSelectSchema(
 	schooling: schoolingZod.nullable(),
 	languages: LanguageCodeZod.array(),
 	program: z.string().nullable(),
+	course: z.string().nullable(),
 	notes: noteZod.array(),
 	address: addressZod.nullable(),
 	currentAddress: addressZod.nullable(),
@@ -92,6 +94,7 @@ export const UpdateStudentSchema = createUpdateSchema(
 	schooling: schoolingZod.nullable().optional(),
 	languages: LanguageCodeZod.array().optional(),
 	program: z.string().nullable().optional(),
+	course: z.string().nullable().optional(),
 	notes: noteZod.array().optional(),
 	address: addressZod.nullable().optional(),
 	currentAddress: addressZod.nullable().optional(),
@@ -179,8 +182,14 @@ export const UpdateMaterialSchema = createUpdateSchema(
 });
 
 // Payment
-export const SelectPaymentSchema = createSelectSchema(schema.payment);
-export const InsertPaymentSchema = createInsertSchema(schema.payment);
+export const SelectPaymentSchema = createSelectSchema(schema.programPayment);
+export const InsertPaymentSchema = createInsertSchema(schema.programPayment);
+export const SelectCoursePaymentSchema = createSelectSchema(
+	schema.coursePayment,
+);
+export const InsertCoursePaymentSchema = createInsertSchema(
+	schema.coursePayment,
+);
 
 // Feedback
 export const FeedbackTypeZod = z.enum(schema.feedbackTypes);
@@ -191,7 +200,10 @@ export const InsertFeedbackSchema = createInsertSchema(
 ).safeExtend({
 	content: z.string().min(1).max(2000),
 	type: FeedbackTypeZod,
-	ref: z.string().regex(/^[a-z_]+:[^:]+$/).nullish(),
+	ref: z
+		.string()
+		.regex(/^[a-z_]+:[^:]+$/)
+		.nullish(),
 	userId: z.string().nullable().optional(),
 });
 

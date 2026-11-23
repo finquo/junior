@@ -100,8 +100,8 @@ export const analyticsRouter = {
 						"db-analytics-student-report-payments",
 						db
 							.select()
-							.from(schema.payment)
-							.where(eq(schema.payment.studentId, input.id)),
+							.from(schema.programPayment)
+							.where(eq(schema.programPayment.studentId, input.id)),
 						[],
 					),
 					getAPI(
@@ -116,8 +116,8 @@ export const analyticsRouter = {
 						"db-analytics-student-report-answers",
 						db
 							.select()
-							.from(schema.answer)
-							.where(eq(schema.answer.studentId, input.id)),
+							.from(schema.lessonAnwser)
+							.where(eq(schema.lessonAnwser.studentId, input.id)),
 						[],
 					),
 				]);

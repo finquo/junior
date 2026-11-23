@@ -85,14 +85,14 @@ export const quizRouter = {
 				"db-core-quiz-answers",
 				db
 					.select()
-					.from(schema.answer)
+					.from(schema.lessonAnwser)
 					.where(
 						and(
-							eq(schema.answer.studentId, slot.studentId),
-							eq(schema.answer.lessonId, slot.lessonId),
+							eq(schema.lessonAnwser.studentId, slot.studentId),
+							eq(schema.lessonAnwser.lessonId, slot.lessonId),
 						),
 					)
-					.orderBy(schema.answer.createdAt),
+					.orderBy(schema.lessonAnwser.createdAt),
 				[],
 			);
 		}),
@@ -143,13 +143,13 @@ export const quizRouter = {
 				const existing = await tryAPI(
 					"db-core-quiz-submit-find",
 					db
-						.select({ id: schema.answer.id })
-						.from(schema.answer)
+						.select({ id: schema.lessonAnwser.id })
+						.from(schema.lessonAnwser)
 						.where(
 							and(
-								eq(schema.answer.studentId, context.user.id),
-								eq(schema.answer.lessonId, input.lessonId),
-								sql`${schema.answer.answer}->>'questionId' = ${item.questionId}`,
+								eq(schema.lessonAnwser.studentId, context.user.id),
+								eq(schema.lessonAnwser.lessonId, input.lessonId),
+								sql`${schema.lessonAnwser.answer}->>'questionId' = ${item.questionId}`,
 							),
 						)
 						.limit(1),
@@ -162,14 +162,14 @@ export const quizRouter = {
 					await tryAPI(
 						"db-core-quiz-submit-update",
 						db
-							.update(schema.answer)
+							.update(schema.lessonAnwser)
 							.set({ answer, status: "answered" })
-							.where(eq(schema.answer.id, match.id)),
+							.where(eq(schema.lessonAnwser.id, match.id)),
 					);
 				} else {
 					await tryAPI(
 						"db-core-quiz-submit-insert",
-						db.insert(schema.answer).values({
+						db.insert(schema.lessonAnwser).values({
 							studentId: context.user.id,
 							lessonId: input.lessonId,
 							status: "answered",
@@ -186,22 +186,22 @@ export const quizRouter = {
 				"db-core-quiz-student-answers",
 				db
 					.select({
-						id: schema.answer.id,
-						status: schema.answer.status,
-						answer: schema.answer.answer,
-						createdAt: schema.answer.createdAt,
-						updatedAt: schema.answer.updatedAt,
+						id: schema.lessonAnwser.id,
+						status: schema.lessonAnwser.status,
+						answer: schema.lessonAnwser.answer,
+						createdAt: schema.lessonAnwser.createdAt,
+						updatedAt: schema.lessonAnwser.updatedAt,
 						lessonId: schema.lesson.id,
 						lessonName: schema.lesson.name,
 						quiz: schema.lesson.quiz,
 					})
-					.from(schema.answer)
+					.from(schema.lessonAnwser)
 					.innerJoin(
 						schema.lesson,
-						eq(schema.answer.lessonId, schema.lesson.id),
+						eq(schema.lessonAnwser.lessonId, schema.lesson.id),
 					)
-					.where(eq(schema.answer.studentId, input.studentId))
-					.orderBy(schema.answer.createdAt),
+					.where(eq(schema.lessonAnwser.studentId, input.studentId))
+					.orderBy(schema.lessonAnwser.createdAt),
 				[],
 			);
 		}),
@@ -218,13 +218,13 @@ export const quizRouter = {
 			await tryAPI(
 				"db-core-quiz-grade-update",
 				db
-					.update(schema.answer)
+					.update(schema.lessonAnwser)
 					.set({ status: input.status })
 					.where(
 						and(
-							eq(schema.answer.id, input.answerId),
-							eq(schema.answer.studentId, input.studentId),
-							eq(schema.answer.lessonId, input.lessonId),
+							eq(schema.lessonAnwser.id, input.answerId),
+							eq(schema.lessonAnwser.studentId, input.studentId),
+							eq(schema.lessonAnwser.lessonId, input.lessonId),
 						),
 					),
 			);
@@ -242,13 +242,13 @@ export const quizRouter = {
 				await tryAPI(
 					"db-core-quiz-retake-update",
 					db
-						.update(schema.answer)
+						.update(schema.lessonAnwser)
 						.set({ status: "retake" })
 						.where(
 							and(
-								eq(schema.answer.studentId, input.studentId),
-								eq(schema.answer.lessonId, input.lessonId),
-								sql`${schema.answer.answer}->>'questionId' = ${questionId}`,
+								eq(schema.lessonAnwser.studentId, input.studentId),
+								eq(schema.lessonAnwser.lessonId, input.lessonId),
+								sql`${schema.lessonAnwser.answer}->>'questionId' = ${questionId}`,
 							),
 						),
 				);
