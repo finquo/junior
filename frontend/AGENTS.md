@@ -38,6 +38,18 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 - Never default form values to empty strings (`""`). Empty strings are saved to the database and make null queries impossible. Use `undefined` as the fallback for every optional or unset key, start arrays empty instead of `[""]`, and omit defaults where possible. Convert blank values to `null` or `undefined` only when building the server payload, never in the form defaults.
 - Share components the same way as schemas/config: build a feature's UI once as a named component (for example `QuizList` in `frontend/src/components/custom/quiz.tsx`) and compose it from every route that renders it. Never duplicate the same rendering inline in a route's `_components`. Keep related presentational components together in the same file as separate named exports; forms belong in their own file.
 - `frontend/src/components/custom/` is the home for shared custom (non-shadcn) components.
+- For course-related pages, follow the same structure as program pages.
+- Use `<LoadQuery label="..." api={...}>{(data) => ...}</LoadQuery>` from `@/hooks/load` for query loading/error/not-found states instead of repeating `isPending`/`isError`/missing-data alert branches. Nest `LoadQuery` components for dependent queries so inner queries can use parent data from the render prop, keeping pages small and reusable. Pass `wrapper` when loading/error UI needs a shared container:
+
+  ```tsx
+  <LoadQuery
+    label="Module"
+    api={api.core.module.get.queryOptions({ input: { id } })}
+    wrapper={(children) => <Card><CardContent>{children}</CardContent></Card>}
+  >
+    {(module) => <ModuleProfile data={module} />}
+  </LoadQuery>
+  ```
 
 ## Routes and layouts
 

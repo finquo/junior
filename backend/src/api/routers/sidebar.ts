@@ -163,4 +163,50 @@ export const sidebarRouter = {
 			title: program.name,
 		}));
 	}),
+	courses: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+		"qa_auditor",
+		"financier",
+	]).handler(async () => {
+		const data = await getAPI(
+			"db-sidebar-get-courses-query",
+			db.query.course.findMany({
+				orderBy: { name: "asc" },
+			}),
+			[],
+		);
+
+		return data.map((course) => ({
+			id: course.id,
+			title: course.name,
+		}));
+	}),
+	modules: getRolesProcedure([
+		"admin",
+		"scheduler",
+		"teacher",
+		"enrollment_advisor",
+		"qa_auditor",
+		"financier",
+	]).handler(async () => {
+		const data = await getAPI(
+			"db-sidebar-get-modules-query",
+			db.query.module.findMany({
+				orderBy: { name: "asc" },
+				limit: 5,
+				with: { courseInfo: true },
+			}),
+			[],
+		);
+
+		return data.map((module) => ({
+			id: module.id,
+			title: module.courseInfo?.name
+				? `${module.name} (${module.courseInfo.name})`
+				: module.name,
+		}));
+	}),
 };

@@ -69,7 +69,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-content"
-			className={cn("gap-(--card-spacing) px-(--card-spacing)", className)}
+			className={cn("space-y-(--card-spacing) px-(--card-spacing)", className)}
 			{...props}
 		/>
 	);
@@ -80,7 +80,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="card-footer"
 			className={cn(
-				"flex flex-row items-center gap-(--card-spacing) rounded-b-[min(var(--radius-4xl),24px)] px-(--card-spacing) [.border-t]:py-(--card-spacing)",
+				"flex flex-row items-center gap-(--card-spacing) rounded-b-[min(var(--radius-4xl),24px)] in-data-[slot=card-content]:p-0 px-(--card-spacing) [.border-t]:py-(--card-spacing)",
 				className,
 			)}
 			{...props}

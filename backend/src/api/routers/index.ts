@@ -3,7 +3,9 @@ import { protectedProcedure, publicProcedure } from "../procedure";
 import { adminRouter as admin } from "./admin";
 import { chatRouter as chat } from "./chat";
 import { commonRouter as common } from "./common";
+import { courseRouter as courseCore } from "./core/course";
 import { lessonRouter as lessonCore } from "./core/lesson";
+import { moduleRouter as moduleCore } from "./core/module";
 import { paymentRouter as paymentCore } from "./core/payment";
 import { programRouter as programCore } from "./core/program";
 import { quizRouter as quizCore } from "./core/quiz";
@@ -13,6 +15,7 @@ import { slotRouter as slotCore } from "./core/slot";
 import { studentRouter as studentCore } from "./core/student";
 import { teacherRouter as teacherCore } from "./core/teacher";
 import { userRouter as userCore } from "./core/user";
+import { videoRouter as videoCore } from "./core/video";
 import { feedbackRouter as feedback } from "./feedback";
 import { materialRouter as materialCore } from "./material";
 import { mediaRouter as media } from "./media";
@@ -40,8 +43,10 @@ export const appRouter = {
 	stream,
 	feedback,
 	core: {
+		course: courseCore,
 		lesson: lessonCore,
 		material: materialCore,
+		module: moduleCore,
 		payment: paymentCore,
 		program: programCore,
 		quiz: quizCore,
@@ -51,5 +56,6 @@ export const appRouter = {
 		student: studentCore,
 		teacher: teacherCore,
 		user: userCore,
+		video: videoCore,
 	},
 };

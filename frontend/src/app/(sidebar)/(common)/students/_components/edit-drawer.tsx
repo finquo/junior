@@ -19,6 +19,7 @@ import {
 	Languages,
 } from "utils";
 import type { z } from "zod";
+import { CourseSelector } from "@/components/custom/course-selector";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -75,7 +76,14 @@ const toServerAddress = (
 	const { line1, line2, city, state, postalCode, country } = address;
 	if (!line1 || !city || !state || !postalCode || !country) return undefined;
 
-	return { line1, line2: line2?.trim() || undefined, city, state, postalCode, country };
+	return {
+		line1,
+		line2: line2?.trim() || undefined,
+		city,
+		state,
+		postalCode,
+		country,
+	};
 };
 
 export function EditStudentDrawer({
@@ -158,6 +166,18 @@ export function EditStudentDrawer({
 										onValueChange={(val) =>
 											field.handleChange(val || undefined)
 										}
+										disabled={isPending}
+									/>
+								)}
+							/>
+
+							<form.Field
+								name="course"
+								children={(field) => (
+									<CourseSelector
+										id={field.name}
+										value={field.state.value}
+										onValueChange={(val) => field.handleChange(val)}
 										disabled={isPending}
 									/>
 								)}
@@ -543,7 +563,9 @@ export function EditStudentDrawer({
 															name={field.name}
 															value={field.state.value ?? ""}
 															onBlur={field.handleBlur}
-															onChange={(e) => field.handleChange(e.target.value)}
+															onChange={(e) =>
+																field.handleChange(e.target.value)
+															}
 															disabled={isPending}
 														/>
 													</Field>
@@ -559,7 +581,9 @@ export function EditStudentDrawer({
 															name={field.name}
 															value={field.state.value ?? ""}
 															onBlur={field.handleBlur}
-															onChange={(e) => field.handleChange(e.target.value)}
+															onChange={(e) =>
+																field.handleChange(e.target.value)
+															}
 															disabled={isPending}
 														/>
 													</Field>
@@ -579,7 +603,9 @@ export function EditStudentDrawer({
 															name={field.name}
 															value={field.state.value ?? ""}
 															onBlur={field.handleBlur}
-															onChange={(e) => field.handleChange(e.target.value)}
+															onChange={(e) =>
+																field.handleChange(e.target.value)
+															}
 															disabled={isPending}
 														/>
 													</Field>
@@ -589,13 +615,17 @@ export function EditStudentDrawer({
 												name="currentAddress.country"
 												children={(field) => (
 													<Field>
-														<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+														<FieldLabel htmlFor={field.name}>
+															Country
+														</FieldLabel>
 														<Input
 															id={field.name}
 															name={field.name}
 															value={field.state.value ?? ""}
 															onBlur={field.handleBlur}
-															onChange={(e) => field.handleChange(e.target.value)}
+															onChange={(e) =>
+																field.handleChange(e.target.value)
+															}
 															disabled={isPending}
 														/>
 													</Field>

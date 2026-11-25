@@ -120,6 +120,40 @@ export const UpdateProgramSchema = createUpdateSchema(
 	price: priceZod,
 });
 
+// Course
+export const SelectCourseSchema = createSelectSchema(schema.course).safeExtend({
+	language: LanguageCodeZod,
+	price: priceZod,
+	modules: z.string().array(),
+});
+export const InsertCourseSchema = createInsertSchema(schema.course).safeExtend({
+	language: LanguageCodeZod,
+	price: priceZod,
+	modules: z.string().array().optional(),
+});
+export const UpdateCourseSchema = createUpdateSchema(schema.course).safeExtend({
+	language: LanguageCodeZod.optional(),
+	price: priceZod.optional(),
+	modules: z.string().array().optional(),
+});
+
+export const SelectModuleSchema = createSelectSchema(schema.module).safeExtend({
+	quiz: quizZod.array().nullable(),
+	videos: z.string().array(),
+});
+export const InsertModuleSchema = createInsertSchema(schema.module).safeExtend({
+	quiz: quizZod.array().nullable().optional(),
+	videos: z.string().array().optional(),
+});
+export const UpdateModuleSchema = createUpdateSchema(schema.module).safeExtend({
+	quiz: quizZod.array().nullable().optional(),
+	videos: z.string().array().optional(),
+});
+
+export const SelectVideoSchema = createSelectSchema(schema.video);
+export const InsertVideoSchema = createInsertSchema(schema.video);
+export const UpdateVideoSchema = createUpdateSchema(schema.video);
+
 // Slot
 export const SelectSlotSchema = createSelectSchema(schema.slot).safeExtend({
 	participants: slotParticipantZod.array(),

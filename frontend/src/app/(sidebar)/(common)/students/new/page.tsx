@@ -19,6 +19,7 @@ import {
 	PhoneNumberZod,
 } from "utils";
 import { z } from "zod";
+import { CourseSelector } from "@/components/custom/course-selector";
 import {
 	Frame,
 	FrameDescription,
@@ -64,6 +65,7 @@ const createStudentSchema = z.object({
 		.min(6, "Password must be at least 6 characters")
 		.default("1234567890"),
 	program: z.string().optional(),
+	course: z.string().optional(),
 	mentorId: z.string().optional(),
 	supervisorId: z.string().optional(),
 	schooling: schoolingZod.nullable().optional(),
@@ -131,6 +133,7 @@ export default function Page() {
 				},
 				student: {
 					program: value.program || undefined,
+					course: value.course || undefined,
 					mentorId: value.mentorId || undefined,
 					supervisorId: value.supervisorId || undefined,
 					schooling: value.schooling ?? undefined,
@@ -401,6 +404,18 @@ export default function Page() {
 											form.setFieldValue("remaining", price);
 										}
 									}}
+									disabled={isPending}
+								/>
+							)}
+						/>
+
+						<form.Field
+							name="course"
+							children={(field) => (
+								<CourseSelector
+									id={field.name}
+									value={field.state.value}
+									onValueChange={(val) => field.handleChange(val)}
 									disabled={isPending}
 								/>
 							)}
