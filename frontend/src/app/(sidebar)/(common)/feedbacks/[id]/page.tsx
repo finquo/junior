@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import type { FeedbackStatusZod } from "backend/db";
 import {
 	ArrowLeftIcon,
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 import { api, refetchAPIs } from "@/hooks/api";
+import { LoadQuery } from "@/hooks/load";
 import { FetchUser } from "@/hooks/user";
 import type { API_Returns } from "@/lib/api";
 
@@ -254,43 +255,15 @@ function FeedbackView({ feedback }: { feedback: Feedback }) {
 	);
 }
 
-function Feedback({ feedbackId }: { feedbackId: string }) {
-	const { data, isPending, isError } = useQuery(
-		api.feedback.get.queryOptions({ input: { id: feedbackId } }),
-	);
-
-	if (isPending) {
-		return <Loader />;
-	}
-
-	if (isError || !data) {
-		return (
-			<Alert variant="destructive">
-				<AlertTitle>Feedback Not Found</AlertTitle>
-				<AlertDescription>
-					The requested feedback could not be loaded or does not exist.
-				</AlertDescription>
-			</Alert>
-		);
-	}
-
-	return <FeedbackView feedback={data} />;
-}
-
 export default function Page() {
-	const params = useParams<{ id: string }>();
-	const feedbackId = params?.id;
+	const id = useParams<{ id: string }>().id;
 
-	if (!feedbackId) {
-		return (
-			<Alert variant="destructive">
-				<AlertTitle>Invalid Feedback ID</AlertTitle>
-				<AlertDescription>
-					No feedback identifier was found in the URL.
-				</AlertDescription>
-			</Alert>
-		);
-	}
-
-	return <Feedback feedbackId={feedbackId} />;
+	return (
+		<LoadQuery
+			label="Feedback"
+			api={api.feedback.get.queryOptions({ input: { id } })}
+		>
+			{(feedback) => <FeedbackView feedback={feedback} />}
+		</LoadQuery>
+	);
 }

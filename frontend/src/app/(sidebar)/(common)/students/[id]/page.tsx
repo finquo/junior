@@ -2,55 +2,32 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import Loader from "@/components/loader";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/hooks/api";
+import { LoadQuery } from "@/hooks/load";
+import type { API_Returns } from "@/lib/api";
 import { StudentProfile } from "../_components/profile";
 
-function Student({ studentId }: { studentId: string }) {
-	const { data, isPending, isError } = useQuery(
-		api.core.student.get.queryOptions({
-			input: { id: studentId },
-		}),
-	);
+type StudentData = NonNullable<API_Returns["core"]["student"]["get"]>;
+
+function StudentDetail({ data }: { data: StudentData }) {
 	const { data: curriculum } = useQuery(
 		api.core.student.getCurriculum.queryOptions({
-			input: { id: studentId },
+			input: { id: data.id },
 		}),
 	);
-
-	if (isPending) {
-		return <Loader />;
-	}
-
-	if (isError || !data) {
-		return (
-			<Alert variant="destructive">
-				<AlertTitle>Student Not Found</AlertTitle>
-				<AlertDescription>
-					The requested student profile could not be loaded or does not exist.
-				</AlertDescription>
-			</Alert>
-		);
-	}
 
 	return <StudentProfile data={data} curriculum={curriculum} />;
 }
 
 export default function Page() {
-	const params = useParams<{ id: string }>();
-	const studentId = params?.id;
+	const id = useParams<{ id: string }>().id;
 
-	if (!studentId) {
-		return (
-			<Alert variant="destructive">
-				<AlertTitle>Invalid Student ID</AlertTitle>
-				<AlertDescription>
-					No student identifier was found in the URL.
-				</AlertDescription>
-			</Alert>
-		);
-	}
-
-	return <Student studentId={studentId} />;
+	return (
+		<LoadQuery
+			label="Student"
+			api={api.core.student.get.queryOptions({ input: { id } })}
+		>
+			{(data) => <StudentDetail data={data} />}
+		</LoadQuery>
+	);
 }

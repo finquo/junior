@@ -18,7 +18,7 @@ type LoadQueryProps<
 > = {
 	label: string;
 	api: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>;
-	children: (data: TData) => React.ReactElement;
+	children: (data: NonNullable<TData>) => React.ReactElement;
 	wrapper?: (children: React.ReactElement) => React.ReactElement;
 };
 
@@ -58,7 +58,7 @@ function LoadQueryInner<
 		);
 	}
 
-	return children(data);
+	return children(data as NonNullable<TData>);
 }
 
 export function LoadQuery<

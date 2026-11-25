@@ -39,6 +39,7 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 - Share components the same way as schemas/config: build a feature's UI once as a named component (for example `QuizList` in `frontend/src/components/custom/quiz.tsx`) and compose it from every route that renders it. Never duplicate the same rendering inline in a route's `_components`. Keep related presentational components together in the same file as separate named exports; forms belong in their own file.
 - `frontend/src/components/custom/` is the home for shared custom (non-shadcn) components.
 - For course-related pages, follow the same structure as program pages.
+- In `[id]` pages, read the param with `const id = useParams<{ id: string }>().id;` so you can avoid an extra `if (!id)` guard/branch.
 - Use `<LoadQuery label="..." api={...}>{(data) => ...}</LoadQuery>` from `@/hooks/load` for query loading/error/not-found states instead of repeating `isPending`/`isError`/missing-data alert branches. Nest `LoadQuery` components for dependent queries so inner queries can use parent data from the render prop, keeping pages small and reusable. Pass `wrapper` when loading/error UI needs a shared container:
 
   ```tsx
