@@ -7,7 +7,7 @@ import {
 	ComponentIcon,
 	FolderOpenIcon,
 	GraduationCapIcon,
-	ListIcon,
+	LandPlotIcon,
 	MessageSquareWarningIcon,
 	PackageIcon,
 	PlusIcon,
@@ -54,11 +54,6 @@ export function SidebarConfig({
 									title: "Create User",
 									url: "/users/new",
 								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/users",
-								},
 							],
 						},
 						{
@@ -70,11 +65,6 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/schedulers/new",
-								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/schedulers",
 								},
 							],
 							fetchItems: {
@@ -92,11 +82,6 @@ export function SidebarConfig({
 									title: "Create New",
 									url: "/teachers/new",
 								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/teachers",
-								},
 							],
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
@@ -112,11 +97,6 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/students/new",
-								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/students",
 								},
 							],
 							fetchItems: {
@@ -144,26 +124,35 @@ export function SidebarConfig({
 									url: "/programs/new",
 								},
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/programs",
+									icon: <BookOpenCheckIcon />,
+									title: "Lessons",
+									url: "/lessons",
 								},
 							],
 						},
 						{
-							title: "Lessons",
-							url: "/lessons",
-							icon: <BookOpenCheckIcon />,
+							title: "Courses",
+							url: "/courses",
+							icon: <LandPlotIcon />,
+							fetchItems: {
+								api: api.sidebar.courses.queryOptions(),
+								getLink: (id) => `/courses/${id}`,
+							},
 							subItems: [
 								{
 									icon: <PlusIcon />,
 									title: "Create New",
-									url: "/lessons/new",
+									url: "/courses/new",
 								},
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/lessons",
+									icon: <BookOpenCheckIcon />,
+									title: "Modules",
+									url: "/modules",
+								},
+								{
+									icon: <VideoIcon />,
+									title: "Videos",
+									url: "/videos",
 								},
 							],
 						},
@@ -176,11 +165,6 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Create New",
 									url: "/materials/new",
-								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/materials",
 								},
 							],
 						},
@@ -195,44 +179,20 @@ export function SidebarConfig({
 									url: "/slots/new",
 								},
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/slots",
+									icon: <FolderOpenIcon />,
+									title: "Media",
+									url: "/medias",
+								},
+								{
+									icon: <MessageSquareWarningIcon />,
+									title: "Feedback",
+									url: "/feedbacks",
 								},
 							],
 							// fetchItems: {
 							// 	api: api.sidebar.slots.queryOptions(),
 							// 	getLink: (id) => `/slots/${id}`,
 							// },
-						},
-						{
-							title: "Medias",
-							url: "/medias",
-							icon: <FolderOpenIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/medias",
-								},
-							],
-						},
-						{
-							title: "Feedbacks",
-							url: "/feedbacks",
-							icon: <MessageSquareWarningIcon />,
-							subItems: [
-								{
-									icon: <PlusIcon />,
-									title: "Create New",
-									url: "/feedbacks/new",
-								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/feedbacks",
-								},
-							],
 						},
 						{
 							title: "Payments",
@@ -243,11 +203,6 @@ export function SidebarConfig({
 									icon: <PlusIcon />,
 									title: "Record Payment",
 									url: "/payments/new",
-								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/payments",
 								},
 							],
 						},

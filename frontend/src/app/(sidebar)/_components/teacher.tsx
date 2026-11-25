@@ -1,12 +1,13 @@
 "use client";
 
 import {
+	BookOpenCheckIcon,
 	CalendarFoldIcon,
 	CalendarHeartIcon,
 	CalendarX2Icon,
 	ComponentIcon,
 	GraduationCapIcon,
-	ListIcon,
+	LandPlotIcon,
 	UserPenIcon,
 	VideoIcon,
 } from "lucide-react";
@@ -40,13 +41,6 @@ export function SidebarConfig({
 							title: "Students",
 							url: "/students",
 							icon: <GraduationCapIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/students",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
 								getLink: (id) => `/students/${id}`,
@@ -61,29 +55,36 @@ export function SidebarConfig({
 							title: "Programs",
 							url: "/programs",
 							icon: <ComponentIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/programs",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,
 							},
 						},
 						{
+							title: "Courses",
+							url: "/courses",
+							icon: <LandPlotIcon />,
+							fetchItems: {
+								api: api.sidebar.courses.queryOptions(),
+								getLink: (id) => `/courses/${id}`,
+							},
+							subItems: [
+								{
+									icon: <BookOpenCheckIcon />,
+									title: "Modules",
+									url: "/modules",
+								},
+								{
+									icon: <VideoIcon />,
+									title: "Videos",
+									url: "/videos",
+								},
+							],
+						},
+						{
 							title: "Slots",
 							url: "/slots",
 							icon: <VideoIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/slots",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.slots.queryOptions(),
 								getLink: (id) => `/slots/${id}`,

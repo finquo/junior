@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { GripIcon, PenIcon } from "lucide-react";
+import { GripIcon, PenIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { sileo as toast } from "sileo";
@@ -122,42 +122,30 @@ export function VideoOrderList({
 								<ItemDescription>{video.description}</ItemDescription>
 							</ItemContent>
 							<ItemActions>
-								<ModuleVideoActions
+								<VideoForm
 									courseId={courseId}
 									moduleId={moduleId}
 									video={video}
-								/>
+								>
+									<Button variant="outline" size="icon-sm">
+										<PenIcon />
+									</Button>
+								</VideoForm>
+								<VideoDeleteButton
+									videoId={video.id}
+									courseId={courseId}
+									moduleId={moduleId}
+									name={video.name}
+								>
+									<Button variant="destructive" size="icon-sm">
+										<Trash2Icon />
+									</Button>
+								</VideoDeleteButton>
 							</ItemActions>
 						</Item>
 					</SortableItem>
 				);
 			})}
 		</Sortable>
-	);
-}
-
-function ModuleVideoActions({
-	courseId,
-	moduleId,
-	video,
-}: {
-	courseId: string;
-	moduleId: string;
-	video: VideoRecord;
-}) {
-	return (
-		<>
-			<VideoForm courseId={courseId} moduleId={moduleId} video={video}>
-				<Button variant="ghost" size="icon-sm">
-					<PenIcon />
-				</Button>
-			</VideoForm>
-			<VideoDeleteButton
-				videoId={video.id}
-				courseId={courseId}
-				moduleId={moduleId}
-				name={video.name}
-			/>
-		</>
 	);
 }

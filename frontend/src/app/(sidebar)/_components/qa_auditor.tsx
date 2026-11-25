@@ -6,7 +6,7 @@ import {
 	CalendarHeartIcon,
 	ComponentIcon,
 	GraduationCapIcon,
-	ListIcon,
+	LandPlotIcon,
 	UserPenIcon,
 	UserRoundCogIcon,
 	VideoIcon,
@@ -41,13 +41,6 @@ export function SidebarConfig({
 							title: "Schedulers",
 							url: "/schedulers",
 							icon: <UserRoundCogIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/schedulers",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.schedulers.queryOptions(),
 								getLink: (id) => `/schedulers/${id}`,
@@ -57,13 +50,6 @@ export function SidebarConfig({
 							title: "Teachers",
 							url: "/teachers",
 							icon: <BriefcaseBusinessIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/teachers",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.teachers.queryOptions(),
 								getLink: (id) => `/teachers/${id}`,
@@ -73,13 +59,6 @@ export function SidebarConfig({
 							title: "Students",
 							url: "/students",
 							icon: <GraduationCapIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/students",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
 								getLink: (id) => `/students/${id}`,
@@ -96,9 +75,9 @@ export function SidebarConfig({
 							icon: <ComponentIcon />,
 							subItems: [
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/programs",
+									icon: <BookOpenCheckIcon />,
+									title: "Lessons",
+									url: "/lessons",
 								},
 							],
 							fetchItems: {
@@ -107,14 +86,23 @@ export function SidebarConfig({
 							},
 						},
 						{
-							title: "Lessons",
-							url: "/lessons",
-							icon: <BookOpenCheckIcon />,
+							title: "Courses",
+							url: "/courses",
+							icon: <LandPlotIcon />,
+							fetchItems: {
+								api: api.sidebar.courses.queryOptions(),
+								getLink: (id) => `/courses/${id}`,
+							},
 							subItems: [
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/lessons",
+									icon: <BookOpenCheckIcon />,
+									title: "Modules",
+									url: "/modules",
+								},
+								{
+									icon: <VideoIcon />,
+									title: "Videos",
+									url: "/videos",
 								},
 							],
 						},
@@ -122,13 +110,6 @@ export function SidebarConfig({
 							title: "Slots",
 							url: "/slots",
 							icon: <VideoIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/slots",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.slots.queryOptions(),
 								getLink: (id) => `/slots/${id}`,

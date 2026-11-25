@@ -1,11 +1,13 @@
 "use client";
 
 import {
+	BookOpenCheckIcon,
 	ComponentIcon,
 	GraduationCapIcon,
-	ListIcon,
+	LandPlotIcon,
 	PlusIcon,
 	UserPenIcon,
+	VideoIcon,
 } from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav-main";
@@ -43,11 +45,6 @@ export function SidebarConfig({
 									title: "Create New",
 									url: "/students/new",
 								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/students",
-								},
 							],
 							fetchItems: {
 								api: api.sidebar.students.queryOptions(),
@@ -63,16 +60,30 @@ export function SidebarConfig({
 							title: "Programs",
 							url: "/programs",
 							icon: <ComponentIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/programs",
-								},
-							],
 							fetchItems: {
 								api: api.sidebar.programs.queryOptions(),
 								getLink: (id) => `/programs/${id}`,
+							},
+						},
+						{
+							title: "Courses",
+							url: "/courses",
+							icon: <LandPlotIcon />,
+							subItems: [
+								{
+									icon: <BookOpenCheckIcon />,
+									title: "Modules",
+									url: "/modules",
+								},
+								{
+									icon: <VideoIcon />,
+									title: "Videos",
+									url: "/videos",
+								},
+							],
+							fetchItems: {
+								api: api.sidebar.courses.queryOptions(),
+								getLink: (id) => `/courses/${id}`,
 							},
 						},
 					]}

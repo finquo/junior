@@ -1,11 +1,12 @@
 "use client";
 
 import {
+	BookOpenCheckIcon,
 	BriefcaseBusinessIcon,
 	CalendarHeartIcon,
 	ComponentIcon,
 	GraduationCapIcon,
-	ListIcon,
+	LandPlotIcon,
 	PlusIcon,
 	UserPenIcon,
 	VideoIcon,
@@ -40,25 +41,11 @@ export function SidebarConfig({
 							title: "Teachers",
 							url: "/teachers",
 							icon: <BriefcaseBusinessIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/teachers",
-								},
-							],
 						},
 						{
 							title: "Students",
 							url: "/students",
 							icon: <GraduationCapIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/students",
-								},
-							],
 						},
 					]}
 				/>
@@ -75,22 +62,27 @@ export function SidebarConfig({
 									title: "Record Payment",
 									url: "/payments/new",
 								},
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/payments",
-								},
 							],
 						},
 						{
 							title: "Programs",
 							url: "/programs",
 							icon: <ComponentIcon />,
+						},
+						{
+							title: "Courses",
+							url: "/courses",
+							icon: <LandPlotIcon />,
 							subItems: [
 								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/programs",
+									icon: <BookOpenCheckIcon />,
+									title: "Modules",
+									url: "/modules",
+								},
+								{
+									icon: <VideoIcon />,
+									title: "Videos",
+									url: "/videos",
 								},
 							],
 						},
@@ -98,13 +90,6 @@ export function SidebarConfig({
 							title: "Slots",
 							url: "/slots",
 							icon: <VideoIcon />,
-							subItems: [
-								{
-									icon: <ListIcon />,
-									title: "Show List",
-									url: "/slots",
-								},
-							],
 						},
 					]}
 				/>
