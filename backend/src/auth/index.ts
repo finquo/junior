@@ -8,16 +8,18 @@ import { ac, roles } from "./permissions";
 
 export * from "./permissions";
 
+const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
 export function createAuth(db: Database) {
 	return betterAuth({
 		appName: "Finquo Junior",
 		secret: process.env.BETTER_AUTH_SECRET,
 		baseURL: process.env.DOMAIN_NAME
-			? `https://${process.env.DOMAIN_NAME}`
+			? `${protocol}://${process.env.DOMAIN_NAME}`
 			: {
-			allowedHosts: getAllowedHosts(),
-			protocol: process.env.NODE_ENV === "development" ? "http" : "https",
-		},
+					allowedHosts: getAllowedHosts(),
+					protocol,
+				},
 		emailAndPassword: {
 			enabled: true,
 			disableSignUp: false,

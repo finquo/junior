@@ -425,7 +425,10 @@ export const studentRouter = {
 				throw getError("BAD_REQUEST", "Student has no phone number");
 			}
 
-			const link = appOrigin(context.req.url, `/analytics/students/${input.id}`);
+			const link = appOrigin(
+				context.req.url,
+				`/analytics/students/${input.id}`,
+			);
 
 			await notifyStudentReport({
 				name: student.user.name,
@@ -488,6 +491,7 @@ export const studentRouter = {
 				}),
 				student: InsertStudentSchema.pick({
 					program: true,
+					course: true,
 					mentorId: true,
 					supervisorId: true,
 					schooling: true,
