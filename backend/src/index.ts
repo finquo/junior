@@ -14,6 +14,12 @@ import { createContext } from "./api/context";
 import { getOrigin } from "./auth/origin";
 import { bot } from "./chat/whatsapp";
 import { auth } from "./services";
+import { isNotFound } from "./stream/bucket";
+import {
+	getDemoVideoMeta,
+	getDemoVideoStream,
+	parseDemoVideoRange,
+} from "./stream/demo";
 import { zoomEventHandler } from "./zoom/handler";
 import { zoomWebhookMiddleware } from "./zoom/webhook";
 
@@ -32,6 +38,45 @@ app.use(
 
 app.get("/", (c) => {
 	return c.text("OK");
+});
+
+app.on(["GET", "HEAD"], "/demo/video", async (c) => {
+	try {
+		const meta = await getDemoVideoMeta();
+		const parsed = parseDemoVideoRange(c.req.header("range"), meta.size);
+
+		c.header("Accept-Ranges", "bytes");
+		c.header("Content-Type", meta.contentType);
+		c.header("Cache-Control", "public, max-age=3600");
+
+		if (parsed && "unsatisfiable" in parsed) {
+			c.header("Content-Range", `bytes */${meta.size}`);
+			return c.text("Range Not Satisfiable", 416);
+		}
+
+		const range = parsed && "start" in parsed ? parsed : null;
+		const length = range ? range.end - range.start + 1 : meta.size;
+
+		c.header("Content-Length", String(length));
+
+		const status = range ? 206 : 200;
+
+		if (range) {
+			c.header(
+				"Content-Range",
+				`bytes ${range.start}-${range.end}/${meta.size}`,
+			);
+		}
+
+		if (c.req.method === "HEAD") return c.body(null, status);
+
+		return c.body(await getDemoVideoStream(range), status);
+	} catch (error) {
+		if (isNotFound(error)) return c.notFound();
+
+		console.error(error);
+		return c.text("Failed to stream demo video", 500);
+	}
 });
 
 app.on(["POST", "GET"], "/auth/*", async (c) => {

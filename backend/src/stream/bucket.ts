@@ -19,7 +19,7 @@ export type CourseVideoJobMarker = {
 };
 
 export const courseVideoKey = (videoId: string, path: string) =>
-	`course/${videoId}/${path}`;
+	`course/${videoId}/${path}` as const;
 
 export const courseVideoSourceKey = (videoId: string) =>
 	courseVideoKey(videoId, "source/video.mp4");
@@ -37,7 +37,7 @@ export const courseVideoJobKey = (
 export const getCourseVideoBucketURL = (key: string) =>
 	`s3://${MEDIA_BUCKET}/${key}`;
 
-function isNotFound(error: unknown) {
+export function isNotFound(error: unknown) {
 	const err = error as {
 		name?: string;
 		$metadata?: { httpStatusCode?: number };

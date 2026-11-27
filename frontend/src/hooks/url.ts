@@ -16,7 +16,7 @@ export const getServerBaseUrl = (paths?: string) => {
 	} else if (typeof window !== "undefined") {
 		base = window.location.origin;
 	} else {
-		base = "http://localhost:3000";
+		base = "http://localhost:4000";
 	}
 
 	return base + (paths ? paths : "");
@@ -25,4 +25,4 @@ export const getServerBaseUrl = (paths?: string) => {
 export const getClientBaseUrl = (paths?: string) =>
 	(typeof window !== "undefined"
 		? window.location.origin
-		: "http://localhost:3000") + (paths ? paths : "");
+		: "http://localhost:4000") + (paths ? paths : "");
