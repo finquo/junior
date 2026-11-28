@@ -40,8 +40,6 @@ import {
 	ItemContent,
 	ItemDescription,
 	ItemGroup,
-	ItemHeader,
-	ItemSeparator,
 	ItemTitle,
 } from "@/components/ui/item";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -52,7 +50,7 @@ import { useHasRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 import { VideoDeleteButton } from "../../_components/content-actions";
 import { ModuleForm } from "../../_components/module-form";
-import { VideoForm } from "../../_components/video-form";
+import { VideoUpdateForm } from "../../_components/video-update";
 import { ModuleOrderList } from "./module-order-list";
 
 type CourseRecord = API_Returns["core"]["course"]["get"];
@@ -262,12 +260,12 @@ export function CourseProfile({
 						<CardDescription>Manage course video metadata.</CardDescription>
 						<CardAction>
 							{canEditContent && (
-								<VideoForm courseId={data.id}>
-									<Button size="sm">
+								<Button size="sm" asChild>
+									<Link href={`/videos/new?course=${data.id}` as "/"}>
 										<PlusIcon />
 										Add Video
-									</Button>
-								</VideoForm>
+									</Link>
+								</Button>
 							)}
 						</CardAction>
 					</CardHeader>
@@ -302,15 +300,11 @@ export function CourseProfile({
 
 												{canEditContent && (
 													<>
-														<VideoForm
-															courseId={data.id}
-															moduleId={video.module}
-															video={video}
-														>
+														<VideoUpdateForm courseId={data.id} video={video}>
 															<Button variant="outline" size="icon-sm">
 																<PenIcon />
 															</Button>
-														</VideoForm>
+														</VideoUpdateForm>
 														<VideoDeleteButton
 															videoId={video.id}
 															courseId={data.id}

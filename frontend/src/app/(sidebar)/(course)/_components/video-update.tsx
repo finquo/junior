@@ -2,11 +2,9 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { InsertVideoSchema } from "backend/db";
-import { PlusIcon, SaveIcon } from "lucide-react";
+import { SaveIcon } from "lucide-react";
 import { sileo as toast } from "sileo";
-import { z } from "zod";
-import { ModuleSelector } from "@/components/custom/course-selector";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -32,23 +30,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { api, refetchAPIs } from "@/hooks/api";
 import type { API_Returns } from "@/lib/api";
 import type { GetFormZod } from "@/lib/utils";
+import { videoUpdateFormSchema } from "./video-schema";
 
 type VideoRecord = API_Returns["core"]["video"]["list"][number];
 
-const videoFormSchema = InsertVideoSchema.pick({
-	name: true,
-	description: true,
-}).extend({ module: z.string() });
-
-export function VideoForm({
+export function VideoUpdateForm({
 	courseId,
-	moduleId,
 	video,
 	children,
 }: {
 	courseId: string;
-	moduleId?: string;
-	video?: VideoRecord;
+	video: VideoRecord;
 	children: React.ReactElement;
 }) {
 	const invalidate = () => {
@@ -59,18 +51,7 @@ export function VideoForm({
 		]);
 	};
 
-	const create = useMutation(
-		api.core.video.create.mutationOptions({
-			onSuccess: () => {
-				invalidate();
-				toast.success({ title: "Video created" });
-			},
-			onError: (err) => {
-				toast.error({ title: err.message || "Failed to create video" });
-			},
-		}),
-	);
-	const update = useMutation(
+	const { isPending, mutateAsync } = useMutation(
 		api.core.video.update.mutationOptions({
 			onSuccess: () => {
 				invalidate();
@@ -82,33 +63,21 @@ export function VideoForm({
 		}),
 	);
 
-	const isPending = create.isPending || update.isPending;
-
 	const form = useForm({
 		defaultValues: {
-			name: video?.name,
-			description: video?.description ?? undefined,
-			module: video?.module ?? moduleId,
-		} as z.infer<typeof videoFormSchema>,
+			name: video.name,
+			description: video.description ?? undefined,
+		} as z.infer<typeof videoUpdateFormSchema>,
 		validators: {
-			onSubmit: videoFormSchema as GetFormZod<typeof videoFormSchema>,
+			onSubmit: videoUpdateFormSchema as GetFormZod<
+				typeof videoUpdateFormSchema
+			>,
 		},
 		onSubmit: async ({ value }) => {
-			if (!value.module) return;
-
-			const payload = {
+			await mutateAsync({
+				id: video.id,
 				name: value.name.trim(),
 				description: value.description?.trim() || null,
-			};
-
-			if (video) {
-				await update.mutateAsync({ id: video.id, ...payload });
-				return;
-			}
-			await create.mutateAsync({
-				course: courseId,
-				module: value.module,
-				...payload,
 			});
 		},
 	});
@@ -118,12 +87,12 @@ export function VideoForm({
 			<DrawerTrigger asChild>{children}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
-					<DrawerTitle>{video ? "Edit Video" : "Create Video"}</DrawerTitle>
-					<DrawerDescription>Add video metadata only.</DrawerDescription>
+					<DrawerTitle>Edit Video</DrawerTitle>
+					<DrawerDescription>Update video metadata.</DrawerDescription>
 				</DrawerHeader>
 				<DrawerInner>
 					<form
-						id={`video-form-${video?.id ?? "new"}`}
+						id={`video-form-${video.id}`}
 						onSubmit={(event) => {
 							event.preventDefault();
 							event.stopPropagation();
@@ -131,21 +100,6 @@ export function VideoForm({
 						}}
 					>
 						<FieldGroup>
-							{!video && (
-								<form.Field
-									name="module"
-									children={(field) => (
-										<ModuleSelector
-											courseId={courseId}
-											id={field.name}
-											value={field.state.value}
-											onValueChange={(val) => field.handleChange(val)}
-											disabled={isPending}
-										/>
-									)}
-								/>
-							)}
-
 							<form.Field
 								name="name"
 								children={(field) => {
@@ -209,14 +163,19 @@ export function VideoForm({
 							Cancel
 						</Button>
 					</DrawerClose>
-					<Button
-						type="submit"
-						form={`video-form-${video?.id ?? "new"}`}
-						disabled={isPending}
-					>
-						{isPending ? <Spinner /> : video ? <SaveIcon /> : <PlusIcon />}
-						{video ? "Save Changes" : "Create Video"}
-					</Button>
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isDirty]}
+						children={([canSubmit, isDirty]) => (
+							<Button
+								type="submit"
+								form={`video-form-${video.id}`}
+								disabled={!canSubmit || !isDirty || isPending}
+							>
+								{isPending ? <Spinner /> : <SaveIcon />}
+								Save Changes
+							</Button>
+						)}
+					/>
 				</DrawerFooter>
 			</DrawerContent>
 		</Drawer>

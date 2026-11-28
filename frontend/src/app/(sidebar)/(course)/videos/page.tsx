@@ -6,6 +6,7 @@ import {
 	ExternalLinkIcon,
 	MoreHorizontalIcon,
 	PenIcon,
+	PlusIcon,
 	Trash2Icon,
 } from "lucide-react";
 import Link from "next/link";
@@ -57,7 +58,7 @@ import { useDataTable } from "@/hooks/use-data-table";
 import type { API_Returns } from "@/lib/api";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { VideoDeleteButton } from "../_components/content-actions";
-import { VideoForm } from "../_components/video-form";
+import { VideoUpdateForm } from "../_components/video-update";
 
 type VideoRecord = API_Returns["core"]["video"]["list"][number] & {
 	courseName: string;
@@ -90,18 +91,14 @@ function VideoActions({ video }: { video: VideoRecord }) {
 						</DropdownMenuActionItem>
 					</DrawerTrigger>
 					<RenderWhenRole role={["admin", "scheduler"]}>
-						<VideoForm
-							courseId={video.course}
-							moduleId={video.module}
-							video={video}
-						>
+						<VideoUpdateForm courseId={video.course} video={video}>
 							<DropdownMenuActionItem
 								onSelect={(event) => event.preventDefault()}
 							>
 								<PenIcon />
 								Edit Video
 							</DropdownMenuActionItem>
-						</VideoForm>
+						</VideoUpdateForm>
 					</RenderWhenRole>
 					<RenderWhenRole role={["admin", "scheduler"]}>
 						<VideoDeleteButton
@@ -328,6 +325,12 @@ export default function Page() {
 								<Spinner />
 							</Button>
 						)}
+						<Button asChild>
+							<Link href="/videos/new">
+								<PlusIcon />
+								Create Video
+							</Link>
+						</Button>
 					</ButtonGroup>
 				</FrameActions>
 			</FrameHeader>

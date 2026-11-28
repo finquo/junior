@@ -27,6 +27,7 @@ Everything an agent needs to work in `frontend/`: architecture, API/data pattern
 
 ## Code style tips
 
+- Keep files under 300 lines. Split large route-private components into focused sibling files instead of letting one file keep growing.
 - Avoid ternaries inside TSX components. Compute values (including prop defaults) before the JSX; put defaults in function props, not inside the component body.
 - Type props directly in the function signature (`({ href = "/me" }: { href?: Route })`) - no separate exported props interfaces; never export prop types to the outside.
 - Type narrow props with Next typed routes (`href?: Route` from `"next"`) so call sites get route completion/validation.
@@ -212,6 +213,7 @@ export default function Page() {
 
 ## Forms (TanStack Form)
 
+- When form typing fails, read `skills/form.md` first; strict schema/default-value alignment is defined there. Fix the schema or defaults instead of adding quick casts.
 - Reuse backend schemas/dictionaries from `backend/config` (for example `LanguageCodeZod`, `Languages`, `type LanguageCodes`). Type validators with `GetFormZod` from `@/lib/utils`.
 - No raw HTML: use `FieldGroup`, `Field`, `FieldLabel htmlFor`, `FieldDescription`, `FieldError`. Never wrap inputs in custom `<div>`s or use native `<label>`. For checkboxes with labels use `<Field orientation="horizontal">` with `<Checkbox id=...>` and `<FieldLabel htmlFor=...>`.
 - Cards: header actions go in `<CardAction>` inside `<CardHeader>`; right-align footer buttons with `<CardFooter className="justify-end">`.

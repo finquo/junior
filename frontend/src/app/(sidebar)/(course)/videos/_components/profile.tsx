@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useHasRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 import { VideoDeleteButton } from "../../_components/content-actions";
-import { VideoForm } from "../../_components/video-form";
+import { VideoUpdateForm } from "../../_components/video-update";
 
 type VideoData = API_Returns["core"]["video"]["get"];
 
@@ -45,16 +45,12 @@ export function VideoProfile({ data }: { data: VideoData }) {
 						</Button>
 						{canEditContent && (
 							<>
-								<VideoForm
-									courseId={data.course}
-									moduleId={data.module}
-									video={data}
-								>
+								<VideoUpdateForm courseId={data.course} video={data}>
 									<Button variant="outline">
 										<PenIcon />
 										Edit
 									</Button>
-								</VideoForm>
+								</VideoUpdateForm>
 								<VideoDeleteButton
 									videoId={data.id}
 									courseId={data.course}

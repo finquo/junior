@@ -21,7 +21,6 @@ import { useHasRole } from "@/hooks/role";
 import type { API_Returns } from "@/lib/api";
 import { ModuleDeleteButton } from "../../_components/content-actions";
 import { ModuleForm, ModuleQuizList } from "../../_components/module-form";
-import { VideoForm } from "../../_components/video-form";
 import { VideoOrderList } from "./video-order-list";
 
 type ModuleData = API_Returns["core"]["module"]["get"];
@@ -162,12 +161,16 @@ export function ModuleProfile({
 						<CardDescription>Video metadata for this module.</CardDescription>
 						<CardAction>
 							{canEditContent && (
-								<VideoForm courseId={data.course} moduleId={data.id}>
-									<Button size="sm">
+								<Button size="sm" asChild>
+									<Link
+										href={
+											`/videos/new?course=${data.course}&module=${data.id}` as "/"
+										}
+									>
 										<PlusIcon />
 										Add Video
-									</Button>
-								</VideoForm>
+									</Link>
+								</Button>
 							)}
 						</CardAction>
 					</CardHeader>

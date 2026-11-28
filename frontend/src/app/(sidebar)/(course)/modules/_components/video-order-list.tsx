@@ -22,7 +22,7 @@ import {
 import { api, refetchAPIs } from "@/hooks/api";
 import type { API_Returns } from "@/lib/api";
 import { VideoDeleteButton } from "../../_components/content-actions";
-import { VideoForm } from "../../_components/video-form";
+import { VideoUpdateForm } from "../../_components/video-update";
 
 type VideoRecord = API_Returns["core"]["video"]["list"][number];
 
@@ -122,15 +122,11 @@ export function VideoOrderList({
 								<ItemDescription>{video.description}</ItemDescription>
 							</ItemContent>
 							<ItemActions>
-								<VideoForm
-									courseId={courseId}
-									moduleId={moduleId}
-									video={video}
-								>
+								<VideoUpdateForm courseId={courseId} video={video}>
 									<Button variant="outline" size="icon-sm">
 										<PenIcon />
 									</Button>
-								</VideoForm>
+								</VideoUpdateForm>
 								<VideoDeleteButton
 									videoId={video.id}
 									courseId={courseId}

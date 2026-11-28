@@ -119,6 +119,14 @@
 	--sidebar-accent-foreground: oklch(1 0 0);
 	--sidebar-border: oklch(0.26 0 0);
 	--sidebar-ring: oklch(0.7024 0.185 46.4154);
+	--success: var(--color-emerald-500);
+	--success-foreground: var(--color-emerald-600);
+	--info: var(--color-violet-500);
+	--info-foreground: var(--color-violet-600);
+	--warning: var(--color-yellow-500);
+	--warning-foreground: var(--color-yellow-600);
+	--invert: var(--color-zinc-700);
+	--invert-foreground: var(--color-zinc-50);
 }
 
 @theme inline {
