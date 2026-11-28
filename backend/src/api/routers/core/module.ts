@@ -24,7 +24,10 @@ const writeRoles = ["admin", "scheduler"] as const;
  * Order modules using the parent course's `modules` array.
  * Modules missing from the array keep their relative position at the end.
  */
-function orderModules<T extends { id: string }>(modules: T[], order: string[]) {
+export function orderModules<T extends { id: string }>(
+	modules: T[],
+	order: string[],
+) {
 	const position = new Map(order.map((id, index) => [id, index]));
 	return [...modules].sort(
 		(a, b) =>

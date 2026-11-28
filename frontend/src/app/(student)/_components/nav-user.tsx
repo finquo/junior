@@ -9,7 +9,6 @@ import {
 	UserPenIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { sileo as toast } from "sileo";
 import { FeedbackDialog } from "@/components/custom/feedback-dialog";

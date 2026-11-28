@@ -6,6 +6,7 @@ import {
 	CalendarClockIcon,
 	GraduationCapIcon,
 	HomeIcon,
+	LandPlotIcon,
 	UserRoundIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,12 @@ const navItems = [
 		label: "Mentor",
 		href: "/student/mentor",
 		icon: <BookHeartIcon />,
+	},
+	{
+		id: "course",
+		label: "Course",
+		href: "/student/courses" as "/",
+		icon: <LandPlotIcon />,
 	},
 	{
 		id: "program",

@@ -24,7 +24,10 @@ const writeRoles = ["admin", "scheduler"] as const;
  * Order videos using the parent module's `videos` array.
  * Videos missing from the array keep their relative position at the end.
  */
-function orderVideos<T extends { id: string }>(videos: T[], order: string[]) {
+export function orderVideos<T extends { id: string }>(
+	videos: T[],
+	order: string[],
+) {
 	const position = new Map(order.map((id, index) => [id, index]));
 	return [...videos].sort(
 		(a, b) =>

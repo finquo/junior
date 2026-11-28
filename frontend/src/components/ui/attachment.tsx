@@ -12,10 +12,12 @@ const attachmentVariants = cva(
 			size: {
 				default:
 					"gap-2 text-sm has-data-[slot=attachment-media]:p-2 has-data-[slot=attachment-content]:px-2.5 has-data-[slot=attachment-content]:py-2",
+				lg: "gap-3 text-sm has-data-[slot=attachment-media]:p-3 has-data-[slot=attachment-content]:px-3 has-data-[slot=attachment-content]:py-3",
 				sm: "gap-2.5 text-xs has-data-[slot=attachment-media]:p-1.5 has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5",
 				xs: "gap-1.5 rounded-xl text-xs has-data-[slot=attachment-media]:p-1 has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1",
 			},
 			orientation: {
+				thumbnail: "!p-1.5 !pe-4 min-w-40",
 				horizontal: "min-w-40 items-center",
 				vertical: "w-24 flex-col has-data-[slot=attachment-content]:w-30",
 			},
@@ -53,6 +55,8 @@ const attachmentMediaVariants = cva(
 				icon: "",
 				image:
 					"opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+				thumbnail:
+					"aspect-video w-40 opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-video *:[img]:w-full *:[img]:object-cover",
 			},
 		},
 		defaultVariants: {
@@ -150,7 +154,7 @@ function AttachmentAction({
 	return (
 		<Button
 			data-slot="attachment-action"
-			variant={variant ?? "ghost"}
+			variant={variant}
 			size={size}
 			className={cn(className)}
 			{...props}
