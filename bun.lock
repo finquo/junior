@@ -89,6 +89,7 @@
         "@uidotdev/usehooks": "^2.4.1",
         "@varlock/nextjs-integration": "1.2.2",
         "@videojs/core": "10.7.0",
+        "@videojs/hlsjs-video": "10.7.0",
         "@videojs/react": "10.7.0",
         "@zoom/videosdk": "^2.6.0",
         "@zoom/videosdk-react": "^0.0.3",
@@ -1148,6 +1149,8 @@
 
     "@videojs/core": ["@videojs/core@10.7.0", "", { "dependencies": { "@videojs/media": "10.7.0", "@videojs/store": "10.7.0", "@videojs/utils": "10.7.0", "video.js": "10.7.0" } }, "sha512-B8lqQ0UN5HOiXRRBbGW6/Cl7iRat+XG7Ruq1anAHR0VDuWHOrgV7k1s3d5ViEru2QWVIaFeCCkork5jlIYE7Fg=="],
 
+    "@videojs/hlsjs-video": ["@videojs/hlsjs-video@10.7.0", "", { "dependencies": { "@videojs/media": "10.7.0", "@videojs/native-hls-video": "10.7.0", "@videojs/spf": "10.7.0", "@videojs/utils": "10.7.0", "hls.js": "1.7.4" } }, "sha512-GMjV99UMxWBESE+tX6BMqURpT0V7Q+lIbPg3LTOOaz49BekkVQ5id2uA+Ayyua6wbrVoN/yQA4qC1OsRgTvPyg=="],
+
     "@videojs/media": ["@videojs/media@10.7.0", "", { "dependencies": { "@videojs/utils": "10.7.0" } }, "sha512-A2+Lg6KMIFAc7vU1Min2gS+tS5ChjYl3MOBrbmttfchBQgeVopVv9jll3lEMkO2zGo25TcmrbzoMaJRd+hvzFg=="],
 
     "@videojs/native-hls-video": ["@videojs/native-hls-video@10.7.0", "", { "dependencies": { "@videojs/media": "10.7.0", "@videojs/spf": "10.7.0", "@videojs/utils": "10.7.0" } }, "sha512-O2Q6KYd7H/MLm9NMB9ohavSTSfv583xLrVnSY6JtLWtvPR910Y5iPCXyMNp/58V0b0DU5e4QWtMiVNVCQDUrEg=="],
@@ -1563,6 +1566,8 @@
     "has-symbols": ["has-symbols@1.1.0", "", {}, "sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ=="],
 
     "hasown": ["hasown@2.0.4", "", { "dependencies": { "function-bind": "^1.1.2" } }, "sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A=="],
+
+    "hls.js": ["hls.js@1.7.4", "", {}, "sha512-3GlxGdPvT2YHvQYOt+yOzT/DEior/qJVNIylHA77kgeoBTdQQqi70GwefNEUmHQeNGyjC8U62+bruqW/Tpm+tg=="],
 
     "hono": ["hono@4.13.13", "", {}, "sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA=="],
 

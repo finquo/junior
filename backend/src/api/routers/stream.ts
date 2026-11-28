@@ -1,204 +1,95 @@
 import z from "zod";
 import { getAPI, getError, getRolesProcedure, tryAPI } from "@/api/procedure";
 import {
-	type CourseVideoJobMarker,
-	courseVideoExists,
-	courseVideoRenditionKey,
+	courseVideoKey,
 	courseVideoSourceKey,
 	createCourseVideoUploadURL,
+	deleteCourseVideoFile,
+	getCourseVideoDownloadURL,
 	getCourseVideoMeta,
-	getCourseVideoStreamURL,
-	listCourseVideoResolutions,
-	readCourseVideoJobMarker,
-	writeCourseVideoJobMarker,
+	listCourseVideoFiles,
+	listCourseVideos,
 } from "@/stream/bucket";
-import {
-	type CourseVideoResolution,
-	courseVideoResolutionSchema,
-	STALE_JOB_MS,
-} from "@/stream/config";
-import { createCourseVideoConvertJob } from "@/stream/convert";
+import { courseVideoFilePathSchema } from "@/stream/config";
 
 const videoId = z
 	.string()
 	.min(1)
 	.regex(/^[A-Za-z0-9_-]+$/);
 
-const viewerRoles = [
-	"admin",
-	"scheduler",
-	"teacher",
-	"student",
-	"qa_auditor",
-] as const;
-
 const editorRoles = ["admin", "scheduler"] as const;
 
 export const streamRouter = {
-	courseVideo: {
-		uploadUrl: getRolesProcedure(editorRoles)
-			.input(
-				z.object({
-					videoId,
-					contentType: z.literal("video/mp4"),
-				}),
-			)
-			.handler(async ({ input }) => {
-				const key = courseVideoSourceKey(input.videoId);
+	list: getRolesProcedure(["admin", "scheduler", "qa_auditor"]).handler(
+		async () =>
+			getAPI("aws-s3-list-course-video-library", listCourseVideos(), []),
+	),
 
-				return {
-					key,
-					url: await tryAPI(
-						"aws-s3-presign-course-video-upload",
-						createCourseVideoUploadURL({
-							key,
-							contentType: input.contentType,
-						}),
-					),
-				};
+	files: getRolesProcedure(["admin", "scheduler", "qa_auditor"])
+		.input(z.object({ videoId }))
+		.handler(async ({ input }) =>
+			getAPI(
+				"aws-s3-list-course-video-library-files",
+				listCourseVideoFiles(input.videoId),
+				[],
+			),
+		),
+
+	uploadUrl: getRolesProcedure(editorRoles)
+		.input(
+			z.object({
+				videoId,
+				contentType: z.literal("video/mp4"),
 			}),
+		)
+		.handler(async ({ input }) => {
+			const key = courseVideoSourceKey(input.videoId);
 
-		resolutions: getRolesProcedure(viewerRoles)
-			.input(z.object({ videoId }))
-			.handler(async ({ input }) => {
-				const [resolutions, source] = await Promise.all([
-					getAPI<CourseVideoResolution[]>(
-						"aws-s3-list-course-video-resolutions",
-						listCourseVideoResolutions(input.videoId),
-						[],
-					),
-					courseVideoExists(courseVideoSourceKey(input.videoId)),
-				]);
-
-				const items = await Promise.all(
-					resolutions.map(async (resolution) => ({
-						resolution,
-						meta: await tryAPI(
-							"aws-s3-course-video-resolution-meta",
-							getCourseVideoMeta(
-								courseVideoRenditionKey(input.videoId, resolution),
-							),
-						),
-					})),
-				);
-
-				return {
-					source,
-					resolutions: items.map(({ resolution, meta }) => ({
-						resolution,
-						size: meta?.size ?? null,
-					})),
-				};
-			}),
-
-		ensureResolution: getRolesProcedure(editorRoles)
-			.input(
-				z.object({
-					videoId,
-					resolution: courseVideoResolutionSchema,
-				}),
-			)
-			.handler(async ({ input }) => {
-				const key = courseVideoRenditionKey(input.videoId, input.resolution);
-				const meta = await courseVideoExists(key);
-
-				if (meta) {
-					return {
-						status: "ready" as const,
-						resolution: input.resolution,
-						url: await tryAPI(
-							"aws-s3-presign-course-video-stream",
-							getCourseVideoStreamURL(key),
-						),
-					};
-				}
-
-				const sourceKey = courseVideoSourceKey(input.videoId);
-				if (!(await courseVideoExists(sourceKey))) {
-					throw getError(
-						"NOT_FOUND",
-						`Source video not found for ${input.videoId}`,
-					);
-				}
-
-				const marker = await getAPI<CourseVideoJobMarker | null>(
-					"aws-s3-read-course-video-job",
-					readCourseVideoJobMarker(input.videoId, input.resolution),
-					null,
-				);
-
-				if (
-					marker &&
-					Number.isFinite(Date.parse(marker.createdAt)) &&
-					Date.now() - Date.parse(marker.createdAt) <= STALE_JOB_MS
-				) {
-					return {
-						status: "processing" as const,
-						resolution: input.resolution,
-						jobId: marker.jobId,
-					};
-				}
-
-				const job = await tryAPI(
-					"aws-mediaconvert-course-video",
-					createCourseVideoConvertJob({
-						videoId: input.videoId,
-						resolution: input.resolution,
-						sourceKey,
+			return {
+				key,
+				url: await tryAPI(
+					"aws-s3-presign-course-video-upload",
+					createCourseVideoUploadURL({
+						key,
+						contentType: input.contentType,
 					}),
+				),
+			};
+		}),
+
+	downloadUrl: getRolesProcedure(editorRoles)
+		.input(z.object({ videoId, path: courseVideoFilePathSchema }))
+		.handler(async ({ input }) => {
+			const key = courseVideoKey(input.videoId, input.path);
+			const meta = await getAPI(
+				"aws-s3-course-video-file-meta",
+				getCourseVideoMeta(key),
+				null,
+			);
+
+			if (!meta) {
+				throw getError(
+					"NOT_FOUND",
+					`Course video file not found: ${input.path}`,
 				);
+			}
 
-				if (!job?.jobId) {
-					throw getError(
-						"INTERNAL_SERVER_ERROR",
-						"MediaConvert did not return a job",
-					);
-				}
+			return {
+				url: await tryAPI(
+					"aws-s3-presign-course-video-download",
+					getCourseVideoDownloadURL(key),
+				),
+			};
+		}),
 
-				await tryAPI(
-					"aws-s3-write-course-video-job",
-					writeCourseVideoJobMarker(input.videoId, input.resolution, {
-						jobId: job.jobId,
-						sourceKey,
-						createdAt: new Date().toISOString(),
-					}),
-				);
+	delete: getRolesProcedure(editorRoles)
+		.input(z.object({ videoId, path: courseVideoFilePathSchema }))
+		.handler(async ({ input }) => {
+			await tryAPI(
+				"aws-s3-delete-course-video-file",
+				deleteCourseVideoFile(courseVideoKey(input.videoId, input.path)),
+			);
 
-				return {
-					status: "processing" as const,
-					resolution: input.resolution,
-					jobId: job.jobId,
-				};
-			}),
-
-		stream: getRolesProcedure(viewerRoles)
-			.input(
-				z.object({
-					videoId,
-					resolution: courseVideoResolutionSchema,
-				}),
-			)
-			.handler(async ({ input }) => {
-				const key = courseVideoRenditionKey(input.videoId, input.resolution);
-				const meta = await tryAPI(
-					"aws-s3-course-video-stream-meta",
-					getCourseVideoMeta(key),
-				);
-
-				if (!meta) {
-					throw getError(
-						"NOT_FOUND",
-						`${input.resolution} video not found for ${input.videoId}`,
-					);
-				}
-
-				return {
-					url: await tryAPI(
-						"aws-s3-presign-course-video-stream",
-						getCourseVideoStreamURL(key),
-					),
-					size: meta.size,
-				};
-			}),
-	},
+			return { success: true };
+		}),
 };

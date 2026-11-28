@@ -13,11 +13,19 @@ export const COURSE_VIDEO_RESOLUTION_KEYS = Object.keys(
 	COURSE_VIDEO_RESOLUTIONS,
 ) as CourseVideoResolution[];
 
-export const courseVideoResolutionSchema = z.enum(
-	COURSE_VIDEO_RESOLUTION_KEYS as [
-		CourseVideoResolution,
-		...CourseVideoResolution[],
-	],
-);
+export const courseVideoFilePathSchema = z
+	.string()
+	.min(1)
+	.regex(/^[A-Za-z0-9._/-]+$/)
+	.refine((path) => !path.split("/").includes(".."), "Invalid file path");
 
-export const STALE_JOB_MS = 30 * 60 * 1000;
+export function getCourseVideoFileUrl(videoId: string, path: string) {
+	if (path === "source/video.mp4") return `/api/stream/${videoId}`;
+
+	const hlsFile = /^hls\/(.+)$/.exec(path);
+	if (hlsFile?.[1]) {
+		return `/api/stream/${videoId}/hls/${hlsFile[1]}`;
+	}
+
+	return null;
+}

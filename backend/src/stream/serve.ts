@@ -1,38 +1,49 @@
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { bucket } from "@/aws/bucket";
 import { MEDIA_BUCKET } from "@/aws/config";
-import { courseVideoSourceKey } from "./bucket";
+import { isNotFound } from "./bucket";
 
-export const DEMO_VIDEO_ID = "demo";
-export const DEMO_VIDEO_KEY = courseVideoSourceKey(DEMO_VIDEO_ID);
-
-export type DemoVideoMeta = {
+export type StreamVideoMeta = {
 	contentType: string;
 	size: number;
 };
 
-export type DemoVideoRange = {
+export type ByteRange = {
 	start: number;
 	end: number;
 };
 
-type ParsedDemoVideoRange = DemoVideoRange | { unsatisfiable: true };
+type ParsedByteRange = ByteRange | { unsatisfiable: true };
 
-export async function getDemoVideoMeta(): Promise<DemoVideoMeta> {
-	const res = await bucket.send(
-		new HeadObjectCommand({ Bucket: MEDIA_BUCKET, Key: DEMO_VIDEO_KEY }),
-	);
-
-	return {
-		contentType: res.ContentType ?? "video/mp4",
-		size: res.ContentLength ?? 0,
-	};
+export function streamContentType(key: string) {
+	if (key.endsWith(".m3u8")) return "application/vnd.apple.mpegurl";
+	if (key.endsWith(".ts")) return "video/mp2t";
+	if (key.endsWith(".mp4")) return "video/mp4";
+	return "application/octet-stream";
 }
 
-export function parseDemoVideoRange(
+export async function getStreamVideoMeta(
+	key: string,
+): Promise<StreamVideoMeta | null> {
+	try {
+		const res = await bucket.send(
+			new HeadObjectCommand({ Bucket: MEDIA_BUCKET, Key: key }),
+		);
+
+		return {
+			contentType: streamContentType(key),
+			size: res.ContentLength ?? 0,
+		};
+	} catch (error) {
+		if (isNotFound(error)) return null;
+		throw error;
+	}
+}
+
+export function parseByteRange(
 	header: string | undefined,
 	size: number,
-): ParsedDemoVideoRange | null {
+): ParsedByteRange | null {
 	if (!header) return null;
 
 	const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
@@ -67,16 +78,19 @@ export function parseDemoVideoRange(
 	return { start, end };
 }
 
-export async function getDemoVideoStream(range: DemoVideoRange | null) {
+export async function getStreamVideoStream(
+	key: string,
+	range: ByteRange | null,
+) {
 	const res = await bucket.send(
 		new GetObjectCommand({
 			Bucket: MEDIA_BUCKET,
-			Key: DEMO_VIDEO_KEY,
+			Key: key,
 			Range: range ? `bytes=${range.start}-${range.end}` : undefined,
 		}),
 	);
 
-	if (!res.Body) throw new Error("Demo video has no body");
+	if (!res.Body) throw new Error(`Stream video has no body: ${key}`);
 
 	return res.Body.transformToWebStream() as ReadableStream<Uint8Array>;
 }

@@ -154,6 +154,11 @@ export function SidebarConfig({
 									title: "Videos",
 									url: "/videos",
 								},
+								{
+									icon: <FolderOpenIcon />,
+									title: "Media",
+									url: "/courses/medias",
+								},
 							],
 						},
 						{

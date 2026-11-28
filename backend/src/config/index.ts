@@ -1,3 +1,4 @@
+export * from "@/stream/config";
 export * from "./payment";
 export * from "./profile";
 export * from "./program";

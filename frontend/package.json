@@ -44,6 +44,7 @@
 		"@uidotdev/usehooks": "^2.4.1",
 		"@varlock/nextjs-integration": "1.2.2",
 		"@videojs/core": "10.7.0",
+		"@videojs/hlsjs-video": "10.7.0",
 		"@videojs/react": "10.7.0",
 		"@zoom/videosdk": "^2.6.0",
 		"@zoom/videosdk-react": "^0.0.3",

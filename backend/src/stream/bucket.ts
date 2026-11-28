@@ -1,4 +1,5 @@
 import {
+	DeleteObjectCommand,
 	GetObjectCommand,
 	HeadObjectCommand,
 	ListObjectsV2Command,
@@ -7,32 +8,21 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { bucket } from "@/aws/bucket";
 import { MEDIA_BUCKET } from "@/aws/config";
-import {
-	COURSE_VIDEO_RESOLUTION_KEYS,
-	type CourseVideoResolution,
-} from "./config";
-
-export type CourseVideoJobMarker = {
-	jobId: string;
-	sourceKey: string;
-	createdAt: string;
-};
 
 export const courseVideoKey = (videoId: string, path: string) =>
 	`course/${videoId}/${path}` as const;
 
+export const COURSE_VIDEO_SOURCE_KEY =
+	/^course\/([A-Za-z0-9_-]+)\/source\/video\.mp4$/;
+
 export const courseVideoSourceKey = (videoId: string) =>
 	courseVideoKey(videoId, "source/video.mp4");
 
-export const courseVideoRenditionKey = (
-	videoId: string,
-	resolution: CourseVideoResolution,
-) => courseVideoKey(videoId, `${resolution}/video.mp4`);
+export const courseVideoHlsKey = (videoId: string) =>
+	courseVideoKey(videoId, "hls/master.m3u8");
 
-export const courseVideoJobKey = (
-	videoId: string,
-	resolution: CourseVideoResolution,
-) => courseVideoKey(videoId, `jobs/${resolution}.json`);
+export const courseVideoHlsFileKey = (videoId: string, file: string) =>
+	courseVideoKey(videoId, `hls/${file}`);
 
 export const getCourseVideoBucketURL = (key: string) =>
 	`s3://${MEDIA_BUCKET}/${key}`;
@@ -50,33 +40,84 @@ export function isNotFound(error: unknown) {
 	);
 }
 
-export async function courseVideoExists(key: string) {
-	try {
-		await bucket.send(
-			new HeadObjectCommand({ Bucket: MEDIA_BUCKET, Key: key }),
-		);
-		return true;
-	} catch (error) {
-		if (isNotFound(error)) return false;
-		throw error;
-	}
-}
-
 export async function getCourseVideoMeta(key: string) {
 	try {
 		const res = await bucket.send(
 			new HeadObjectCommand({ Bucket: MEDIA_BUCKET, Key: key }),
 		);
-		return { size: res.ContentLength ?? null };
+		return {
+			size: res.ContentLength ?? null,
+			lastModified: res.LastModified?.getTime() ?? null,
+		};
 	} catch (error) {
 		if (isNotFound(error)) return null;
 		throw error;
 	}
 }
 
-export async function listCourseVideoResolutions(videoId: string) {
+export async function listCourseVideos() {
+	const sources = new Map<
+		string,
+		{ key: string; size: number | null; lastModified: number | null }
+	>();
+	let token: string | undefined;
+
+	do {
+		const res = await bucket.send(
+			new ListObjectsV2Command({
+				Bucket: MEDIA_BUCKET,
+				Prefix: "course/",
+				ContinuationToken: token,
+			}),
+		);
+
+		for (const item of res.Contents ?? []) {
+			if (!item.Key) continue;
+
+			const match = /^course\/([^/]+)\/source\/video\.mp4$/.exec(item.Key);
+			if (!match?.[1]) continue;
+
+			sources.set(match[1], {
+				key: item.Key,
+				size: item.Size ?? null,
+				lastModified: item.LastModified?.getTime() ?? null,
+			});
+		}
+
+		token = res.NextContinuationToken;
+	} while (token);
+
+	const videos = await Promise.all(
+		[...sources].map(async ([videoId, source]) => {
+			const hlsKey = courseVideoHlsKey(videoId);
+			const hls = await getCourseVideoMeta(hlsKey);
+
+			return {
+				videoId,
+				source,
+				hls: hls ? { key: hlsKey, ...hls } : null,
+			};
+		}),
+	);
+
+	return videos.sort((a, b) => a.videoId.localeCompare(b.videoId));
+}
+
+const fileRank = (path: string) => {
+	if (path === "source/video.mp4") return 0;
+	if (path === "hls/master.m3u8") return 1;
+	if (path.startsWith("hls/") && path.endsWith(".m3u8")) return 2;
+	if (path.startsWith("hls/")) return 3;
+	return 4;
+};
+
+export async function listCourseVideoFiles(videoId: string) {
 	const prefix = `course/${videoId}/`;
-	const resolutions = new Set<CourseVideoResolution>();
+	const files: {
+		path: string;
+		size: number | null;
+		lastModified: number | null;
+	}[] = [];
 	let token: string | undefined;
 
 	do {
@@ -89,26 +130,25 @@ export async function listCourseVideoResolutions(videoId: string) {
 		);
 
 		for (const item of res.Contents ?? []) {
-			if (!item.Key) continue;
+			if (!item.Key?.startsWith(prefix)) continue;
 
-			const relative = item.Key.slice(prefix.length);
-			const match = /^([^/]+)\/video\.mp4$/.exec(relative);
-			const resolution = match?.[1];
+			const path = item.Key.slice(prefix.length);
+			if (!path) continue;
 
-			if (
-				resolution &&
-				COURSE_VIDEO_RESOLUTION_KEYS.includes(
-					resolution as CourseVideoResolution,
-				)
-			) {
-				resolutions.add(resolution as CourseVideoResolution);
-			}
+			files.push({
+				path,
+				size: item.Size ?? null,
+				lastModified: item.LastModified?.getTime() ?? null,
+			});
 		}
 
 		token = res.NextContinuationToken;
 	} while (token);
 
-	return [...resolutions];
+	return files.sort(
+		(a, b) =>
+			fileRank(a.path) - fileRank(b.path) || a.path.localeCompare(b.path),
+	);
 }
 
 export function createCourseVideoUploadURL({
@@ -131,7 +171,7 @@ export function createCourseVideoUploadURL({
 	);
 }
 
-export function getCourseVideoStreamURL(key: string, expiresIn = 3600) {
+export function getCourseVideoDownloadURL(key: string, expiresIn = 3600) {
 	const filename = key.split("/").pop() ?? "video.mp4";
 
 	return getSignedUrl(
@@ -139,45 +179,18 @@ export function getCourseVideoStreamURL(key: string, expiresIn = 3600) {
 		new GetObjectCommand({
 			Bucket: MEDIA_BUCKET,
 			Key: key,
-			ResponseContentType: "video/mp4",
-			ResponseContentDisposition: `inline; filename="${filename}"`,
+			ResponseContentType: "application/octet-stream",
+			ResponseContentDisposition: `attachment; filename="${filename}"`,
 		}),
 		{ expiresIn },
 	);
 }
 
-export async function writeCourseVideoJobMarker(
-	videoId: string,
-	resolution: CourseVideoResolution,
-	marker: CourseVideoJobMarker,
-) {
+export async function deleteCourseVideoFile(key: string) {
 	await bucket.send(
-		new PutObjectCommand({
+		new DeleteObjectCommand({
 			Bucket: MEDIA_BUCKET,
-			Key: courseVideoJobKey(videoId, resolution),
-			Body: JSON.stringify(marker),
-			ContentType: "application/json",
+			Key: key,
 		}),
 	);
-}
-
-export async function readCourseVideoJobMarker(
-	videoId: string,
-	resolution: CourseVideoResolution,
-) {
-	try {
-		const res = await bucket.send(
-			new GetObjectCommand({
-				Bucket: MEDIA_BUCKET,
-				Key: courseVideoJobKey(videoId, resolution),
-			}),
-		);
-
-		const body = await res.Body?.transformToString();
-		if (!body) return null;
-		return JSON.parse(body) as CourseVideoJobMarker;
-	} catch (error) {
-		if (isNotFound(error)) return null;
-		throw error;
-	}
 }

@@ -36,6 +36,37 @@ resource "aws_iam_role_policy" "event_lambda_logs" {
 	})
 }
 
+resource "aws_iam_role_policy" "event_lambda_media" {
+	name	= "finquo-junior-event-lambda-media-${var.environment}"
+	role	= aws_iam_role.event_lambda.id
+
+	policy	= jsonencode({
+		Version	= "2012-10-17"
+		Statement	= [
+			{
+				Effect	= "Allow"
+				Action	= ["s3:ListBucket"]
+				Resource	= aws_s3_bucket.media.arn
+			},
+			{
+				Effect	= "Allow"
+				Action	= ["s3:GetObject", "s3:PutObject"]
+				Resource	= "${aws_s3_bucket.media.arn}/*"
+			},
+			{
+				Effect	= "Allow"
+				Action	= ["mediaconvert:CreateJob"]
+				Resource	= aws_media_convert_queue.media.arn
+			},
+			{
+				Effect	= "Allow"
+				Action	= "iam:PassRole"
+				Resource	= aws_iam_role.media_convert.arn
+			}
+		]
+	})
+}
+
 resource "aws_lambda_function" "event" {
 	function_name		= "finquo-junior-event-${var.environment}"
 	role			= aws_iam_role.event_lambda.arn
@@ -59,6 +90,26 @@ resource "aws_lambda_function" "event" {
 
 	lifecycle {
 		ignore_changes	= [filename, source_code_hash]
+	}
+}
+
+resource "aws_lambda_permission" "event_s3" {
+	statement_id	= "AllowExecutionFromMediaBucket"
+	action		= "lambda:InvokeFunction"
+	function_name	= aws_lambda_function.event.function_name
+	principal	= "s3.amazonaws.com"
+	source_arn	= aws_s3_bucket.media.arn
+}
+
+resource "aws_s3_bucket_notification" "course_video_source" {
+	bucket		= aws_s3_bucket.media.id
+	depends_on	= [aws_lambda_permission.event_s3]
+
+	lambda_function {
+		lambda_function_arn	= aws_lambda_function.event.arn
+		events			= ["s3:ObjectCreated:*"]
+		filter_prefix		= "course/"
+		filter_suffix		= "/source/video.mp4"
 	}
 }
 

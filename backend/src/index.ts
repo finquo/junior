@@ -14,12 +14,16 @@ import { createContext } from "./api/context";
 import { getOrigin } from "./auth/origin";
 import { bot } from "./chat/whatsapp";
 import { auth } from "./services";
-import { isNotFound } from "./stream/bucket";
 import {
-	getDemoVideoMeta,
-	getDemoVideoStream,
-	parseDemoVideoRange,
-} from "./stream/demo";
+	courseVideoHlsFileKey,
+	courseVideoSourceKey,
+	isNotFound,
+} from "./stream/bucket";
+import {
+	getStreamVideoMeta,
+	getStreamVideoStream,
+	parseByteRange,
+} from "./stream/serve";
 import { zoomEventHandler } from "./zoom/handler";
 import { zoomWebhookMiddleware } from "./zoom/webhook";
 
@@ -30,8 +34,9 @@ app.use(
 	"/*",
 	cors({
 		origin: getOrigin(),
-		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization"],
+		allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
+		allowHeaders: ["Content-Type", "Authorization", "Range"],
+		exposeHeaders: ["Accept-Ranges", "Content-Length", "Content-Range"],
 		credentials: true,
 	}),
 );
@@ -40,10 +45,26 @@ app.get("/", (c) => {
 	return c.text("OK");
 });
 
-app.on(["GET", "HEAD"], "/demo/video", async (c) => {
+app.on(["GET", "HEAD"], "/stream/:videoId/hls/:file", async (c) => {
+	const videoId = c.req.param("videoId");
+	const file = c.req.param("file");
+	if (
+		!videoId ||
+		!/^[A-Za-z0-9_-]+$/.test(videoId) ||
+		!file ||
+		!/^[A-Za-z0-9._-]+$/.test(file) ||
+		file.includes("..")
+	) {
+		return c.text("Invalid HLS path", 400);
+	}
+
+	const key = courseVideoHlsFileKey(videoId, file);
+
 	try {
-		const meta = await getDemoVideoMeta();
-		const parsed = parseDemoVideoRange(c.req.header("range"), meta.size);
+		const meta = await getStreamVideoMeta(key);
+		if (!meta) return c.notFound();
+
+		const parsed = parseByteRange(c.req.header("range"), meta.size);
 
 		c.header("Accept-Ranges", "bytes");
 		c.header("Content-Type", meta.contentType);
@@ -70,12 +91,60 @@ app.on(["GET", "HEAD"], "/demo/video", async (c) => {
 
 		if (c.req.method === "HEAD") return c.body(null, status);
 
-		return c.body(await getDemoVideoStream(range), status);
+		return c.body(await getStreamVideoStream(key, range), status);
 	} catch (error) {
 		if (isNotFound(error)) return c.notFound();
 
 		console.error(error);
-		return c.text("Failed to stream demo video", 500);
+		return c.text("Failed to stream HLS file", 500);
+	}
+});
+
+app.on(["GET", "HEAD"], "/stream/:videoId", async (c) => {
+	const videoId = c.req.param("videoId");
+	if (!videoId || !/^[A-Za-z0-9_-]+$/.test(videoId)) {
+		return c.text("Invalid video id", 400);
+	}
+
+	const key = courseVideoSourceKey(videoId);
+
+	try {
+		const meta = await getStreamVideoMeta(key);
+		if (!meta) return c.notFound();
+
+		const parsed = parseByteRange(c.req.header("range"), meta.size);
+
+		c.header("Accept-Ranges", "bytes");
+		c.header("Content-Type", meta.contentType);
+		c.header("Cache-Control", "public, max-age=3600");
+
+		if (parsed && "unsatisfiable" in parsed) {
+			c.header("Content-Range", `bytes */${meta.size}`);
+			return c.text("Range Not Satisfiable", 416);
+		}
+
+		const range = parsed && "start" in parsed ? parsed : null;
+		const length = range ? range.end - range.start + 1 : meta.size;
+
+		c.header("Content-Length", String(length));
+
+		const status = range ? 206 : 200;
+
+		if (range) {
+			c.header(
+				"Content-Range",
+				`bytes ${range.start}-${range.end}/${meta.size}`,
+			);
+		}
+
+		if (c.req.method === "HEAD") return c.body(null, status);
+
+		return c.body(await getStreamVideoStream(key, range), status);
+	} catch (error) {
+		if (isNotFound(error)) return c.notFound();
+
+		console.error(error);
+		return c.text("Failed to stream video", 500);
 	}
 });
 

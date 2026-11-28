@@ -1,4 +1,5 @@
-// import { transcribeAudio, transcribeAudioChunk } from "@/ai/transcribe";
+import { COURSE_VIDEO_SOURCE_KEY, courseVideoSourceKey } from "@/stream/bucket";
+import { createCourseVideoConvertJob } from "@/stream/convert";
 
 export type S3Event = {
 	Records: {
@@ -11,13 +12,16 @@ export type S3Event = {
 
 export const handleMediaEvent = async (event: S3Event) => {
 	for (const record of event.Records) {
-		console.log("[event-media]", record.s3.bucket.name, record.s3.object.key);
+		const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
+		const match = COURSE_VIDEO_SOURCE_KEY.exec(key);
 
-		// const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
+		if (!match?.[1]) continue;
 
-		// if (/\/audio-chunks\/\d+\/\d+_audio_\d+\.aac$/.test(key))
-		// 	return transcribeAudioChunk(key);
+		const videoId = match[1];
 
-		// return transcribeAudio(key);
+		await createCourseVideoConvertJob({
+			videoId,
+			sourceKey: courseVideoSourceKey(videoId),
+		});
 	}
 };
